@@ -10,7 +10,7 @@ extern "C" {
 #endif
 
 
-struct glx_state {
+typedef struct glx_state {
     GLXContext		context;	/* active context, initial NULL */
     Display		*display;	/* active display, initial NULL */
     gl_state_t		state;		/* the cached states associated

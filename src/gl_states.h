@@ -170,6 +170,7 @@ typedef struct v_program_status {
 /* this struct for attribute */
 typedef struct v_program_attrib {
     GLuint	location;
+    GLuint	index;
     GLchar 	*name;
 } v_program_attrib_t;
 
