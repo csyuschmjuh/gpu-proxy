@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-typedef struct gl_states
+typedef struct gl_srv_states
 {
     int num_contexts;
 
@@ -43,12 +43,12 @@ typedef struct gl_states
     egl_state_t		embedded_states[4];
     egl_state_t		*states;
 #endif
-} gl_states_t;
+} gl_srv_states_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-void _virtual_server_init ();
+void _virtual_srv_init ();
 
 #endif /* GPUPROCESS_SRV_PRIVATE_H */
