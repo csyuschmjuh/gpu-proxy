@@ -1,5 +1,5 @@
-#ifndef SRV_STATES_H
-#define SRV_STATES_H
+#ifndef GPUPROCESS_SRV_PRIVATE_H
+#define GPUPROCESS_SRV_PRIVATE_H
 
 #ifdef HAS_GL
 #include "glx_states.h"
@@ -51,4 +51,4 @@ typedef struct gl_states
 
 void _virtual_server_init ();
 
-#endif /* SRV_STATES_H */
+#endif /* GPUPROCESS_SRV_PRIVATE_H */
