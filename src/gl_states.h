@@ -218,7 +218,7 @@ typedef enum v_clip_distance {
 } v_clip_distance_t;
 #endif
 
-struct gl_state {
+typedef struct gl_state {
     /* GL_VERSION_1_1 */
 #ifdef GL_VERSION_1_1
 /* GL states from glGet () */
