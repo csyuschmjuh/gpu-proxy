@@ -1,6 +1,8 @@
 #ifndef GPUPROCESS_CLI_PRIVATE_H
 #define GPUPROCESS_CLI_PRIVATE_H
 
+#define HAS_GLES2 1
+
 #ifdef HAS_GL
 #include "glx_states.h"
 #elif HAS_GLES2
@@ -27,10 +29,16 @@ typedef struct gl_cli_states
      */
 } gl_cli_states_t;
 
+/* thread local client states */
+__thread  gl_cli_states_t cli_states 
+    __attribute__(( tls_model ("initial-exec")));
+
+void 
+_gpuprocess_cli_init ();
+
 #ifdef __cplusplus
 }
 #endif
 
-void _virtual_cli_init ();
 
 #endif /* GPUPROCESS_SRV_PRIVATE_H */

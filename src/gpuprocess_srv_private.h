@@ -45,10 +45,11 @@ typedef struct gl_srv_states
 #endif
 } gl_srv_states_t;
 
+void _gpuprocess_srv_init ();
+
 #ifdef __cplusplus
 }
 #endif
 
-void _virtual_srv_init ();
 
 #endif /* GPUPROCESS_SRV_PRIVATE_H */
