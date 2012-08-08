@@ -1,5 +1,5 @@
-#ifndef GL_STATE_H
-#define GL_STATE_H
+#ifndef GPUPROCESS_GL_STATE_H
+#define GPUPROCESS_GL_STATE_H
 
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -2373,4 +2373,4 @@ typedef struct gl_state {
 }
 #endif
 
-#endif /* GL_STATE_H */
+#endif /* GPUPROCESS_GL_STATE_H */

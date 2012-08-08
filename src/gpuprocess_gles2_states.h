@@ -1,5 +1,5 @@
-#ifndef GLES2_STATE_H
-#define GLES2_STATE_H
+#ifndef GPUPROCESS_GLES2_STATE_H
+#define GPUPROCESS_GLES2_STATE_H
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
@@ -405,4 +405,4 @@ typedef struct gl_state {
 }
 #endif
 
-#endif /* GLES2_STATE_H */
+#endif /* GPUPROCESS_GLES2_STATE_H */

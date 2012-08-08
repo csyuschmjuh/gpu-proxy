@@ -2,9 +2,9 @@
 #define GPUPROCESS_CLI_PRIVATE_H
 
 #ifdef HAS_GL
-#include "glx_states.h"
+#include "gpuprocess_glx_states.h"
 #elif HAS_GLES2
-#include "egl_states.h"
+#include "gpuprocess_egl_states.h"
 #else
 #error "Could not find appropriate backend"
 #endif

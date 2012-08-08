@@ -1,9 +1,9 @@
-#ifndef GLX_STATE_H
-#define GLX_STATE_H
+#ifndef GPUPROCESS_GLX_STATE_H
+#define GPUPROCESS_GLX_STATE_H
 
 #include <GL/glx.h>
 #include <GL/glxext.h>
-#include "gl_states.h"
+#include "gpuprocess_gl_states.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,4 +25,4 @@ typedef struct glx_state {
 }
 #endif
 
-#endif /* GLX_STATE_H */
+#endif /* GPUPROCESS_GLX_STATE_H */

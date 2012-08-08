@@ -1,7 +1,7 @@
 #ifndef GPUPROCESS_GL_SRV_PRIVATE_H
 #define GPUPROCESS_GL_SRV_PRIVATE_H
 
-#include "glx_states.h"
+#include "gpuprocess_glx_states.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,7 +1,7 @@
 #ifndef GPUPROCESS_GLES2_SRV_PRIVATE_H
 #define GPUPROCESS_GLES2_SRV_PRIVATE_H
 
-#include "egl_states.h"
+#include "gpuprocess_egl_states.h"
 
 #ifdef __cplusplus
 extern "C" {

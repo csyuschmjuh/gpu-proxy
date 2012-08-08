@@ -1,9 +1,9 @@
-#ifndef EGL_STATE_H
-#define EGL_STATE_H
+#ifndef GPUPROCESS_EGL_STATE_H
+#define GPUPROCESS_EGL_STATE_H
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "gles2_states.h"
+#include "gpuprocess_gles2_states.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,4 +24,4 @@ typedef struct egl_state {
 }
 #endif
 
-#endif /* EGL_STATE_H */
+#endif /* GPUPROCESS_EGL_STATE_H */
