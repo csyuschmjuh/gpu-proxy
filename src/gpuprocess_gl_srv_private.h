@@ -1,17 +1,13 @@
-#ifndef GPUPROCESS_SRV_PRIVATE_H
-#define GPUPROCESS_SRV_PRIVATE_H
+#ifndef GPUPROCESS_GL_SRV_PRIVATE_H
+#define GPUPROCESS_GL_SRV_PRIVATE_H
 
-#ifdef HAS_GL
 #include "glx_states.h"
-#elif HAS_GLES2
-#include "egl_states.h"
-#else
-#error "Could not find appropriate backend"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define NUM_CONTEXTS
 
 typedef struct gl_srv_states
 {
@@ -21,7 +17,6 @@ typedef struct gl_srv_states
      * matches the request, we return quickly.  Otherwise, we save
      * the request context/display/drawable to pending_xxxx, 
      */
-#ifdef HAS_GL
     GLXContext		pending_context;	
     Display 		*pending_display;
     GLXDrawable 	pending_drawable;
@@ -29,23 +24,26 @@ typedef struct gl_srv_states
 
     glx_state_t		*active_state;
 
-    glx_state_t		embedded_states[4];
+    glx_state_t		embedded_states[NUM_CONTEXTS];
     glx_state_t		*states;
-
-#else /* EGL states */
-    EGLContext		pending_context;
-    EGLDisplay		pending_display;
-    EGLSurface		pending_drawable;
-    EGLSurface		pending_readable;
-
-    egl_state_t		*active_state;
-    
-    egl_state_t		embedded_states[4];
-    egl_state_t		*states;
-#endif
 } gl_srv_states_t;
 
-void _gpuprocess_srv_init ();
+/* global state variable */
+gl_srv_states_t	srv_states;
+
+/* called within eglInitialize () */
+void 
+_gpuprocess_srv_init ();
+
+void 
+_gpuprocess_srv_destroy ();
+
+/* called within eglMakeCurrent () */
+void
+_gpuprocess_srv_make_current (EGLDisplay display, 
+			      EGLSurface drawable, 
+			      EGLSurface readable,
+			      EGLContext context);
 
 #ifdef __cplusplus
 }

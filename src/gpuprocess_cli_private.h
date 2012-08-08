@@ -1,8 +1,6 @@
 #ifndef GPUPROCESS_CLI_PRIVATE_H
 #define GPUPROCESS_CLI_PRIVATE_H
 
-#define HAS_GLES2 1
-
 #ifdef HAS_GL
 #include "glx_states.h"
 #elif HAS_GLES2
@@ -17,9 +15,7 @@ extern "C" {
 
 typedef struct gl_cli_states
 {
-    int 			count;
-    v_vertex_attrib_list_t	embedded_vertex_attribs[32];
-    v_vertex_attrib_list_t	*vertex_attribs;
+    v_vertex_attrib_list_t	vertex_attribs;
 
     GLint			pack_alignment; 	/* initial 4 */
     GLint			unpack_alignment;	/* initial 4 */
@@ -35,6 +31,9 @@ __thread  gl_cli_states_t cli_states
 
 void 
 _gpuprocess_cli_init ();
+
+void
+_gpuprocess_cli_destroy ();
 
 #ifdef __cplusplus
 }

@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+#define NUM_EMBEDDED 32
+
 /* these are client state */
 typedef struct v_vertex_attrib
 {
@@ -25,7 +27,7 @@ typedef struct v_vertex_attrib
 typedef struct v_vertex_attrib_list
 {
     int 		count;			/* initial 0 */
-    v_vertex_attrib_t	embedded_attribs[32];
+    v_vertex_attrib_t	embedded_attribs[NUM_EMBEDDED];
     v_vertex_attrib_t	*attribs;
 } v_vertex_attrib_list_t;
 
@@ -73,6 +75,8 @@ typedef struct v_program {
 } v_program_t;
 
 typedef struct gl_state {
+    GLenum	error;			/* initial is GL_NO_ERROR */
+
 /* GL states from glGet () */
     GLint	active_texture;			/* initial GL_TEXTURE0 */
     GLfloat	aliased_line_width_range[2];	/* must include 1 */
@@ -224,6 +228,9 @@ typedef struct gl_state {
 #ifdef GL_OES_EGL_image
 #endif
 
+#ifdef GL_OES_EGL_image_external
+#endif
+
 #ifdef GL_OES_element_index_uint
 #endif
 
@@ -295,11 +302,40 @@ typedef struct gl_state {
 #ifdef GL_AMD_program_binary_Z400
 #endif
 
+#ifdef GL_ANGLE_framebuffer_blit
+    GLint	draw_framebuffer_binding;		/* initial 0 ? */
+    GLint	read_framebuffer_binding;		/* initial 0 ? */
+#endif
+
+#ifdef GL_ANGLE_framebuffer_multisample
+    GLint	max_samples;
+#endif
+
+#ifdef GL_APPLE_rgb_422
+#endif
+
+#ifdef GL_APPLE_framebuffer_multisample
+	/* reuse GL_ANGLE_framebuffer_blit */
+#endif
+
+#ifdef GL_APPLE_texture_format_BGRA8888
+#endif
+
+#ifdef GL_APPLE_texture_max_level
+    GLint	texture_max_level;
+#endif
+
+#ifdef GL_ARM_mali_shader_bindary
+#endif
+
+#ifdef GL_ARM_rgba8
+#endif
+
 #ifdef GL_EXT_blend_minmax
     /* reuse blend_equation */
 #endif
 
-#ifdef GL_EXT__discard_framebuffer
+#ifdef GL_EXT_discard_framebuffer
 #endif
 
 #ifdef GL_EXT_multi_draw_arrays
@@ -330,6 +366,7 @@ typedef struct gl_state {
 #endif
 
 #ifdef GL_IMG_multisampled_render_to_texture
+    /* reuse max_samples */
 #endif
 
 #ifdef GL_NV_fence
@@ -354,6 +391,13 @@ typedef struct gl_state {
 #endif
 
 #ifdef GL_QCOM_tiled_rendering
+#endif
+
+#ifdef GL_VIV_shader_bindary
+#endif
+
+#ifdef GL_EXT_multisampled_render_to_texture
+    /* re-use max_samples */
 #endif
 
 } gles2_state_t;
