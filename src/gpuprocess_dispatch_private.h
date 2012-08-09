@@ -1,10 +1,21 @@
 #ifndef GPUPROCESS_DISPATCH_PRIVATE_H
 #define GPUPROCESS_DISPATCH_PRIVATE_H
 
-#include <GL/gl.h>
+#include "config.h"
+
+#ifdef HAS_GL
 #include <GL/glx.h>
+#endif
+
+#ifdef HAS_GLES2
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#endif
+
+typedef void (*FunctionPointerType)(void);
 
 typedef struct _gpuprocess_dispatch {
+#ifdef HAS_GL
 /* GLX */
     XVisualInfo* (*ChooseVisual) (Display *dpy, int screen,
 				  int *attribList);
@@ -34,7 +45,6 @@ typedef struct _gpuprocess_dispatch {
     const char * (*QueryExtensionsString) (Display *dpy, int screen);
     const char * (*QueryServerString) (Display *dpy, int screen, int name);
     const char * (*GetClientString) (Display *dpy, int name);
-
 
 /* GLX 1.2 and later */
     Display * (*GetCurrentDisplay) (void);
@@ -73,14 +83,231 @@ typedef struct _gpuprocess_dispatch {
     void (*GetSelectedEvent) (Display *dpy, GLXDrawable drawable,
 			      unsigned long *mask);
 
-    __GLXextFuncPtr (*GetProcAddress) (const char *);
-
 #ifdef GLX_EXT_texture_from_pixmap
     void (*BindTexImageEXT) (Display *display, GLXDrawable drawable, int buffer, const int *attrib_list);
     void (*ReleaseTexImageEXT) (Display *display, GLXDrawable drawable, int buffer);
 #endif
 
-    void (*NewList)(GLuint, GLenum);
+#endif // HAS_GL
+
+#ifdef HAS_GLES2
+    EGLint (*eglGetError) (void);
+
+    EGLDisplay (*eglGetDisplay) (EGLNativeDisplayType);
+    EGLBoolean (*eglInitialize) (EGLDisplay, EGLint *, EGLint *);
+    EGLBoolean (*eglTerminate) (EGLDisplay);
+
+    const char * (*eglQueryString) (EGLDisplay, EGLint);
+
+    EGLBoolean (*eglGetConfigs) (EGLDisplay, EGLConfig *,
+				 EGLint, EGLint *);
+    EGLBoolean (*eglChooseConfig) (EGLDisplay, const EGLint *,
+				   EGLConfig *, EGLint,
+				   EGLint *);
+    EGLBoolean (*eglGetConfigAttrib) (EGLDisplay, EGLConfig,
+				      EGLint, EGLint *);
+
+    EGLSurface (*eglCreateWindowSurface) (EGLDisplay, EGLConfig,
+					  EGLNativeWindowType,
+					  const EGLint *);
+    EGLSurface (*eglCreatePbufferSurface) (EGLDisplay, EGLConfig,
+					   const EGLint *);
+    EGLSurface (*eglCreatePixmapSurface) (EGLDisplay, EGLConfig,
+					  EGLNativePixmapType,
+					  const EGLint *);
+    EGLBoolean (*eglDestroySurface) (EGLDisplay, EGLSurface);
+    EGLBoolean (*eglQuerySurface) (EGLDisplay, EGLSurface,
+				   EGLint, EGLint *);
+
+    EGLBoolean (*eglBindAPI) (EGLenum);
+    EGLenum (*eglQueryAPI) (void);
+
+    EGLBoolean (*eglWaitClient) (void);
+
+    EGLBoolean (*eglReleaseThread) (void);
+
+    EGLSurface (*eglCreatePbufferFromClientBuffer) (
+	EGLDisplay, EGLenum, EGLClientBuffer,
+	EGLConfig, const EGLint *);
+
+    EGLBoolean (*eglSurfaceAttrib) (EGLDisplay, EGLSurface,
+				    EGLint, EGLint);
+    EGLBoolean (*eglBindTexImage) (EGLDisplay, EGLSurface, EGLint);
+    EGLBoolean (*eglReleaseTexImage) (EGLDisplay, EGLSurface, EGLint);
+
+    EGLBoolean (*eglSwapInterval) (EGLDisplay, EGLint);
+
+    EGLContext (*eglCreateContext) (EGLDisplay, EGLConfig,
+				    EGLContext,
+				    const EGLint *);
+    EGLBoolean (*eglDestroyContext) (EGLDisplay, EGLContext);
+    EGLBoolean (*eglMakeCurrent) (EGLDisplay, EGLSurface,
+				  EGLSurface, EGLContext);
+
+    EGLContext (*eglGetCurrentContext) (void);
+    EGLSurface (*eglGetCurrentSurface) (EGLint);
+    EGLDisplay (*eglGetCurrentDisplay) (void);
+    EGLBoolean (*eglQueryContext) (EGLDisplay, EGLContext,
+				   EGLint, EGLint *);
+
+    EGLBoolean (*eglWaitGL) (void);
+    EGLBoolean (*eglWaitNative) (EGLint engine);
+    EGLBoolean (*eglSwapBuffers) (EGLDisplay, EGLSurface);
+    EGLBoolean (*eglCopyBuffers) (EGLDisplay, EGLSurface,
+				  EGLNativePixmapType);
+
+#endif // HAS_GLES2
+
+#if defined(HAS_GL) || defined(HAS_GLES2)
+    FunctionPointerType
+    (*GetProcAddress) (const char *procname);
+
+    void  (*ActiveTexture)(GLenum);
+    void  (*AttachShader)(GLuint, GLuint);
+    void  (*BindAttribLocation)(GLuint, GLuint, const GLchar*);
+    void  (*BindBuffer)(GLenum, GLuint);
+    void  (*BindFramebuffer)(GLenum, GLuint);
+    void  (*BindRenderbuffer)(GLenum, GLuint);
+    void  (*BindTexture)(GLenum, GLuint);
+    void  (*BlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+    void  (*BlendEquation)(GLenum);
+    void  (*BlendEquationSeparate)(GLenum, GLenum);
+    void  (*BlendFunc)(GLenum, GLenum);
+    void  (*BlendFuncSeparate)(GLenum, GLenum, GLenum, GLenum);
+    void  (*BufferData)(GLenum, GLsizeiptr, const GLvoid*, GLenum);
+    void  (*BufferSubData)(GLenum, GLintptr, GLsizeiptr, const GLvoid*);
+    GLenum  (*CheckFramebufferStatus)(GLenum);
+    void  (*Clear)(GLbitfield);
+    void  (*ClearColor)(GLclampf, GLclampf, GLclampf, GLclampf);
+    void  (*ClearDepthf)(GLclampf);
+    void  (*ClearStencil)(GLint);
+    void  (*ColorMask)(GLboolean, GLboolean, GLboolean, GLboolean);
+    void  (*CompileShader)(GLuint);
+    void  (*CompressedTexImage2D)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid*);
+    void  (*CompressedTexSubImage2D)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*);
+    void  (*CopyTexImage2D)(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLsizei, GLint);
+    void  (*CopyTexSubImage2D)(GLenum, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei);
+    GLuint (*CreateProgram)(void);
+    GLuint (*CreateShader)(GLenum);
+    void  (*CullFace)(GLenum);
+    void  (*DeleteBuffers)(GLsizei, const GLuint*);
+    void  (*DeleteFramebuffers)(GLsizei, const GLuint*);
+    void  (*DeleteProgram)(GLuint);
+    void  (*DeleteRenderbuffers)(GLsizei, const GLuint*);
+    void  (*DeleteShader)(GLuint);
+    void  (*DeleteTextures)(GLsizei, const GLuint*);
+    void  (*DepthFunc)(GLenum);
+    void  (*DepthMask)(GLboolean);
+    void  (*DepthRangef)(GLclampf, GLclampf);
+    void  (*DetachShader)(GLuint, GLuint);
+    void  (*Disable)(GLenum);
+    void  (*DisableVertexAttribArray)(GLuint index);
+    void  (*DrawArrays)(GLenum mode, GLint first, GLsizei count);
+    void  (*DrawElements)(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices);
+    void  (*Enable)(GLenum cap);
+    void  (*EnableVertexAttribArray)(GLuint index);
+    void  (*Finish)(void);
+    void  (*Flush)(void);
+    void  (*FramebufferRenderbuffer)(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+    void  (*FramebufferTexture2D)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+    void  (*FrontFace)(GLenum mode);
+    void  (*GenBuffers)(GLsizei n, GLuint* buffers);
+    void  (*GenerateMipmap)(GLenum target);
+    void  (*GenFramebuffers)(GLsizei n, GLuint* framebuffers);
+    void  (*GenRenderbuffers)(GLsizei n, GLuint* renderbuffers);
+    void  (*GenTextures)(GLsizei n, GLuint* textures);
+    void  (*GetActiveAttrib)(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name);
+    void  (*GetActiveUniform)(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name);
+    void  (*GetAttachedShaders)(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders);
+    int   (*GetAttribLocation)(GLuint program, const GLchar* name);
+    void  (*GetBooleanv)(GLenum pname, GLboolean* params);
+    void  (*GetBufferParameteriv)(GLenum target, GLenum pname, GLint* params);
+    GLenum (*GetError)(void);
+    void  (*GetFloatv)(GLenum pname, GLfloat* params);
+    void  (*GetFramebufferAttachmentParameteriv)(GLenum target, GLenum attachment, GLenum pname, GLint* params);
+    void  (*GetIntegerv)(GLenum pname, GLint* params);
+    void  (*GetProgramiv)(GLuint program, GLenum pname, GLint* params);
+    void  (*GetProgramInfoLog)(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog);
+    void  (*GetRenderbufferParameteriv)(GLenum target, GLenum pname, GLint* params);
+    void  (*GetShaderiv)(GLuint shader, GLenum pname, GLint* params);
+    void  (*GetShaderInfoLog)(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog);
+    void  (*GetShaderPrecisionFormat)(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision);
+    void  (*GetShaderSource)(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source);
+    const GLubyte* (*GetString)(GLenum name);
+    void  (*GetTexParameterfv)(GLenum target, GLenum pname, GLfloat* params);
+    void  (*GetTexParameteriv)(GLenum target, GLenum pname, GLint* params);
+    void  (*GetUniformfv)(GLuint program, GLint location, GLfloat* params);
+    void  (*GetUniformiv)(GLuint program, GLint location, GLint* params);
+    int   (*GetUniformLocation)(GLuint program, const GLchar* name);
+    void  (*GetVertexAttribfv)(GLuint index, GLenum pname, GLfloat* params);
+    void  (*GetVertexAttribiv)(GLuint index, GLenum pname, GLint* params);
+    void  (*GetVertexAttribPointerv)(GLuint index, GLenum pname, GLvoid** pointer);
+    void  (*Hint)(GLenum target, GLenum mode);
+    GLboolean  (*IsBuffer)(GLuint buffer);
+    GLboolean  (*IsEnabled)(GLenum cap);
+    GLboolean  (*IsFramebuffer)(GLuint framebuffer);
+    GLboolean  (*IsProgram)(GLuint program);
+    GLboolean  (*IsRenderbuffer)(GLuint renderbuffer);
+    GLboolean  (*IsShader)(GLuint shader);
+    GLboolean  (*IsTexture)(GLuint texture);
+    void  (*LineWidth)(GLfloat width);
+    void  (*LinkProgram)(GLuint program);
+    void  (*PixelStorei)(GLenum pname, GLint param);
+    void  (*PolygonOffset)(GLfloat factor, GLfloat units);
+    void  (*ReadPixels)(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
+    void  (*ReleaseShaderCompiler)(void);
+    void  (*RenderbufferStorage)(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+    void  (*SampleCoverage)(GLclampf value, GLboolean invert);
+    void  (*Scissor)(GLint x, GLint y, GLsizei width, GLsizei height);
+    void  (*ShaderBinary)(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length);
+    void  (*ShaderSource)(GLuint shader, GLsizei count, const GLchar** string, const GLint* length);
+    void  (*StencilFunc)(GLenum func, GLint ref, GLuint mask);
+    void  (*StencilFuncSeparate)(GLenum face, GLenum func, GLint ref, GLuint mask);
+    void  (*StencilMask)(GLuint mask);
+    void  (*StencilMaskSeparate)(GLenum face, GLuint mask);
+    void  (*StencilOp)(GLenum fail, GLenum zfail, GLenum zpass);
+    void  (*StencilOpSeparate)(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+    void  (*TexImage2D)(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
+    void  (*TexParameterf)(GLenum target, GLenum pname, GLfloat param);
+    void  (*TexParameterfv)(GLenum, GLenum, const GLfloat*);
+    void  (*TexParameteri)(GLenum, GLenum, GLint);
+    void  (*TexParameteriv)(GLenum, GLenum, const GLint*);
+    void  (*TexSubImage2D)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum format, GLenum, const GLvoid*);
+    void  (*Uniform1f)(GLint, GLfloat);
+    void  (*Uniform1fv)(GLint, GLsizei, const GLfloat*);
+    void  (*Uniform1i)(GLint, GLint);
+    void  (*Uniform1iv)(GLint, GLsizei count, const GLint*);
+    void  (*Uniform2f)(GLint, GLfloat, GLfloat);
+    void  (*Uniform2fv)(GLint, GLsizei, const GLfloat*);
+    void  (*Uniform2i)(GLint, GLint x, GLint);
+    void  (*Uniform2iv)(GLint, GLsizei, const GLint*);
+    void  (*Uniform3f)(GLint, GLfloat, GLfloat, GLfloat);
+    void  (*Uniform3fv)(GLint, GLsizei, const GLfloat*);
+    void  (*Uniform3i)(GLint, GLint, GLint, GLint);
+    void  (*Uniform3iv)(GLint, GLsizei, const GLint*);
+    void  (*Uniform4f)(GLint, GLfloat, GLfloat, GLfloat, GLfloat);
+    void  (*Uniform4fv)(GLint, GLsizei, const GLfloat*);
+    void  (*Uniform4i)(GLint, GLint, GLint, GLint, GLint);
+    void  (*Uniform4iv)(GLint, GLsizei, const GLint*);
+    void  (*UniformMatrix2fv)(GLint, GLsizei, GLboolean, const GLfloat*);
+    void  (*UniformMatrix3fv)(GLint, GLsizei, GLboolean, const GLfloat*);
+    void  (*UniformMatrix4fv)(GLint, GLsizei, GLboolean, const GLfloat*);
+    void  (*UseProgram)(GLuint);
+    void  (*ValidateProgram)(GLuint);
+    void  (*VertexAttrib1f)(GLuint, GLfloat);
+    void  (*VertexAttrib1fv)(GLuint, const GLfloat*);
+    void  (*VertexAttrib2f)(GLuint, GLfloat, GLfloat);
+    void  (*VertexAttrib2fv)(GLuint, const GLfloat*);
+    void  (*VertexAttrib3f)(GLuint, GLfloat, GLfloat, GLfloat);
+    void  (*VertexAttrib3fv)(GLuint, const GLfloat*);
+    void  (*VertexAttrib4f)(GLuint, GLfloat, GLfloat, GLfloat, GLfloat);
+    void  (*VertexAttrib4fv)(GLuint, const GLfloat*);
+    void  (*VertexAttribPointer)(GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid*);
+    void  (*Viewport)(GLint, GLint, GLsizei, GLsizei);
+#endif
+
+#if HAS_GL
+    void  (*NewList)(GLuint, GLenum);
     void  (*EndList)(void);
     void  (*CallList)(GLuint);
     void  (*CallLists)(GLsizei, GLenum, const GLvoid *);
@@ -232,13 +459,10 @@ typedef struct _gpuprocess_dispatch {
     void  (*Vertex4sv)(const GLshort *);
     void  (*ClipPlane)(GLenum, const GLdouble *);
     void  (*ColorMaterial)(GLenum, GLenum);
-    void  (*CullFace)(GLenum);
     void  (*Fogf)(GLenum, GLfloat);
     void  (*Fogfv)(GLenum, const GLfloat *);
     void  (*Fogi)(GLenum, GLint);
     void  (*Fogiv)(GLenum, const GLint *);
-    void  (*FrontFace)(GLenum);
-    void  (*Hint)(GLenum, GLenum);
     void  (*Lightf)(GLenum, GLenum, GLfloat);
     void  (*Lightfv)(GLenum, GLenum, const GLfloat *);
     void  (*Lighti)(GLenum, GLenum, GLint);
@@ -248,7 +472,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*LightModeli)(GLenum, GLint);
     void  (*LightModeliv)(GLenum, const GLint *);
     void  (*LineStipple)(GLint, GLushort);
-    void  (*LineWidth)(GLfloat);
     void  (*Materialf)(GLenum, GLenum, GLfloat);
     void  (*Materialfv)(GLenum, GLenum, const GLfloat *);
     void  (*Materiali)(GLenum, GLenum, GLint);
@@ -256,14 +479,8 @@ typedef struct _gpuprocess_dispatch {
     void  (*PointSize)(GLfloat);
     void  (*PolygonMode)(GLenum, GLenum);
     void  (*PolygonStipple)(const GLubyte *);
-    void  (*Scissor)(GLint, GLint, GLsizei, GLsizei);
     void  (*ShadeModel)(GLenum);
-    void  (*TexParameterf)(GLenum, GLenum, GLfloat);
-    void  (*TexParameterfv)(GLenum, GLenum, const GLfloat *);
-    void  (*TexParameteri)(GLenum, GLenum, GLint);
-    void  (*TexParameteriv)(GLenum, GLenum, const GLint *);
     void  (*TexImage1D)(GLenum, GLint, GLint, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
-    void  (*TexImage2D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
     void  (*TexEnvf)(GLenum, GLenum, GLfloat);
     void  (*TexEnvfv)(GLenum, GLenum, const GLfloat *);
     void  (*TexEnvi)(GLenum, GLenum, GLint);
@@ -283,21 +500,11 @@ typedef struct _gpuprocess_dispatch {
     void  (*PopName)(void);
     void  (*PushName)(GLuint);
     void  (*DrawBuffer)(GLenum);
-    void  (*Clear)(GLbitfield);
     void  (*ClearAccum)(GLfloat, GLfloat, GLfloat, GLfloat);
     void  (*ClearIndex)(GLfloat);
-    void  (*ClearColor)(GLclampf, GLclampf, GLclampf, GLclampf);
-    void  (*ClearStencil)(GLint);
     void  (*ClearDepth)(GLclampd);
-    void  (*StencilMask)(GLuint);
-    void  (*ColorMask)(GLboolean, GLboolean, GLboolean, GLboolean);
-    void  (*DepthMask)(GLboolean);
     void  (*IndexMask)(GLuint);
     void  (*Accum)(GLenum, GLfloat);
-    void  (*Disable)(GLenum);
-    void  (*Enable)(GLenum);
-    void  (*Finish)(void);
-    void  (*Flush)(void);
     void  (*PopAttrib)(void);
     void  (*PushAttrib)(GLbitfield);
     void  (*Map1d)(GLenum, GLdouble, GLdouble, GLint, GLint, const GLdouble *);
@@ -321,29 +528,19 @@ typedef struct _gpuprocess_dispatch {
     void  (*EvalMesh2)(GLenum, GLint, GLint, GLint, GLint);
     void  (*EvalPoint2)(GLint, GLint);
     void  (*AlphaFunc)(GLenum, GLclampf);
-    void  (*BlendFunc)(GLenum, GLenum);
     void  (*LogicOp)(GLenum);
-    void  (*StencilFunc)(GLenum, GLint, GLuint);
-    void  (*StencilOp)(GLenum, GLenum, GLenum);
-    void  (*DepthFunc)(GLenum);
     void  (*PixelZoom)(GLfloat, GLfloat);
     void  (*PixelTransferf)(GLenum, GLfloat);
     void  (*PixelTransferi)(GLenum, GLint);
     void  (*PixelStoref)(GLenum, GLfloat);
-    void  (*PixelStorei)(GLenum, GLint);
     void  (*PixelMapfv)(GLenum, GLsizei, const GLfloat *);
     void  (*PixelMapuiv)(GLenum, GLsizei, const GLuint *);
     void  (*PixelMapusv)(GLenum, GLsizei, const GLushort *);
     void  (*ReadBuffer)(GLenum);
     void  (*CopyPixels)(GLint, GLint, GLsizei, GLsizei, GLenum);
-    void  (*ReadPixels)(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid *);
     void  (*DrawPixels)(GLsizei, GLsizei, GLenum, GLenum, const GLvoid *);
-    void  (*GetBooleanv)(GLenum, GLboolean *);
     void  (*GetClipPlane)(GLenum, GLdouble *);
     void  (*GetDoublev)(GLenum, GLdouble *);
-    GLenum  (*GetError)(void);
-    void  (*GetFloatv)(GLenum, GLfloat *);
-    void  (*GetIntegerv)(GLenum, GLint *);
     void  (*GetLightfv)(GLenum, GLenum, GLfloat *);
     void  (*GetLightiv)(GLenum, GLenum, GLint *);
     void  (*GetMapdv)(GLenum, GLenum, GLdouble *);
@@ -355,18 +552,14 @@ typedef struct _gpuprocess_dispatch {
     void  (*GetPixelMapuiv)(GLenum, GLuint *);
     void  (*GetPixelMapusv)(GLenum, GLushort *);
     void  (*GetPolygonStipple)(GLubyte *);
-    const GLubyte *  (*GetString)(GLenum);
     void  (*GetTexEnvfv)(GLenum, GLenum, GLfloat *);
     void  (*GetTexEnviv)(GLenum, GLenum, GLint *);
     void  (*GetTexGendv)(GLenum, GLenum, GLdouble *);
     void  (*GetTexGenfv)(GLenum, GLenum, GLfloat *);
     void  (*GetTexGeniv)(GLenum, GLenum, GLint *);
     void  (*GetTexImage)(GLenum, GLint, GLenum, GLenum, GLvoid *);
-    void  (*GetTexParameterfv)(GLenum, GLenum, GLfloat *);
-    void  (*GetTexParameteriv)(GLenum, GLenum, GLint *);
     void  (*GetTexLevelParameterfv)(GLenum, GLint, GLenum, GLfloat *);
     void  (*GetTexLevelParameteriv)(GLenum, GLint, GLenum, GLint *);
-    GLboolean  (*IsEnabled)(GLenum);
     GLboolean  (*IsList)(GLuint);
     void  (*DepthRange)(GLclampd, GLclampd);
     void  (*Frustum)(GLdouble, GLdouble, GLdouble, GLdouble, GLdouble, GLdouble);
@@ -385,13 +578,9 @@ typedef struct _gpuprocess_dispatch {
     void  (*Scalef)(GLfloat, GLfloat, GLfloat);
     void  (*Translated)(GLdouble, GLdouble, GLdouble);
     void  (*Translatef)(GLfloat, GLfloat, GLfloat);
-    void  (*Viewport)(GLint, GLint, GLsizei, GLsizei);
     void  (*ArrayElement)(GLint);
-    void  (*BindTexture)(GLenum, GLuint);
     void  (*ColorPointer)(GLint, GLenum, GLsizei, const GLvoid *);
     void  (*DisableClientState)(GLenum);
-    void  (*DrawArrays)(GLenum, GLint, GLsizei);
-    void  (*DrawElements)(GLenum, GLsizei, GLenum, const GLvoid *);
     void  (*EdgeFlagPointer)(GLsizei, const GLvoid *);
     void  (*EnableClientState)(GLenum);
     void  (*IndexPointer)(GLenum, GLsizei, const GLvoid *);
@@ -399,25 +588,16 @@ typedef struct _gpuprocess_dispatch {
     void  (*Indexubv)(const GLubyte *);
     void  (*InterleavedArrays)(GLenum, GLsizei, const GLvoid *);
     void  (*NormalPointer)(GLenum, GLsizei, const GLvoid *);
-    void  (*PolygonOffset)(GLfloat, GLfloat);
     void  (*TexCoordPointer)(GLint, GLenum, GLsizei, const GLvoid *);
     void  (*VertexPointer)(GLint, GLenum, GLsizei, const GLvoid *);
     GLboolean  (*AreTexturesResident)(GLsizei, const GLuint *, GLboolean *);
     void  (*CopyTexImage1D)(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLint);
-    void  (*CopyTexImage2D)(GLenum, GLint, GLenum, GLint, GLint, GLsizei, GLsizei, GLint);
     void  (*CopyTexSubImage1D)(GLenum, GLint, GLint, GLint, GLint, GLsizei);
-    void  (*CopyTexSubImage2D)(GLenum, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei);
-    void  (*DeleteTextures)(GLsizei, const GLuint *);
-    void  (*GenTextures)(GLsizei, GLuint *);
     void  (*GetPointerv)(GLenum, GLvoid **);
-    GLboolean  (*IsTexture)(GLuint);
     void  (*PrioritizeTextures)(GLsizei, const GLuint *, const GLclampf *);
     void  (*TexSubImage1D)(GLenum, GLint, GLint, GLsizei, GLenum, GLenum, const GLvoid *);
-    void  (*TexSubImage2D)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, const GLvoid *);
     void  (*PopClientAttrib)(void);
     void  (*PushClientAttrib)(GLbitfield);
-    void  (*BlendColor)(GLclampf, GLclampf, GLclampf, GLclampf);
-    void  (*BlendEquation)(GLenum);
     void  (*DrawRangeElements)(GLenum, GLuint, GLuint, GLsizei, GLenum, const GLvoid *);
     void  (*ColorTable)(GLenum, GLenum, GLsizei, GLenum, GLenum, const GLvoid *);
     void  (*ColorTableParameterfv)(GLenum, GLenum, const GLfloat *);
@@ -454,7 +634,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*TexImage3D)(GLenum, GLint, GLint, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, const GLvoid *);
     void  (*TexSubImage3D)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, const GLvoid *);
     void  (*CopyTexSubImage3D)(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLsizei, GLsizei);
-    void  (*ActiveTextureARB)(GLenum);
     void  (*ClientActiveTextureARB)(GLenum);
     void  (*MultiTexCoord1dARB)(GLenum, GLdouble);
     void  (*MultiTexCoord1dvARB)(GLenum, const GLdouble *);
@@ -488,22 +667,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*MultiTexCoord4ivARB)(GLenum, const GLint *);
     void  (*MultiTexCoord4sARB)(GLenum, GLshort, GLshort, GLshort, GLshort);
     void  (*MultiTexCoord4svARB)(GLenum, const GLshort *);
-    void  (*AttachShader)(GLuint, GLuint);
-    GLuint  (*CreateProgram)(void);
-    GLuint  (*CreateShader)(GLenum);
-    void  (*DeleteProgram)(GLuint);
-    void  (*DeleteShader)(GLuint);
-    void  (*DetachShader)(GLuint, GLuint);
-    void  (*GetAttachedShaders)(GLuint, GLsizei, GLsizei *, GLuint *);
-    void  (*GetProgramInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
-    void  (*GetProgramiv)(GLuint, GLenum, GLint *);
-    void  (*GetShaderInfoLog)(GLuint, GLsizei, GLsizei *, GLchar *);
-    void  (*GetShaderiv)(GLuint, GLenum, GLint *);
-    GLboolean  (*IsProgram)(GLuint);
-    GLboolean  (*IsShader)(GLuint);
-    void  (*StencilFuncSeparate)(GLenum, GLenum, GLint, GLuint);
-    void  (*StencilMaskSeparate)(GLenum, GLuint);
-    void  (*StencilOpSeparate)(GLenum, GLenum, GLenum, GLenum);
     void  (*UniformMatrix2x3fv)(GLint, GLsizei, GLboolean, const GLfloat *);
     void  (*UniformMatrix2x4fv)(GLint, GLsizei, GLboolean, const GLfloat *);
     void  (*UniformMatrix3x2fv)(GLint, GLsizei, GLboolean, const GLfloat *);
@@ -526,10 +689,8 @@ typedef struct _gpuprocess_dispatch {
     void  (*MultTransposeMatrixfARB)(const GLfloat *);
     void  (*SampleCoverageARB)(GLclampf, GLboolean);
     void  (*CompressedTexImage1DARB)(GLenum, GLint, GLenum, GLsizei, GLint, GLsizei, const GLvoid *);
-    void  (*CompressedTexImage2DARB)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *);
     void  (*CompressedTexImage3DARB)(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLsizei, const GLvoid *);
     void  (*CompressedTexSubImage1DARB)(GLenum, GLint, GLint, GLsizei, GLenum, GLsizei, const GLvoid *);
-    void  (*CompressedTexSubImage2DARB)(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *);
     void  (*CompressedTexSubImage3DARB)(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLsizei, const GLvoid *);
     void  (*GetCompressedTexImageARB)(GLenum, GLint, GLvoid *);
     void  (*DisableVertexAttribArrayARB)(GLuint);
@@ -589,10 +750,8 @@ typedef struct _gpuprocess_dispatch {
     void  (*VertexAttrib4uivARB)(GLuint, const GLuint *);
     void  (*VertexAttrib4usvARB)(GLuint, const GLushort *);
     void  (*VertexAttribPointerARB)(GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid *);
-    void  (*BindBufferARB)(GLenum, GLuint);
     void  (*BufferDataARB)(GLenum, GLsizeiptrARB, const GLvoid *, GLenum);
     void  (*BufferSubDataARB)(GLenum, GLintptrARB, GLsizeiptrARB, const GLvoid *);
-    void  (*DeleteBuffersARB)(GLsizei, const GLuint *);
     void  (*GenBuffersARB)(GLsizei, GLuint *);
     void  (*GetBufferParameterivARB)(GLenum, GLenum, GLint *);
     void  (*GetBufferPointervARB)(GLenum, GLenum, GLvoid **);
@@ -753,11 +912,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*DrawTransformFeedbackStream)(GLenum, GLuint, GLuint);
     void  (*EndQueryIndexed)(GLenum, GLuint);
     void  (*GetQueryIndexediv)(GLenum, GLuint, GLenum, GLint *);
-    void  (*ClearDepthf)(GLclampf);
-    void  (*DepthRangef)(GLclampf, GLclampf);
-    void  (*GetShaderPrecisionFormat)(GLenum, GLenum, GLint *, GLint *);
-    void  (*ReleaseShaderCompiler)(void);
-    void  (*ShaderBinary)(GLsizei, const GLuint *, GLenum, const GLvoid *, GLsizei);
     void  (*DebugMessageCallbackARB)(GLDEBUGPROCARB, const GLvoid *);
     void  (*DebugMessageControlARB)(GLenum, GLenum, GLenum, GLsizei, const GLuint *, GLboolean);
     void  (*DebugMessageInsertARB)(GLenum, GLenum, GLuint, GLenum, GLsizei, const GLcharARB *);
@@ -830,7 +984,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*FogCoorddvEXT)(const GLdouble *);
     void  (*FogCoordfEXT)(GLfloat);
     void  (*FogCoordfvEXT)(const GLfloat *);
-    void  (*BlendFuncSeparateEXT)(GLenum, GLenum, GLenum, GLenum);
     void  (*ResizeBuffersMESA)(void);
     void  (*WindowPos2dMESA)(GLdouble, GLdouble);
     void  (*WindowPos2dvMESA)(const GLdouble *);
@@ -952,12 +1105,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*PrimitiveRestartIndexNV)(GLuint);
     void  (*PrimitiveRestartNV)(void);
     void  (*DepthBoundsEXT)(GLclampd, GLclampd);
-    void  (*BlendEquationSeparateEXT)(GLenum, GLenum);
-    void  (*BindFramebufferEXT)(GLenum, GLuint);
-    void  (*BindRenderbufferEXT)(GLenum, GLuint);
-    GLenum  (*CheckFramebufferStatusEXT)(GLenum);
-    void  (*DeleteFramebuffersEXT)(GLsizei, const GLuint *);
-    void  (*DeleteRenderbuffersEXT)(GLsizei, const GLuint *);
     void  (*FramebufferRenderbufferEXT)(GLenum, GLenum, GLenum, GLuint);
     void  (*FramebufferTexture1DEXT)(GLenum, GLenum, GLenum, GLuint, GLint);
     void  (*FramebufferTexture2DEXT)(GLenum, GLenum, GLenum, GLuint, GLint);
@@ -1044,6 +1191,7 @@ typedef struct _gpuprocess_dispatch {
     void  (*GetQueryObjectui64vEXT)(GLuint, GLenum, GLuint64EXT *);
     void  (*EGLImageTargetRenderbufferStorageOES)(GLenum, GLvoid *);
     void  (*EGLImageTargetTexture2DOES)(GLenum, GLvoid *);
+#endif
 } gpuprocess_dispatch_t;
 
 void
