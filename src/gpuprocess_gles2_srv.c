@@ -2,6 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* global state variable */
+gl_srv_states_t	srv_states;
+
+static void
+_gpuprocess_srv_copy_egl_state (egl_state_t *dst, egl_state_t *src)
+{
+    memcpy (dst, src, sizeof (egl_state_t));
+}
+
 void 
 _gpuprocess_srv_init ()
 {
@@ -13,22 +22,45 @@ _gpuprocess_srv_init ()
     srv_states.pending_display = EGL_NO_DISPLAY;
     srv_states.pending_drawable = EGL_NO_SURFACE;
     srv_states.pending_readable = EGL_NO_SURFACE;
+    srv_states.make_current_called = FALSE;
 
-    srv_states.states = srv_states.embedded_states;
+    srv_states.states = NULL;
 }
 
+/* called within eglTerminate */
 void 
-_gpuprocess_srv_destroy ()
+_gpuprocess_srv_terminate (EGLDisplay display)
 {
-    int i;
+   v_link_list_t *head = srv_states.states;
+   v_link_list_t *list = head;
+   v_link_list_t *current;
 
-    egl_state_t *egl_state = srv_states.states;
+   egl_state_t *egl_state;
 
-    if (srv_states.num_contexts == 0)
+    if (srv_states.num_contexts == 0 || ! srv_states.states)
 	return;
 
-    if (egl_state !=  srv_states.embedded_states)
-	free (egl_state);
+    
+    while (list != NULL) {
+	egl_state = (egl_state_t *) list->data;
+	current = list;
+	list = list->next;
+
+	if (egl_state->display == display) {
+	    if (srv_states.active_state == egl_state)
+		srv_states.active_state = NULL;
+
+	    free (egl_state);
+
+	    if (current->prev)
+		current->prev->next = current->next;
+	    if (current->next)
+		current->next->prev = current->prev;
+	    if (head == current)
+		head = current->next;
+	    free (current);
+  	}
+    }
 }
 
 static void
@@ -140,12 +172,6 @@ _gpuprocess_srv_set_egl_states (egl_state_t *egl_state,
     egl_state->readable = readable;
 }
 
-static void
-_gpuprocess_srv_copy_egl_state (egl_state_t *dst, egl_state_t *src)
-{
-    memcpy (dst, src, sizeof (egl_state_t));
-}
-
 int
 _gpuprocess_srv_is_equal (egl_state_t *state,
 			  EGLDisplay  display,
@@ -166,44 +192,58 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 			      EGLSurface readable,
 			      EGLContext context)
 {
-    int i;
-    int found = 0;
+    egl_state_t *new_state;
+    v_link_list_t *list = srv_states.states;
+    v_link_list_t *new_list;
 
-    if (srv_states.num_contexts == 0) {
+    srv_states.make_current_called = FALSE;
+
+    if (srv_states.num_contexts == 0 || ! srv_states.states) {
 	srv_states.num_contexts = 1;
-	_gpuprocess_srv_set_egl_states (&srv_states.embedded_states[0],
-					display, drawable, readable, context);
-	_gpuprocess_srv_init_gles2_states (&srv_states.embedded_states[0]);
-	srv_states.active_state = &srv_states.embedded_states[0];
-	srv_states.states = srv_states.active_state;
+	srv_states.states = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+	srv_states.states->prev = NULL;
+	srv_states.states->next = NULL;
+
+	new_state = (egl_state_t *)malloc (sizeof (egl_state_t));
+
+	_gpuprocess_srv_set_egl_states (new_state, display, drawable, 
+					readable, context);
+	_gpuprocess_srv_init_gles2_states (new_state);
+	srv_states.active_state = new_state;
+	srv_states.states->data = new_state;
     }
 
     /* look for matching context in embedded_states */
-    for (i = 0; i < srv_states.num_contexts; i++) {
-	if (srv_states.states[i].context == context &&
-	    srv_states.states[i].display == display) {
-	    _gpuprocess_srv_set_egl_states (&srv_states.states[i],
+    while (list) {
+	egl_state_t *state = (egl_state_t *)list->data;
+	
+	if (state->context == context &&
+	    state->display == display) {	
+	    _gpuprocess_srv_set_egl_states (state,
 					    display, drawable, 
 					    readable, context);
-	    srv_states.active_state = &srv_states.states[i];
+	    srv_states.active_state = state;
 	    return;
 	}
     }
 
     /* we have not found a context match */
-    egl_state_t *new_states = (egl_state_t *) malloc (sizeof (egl_state_t) * (srv_states.num_contexts + 1));
+    new_state = (egl_state_t *) malloc (sizeof (egl_state_t));
 
-    for (i = 0; i < srv_states.num_contexts; i++)
-	_gpuprocess_copy_egl_state (&new_states[i], &srv_states.states[i]);
-
-    free (srv_states.states);
-
-    _gpuprocess_srv_set_egl_states (&new_states[srv_states.num_contexts],
-				    display, drawable, readable, context);
-    _gpuprocess_srv_init_gles2_states (&new_states[srv_states.num_contexts]);
-    srv_states.active_state = &new_states[srv_states.num_contexts];
-    srv_states.states = new_states;
+    _gpuprocess_srv_set_egl_states (new_state, display, 
+				    drawable, readable, context);
+    _gpuprocess_srv_init_gles2_states (new_state);
+    srv_states.active_state = new_state;
     srv_states.num_contexts ++;
+
+    list = srv_states.states;
+    while (list->next != NULL)
+	list = list->next;
+
+    new_list = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+    new_list->prev = list;
+    new_list->next = NULL;
+    new_list->data = new_state;
 }
 
 /* called by eglDestroyContext() */
@@ -222,35 +262,33 @@ _gpuprocess_srv_has_context (egl_state_t *state,
 void
 _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context)
 {
-    int i, j;
+    egl_state_t *state;
+    v_link_list_t *list = srv_states.states;
+    v_link_list_t *current;
 
-    if (srv_states.num_contexts == 0)
+    if (srv_states.num_contexts == 0 || ! srv_states.states)
 	return;
 
+    while (list != NULL) {
+	current = list;
+	list = list->next;
+	state = (egl_state_t *)current->data;
     
-    for (i = 0; i < srv_states.num_contexts; i++) {
-	if (_gpuprocess_has_context (&srv_states.states[i], display,
-				     context))
+	if (_gpuprocess_has_context (state, display, context)) {
+	    if (srv_states.active_state == state)
+		srv_states.active_state = NULL;
+	    if (srv_states.states == current)
+		srv_states.states = current->next;
+	
+	    if (current->prev)
+		current->prev->next = current->next;
+	    if (current->next)
+		current->next->prev = current->prev;
+
+	    free (current);
+	    free (state);
+	    srv_states.num_contexts --;
 	    break;
+	}
     }
-    
-    /* we did not find */
-    if (i == srv_states.num_contexts)
-	return;
-
-    if (srv_states.num_contexts < NUM_CONTEXTS) {
-	for (j = i + 1; j < srv_states.num_contexts; j++) 
-	    _gpuprocess_srv_copy_egl_state (&srv_states.embedded_states[j-1],
-					    &srv_states.embedded_states[j]);
-    }
-    else {
-	egl_state_t *new_states = malloc(sizeof (egl_state_t) * (srv_states.num_contexts - 1));
-
-	memcpy (new_states, &srv_states.states[1], sizeof (egl_state_t) * i);
-	memcpy (&new_states[i], &srv_states.states[i+1], sizeof (egl_state_t) * (srv_states.num_contexts - i));
-	free (srv_states.states);
-	srv_states.states = new_states;
-    }
-    srv_states.num_contexts --;
-    srv_states.active_state = NULL;
 }

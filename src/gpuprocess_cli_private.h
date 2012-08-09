@@ -26,7 +26,7 @@ typedef struct gl_cli_states
 } gl_cli_states_t;
 
 /* thread local client states */
-__thread  gl_cli_states_t cli_states 
+extern __thread  gl_cli_states_t cli_states 
     __attribute__(( tls_model ("initial-exec")));
 
 void 

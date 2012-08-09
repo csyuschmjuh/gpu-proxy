@@ -2,6 +2,7 @@
 #define GPUPROCESS_GLES2_SRV_PRIVATE_H
 
 #include "gpuprocess_egl_states.h"
+#include "gpuprocess_types_private.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,6 +18,7 @@ typedef struct gl_srv_states
      * matches the request, we return quickly.  Otherwise, we save
      * the request context/display/drawable to pending_xxxx, 
      */
+    v_bool_t 		make_current_called;
     EGLContext		pending_context;
     EGLDisplay		pending_display;
     EGLSurface		pending_drawable;
@@ -24,19 +26,18 @@ typedef struct gl_srv_states
 
     egl_state_t		*active_state;
     
-    egl_state_t		embedded_states[NUM_CONTEXTS];
-    egl_state_t		*states;
+    v_link_list_t	*states;
 } gl_srv_states_t;
 
 /* global state variable */
-gl_srv_states_t	srv_states;
+extern gl_srv_states_t	srv_states;
 
-/* called within eglInitialize () */
+/* called within eglGetDisplay () */
 void 
 _gpuprocess_srv_init ();
 
 void 
-_gpuprocess_srv_destroy ();
+_gpuprocess_srv_terminate (EGLDisplay display);
 
 /* called within eglMakeCurrent () */
 void
@@ -48,7 +49,7 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 void
 _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context);
 
-int
+v_bool_t
 _gpuprocess_srv_is_equal (egl_state_t *state,
 			  EGLDisplay  display,
 			  EGLSurface  drawable,
