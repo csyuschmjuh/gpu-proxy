@@ -10,6 +10,7 @@ libGL_la_SOURCES = \
 	src/glx_states.h
 
 AM_CFLAGS = \
+	-I/home/me/local/mali/usr/include \
 	-ldl
 
 if HAS_GL
@@ -37,6 +38,7 @@ es2tri_SOURCES = \
         tests/es2tri.c
 
 es2tri_CFLAGS = \
+	-I/home/me/local/mali/usr/include \
         -I$(srcdir)/src \
         -I.
 

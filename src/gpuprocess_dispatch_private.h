@@ -9,7 +9,9 @@
 
 #ifdef HAS_GLES2
 #include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #endif
 
 typedef void (*FunctionPointerType)(void);
@@ -155,6 +157,182 @@ typedef struct _gpuprocess_dispatch {
     EGLBoolean (*eglSwapBuffers) (EGLDisplay, EGLSurface);
     EGLBoolean (*eglCopyBuffers) (EGLDisplay, EGLSurface,
 				  EGLNativePixmapType);
+
+#ifdef EGL_KHR_lock_surface
+    EGLBoolean (*eglLockSurfaceKHR) (EGLDisplay, EGLSurface, const EGLint *);
+    EGLBoolean (*eglUnlockSurfaceKHR) (EGLDisplay, EGLSurface);
+#endif
+
+#ifdef EGL_KHR_image
+    EGLImageKHR (*eglCreateImageKHR) (EGLDisplay, EGLContext, EGLenum, EGLClientBuffer, const EGLint *);
+    EGLBoolean (*eglDestroyImageKHR) (EGLDisplay, EGLImageKHR);
+#endif
+
+#ifdef EGL_KHR_reusable_sync
+    EGLSyncKHR (*eglCreateSyncKHR) (EGLDisplay, EGLenum, const EGLint *);
+    EGLBoolean (*eglDestroySyncKHR) (EGLDisplay, EGLSyncKHR);
+    EGLint (*eglClientWaitSyncKHR) (EGLDisplay, EGLSyncKHR, EGLint, EGLTimeKHR);
+    EGLBoolean (*eglSignalSyncKHR) (EGLDisplay, EGLSyncKHR, EGLenum);
+    EGLBoolean (*eglGetSyncAttribKHR) (EGLDisplay, EGLSyncKHR, EGLint, EGLint *);
+#endif
+
+#ifdef EGL_NV_sync
+    EGLSyncNV (*eglCreateFenceSyncNV) (EGLDisplay, EGLenum, const EGLint *);
+    EGLBoolean (*eglDestroySyncNV) (EGLSyncNV);
+    EGLBoolean (*eglFenceNV) (EGLSyncNV sync);
+    EGLint (*eglClientWaitSyncNV) (EGLSyncNV sync, EGLint flags, EGLTimeNV);
+    EGLBoolean (*eglSignalSyncNV) (EGLSyncNV sync, EGLenum mode);
+    EGLBoolean (*eglGetSyncAttribNV) (EGLSyncNV sync, EGLint attribute, EGLint *value);
+#endif
+
+#ifdef EGL_HI_clientpixmap
+    EGLSurface (*eglCreatePixmapSurfaceHI) (EGLDisplay, EGLConfig, struct EGLClientPixmapHI *);
+#endif
+
+#ifdef EGL_MESA_drm_image
+    EGLImageKHR (*eglCreateDRMImageMESA) (EGLDisplay, const EGLint *);
+    EGLBoolean (*eglExportDRMImageMESA) (EGLDisplay, EGLImageKHR, EGLint *, EGLint *, EGLint);
+#endif
+
+#ifdef EGL_POST_SUB_BUFFER_SUPPORTED_NV
+    EGLBoolean (*eglPostSubBufferNV) (EGLDisplay, EGLSurface, EGLint, EGLint, EGLint, EGLint);
+#endif
+
+#ifdef EGL_SEC_image_map
+    void * (*eglMapImageSEC) (EGLDisplay, EGLImageKHR);
+    EGLBoolean (*eglUnmapImageSEC) (EGLDisplay, EGLImageKHR);
+    EGLBoolean (*eglGetImageAttribSEC) (EGLDisplay, EGLImageKHR, EGLint, EGLint *);
+#endif
+
+#ifdef GL_OES_EGL_image
+    void (*EGLImageTargetTexture2DOES) (GLenum, GLeglImageOES);
+    void (*EGLImageTargetRenderbufferStorageOES) (GLenum, GLeglImageOES);
+#endif
+
+#ifdef GL_OES_get_program_binary
+    void (*GetProgramBinaryOES) (GLuint, GLsizei, GLsizei *, GLenum *, GLvoid *);
+    void (*ProgramBinaryOES) (GLuint, GLenum, const GLvoid *, GLint);
+#endif
+
+#ifdef GL_OES_mapbuffer
+    void* (*MapBufferOES) (GLenum, GLenum);
+    GLboolean (*UnmapBufferOES) (GLenum);
+    void (*GetBufferPointervOES) (GLenum, GLenum, GLvoid**);
+#endif
+
+#ifdef GL_OES_texture_3D
+    void (*TexImage3DOES) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint,
+			   GLenum, GLenum, const GLvoid*);
+    void (*TexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei,
+			      GLsizei, GLenum, GLenum, const GLvoid*);
+    void (*CopyTexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLint, GLint,
+				  GLsizei, GLsizei height);
+    void (*CompressedTexImage3DOES) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei,
+				     GLint, GLsizei, const GLvoid*);
+    void (*CompressedTexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLsizei,
+					GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*);
+    void (*FramebufferTexture3DOES) (GLenum, GLenum, GLenum, GLuint, GLint, GLint);
+#endif
+
+#ifdef GL_OES_vertex_array_object
+    void (*BindVertexArrayOES) (GLuint);
+    void (*DeleteVertexArraysOES) (GLsizei, const GLuint *);
+    void (*GenVertexArraysOES) (GLsizei, GLuint *);
+    GLboolean (*IsVertexArrayOES) (GLuint);
+#endif
+
+#ifdef GL_AMD_performance_monitor
+    void (*GetPerfMonitorGroupsAMD) (GLint *, GLsizei, GLuint *);
+    void (*GetPerfMonitorCountersAMD) (GLuint, GLint *, GLint *, GLsizei, GLuint *);
+    void (*GetPerfMonitorGroupStringAMD) (GLuint, GLsizei, GLsizei *, GLchar *);
+    void (*GetPerfMonitorCounterStringAMD) (GLuint, GLuint, GLsizei, GLsizei *, GLchar *);
+    void (*GetPerfMonitorCounterInfoAMD) (GLuint, GLuint, GLenum, GLvoid *);
+    void (*GenPerfMonitorsAMD) (GLsizei, GLuint *);
+    void (*DeletePerfMonitorsAMD) (GLsizei, GLuint *);
+    void (*SelectPerfMonitorCountersAMD) (GLuint, GLboolean, GLuint, GLint, GLuint *);
+    void (*BeginPerfMonitorAMD) (GLuint);
+    void (*EndPerfMonitorAMD) (GLuint);
+    void (*GetPerfMonitorCounterDataAMD) (GLuint, GLenum, GLsizei, GLuint *, GLint *);
+#endif
+
+#ifdef GL_ANGLE_framebuffer_blit
+    void (*BlitFramebufferANGLE) (GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint,
+				  GLbitfield, GLenum);
+#endif
+
+#ifndef GL_ANGLE_framebuffer_multisample
+    void (*RenderbufferStorageMultisampleANGLE) (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+#endif
+
+#ifdef GL_APPLE_framebuffer_multisample
+    void (*RenderbufferStorageMultisampleAPPLE) (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+    void (*ResolveMultisampleFramebufferAPPLE) (void);
+#endif
+
+#ifdef GL_IMG_multisampled_render_to_texture
+    void (*RenderbufferStorageMultisampleIMG) (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+    void (*FramebufferTexture2DMultisampleIMG) (GLenum, GLenum, GLenum, GLuint, GLint, GLsizei);
+#endif
+
+#ifdef GL_EXT_discard_framebuffer
+    void (*DiscardFramebufferEXT) (GLenum, GLsizei, const GLenum *);
+#endif
+
+#ifdef GL_EXT_multisampled_render_to_texture
+    void (*RenderbufferStorageMultisampleEXT) (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
+    void (*FramebufferTexture2DMultisampleEXT) (GLenum, GLenum, GLenum, GLuint, GLint, GLsizei);
+#endif
+
+#ifdef GL_EXT_multi_draw_arrays
+    void (*MultiDrawArraysEXT) (GLenum, const GLint *, const GLsizei *, GLsizei);
+    void (*MultiDrawElementsEXT) (GLenum, const GLsizei *, GLenum, const GLvoid **, GLsizei);
+#endif
+
+#ifdef GL_NV_fence
+    void (*DeleteFencesNV) (GLsizei, const GLuint *);
+    void (*GenFencesNV) (GLsizei, GLuint *);
+    GLboolean (*IsFenceNV) (GLuint);
+    GLboolean (*TestFenceNV) (GLuint);
+    void (*GetFenceivNV) (GLuint, GLenum, GLint *);
+    void (*FinishFenceNV) (GLuint);
+    void (*SetFenceNV) (GLuint, GLenum);
+#endif
+
+#ifdef GL_NV_coverage_sample
+    void (*CoverageMaskNV) (GLboolean mask);
+    void (*CoverageOperationNV) (GLenum operation);
+#endif
+
+#ifdef GL_QCOM_driver_control
+    void (*GetDriverControlsQCOM) (GLint *num, GLsizei size, GLuint *driverControls);
+    void (*GetDriverControlStringQCOM) (GLuint driverControl, GLsizei bufSize, GLsizei *length, GLchar *driverControlString);
+    void (*EnableDriverControlQCOM) (GLuint driverControl);
+    void (*DisableDriverControlQCOM) (GLuint driverControl);
+#endif
+
+#ifdef GL_QCOM_extended_get
+    void (*ExtGetTexturesQCOM) (GLuint *, GLint, GLint *);
+    void (*ExtGetBuffersQCOM) (GLuint *, GLint, GLint *);
+    void (*ExtGetRenderbuffersQCOM) (GLuint *, GLint, GLint *);
+    void (*ExtGetFramebuffersQCOM) (GLuint *, GLint, GLint *);
+    void (*ExtGetTexLevelParameterivQCOM) (GLuint, GLenum, GLint, GLenum, GLint *);
+    void (*ExtTexObjectStateOverrideiQCOM) (GLenum, GLenum, GLint);
+    void (*ExtGetTexSubImageQCOM) (GLenum, GLint, GLint, GLint, GLint, GLsizei,
+				   GLsizei, GLsizei, GLenum, GLenum, GLvoid *);
+    void (*ExtGetBufferPointervQCOM) (GLenum, GLvoid **);
+#endif
+
+#ifdef GL_QCOM_extended_get2
+    void (*ExtGetShadersQCOM) (GLuint *, GLint, GLint *);
+    void (*ExtGetProgramsQCOM) (GLuint *, GLint, GLint *);
+    GLboolean (*ExtIsProgramBinaryQCOM) (GLuint);
+    void (*ExtGetProgramBinarySourceQCOM) (GLuint, GLenum, GLchar *, GLint *);
+#endif
+
+#ifdef GL_QCOM_tiled_rendering
+    void (*StartTilingQCOM) (GLuint, GLuint, GLuint, GLuint, GLbitfield);
+    void (*EndTilingQCOM) (GLbitfield);
+#endif
 
 #endif // HAS_GLES2
 
@@ -1190,7 +1368,6 @@ typedef struct _gpuprocess_dispatch {
     void  (*GetQueryObjecti64vEXT)(GLuint, GLenum, GLint64EXT *);
     void  (*GetQueryObjectui64vEXT)(GLuint, GLenum, GLuint64EXT *);
     void  (*EGLImageTargetRenderbufferStorageOES)(GLenum, GLvoid *);
-    void  (*EGLImageTargetTexture2DOES)(GLenum, GLvoid *);
 #endif
 } gpuprocess_dispatch_t;
 

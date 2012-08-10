@@ -42,7 +42,7 @@ gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
               if (!func)
                   func = dlsym(handle, name);
           }
-
+	  
 	  if (func)
 	      break;
       }

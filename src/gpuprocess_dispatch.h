@@ -129,6 +129,52 @@ gpuprocess_dispatch_entry_t dispatch_egl_entries[] = {
     DISPATCH_ENTRY_EGL (eglSwapBuffers),
     DISPATCH_ENTRY_EGL (eglCopyBuffers),
 
+#ifdef EGL_KHR_lock_surface
+    DISPATCH_ENTRY_EGL (eglLockSurfaceKHR),
+    DISPATCH_ENTRY_EGL (eglUnlockSurfaceKHR),
+#endif
+
+#ifdef EGL_KHR_image
+    DISPATCH_ENTRY_EGL (eglCreateImageKHR),
+    DISPATCH_ENTRY_EGL (eglDestroyImageKHR),
+#endif
+
+#ifdef EGL_KHR_reusable_sync
+    DISPATCH_ENTRY_EGL (eglCreateSyncKHR),
+    DISPATCH_ENTRY_EGL (eglDestroySyncKHR),
+    DISPATCH_ENTRY_EGL (eglClientWaitSyncKHR),
+    DISPATCH_ENTRY_EGL (eglSignalSyncKHR),
+    DISPATCH_ENTRY_EGL (eglGetSyncAttribKHR),
+#endif
+
+#ifdef EGL_NV_sync
+    DISPATCH_ENTRY_EGL (eglCreateFenceSyncNV),
+    DISPATCH_ENTRY_EGL (eglDestroySyncNV),
+    DISPATCH_ENTRY_EGL (eglFenceNV),
+    DISPATCH_ENTRY_EGL (eglClientWaitSyncNV),
+    DISPATCH_ENTRY_EGL (eglSignalSyncNV),
+    DISPATCH_ENTRY_EGL (eglGetSyncAttribNV),
+#endif
+
+#ifdef EGL_HI_clientpixmap
+    DISPATCH_ENTRY_EGL (eglCreatePixmapSurfaceHI),
+#endif
+
+#ifdef EGL_MESA_drm_image
+    DISPATCH_ENTRY_EGL (eglCreateDRMImageMESA),
+    DISPATCH_ENTRY_EGL (eglExportDRMImageMESA),
+#endif
+
+#ifdef EGL_POST_SUB_BUFFER_SUPPORTED_NV
+    DISPATCH_ENTRY_EGL (eglPostSubBufferNV),
+#endif
+
+#ifdef EGL_SEC_image_map
+    DISPATCH_ENTRY_EGL (eglMapImageSEC),
+    DISPATCH_ENTRY_EGL (eglUnmapImageSEC),
+    DISPATCH_ENTRY_EGL (eglGetImageAttribSEC),
+#endif
+
     DISPATCH_ENTRY_EGL (GetProcAddress),
 #endif
 
@@ -281,6 +327,132 @@ gpuprocess_dispatch_entry_t dispatch_opengl_entries[] = {
     DISPATCH_ENTRY_GL (Viewport),
 #endif
 
+#ifdef HAS_GLES2
+#ifdef GL_OES_EGL_image
+    DISPATCH_ENTRY_GL (EGLImageTargetTexture2DOES),
+    DISPATCH_ENTRY_GL (EGLImageTargetRenderbufferStorageOES),
+#endif
+
+#ifdef GL_OES_get_program_binary
+    DISPATCH_ENTRY_GL (GetProgramBinaryOES),
+    DISPATCH_ENTRY_GL (ProgramBinaryOES),
+#endif
+
+#ifdef GL_OES_mapbuffer
+    DISPATCH_ENTRY_GL (MapBufferOES),
+    DISPATCH_ENTRY_GL (UnmapBufferOES),
+    DISPATCH_ENTRY_GL (GetBufferPointervOES),
+#endif
+
+#ifdef GL_OES_texture_3D
+    DISPATCH_ENTRY_GL (TexImage3DOES),
+    DISPATCH_ENTRY_GL (TexSubImage3DOES),
+    DISPATCH_ENTRY_GL (CopyTexSubImage3DOES),
+    DISPATCH_ENTRY_GL (CompressedTexImage3DOES),
+    DISPATCH_ENTRY_GL (CompressedTexSubImage3DOES),
+    DISPATCH_ENTRY_GL (FramebufferTexture3DOES),
+#endif
+
+#ifdef GL_OES_vertex_array_object
+    DISPATCH_ENTRY_GL (BindVertexArrayOES),
+    DISPATCH_ENTRY_GL (DeleteVertexArraysOES),
+    DISPATCH_ENTRY_GL (GenVertexArraysOES),
+    DISPATCH_ENTRY_GL (IsVertexArrayOES),
+#endif
+
+#ifdef GL_AMD_performance_monitor
+    DISPATCH_ENTRY_GL(GetPerfMonitorGroupsAMD),
+    DISPATCH_ENTRY_GL(GetPerfMonitorCountersAMD),
+    DISPATCH_ENTRY_GL(GetPerfMonitorGroupStringAMD),
+    DISPATCH_ENTRY_GL(GetPerfMonitorCounterStringAMD),
+    DISPATCH_ENTRY_GL(GetPerfMonitorCounterInfoAMD),
+    DISPATCH_ENTRY_GL(GenPerfMonitorsAMD),
+    DISPATCH_ENTRY_GL(DeletePerfMonitorsAMD),
+    DISPATCH_ENTRY_GL(SelectPerfMonitorCountersAMD),
+    DISPATCH_ENTRY_GL(BeginPerfMonitorAMD),
+    DISPATCH_ENTRY_GL(EndPerfMonitorAMD),
+    DISPATCH_ENTRY_GL(GetPerfMonitorCounterDataAMD),
+#endif
+
+#ifdef GL_ANGLE_framebuffer_blit
+    DISPATCH_ENTRY_GL(BlitFramebufferANGLE),
+#endif
+
+#ifndef GL_ANGLE_framebuffer_multisample
+    DISPATCH_ENTRY_GL(RenderbufferStorageMultisampleANGLE),
+#endif
+
+#ifdef GL_APPLE_framebuffer_multisample
+    DISPATCH_ENTRY_GL(RenderbufferStorageMultisampleAPPLE),
+    DISPATCH_ENTRY_GL(ResolveMultisampleFramebufferAPPLE),
+#endif
+
+#ifdef GL_IMG_multisampled_render_to_texture
+    DISPATCH_ENTRY_GL (RenderbufferStorageMultisampleIMG),
+    DISPATCH_ENTRY_GL (FramebufferTexture2DMultisampleIMG),
+#endif
+
+#ifdef GL_EXT_discard_framebuffer
+    DISPATCH_ENTRY_GL (DiscardFramebufferEXT),
+#endif
+
+#ifdef GL_EXT_multi_draw_arrays
+    DISPATCH_ENTRY_GL (MultiDrawArraysEXT),
+    DISPATCH_ENTRY_GL (MultiDrawElementsEXT),
+#endif
+
+#ifdef GL_EXT_multisampled_render_to_texture
+    DISPATCH_ENTRY_GL (RenderbufferStorageMultisampleEXT),
+    DISPATCH_ENTRY_GL (FramebufferTexture2DMultisampleEXT),
+#endif
+
+
+#ifdef GL_NV_fence
+    DISPATCH_ENTRY_GL (DeleteFencesNV),
+    DISPATCH_ENTRY_GL (GenFencesNV),
+    DISPATCH_ENTRY_GL (IsFenceNV),
+    DISPATCH_ENTRY_GL (TestFenceNV),
+    DISPATCH_ENTRY_GL (GetFenceivNV),
+    DISPATCH_ENTRY_GL (FinishFenceNV),
+    DISPATCH_ENTRY_GL (SetFenceNV),
+#endif
+
+#ifdef GL_NV_coverage_sample
+    DISPATCH_ENTRY_GL (CoverageMaskNV),
+    DISPATCH_ENTRY_GL (CoverageOperationNV),
+#endif
+
+#ifdef GL_QCOM_driver_control
+    DISPATCH_ENTRY_GL (GetDriverControlsQCOM),
+    DISPATCH_ENTRY_GL (GetDriverControlStringQCOM),
+    DISPATCH_ENTRY_GL (EnableDriverControlQCOM),
+    DISPATCH_ENTRY_GL (DisableDriverControlQCOM),
+#endif
+
+#ifdef GL_QCOM_extended_get
+    DISPATCH_ENTRY_GL (ExtGetTexturesQCOM),
+    DISPATCH_ENTRY_GL (ExtGetBuffersQCOM),
+    DISPATCH_ENTRY_GL (ExtGetRenderbuffersQCOM),
+    DISPATCH_ENTRY_GL (ExtGetFramebuffersQCOM),
+    DISPATCH_ENTRY_GL (ExtGetTexLevelParameterivQCOM),
+    DISPATCH_ENTRY_GL (ExtTexObjectStateOverrideiQCOM),
+    DISPATCH_ENTRY_GL (ExtGetTexSubImageQCOM),
+    DISPATCH_ENTRY_GL (ExtGetBufferPointervQCOM),
+#endif
+
+#ifdef GL_QCOM_extended_get2
+    DISPATCH_ENTRY_GL (ExtGetShadersQCOM),
+    DISPATCH_ENTRY_GL (ExtGetProgramsQCOM),
+    DISPATCH_ENTRY_GL (ExtIsProgramBinaryQCOM),
+    DISPATCH_ENTRY_GL (ExtGetProgramBinarySourceQCOM),
+#endif
+
+#ifdef GL_QCOM_tiled_rendering
+    DISPATCH_ENTRY_GL (StartTilingQCOM),
+    DISPATCH_ENTRY_GL (EndTilingQCOM),
+#endif
+
+#endif // HAS_GLES2
 
 #ifdef HAS_GL
     DISPATCH_ENTRY_GL (NewList),
@@ -1235,7 +1407,6 @@ gpuprocess_dispatch_entry_t dispatch_opengl_entries[] = {
     DISPATCH_ENTRY_GL (GetQueryObjecti64vEXT),
     DISPATCH_ENTRY_GL (GetQueryObjectui64vEXT),
     DISPATCH_ENTRY_GL (EGLImageTargetRenderbufferStorageOES),
-    DISPATCH_ENTRY_GL (EGLImageTargetTexture2DOES),
 
 #endif
     DISPATCH_ENTRY_LAST
