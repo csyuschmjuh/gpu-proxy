@@ -9,8 +9,7 @@ libGL_la_SOURCES = \
 	src/gles2_states.h \
 	src/glx_states.h
 
-AM_CFLAGS = \
-	-I/home/me/local/mali/usr/include \
+AM_LDFLAGS = \
 	-ldl
 
 if HAS_GL
@@ -21,9 +20,9 @@ texture_from_pixmap_SOURCES = \
 	tests/texture_from_pixmap.c
 
 texture_from_pixmap_CFLAGS = \
+	$(GPUPROCESS_CFLAGS) \
 	-I$(srcdir)/src \
-	-I. \
-	-I/home/igor/work/mesa/include
+	-I.
 
 texture_from_pixmap_LDFLAGS = \
         -lX11
@@ -38,7 +37,7 @@ es2tri_SOURCES = \
         tests/es2tri.c
 
 es2tri_CFLAGS = \
-	-I/home/me/local/mali/usr/include \
+        $(GPUPROCESS_CFLAGS) \
         -I$(srcdir)/src \
         -I.
 
