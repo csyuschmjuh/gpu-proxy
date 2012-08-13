@@ -55,6 +55,9 @@ fi
 
 AC_SUBST([GPUPROCESS_CFLAGS])
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+Makefile
+src/Makefile
+tests/Makefile])
 
 AC_OUTPUT
