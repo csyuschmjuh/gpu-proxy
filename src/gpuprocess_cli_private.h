@@ -9,6 +9,8 @@
 #error "Could not find appropriate backend"
 #endif
 
+#include "gpuprocess_compiler_private.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,10 +31,10 @@ typedef struct gl_cli_states
 extern __thread  gl_cli_states_t cli_states 
     __attribute__(( tls_model ("initial-exec")));
 
-void 
+gpuprocess_private void 
 _gpuprocess_cli_init ();
 
-void
+gpuprocess_private void
 _gpuprocess_cli_destroy ();
 
 #ifdef __cplusplus

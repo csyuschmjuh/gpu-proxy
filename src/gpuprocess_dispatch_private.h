@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#include "gpuprocess_compiler_private.h"
+
 #ifdef HAS_GL
 #include <GL/glx.h>
 #endif
@@ -1371,7 +1373,7 @@ typedef struct _gpuprocess_dispatch {
 #endif
 } gpuprocess_dispatch_t;
 
-void
+gpuprocess_private void
 gpuprocess_dispatch_init(gpuprocess_dispatch_t *dispatch);
 
 #endif

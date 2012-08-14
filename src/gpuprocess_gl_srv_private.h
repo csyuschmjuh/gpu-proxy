@@ -1,6 +1,7 @@
 #ifndef GPUPROCESS_GL_SRV_PRIVATE_H
 #define GPUPROCESS_GL_SRV_PRIVATE_H
 
+#include "gpuprocess_compiler_private.h"
 #include "gpuprocess_glx_states.h"
 
 #ifdef __cplusplus
@@ -32,14 +33,14 @@ typedef struct gl_srv_states
 gl_srv_states_t	srv_states;
 
 /* called within eglInitialize () */
-void 
+gpuprocess_private void 
 _gpuprocess_srv_init ();
 
-void 
+gpuprocess_private void 
 _gpuprocess_srv_destroy ();
 
 /* called within eglMakeCurrent () */
-void
+gpuprocess_private void
 _gpuprocess_srv_make_current (EGLDisplay display, 
 			      EGLSurface drawable, 
 			      EGLSurface readable,
