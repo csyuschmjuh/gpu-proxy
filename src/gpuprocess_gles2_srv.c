@@ -1,9 +1,11 @@
 #include "gpuprocess_gles2_srv_private.h"
+#include "gpuprocess_dispatch_private.h"
 #include <stdlib.h>
 #include <string.h>
 
 /* global state variable */
 gl_srv_states_t	srv_states;
+extern gpuprocess_dispatch_t dispatch;
 
 static void
 _gpuprocess_srv_copy_egl_state (egl_state_t *dst, egl_state_t *src)
@@ -16,20 +18,12 @@ _gpuprocess_srv_init ()
 {
     srv_states.num_contexts = 0;
 
-    srv_states.active_state = NULL;
-    
-    srv_states.pending_context = EGL_NO_CONTEXT;
-    srv_states.pending_display = EGL_NO_DISPLAY;
-    srv_states.pending_drawable = EGL_NO_SURFACE;
-    srv_states.pending_readable = EGL_NO_SURFACE;
-    srv_states.make_current_called = FALSE;
-
     srv_states.states = NULL;
 }
 
 /* called within eglTerminate */
 void 
-_gpuprocess_srv_terminate (EGLDisplay display)
+_gpuprocess_srv_terminate (EGLDisplay display) 
 {
    v_link_list_t *head = srv_states.states;
    v_link_list_t *list = head;
@@ -47,18 +41,18 @@ _gpuprocess_srv_terminate (EGLDisplay display)
 	list = list->next;
 
 	if (egl_state->display == display) {
-	    if (srv_states.active_state == egl_state)
-		srv_states.active_state = NULL;
-
-	    free (egl_state);
-
-	    if (current->prev)
-		current->prev->next = current->next;
-	    if (current->next)
-		current->next->prev = current->prev;
-	    if (head == current)
-		head = current->next;
-	    free (current);
+	    egl_state->destroy_dpy = TRUE;
+	    if (egl_state->active == FALSE) { 
+		free (egl_state);
+	
+		if (current->prev)
+		    current->prev->next = current->next;
+		if (current->next)
+		    current->next->prev = current->prev;
+		if (head == current)
+		    head = current->next;
+		free (current);
+	    }
   	}
     }
 }
@@ -74,7 +68,31 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     egl_state->drawable = EGL_NO_SURFACE;
     egl_state->readable = EGL_NO_SURFACE;
 
+    egl_state->ref_count = 0;
+
+    egl_state->active = FALSE;
+
+    egl_state->destroy_dpy = FALSE;
+    egl_state->destroy_ctx = FALSE;
+    egl_state->destroy_draw = FALSE;
+    egl_state->destroy_read = FALSE;
+
+    state->max_combined_texture_image_units = 8;
+    state->max_vertex_attribs_queried = FALSE;
+    state->max_vertex_attribs = 8;
+    state->max_cube_map_texture_size = 16;
+    state->max_fragment_uniform_vectors = 16;
+    state->max_renderbuffer_size = 1;
+    state->max_texture_image_units = 8;
+    state->max_texture_size = 64;
+    state->max_varying_vectors = 8;
+    state->max_vertex_uniform_vectors = 128;
+    state->max_vertex_texture_image_units = 0;
+
+
     state->error = GL_NO_ERROR;
+    state->need_get_error = FALSE;
+    state->programs = NULL;
    
     state->active_texture = GL_TEXTURE0;
     state->array_buffer_binding = 0;
@@ -126,6 +144,9 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     memcpy (state->scissor_box, 0, sizeof (GLint) * 4);
     state->scissor_test = GL_FALSE;
 
+    /* XXX: should we set this */
+    state->shader_compiler = GL_TRUE; 
+
     state->stencil_back_fail = GL_KEEP;
     state->stencil_back_func = GL_ALWAYS;
     state->stencil_back_pass_depth_fail = GL_KEEP;
@@ -147,16 +168,22 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     memset (state->viewport, 0, sizeof (GLint) * 4);
 
     for (i = 0; i < 32; i++) {
-	for (j = 0; i < 2; j++) {
+	for (j = 0; i < 3; j++) {
 	    state->texture_mag_filter[i][j] = GL_LINEAR;
 	    state->texture_mag_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
 	    state->texture_wrap_s[i][j] = GL_REPEAT;
 	    state->texture_wrap_t[i][j] = GL_REPEAT;
 	}
+#ifdef GL_OES_texture_3D
+	state->texture_3d_wrap_r[i] = GL_REPEAT;
+#endif
     }
+
 
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
+
+    /* XXX: initialize a thread */
 }
 
 static void
@@ -186,17 +213,46 @@ _gpuprocess_srv_is_equal (egl_state_t *state,
 /* we should call real eglMakeCurrent() before, and wait for result
  * if eglMakeCurrent() returns EGL_TRUE, then we call this
  */
-void
+v_bool_t 
 _gpuprocess_srv_make_current (EGLDisplay display,
 			      EGLSurface drawable,
 			      EGLSurface readable,
-			      EGLContext context)
+			      EGLContext context,
+			      EGLDisplay prev_dpy,
+			      EGLSurface prev_draw,
+			      EGLSurface prev_read,
+			      EGLSurface prev_ctx, 
+			      v_link_list_t **active_state)
 {
     egl_state_t *new_state;
     v_link_list_t *list = srv_states.states;
     v_link_list_t *new_list;
+    v_link_list_t *match_state = NULL;
 
-    srv_states.make_current_called = FALSE;
+
+    if (context == EGL_NO_CONTEXT || display == EGL_NO_DISPLAY) {
+    /* look for matching context in existing states */
+	while (list) {
+	    egl_state_t *state = (egl_state_t *)list->data;
+
+	    if (state->context == prev_ctx &&
+		state->display == prev_dpy) {
+		if (state->ref_count > 0)
+		    state->ref_count --;
+		if (state->ref_count == 0)
+		    state->active = FALSE;
+	    }
+	}
+	_gpuprocess_terminate (prev_dpy);
+	_gpuprocess_destroy_context (prev_dpy, prev_ctx);
+	_gpuprocess_destroy_surface (prev_dpy, prev_draw);
+	_gpuprocess_destroy_surface (prev_dpy, prev_read);
+	
+	*active_state = NULL;
+
+	/* XXX: tell affected thread to terminate */
+	return TRUE;
+    }
 
     if (srv_states.num_contexts == 0 || ! srv_states.states) {
 	srv_states.num_contexts = 1;
@@ -209,41 +265,74 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 	_gpuprocess_srv_set_egl_states (new_state, display, drawable, 
 					readable, context);
 	_gpuprocess_srv_init_gles2_states (new_state);
-	srv_states.active_state = new_state;
 	srv_states.states->data = new_state;
+	new_state->active = TRUE;
+	new_state->ref_count = 1;
+	*active_state = srv_states.states;
+	/* XXX: create a thread */
+	return TRUE; 	/* create new context, need to call eglMakeCurrent */
     }
 
-    /* look for matching context in embedded_states */
+    /* look for matching context in existing states */
     while (list) {
 	egl_state_t *state = (egl_state_t *)list->data;
+
+	if (state->context == prev_ctx &&
+	    state->display == prev_dpy) {
+	    if (state->ref_count > 0)
+		state->ref_count --;
+	    if (state->ref_count == 0)
+		state->active = FALSE;
+	}
 	
 	if (state->context == context &&
 	    state->display == display) {	
 	    _gpuprocess_srv_set_egl_states (state,
 					    display, drawable, 
 					    readable, context);
-	    srv_states.active_state = state;
-	    return;
+	    state->active = TRUE;
+	    state->ref_count ++;
+	    match_state = list;
+	    break;
 	}
     }
 
-    /* we have not found a context match */
-    new_state = (egl_state_t *) malloc (sizeof (egl_state_t));
+    /* destroy pending eglTerminate (display) */
+    if (match_state) {
+	_gpuprocess_terminate (prev_dpy);
+	_gpuprocess_destroy_context (prev_dpy, prev_ctx);
+	_gpuprocess_destroy_surface (prev_dpy, prev_draw);
+	_gpuprocess_destroy_surface (prev_dpy, prev_read);
 
-    _gpuprocess_srv_set_egl_states (new_state, display, 
+	*active_state = match_state;
+
+	/* XXX: terminate affected threads */
+	return TRUE;
+    }
+    else {
+	/* we have not found a context match */
+	new_state = (egl_state_t *) malloc (sizeof (egl_state_t));
+
+	_gpuprocess_srv_set_egl_states (new_state, display, 
 				    drawable, readable, context);
-    _gpuprocess_srv_init_gles2_states (new_state);
-    srv_states.active_state = new_state;
-    srv_states.num_contexts ++;
+	_gpuprocess_srv_init_gles2_states (new_state);
+	srv_states.num_contexts ++;
 
-    list = srv_states.states;
-    while (list->next != NULL)
-	list = list->next;
+	list = srv_states.states;
+	while (list->next != NULL)
+	    list = list->next;
 
-    new_list = (v_link_list_t *)malloc (sizeof (v_link_list_t));
-    new_list->prev = list;
-    new_list->next = NULL;
-    new_list->data = new_state;
+	new_list = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+	new_list->prev = list;
+	new_list->next = NULL;
+	new_list->data = new_state;
+	new_state->active = TRUE;
+	list->next = new_list;
+	*active_state = new_list;
+
+	/* XXX: start a new thread */
+	return TRUE;
+    }
 }
 
 /* called by eglDestroyContext() */
@@ -260,7 +349,8 @@ _gpuprocess_srv_has_context (egl_state_t *state,
  * this function 
  */
 void
-_gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context)
+_gpuprocess_srv_destroy_context (EGLDisplay display, 
+				 EGLContext context)
 {
     egl_state_t *state;
     v_link_list_t *list = srv_states.states;
@@ -275,11 +365,79 @@ _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context)
 	state = (egl_state_t *)current->data;
     
 	if (_gpuprocess_has_context (state, display, context)) {
-	    if (srv_states.active_state == state)
-		srv_states.active_state = NULL;
-	    if (srv_states.states == current)
-		srv_states.states = current->next;
+	    state->destroy_ctx = TRUE;
+	    if (state->active == FALSE) {
+		if (srv_states.states == current)
+		    srv_states.states = current->next;
 	
+		if (current->prev)
+		    current->prev->next = current->next;
+		if (current->next)
+		    current->next->prev = current->prev;
+
+		free (current);
+		free (state);
+		srv_states.num_contexts --;
+		/* XXX: terminate affected thread */
+	    }
+	}
+    }
+}
+
+void
+_gpuprocess_srv_destroy_surface (EGLDisplay display, 
+				 EGLSurface surface)
+{
+    egl_state_t *state;
+    v_link_list_t *list = srv_states.states;
+    v_link_list_t *current;
+
+    if (srv_states.num_contexts == 0 || ! srv_states.states)
+	return;
+
+    while (list != NULL) {
+	current = list;
+	list = list->next;
+	state = (egl_state_t *)current->data;
+
+	if (state->display == display) {
+	    if (state->readable == surface)
+		state->destroy_read = TRUE;
+	    else if (state->drawable == surface)
+		state->destroy_draw = TRUE;
+
+	    if (state->active == FALSE) {
+		if (state->readable == surface && 
+		    state->destroy_read == TRUE)
+		    state->readable = EGL_NO_SURFACE;
+		if (state->drawable == surface && 
+		    state->destroy_draw == TRUE)
+		    state->drawable = EGL_NO_SURFACE;
+	    }
+	}
+    }
+}
+
+void
+_gpuprocess_srv_remove_context (EGLDisplay display, 
+				EGLSurface draw,
+				EGLSurface read,
+				EGLContext context)
+{
+    egl_state_t *state;
+    v_link_list_t *list = srv_states.states;
+    v_link_list_t *current;
+
+    if (srv_states.num_contexts == 0 || ! srv_states.states)
+	return;
+
+    while (list != NULL) {
+	current = list;
+	list = list->next;
+	state = (egl_state_t *)current->data;
+
+	if (state->display == display && state->context == context &&
+	    state->drawable == draw && state->readable == read) {
 	    if (current->prev)
 		current->prev->next = current->next;
 	    if (current->next)
@@ -288,7 +446,34 @@ _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context)
 	    free (current);
 	    free (state);
 	    srv_states.num_contexts --;
-	    break;
+	    /* XXX: terminate affected thread */
 	}
     }
 }
+/* we should call this on srv thread */
+//EGLBoolean 
+//_egl_make_pending_current () 
+//{
+//    EGLBoolean make_current_result = GL_FALSE;
+
+    /* check pending make current call */
+//    if (srv_states.make_current_called && dispatch.eglMakeCurrent) {
+	/* we need to make current call */
+//	make_current_result = 
+//	    dispatch.eglMakeCurrent (srv_states.pending_display,
+//				     srv_states.pending_drawable,
+//				     srv_states.pending_readable,
+//				     srv_states.pending_context);
+//	    srv_states.make_current_called = FALSE;
+ 
+	/* we make current on pending eglMakeCurrent() and it succeeds */
+//	if (make_current_result == EGL_TRUE) {
+//	    _gpuprocess_srv_make_current (srv_states.pending_display,
+//					  srv_states.pending_drawable,
+//					  srv_states.pending_readable,
+//					  srv_states.pending_context);
+//	}
+//    }
+   
+//    return make_current_result;
+//}

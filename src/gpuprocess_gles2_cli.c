@@ -1,10 +1,13 @@
-#include "gpuprocess_cli_private.h"
+#include "gpuprocess_gles2_cli_private.h"
 #include <stdlib.h>
 
 /* thread local client states */
 __thread  gl_cli_states_t cli_states 
     __attribute__(( tls_model ("initial-exec")));
 
+__thread v_link_list_t *active_state
+    __attribute__(( tls_model ("initial-exec"))) = NULL;
+    
 void 
 _gpuprocess_cli_init ()
 {

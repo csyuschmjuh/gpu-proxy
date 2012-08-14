@@ -2,60 +2,33 @@
 #include <EGL/eglext.h>
 #include <stdlib.h>
 
+#include "config.h"
+
 /* XXX: we should move it to the srv */
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
 #include "gpuprocess_gles2_srv_private.h"
-gpuprocess_dispatch_t	dispatch;
+extern gpuprocess_dispatch_t	dispatch;
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
-#include "gpuprocess_cli_private.h"
+#include "gpuprocess_gles2_cli_private.h"
 
 /* XXX: initialize static mutex on srv */
 gpu_mutex_static_init (mutex);
-
-/* we should call this on srv thread */
-static EGLBoolean 
-_egl_make_pending_current () 
-{
-    EGLBoolean make_current_result = GL_FALSE;
-
-    /* check pending make current call */
-    if (srv_states.make_current_called && dispatch.eglMakeCurrent) {
-	/* we need to make current call */
-	make_current_result = 
-	    dispatch.eglMakeCurrent (srv_states.pending_display,
-				     srv_states.pending_drawable,
-				     srv_states.pending_readable,
-				     srv_states.pending_context);
-	    srv_states.make_current_called = FALSE;
- 
-	/* we make current on pending eglMakeCurrent() and it succeeds */
-	if (make_current_result == EGL_TRUE) {
-	    _gpuprocess_srv_make_current (srv_states.pending_display,
-					  srv_states.pending_drawable,
-					  srv_states.pending_readable,
-					  srv_states.pending_context);
-	}
-    }
-   
-    return make_current_result;
-}
+extern gl_srv_states_t	srv_states;
+extern v_link_list_t *active_state;
 
 EGLAPI EGLint EGLAPIENTRY
 eglGetError (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
-    gpu_mutex_lock (mutex);
+    if (! dispatch.eglGetError)
+	return error;
 
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current ();
-    if (dispatch.eglGetError)
-	error = dispatch.eglGetError();
+    error = dispatch.eglGetError();
 
-    gpu_mutex_unlock (mutex);
     return error;
 }
 
@@ -66,22 +39,16 @@ EGLAPI EGLDisplay EGLAPIENTRY
 eglGetDisplay (EGLNativeDisplayType display_id)
 {
     EGLDisplay display;
-
+    
     gpu_mutex_lock (mutex);
 
     /* XXX: we should initialize on srv */
-    _egl_make_pending_current ();
     gpuprocess_dispatch_init (&dispatch);
-    
-    _gpu_process_cli_init ();
-
     /* XXX: this should be initialized in srv */
     _gpuprocess_srv_init ();
-
-    /* XXX: we should create a command buffer for it and wait for signal */
-    display = dispatch.eglGetDisplay (display_id);
-
     gpu_mutex_unlock (mutex);
+
+    display = dispatch.eglGetDisplay (display_id);
 
     return display;
 }
@@ -91,14 +58,8 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
- 
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglInitialize) 
 	result = dispatch.eglInitialize (dpy, major, minor);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -107,19 +68,19 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglTerminate) {
-	/* XXX: remove srv structure */
 	result = dispatch.eglTerminate (dpy);
 
-	if (result == EGL_TRUE)
-	    _gpuprocess_srv_terminate (dpy);
-    }
+	if (result == EGL_TRUE) {
+ 	     gpu_mutex_lock (mutex);
 
-    gpu_mutex_unlock (mutex);
+	    /* XXX: remove srv structure */
+	    _gpuprocess_srv_terminate (dpy);
+    	    
+	    gpu_mutex_unlock (mutex);
+
+    	}
+    }
 
     return result;
 }
@@ -129,14 +90,8 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 {
     const char *result = NULL;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglQueryString)
 	result = dispatch.eglQueryString (dpy, name);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -147,14 +102,8 @@ eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglGetConfigs)
 	result = dispatch.eglGetConfigs (dpy, configs, config_size, num_config);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -166,15 +115,9 @@ eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglChooseConfig) 
 	result = dispatch.eglChooseConfig (dpy, attrib_list, configs,
 					   config_size, num_config);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -185,15 +128,9 @@ eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglGetConfigAttrib)
 	result = dispatch.eglGetConfigAttrib (dpy, config, attribute, value);
 
-    gpu_mutex_unlock (mutex);
-   
     return result;
 }
 
@@ -204,15 +141,9 @@ eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current (); 
     if (dispatch.eglCreateWindowSurface)
 	surface = dispatch.eglCreateWindowSurface (dpy, config, win,
 						   attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return surface;
 }
@@ -222,15 +153,9 @@ eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 			 const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
-
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
+    
     if (dispatch.eglCreatePbufferSurface)
 	surface = dispatch.eglCreatePbufferSurface (dpy, config, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return surface;
 }
@@ -241,16 +166,10 @@ eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
 			const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
-
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
+    
     if (dispatch.eglCreatePixmapSurface)
 	surface = dispatch.eglCreatePixmapSurface (dpy, config, pixmap,
 						   attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return surface;
 }
@@ -258,22 +177,20 @@ eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
 EGLAPI EGLBoolean EGLAPIENTRY
 eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 {
+    int i;
+
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglDestroySurface) { 
 	result = dispatch.eglDestroySurface (dpy, surface);
 	
-	if (result == EGL_TRUE && 
-	    (srv_states.active_state->readable == surface ||
-	     srv_states.active_state->drawable == surface))
-	    srv_states.active_state = NULL;
+	if (result == EGL_TRUE) {
+	    /* update srv states */
+	    gpu_mutex_lock (mutex);
+	    _gpuprocess_srv_destroy_surface (dpy, surface);
+	    gpu_mutex_unlock (mutex);
+    	}
     }
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -284,14 +201,8 @@ eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglQuerySurface) 
 	result = dispatch.eglQuerySurface (dpy, surface, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -301,14 +212,8 @@ eglBindAPI (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglBindAPI) 
 	result = dispatch.eglBindAPI (api);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -318,14 +223,9 @@ eglQueryAPI (void)
 {
     EGLenum result = EGL_NONE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
     _egl_make_pending_current ();
     if (dispatch.eglQueryAPI) 
 	result = dispatch.eglQueryAPI ();
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -334,11 +234,18 @@ EGLAPI EGLBoolean EGLAPIENTRY
 eglWaitClient (void)
 {
     EGLBoolean result = EGL_FALSE;
+    egl_state_t *state;
+
+    if (!active_state)
+	return result;
+
+    state = (egl_state_t *) active_state->data;
+    if (state->context == EGL_NO_CONTEXT || 
+	state->display == EGL_NO_DISPLAY)
+	return result;
     
     gpu_mutex_lock (mutex);
-
     /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglWaitClient)
 	result = dispatch.eglWaitClient ();
 
@@ -351,15 +258,34 @@ EGLAPI EGLBoolean EGLAPIENTRY
 eglReleaseThread (void)
 {
     EGLBoolean result = EGL_FALSE;
+    v_bool_t success;
+    egl_state_t *state;
     
-    gpu_mutex_lock (mutex);
-
     /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
-    if (dispatch.eglReleaseThread)
+    if (dispatch.eglReleaseThread) {
 	result = dispatch.eglReleaseThread ();
 
-    gpu_mutex_unlock (mutex);
+	if (result = EGL_TRUE) {
+	    if (! active_state)
+		return result;
+
+	    state = (egl_state_t *) active_state->data;
+
+	    gpu_mutex_lock (mutex);
+
+	    success = _gpuprocess_make_current (state->display, 
+						EGL_NO_SURFACE,
+						EGL_NO_SURFACE, 
+						EGL_NO_CONTEXT,
+						state->display, 
+						state->drawable,
+						state->readable, 
+						state->context,
+						&active_state);
+
+	    gpu_mutex_unlock (mutex);
+	}
+    }
 
     return result;
 }
@@ -371,16 +297,10 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
 {
     EGLSurface surface = EGL_NO_SURFACE;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglCreatePbufferFromClientBuffer)
 	surface = dispatch.eglCreatePbufferFromClientBuffer (dpy, buftype,
 							     buffer, config,
 							     attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return surface;
 }
@@ -391,14 +311,8 @@ eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglSurfaceAttrib)
 	result = dispatch.eglSurfaceAttrib (dpy, surface, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -408,14 +322,8 @@ eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglBindTexImage)
 	result = dispatch.eglBindTexImage (dpy, surface, buffer);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -425,14 +333,8 @@ eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglReleaseTexImage)
 	result = dispatch.eglReleaseTexImage (dpy, surface, buffer);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -442,14 +344,8 @@ eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
     EGLBoolean result = EGL_FALSE;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglSwapInterval)
 	result = dispatch.eglSwapInterval (dpy, interval);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -461,15 +357,9 @@ eglCreateContext (EGLDisplay dpy, EGLConfig config,
 {
     EGLContext result = EGL_NO_CONTEXT;
     
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglCreateContext)
 	result = dispatch.eglCreateContext (dpy, config, share_context, 
 					    attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -479,18 +369,15 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: we should create a command buffer for it, and wait for signal */
-    _egl_make_pending_current ();
     if (dispatch.eglDestroyContext) {
 	result = dispatch.eglDestroyContext (dpy, ctx); 
 
-	if (result == GL_TRUE) 
+	if (result == GL_TRUE) {
+	    gpu_mutex_lock (mutex);
 	    _gpuprocdess_srv_destroy_context (dpy, ctx);
+	    gpu_mutex_unlock (mutex);
+	}
     }
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -498,62 +385,50 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 EGLAPI EGLContext EGLAPIENTRY 
 eglGetCurrentContext (void)
 {
-    EGLContext result = EGL_NO_CONTEXT;
-
-    gpu_mutex_lock (mutex);
-
-    if (! dispatch.eglGetCurrentContext)
-	goto FINISH;
+    egl_state_t *state;
     
-    _egl_make_pending_current ();
-    result = srv_states.active_state->context;
-	
-FINISH:
-    gpu_mutex_unlock (mutex);
+    if (!active_state)
+	return EGL_NO_CONTEXT;
 
-    return result;
+    state = (egl_state_t *) active_state->data;
+    return state->context;
 }
 
 EGLAPI EGLDisplay EGLAPIENTRY 
 eglGetCurrentDisplay (void)
 {
-    EGLDisplay result = EGL_NO_DISPLAY;
+    egl_state_t *state;
+    
+    if (!active_state)
+	return EGL_NO_DISPLAY;
 
-    gpu_mutex_lock (mutex);
-
-    if (! dispatch.eglGetCurrentDisplay)
-	goto FINISH;
-
-    _egl_make_pending_current ();
-    result = srv_states.active_state->display;
-
-FINISH:
-    gpu_mutex_unlock (mutex);
-
-    return result;
+    state = (egl_state_t *) active_state->data;
+    return state->display;
 }
 
 EGLAPI EGLSurface EGLAPIENTRY 
 eglGetCurrentSurface (EGLint readdraw)
 {
-    EGLSurface result = EGL_NO_SURFACE;
+    egl_state_t *state;
+    EGLSurface surface = EGL_NO_SURFACE;
+    
+    if (!active_state)
+	return EGL_NO_SURFACE;
 
     gpu_mutex_lock (mutex);
 
-    if (! dispatch.eglGetCurrentSurface) 
+    state = (egl_state_t *) active_state->data;
+    
+    if (state->display == EGL_NO_DISPLAY || state->context == EGL_NO_CONTEXT)
 	goto FINISH;
 
-    _egl_make_pending_current ();
-
     if (readdraw == EGL_DRAW)
-	result = srv_states.active_state->drawable;
+	surface = state->drawable;
     else
-	result = srv_states.active_state->readable;
-
-FINISH:
+	surface = state->readable;
+ FINISH:
     gpu_mutex_unlock (mutex);
-
-    return result;
+    return surface;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
@@ -562,17 +437,11 @@ eglQueryContext (EGLDisplay dpy, EGLContext ctx,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
     /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglQueryContext)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglQueryContext (dpy, ctx, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -582,14 +451,12 @@ eglWaitGL (void)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglWaitGL)
 	return result;
     
-    _egl_make_pending_current ();
+    gpu_mutex_lock (mutex);
 
+    /* XXX: We should put a command buffer instead calling here */
     result = dispatch.eglWaitGL ();
 
     gpu_mutex_unlock (mutex);
@@ -602,18 +469,48 @@ eglWaitNative (EGLint engine)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglWaitNative)
 	return result;
     
-    _egl_make_pending_current ();
+    gpu_mutex_lock (mutex);
 
+    /* XXX: We should put a command buffer instead calling here */
     result = dispatch.eglWaitNative (engine);
 
     gpu_mutex_unlock (mutex);
 
+    return result;
+}
+
+EGLAPI EGLBoolean EGLAPIENTRY
+eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
+{
+    EGLBoolean result = EGL_BAD_DISPLAY;
+    egl_state_t *state;
+
+    if (!active_state)
+	return result;
+
+    state = (egl_state_t *)active_state->data;
+    if (state->display == EGL_NO_DISPLAY)
+	return result;
+
+    gpu_mutex_lock (mutex);
+
+    if (state->display != dpy)
+	goto FINISH;
+
+    if (state->readable != surface || state->drawable != surface) {
+	result = EGL_BAD_SURFACE;
+	goto FINISH;
+    }
+
+    /* put in a command buffer */
+    dispatch.eglSwapBuffers (dpy, surface);
+    result = EGL_TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
     return result;
 }
 
@@ -623,17 +520,10 @@ eglCopyBuffers (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCopyBuffers)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglCopyBuffers (dpy, surface, target);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -649,31 +539,94 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
 		EGLContext ctx)
 {
     EGLBoolean result = EGL_FALSE;
+    v_bool_t needs_call = FALSE;
+    egl_state_t	*state;
+    EGLDisplay current_dpy;
+    EGLContext current_ctx;
+    EGLSurface current_read;
+    EGLSurface current_draw;
+    v_bool_t success = TRUE;
+
+    if (! dispatch.eglMakeCurrent)
+	return result;
 
     gpu_mutex_lock (mutex);
 
-    /* XXX: We should put a command buffer instead calling here */
-    if (_gpuprocess_srv_is_equal (srv_states.active_state,
-				  dpy, draw, read, ctx) &&
-	! srv_states.make_current_called)
-	result = EGL_TRUE;
-	goto FINISH;
+    /* we are not in any valid context */
+    if (! active_state) {
+	if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
+	    return EGL_TRUE;
+	else
+	   /* we switch to one of the valid context */
+	    success = _gpuprocess_srv_make_current (dpy, draw, 
+						    read, ctx,
+						    EGL_NO_DISPLAY,
+						    EGL_NO_SURFACE,
+						    EGL_NO_SURFACE,
+						    EGL_NO_CONTEXT,
+						    &active_state);
+    }
+    /* we are in a valid context */
+    else {
+	state = (egl_state_t *) active_state->data;
 
-    srv_states.pending_display = dpy;
-    srv_states.pending_context = ctx;
-    srv_states.pending_drawable = draw;
-    srv_states.pending_readable = read;
-    srv_states.make_current_called = TRUE;
+	/* we are switch to an invalid context */
+	if (dpy == EGL_NO_SURFACE || EGL_NO_CONTEXT) {
+	    state->ref_count --;
+	    current_dpy = state->display;
+	    current_ctx = state->context;
+	    current_read = state->readable;
+	    current_draw = state->drawable;
 
-    /* used for multithreading */
-    if (dpy == NULL && draw == NULL && read == NULL && ctx == NULL)
-	result = EGL_TRUE;
-	goto FINISH;
+	    if (state->ref_count == 0)
+		state->active = FALSE;
+	    if (state->destroy_dpy && ! state->active) {
+		if (active_state->next)
+		    active_state->next->prev = active_state->prev;
+		if (active_state->prev)
+		    active_state->prev->next = active_state->next;
+		free (state);
+		free (active_state);
+		
+	    }
+	    /* look for other states that have same dpy */
+	    success = _gpuprocess_srv_make_current (dpy, draw, 
+						    read, ctx,
+						    current_dpy,
+						    current_draw,
+						    current_read,
+						    current_ctx, 
+						    &active_state); 
+	}
+	/* we are switch to a same context */
+	else if (dpy == state->display &&
+	    ctx == state->context) {
+	    /* previous DestroySurface called on drawable */
+	    if (state->drawable != draw && state->destroy_draw)
+		_gpuprocess_srv_destroy_surface (dpy, state->drawable);
+	    state->drawable = draw;
 
-    result = _egl_make_pending_current ();
-
-FINISH:
+	    /* previous DestroySurface called on readable */
+	    if (state->readable != read && state->destroy_read)
+		_gpuprocess_srv_destroy_surface (dpy, state->readable);
+	    state->readable = read;
+	}
+	/* we are switch to another valid context */
+	else {
+	    success = _gpuprocess_srv_make_current (dpy, draw, 
+						    read, ctx,
+						    current_dpy,
+						    current_draw,
+						    current_read,
+						    current_ctx,
+						    &active_state); 
+	}
+    }
+    
     gpu_mutex_unlock (mutex);
+
+    if (success == TRUE)
+	result = GL_TRUE;
 
     return result;
 }
@@ -685,18 +638,11 @@ eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
 		   const EGLint *attrib_list)
 {
     EGLBoolean result = EGL_FALSE;
-
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
+    
     if (! dispatch.eglLockSurfaceKHR)
 	return result;
-    
-    _egl_make_pending_current ();
 
     result = dispatch.eglLockSurfaceKHR (display, surface, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -706,17 +652,10 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglUnlockSurfaceKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglUnlockSurfaceKHR (display, surface);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -729,18 +668,14 @@ eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCreateImageKHR)
 	return result;
-    
-    _egl_make_pending_current ();
 
+    if (dpy == EGL_NO_DISPLAY)
+	return result;
+    
     result = dispatch.eglCreateImageKHR (dpy, ctx, target,
 					 buffer, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -750,17 +685,10 @@ eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglDestroyImageKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglDestroyImageKHR (dpy, image);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -772,37 +700,23 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCreateSyncKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglCreateSyncKHR (dpy, type, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglCreateSyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
+eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglDestroySyncKHR)
 	return result;
-    
-    _egl_make_pending_current ();
 
-    result = dispatch.eglDestroySyncKHR (dpy, sync);
-
-    gpu_mutex_unlock (mutex);
+    result = dispatch.egltroySyncKHR (dpy, sync);
 
     return result;
 }
@@ -813,17 +727,10 @@ eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
 {
     EGLint result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglClientWaitSyncKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglClientWaitSyncKHR (dpy, sync, flags, timeout);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -833,17 +740,10 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglSignalSyncKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglSignalSyncKHR (dpy, sync, mode);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -854,17 +754,10 @@ eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglGetSyncAttribKHR)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglGetSyncAttribKHR (dpy, sync, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -877,17 +770,10 @@ eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCreateFenceSyncNV)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglCreateFenceSyncNV (dpy, condition, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -897,17 +783,10 @@ eglDestroySyncNV (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglDestroySyncNV)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglDestroySyncNV (sync);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -917,14 +796,12 @@ eglFenceNV (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
+    if (! active_state || ! dispatch.eglFenceNV)
+	return result;
+    
     gpu_mutex_lock (mutex);
 
     /* XXX: We should put a command buffer instead calling here */
-    if (! dispatch.eglFenceNV)
-	return result;
-    
-    _egl_make_pending_current ();
-
     result = dispatch.eglFenceNV (sync);
 
     gpu_mutex_unlock (mutex);
@@ -937,15 +814,13 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
 {
     /* XXX: is this supposed to be default value ? */
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
+    
+    if (! active_state || ! dispatch.eglClientWaitSyncNV)
+	return result;
 
     gpu_mutex_lock (mutex);
 
     /* XXX: We should put a command buffer instead calling here */
-    if (! dispatch.eglClientWaitSyncNV)
-	return result;
-    
-    _egl_make_pending_current ();
-
     result = dispatch.eglClientWaitSyncNV (sync, flags, timeout);
 
     gpu_mutex_unlock (mutex);
@@ -957,15 +832,13 @@ EGLBoolean
 eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
+    
+    if (! active_state || ! dispatch.eglSignalSyncNV)
+	return result;
 
     gpu_mutex_lock (mutex);
 
     /* XXX: We should put a command buffer instead calling here */
-    if (! dispatch.eglSignalSyncNV)
-	return result;
-    
-    _egl_make_pending_current ();
-
     result = dispatch.eglSignalSyncNV (sync, mode);
 
     gpu_mutex_unlock (mutex);
@@ -978,17 +851,11 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
     /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglGetSyncAttribNV)
 	return result;
-    
-    _egl_make_pending_current ();
 
     result = dispatch.eglGetSyncAttribNV (sync, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1001,17 +868,10 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface result = EGL_NO_SURFACE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCreatePixmapSurfaceHI)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglCreatePixmapSurfaceHI (dpy, config, pixmap);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1023,17 +883,10 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglCreateDRMImageMESA)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglCreateDRMImageMESA (dpy, attrib_list);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1044,17 +897,10 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglExportDRMImageMESA)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglExportDRMImageMESA (dpy, image, name, handle, stride);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1068,17 +914,10 @@ eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglExportDRMImageMESA)
 	return result;
-    
-    _egl_make_pending_current ();
 
     result = dispatch.egPostSubBufferNV (dpy, surface, x, y, width, height);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1090,17 +929,10 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     void *result = NULL;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglMapImageSEC)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglMapImageSEC (dpy, image);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1110,17 +942,10 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglUnmapImageSEC)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglUnmapImageSEC (dpy, image);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }
@@ -1131,17 +956,10 @@ eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    gpu_mutex_lock (mutex);
-
-    /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglGetImageAttribSEC)
 	return result;
     
-    _egl_make_pending_current ();
-
     result = dispatch.eglGetImageAttribSEC (dpy, image, attribute, value);
-
-    gpu_mutex_unlock (mutex);
 
     return result;
 }

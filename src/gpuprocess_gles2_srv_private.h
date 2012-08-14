@@ -19,6 +19,7 @@ typedef struct gl_srv_states
      * matches the request, we return quickly.  Otherwise, we save
      * the request context/display/drawable to pending_xxxx, 
      */
+/*
     v_bool_t 		make_current_called;
     EGLContext		pending_context;
     EGLDisplay		pending_display;
@@ -26,7 +27,7 @@ typedef struct gl_srv_states
     EGLSurface		pending_readable;
 
     egl_state_t		*active_state;
-    
+*/  
     v_link_list_t	*states;
 } gl_srv_states_t;
 
@@ -41,11 +42,16 @@ gpuprocess_private void
 _gpuprocess_srv_terminate (EGLDisplay display);
 
 /* called within eglMakeCurrent () */
-gpuprocess_private void
+gpuprocess_private v_bool_t
 _gpuprocess_srv_make_current (EGLDisplay display, 
 			      EGLSurface drawable, 
 			      EGLSurface readable,
-			      EGLContext context);
+			      EGLContext context,
+			      EGLDisplay prev_dpy,
+			      EGLSurface prev_draw,
+			      EGLSurface prev_read,
+			      EGLContext prev_ctx,
+			      v_link_list_t **active_state);
 
 gpuprocess_private void
 _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context);
@@ -58,11 +64,15 @@ _gpuprocess_srv_is_equal (egl_state_t *state,
 			  EGLContext  context);
 
 gpuprocess_private void
-_gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context);
+_gpuprocess_srv_remove_context (EGLDisplay display,
+				EGLSurface draw,
+				EGLSurface read,
+				EGLContext context);
+
 
 #ifdef __cplusplus
 }
 #endif
 
 
-#endif /* GPUPROCESS_SRV_PRIVATE_H */
+#endif /* GPUPROCESS_GLES2_SRV_PRIVATE_H */

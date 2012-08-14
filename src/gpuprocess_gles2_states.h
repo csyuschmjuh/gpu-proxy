@@ -3,6 +3,7 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include "gpuprocess_types_private.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,6 +23,7 @@ typedef struct v_vertex_attrib
     GLvoid	*pointer;		/* initial is 0 */
     GLboolean	array_normalized;	/* initial is GL_FALSE */
     GLfloat	current_attrib[4];	/* initial is (0, 0, 0, 1) */
+    char 	*data;
 } v_vertex_attrib_t;
 
 typedef struct v_vertex_attrib_list
@@ -76,50 +78,71 @@ typedef struct v_program {
 
 typedef struct gl_state {
     GLenum	error;			/* initial is GL_NO_ERROR */
+    v_bool_t	need_get_error;
+    v_link_list_t *programs;		/* initial is NULL */
 
 /* GL states from glGet () */
+    /* used */
     GLint	active_texture;			/* initial GL_TEXTURE0 */
     GLfloat	aliased_line_width_range[2];	/* must include 1 */
     GLfloat	aliased_point_size_range[2];	/* must include 1 */
     GLint	bits[4];			/* alpha, red, green and
 						 * blue bits 
 						 */	
+    /* used */
     GLint	array_buffer_binding;		/* initial 0 */
-    
+   
+    /* blend */ 
     GLboolean	blend;				/* initial GL_FALSE */
+    /* used */
     GLfloat	blend_color[4];			/* initial 0, 0, 0, 0 */
+    /*used all here */
     GLfloat	blend_dst_alpha;		/* initial GL_ZERO */
     GLfloat 	blend_dst_rgb;			/* initial GL_ZERO */
     GLfloat	blend_src_alpha;		/* initial GL_ONE */
     GLfloat	blend_src_rgb;			/* initial GL_ONE */
+    /* used */
     GLint	blend_equation[2];		/* 1 rgb, 2 alpha, initial
 						 * GL_FUNC_ADD
 						 */
-    
+    /* used */
     GLfloat     color_clear_value[4]; 		/* initial 0.0 */
+    /* used */
     GLboolean	color_writemask[4];		/* initial all GL_TRUE */
 
     /* XXX: save GL_COMPRESSED_TEXTURE_FORMATS ? */
+    /* used */
     GLboolean	cull_face;			/* initial GL_FALSE */
+    /* used */
     GLint	cull_face_mode;			/* initial GL_BACK */
 
+    /* used */
     GLint	current_program;		/* initial 0 */
 
     GLint	depth_bits;
+    /* used */
     GLfloat	depth_clear_value;		/* initial 1 */
+    /* used */
     GLint	depth_func;			/* initial GL_LESS */
+    /* used */
     GLfloat	depth_range[2];			/* initial 0, 1 */
+    /* used */
     GLboolean	depth_test;			/* initial GL_FALSE */
+    /* used */
     GLboolean	depth_writemask;		/* initial GL_TRUE */
 
+    /* used */
     GLboolean	dither;				/* intitial GL_TRUE */
-
+    /* used */
     GLint	element_array_buffer_binding;	/* initial 0 */
 
+    /* used */
     GLint 	framebuffer_binding;		/* initial 0 */
 
+    /* used */
     GLint	front_face;			/* initial GL_CCW */
 
+    /* used */
     GLint	generate_mipmap_hint;		/* initial GL_DONT_CARE */
 
     GLint	implementation_color_read_format;/* GL_UNSIGNED_BYTE is 
@@ -128,8 +151,10 @@ typedef struct gl_state {
     GLint	implementation_color_read_type;	/* GL_RGBA is always 
 						 * allowed 
 						 */
+    /* used */
     GLfloat	line_width;			/* initial 1 */
 
+    /* used all */
     GLint	max_combined_texture_image_units;/* at least 8 */
     GLint	max_cube_map_texture_size;	/* at least 16 */
     GLint	max_fragment_uniform_vectors;	/* at least 16 */
@@ -137,54 +162,66 @@ typedef struct gl_state {
     GLint	max_texture_image_units;	/* at least 8 */
     GLint	max_texture_size;		/* at least 64 */
     GLint	max_varying_vectors;		/* at least 8 */
+    GLint	max_vertex_uniform_vectors;	/* at least 128 */
+    /* used all */
+    v_bool_t    max_vertex_attribs_queried;	/* false */
     GLint	max_vertex_attribs;		/* at least 8 */
     GLint	max_vertex_texture_image_units;	/* may be 0 */
     GLint	max_viewport_dims;		/* as large as visible */
-
+    /* used all */
     GLint	num_compressed_texture_formats;	/* min is 0 */
     GLint	num_shader_binary_formats;	/* min is 0 */
-
+    /* used all */
     GLint	pack_alignment;			/* initial is 4 */
     GLint	unpack_alignment;		/* initial is 4 */
-
+    /* used */
     GLfloat	polygon_offset_factor;		/* initial 0 */
+    /* used */
     GLboolean 	polygon_offset_fill;		/* initial GL_FALSE */
     GLfloat	polygon_offset_units;		/* initial is 0 */   
 
     GLint	renderbuffer_binding;		/* initial 0 */
     
+    /* used */
     GLboolean	sample_alpha_to_coverage;	/* initial GL_FALSE */
     GLint	sample_buffers;	
+    /* used */
     GLboolean	sample_coverage;		/* initial GL_FALSE */
     GLboolean	sample_coverage_invert;		/* initial ? */
     GLfloat	sample_coverage_value;		/* positive float */
     GLint	samples;
 
     GLint	scissor_box[4];			/* initial (0, 0, 0, 0) */
+    /* used */
     GLboolean	scissor_test;			/* initial GL_FALSE */
     
-    GLint	shader_binary_formats;	
+    GLint	shader_binary_formats;
+    /* used */	
     GLboolean	shader_compiler;		
 
+    /* used all */
     GLint	stencil_back_fail;		/* initial GL_KEEP */
     GLint	stencil_back_func;		/* initial GL_ALWAYS */
     GLint 	stencil_back_pass_depth_fail;	/* initial GL_KEEP */
     GLint	stencil_back_pass_depth_pass;	/* initial GL_KEEP */
     GLint	stencil_back_ref;		/* initial is 0 */
     GLint	stencil_back_value_mask;	/* initial 0xffffffff */
+
     GLint	stencil_bits;
+    /* used */
     GLint	stencil_clear_value;		/* initial 0 */
     GLint	stencil_fail;			/* initial GL_KEEP */
     GLint	stencil_func;			/* initial GL_ALWAYS */
     GLint	stencil_pass_depth_fail;	/* initial GL_KEEP */
     GLint	stencil_pass_depth_pass;	/* initial GL_KEEP */
     GLint	stencil_ref;			/* initial is 0 */
+    /* used */
     GLboolean	stencil_test;			/* intitial GL_FALSE */
     GLint	stencil_value_mask;		/* initial 0xffffffff */
     GLint	stencil_writemask;		/* initial 0xffffffff */
     
     GLint	subpixel_bits;			/* at least 4 */
-    
+    /*used */
     GLint	texture_binding[2];		/* 2D, cube_map, initial 0 */
     GLint	viewport[4];			/* initial (0, 0, 0, 0) */
     
@@ -195,10 +232,11 @@ typedef struct gl_state {
     GLubyte	shading_language_version[128];
 
     /* glGetTextureParameter() */
-    GLint	texture_mag_filter[32][2];	/* initial GL_LINEAR */
-    GLint	texture_min_filter[32][2];	/* initial GL_NEAREST_MIPMAP_LINEAR */
-    GLint	texture_wrap_s[32][2];		/* initial GL_REPEAT */
-    GLint	texture_wrap_t[32][2];		/* initial GL_REPEAT */
+    /* used */
+    GLint	texture_mag_filter[32][3];	/* initial GL_LINEAR */
+    GLint	texture_min_filter[32][3];	/* initial GL_NEAREST_MIPMAP_LINEAR */
+    GLint	texture_wrap_s[32][3];		/* initial GL_REPEAT */
+    GLint	texture_wrap_t[32][3];		/* initial GL_REPEAT */
 
     /* glGetBufferParameter() */
     GLint	buffer_size[2];			/* initial 0 */	
@@ -258,11 +296,11 @@ typedef struct gl_state {
 #endif
 
 #ifdef GL_OES_texture_3D
+    /* used */
     GLint	texture_binding_3d;
     GLint	max_3d_texture_size;
-    GLint	texture_3d_wrap[3];
-    GLint	texture_3d_min_filter;
-    GLint	texture_3d_mag_filter;
+    /* used */
+    GLint	texture_3d_wrap_r[32]; 	/* initial GL_REPEAT */
 #endif
 
 #ifdef GL_OES_texture_float
@@ -307,7 +345,7 @@ typedef struct gl_state {
     GLint	read_framebuffer_binding;		/* initial 0 ? */
 #endif
 
-#ifdef GL_ANGLE_framebuffer_multisample
+#if defined GL_ANGLE_framebuffer_multisample || GL_EXT_multisampled_render_to_texture || GL_IMG_multisampled_render_to_texture
     GLint	max_samples;
 #endif
 
@@ -365,9 +403,6 @@ typedef struct gl_state {
 #ifdef GL_IMG_texture_compression_pvrtc
 #endif
 
-#ifdef GL_IMG_multisampled_render_to_texture
-    /* reuse max_samples */
-#endif
 
 #ifdef GL_NV_fence
 #endif
@@ -394,10 +429,6 @@ typedef struct gl_state {
 #endif
 
 #ifdef GL_VIV_shader_bindary
-#endif
-
-#ifdef GL_EXT_multisampled_render_to_texture
-    /* re-use max_samples */
 #endif
 
 } gles2_state_t;

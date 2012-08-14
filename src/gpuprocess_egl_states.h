@@ -18,6 +18,13 @@ typedef struct egl_state {
     EGLSurface		drawable;	/* active draw drawable, initial EGL_NO_SURFACE */
     EGLSurface		readable;	/* active read drawable, initial EGL_NO_SURFACE */
 
+    v_bool_t		active;
+    v_bool_t		destroy_dpy;
+    v_bool_t		destroy_ctx;
+    v_bool_t		destroy_read;
+    v_bool_t		destroy_draw;
+
+    v_ref_count_t		ref_count;
 } egl_state_t;
 
 #ifdef __cplusplus

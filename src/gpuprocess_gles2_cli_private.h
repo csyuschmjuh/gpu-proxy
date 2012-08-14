@@ -1,14 +1,7 @@
-#ifndef GPUPROCESS_CLI_PRIVATE_H
-#define GPUPROCESS_CLI_PRIVATE_H
+#ifndef GPUPROCESS_GLES2_CLI_PRIVATE_H
+#define GPUPROCESS_GLES2_CLI_PRIVATE_H
 
-#ifdef HAS_GL
-#include "gpuprocess_glx_states.h"
-#elif HAS_GLES2
 #include "gpuprocess_egl_states.h"
-#else
-#error "Could not find appropriate backend"
-#endif
-
 #include "gpuprocess_compiler_private.h"
 
 #ifdef __cplusplus
@@ -28,11 +21,12 @@ typedef struct gl_cli_states
 } gl_cli_states_t;
 
 /* thread local client states */
-extern __thread  gl_cli_states_t cli_states 
-    __attribute__(( tls_model ("initial-exec")));
+extern __thread  gl_cli_states_t cli_states;
 
+/*
 gpuprocess_private void 
 _gpuprocess_cli_init ();
+*/
 
 gpuprocess_private void
 _gpuprocess_cli_destroy ();
@@ -42,4 +36,4 @@ _gpuprocess_cli_destroy ();
 #endif
 
 
-#endif /* GPUPROCESS_SRV_PRIVATE_H */
+#endif /* GPUPROCESS_GLES2_SRV_PRIVATE_H */
