@@ -178,6 +178,7 @@ typedef struct gl_state {
     GLfloat	polygon_offset_factor;		/* initial 0 */
     /* used */
     GLboolean 	polygon_offset_fill;		/* initial GL_FALSE */
+    /* used */
     GLfloat	polygon_offset_units;		/* initial is 0 */   
 
     GLint	renderbuffer_binding;		/* initial 0 */
@@ -187,10 +188,12 @@ typedef struct gl_state {
     GLint	sample_buffers;	
     /* used */
     GLboolean	sample_coverage;		/* initial GL_FALSE */
-    GLboolean	sample_coverage_invert;		/* initial ? */
+    /* used */
+    GLboolean	sample_coverage_invert;		/* initial GL_FALSE */
     GLfloat	sample_coverage_value;		/* positive float */
-    GLint	samples;
 
+    GLint	samples;
+    /* used */
     GLint	scissor_box[4];			/* initial (0, 0, 0, 0) */
     /* used */
     GLboolean	scissor_test;			/* initial GL_FALSE */
@@ -206,6 +209,7 @@ typedef struct gl_state {
     GLint	stencil_back_pass_depth_pass;	/* initial GL_KEEP */
     GLint	stencil_back_ref;		/* initial is 0 */
     GLint	stencil_back_value_mask;	/* initial 0xffffffff */
+    GLint	stencil_back_writemask;		/* initial 0xffffffff */
 
     GLint	stencil_bits;
     /* used */

@@ -162,6 +162,7 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     state->stencil_test = GL_FALSE;
     memset (&state->stencil_value_mask, 0xff, sizeof (GLint));
     memset (&state->stencil_writemask, 0xff, sizeof (GLint));
+    memset (&state->stencil_back_writemask, 0xff, sizeof (GLint));
 
     memset (state->texture_binding, 0, sizeof (GLint) * 2);
 
