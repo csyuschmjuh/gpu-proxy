@@ -1,5 +1,5 @@
 AC_PREREQ(2.60)
-define([VERSION_NUMBER], [0.1]) # For sharing the version number
+define([VERSION_NUMBER], [0.0.0]) # For sharing the version number
 AC_INIT([GPUPROCESSS], [VERSION_NUMBER], [http://www.samsung.com])
 
 AC_CONFIG_AUX_DIR([config])
@@ -13,6 +13,9 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 AC_DISABLE_STATIC
+AC_PROG_MKDIR_P
+
+LIB_DIR="libs"
 
 AC_ARG_ENABLE(opengl,
 	      AS_HELP_STRING([--enable-opengl],
@@ -54,10 +57,10 @@ if test "x$use_gles" = "xyes"; then
 fi
 
 AC_SUBST([GPUPROCESS_CFLAGS])
+AC_SUBST([LIB_DIR])
 
 AC_CONFIG_FILES([
 Makefile
-src/Makefile
-tests/Makefile])
+src/Makefile])
 
 AC_OUTPUT

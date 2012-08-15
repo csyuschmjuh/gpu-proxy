@@ -17,7 +17,7 @@ extern gpuprocess_dispatch_t	dispatch;
 /* XXX: initialize static mutex on srv */
 gpu_mutex_static_init (mutex);
 extern gl_srv_states_t	srv_states;
-extern v_link_list_t *active_state;
+extern __thread v_link_list_t *active_state;
 
 EGLAPI EGLint EGLAPIENTRY
 eglGetError (void)
@@ -917,7 +917,7 @@ eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
     if (! dispatch.eglExportDRMImageMESA)
 	return result;
 
-    result = dispatch.egPostSubBufferNV (dpy, surface, x, y, width, height);
+    result = dispatch.eglPostSubBufferNV (dpy, surface, x, y, width, height);
 
     return result;
 }
