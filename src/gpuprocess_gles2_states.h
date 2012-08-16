@@ -227,6 +227,7 @@ typedef struct gl_state {
     GLint	subpixel_bits;			/* at least 4 */
     /*used */
     GLint	texture_binding[2];		/* 2D, cube_map, initial 0 */
+    /* used */
     GLint	viewport[4];			/* initial (0, 0, 0, 0) */
     
     /* glGetString () */

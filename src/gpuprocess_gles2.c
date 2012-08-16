@@ -75,6 +75,9 @@ void glActiveTexture (GLenum texture)
 
     /* XXX: create a command buffer */
     dispatch.ActiveTexture (texture);
+
+    /* FIXME: this maybe not right because this texture may be invalid
+     * object, we save here to save time in glGetError() */
     egl_state->state.active_texture = texture;
 
 FINISH:
@@ -1246,6 +1249,25 @@ void glEnable (GLenum cap)
     _gl_set_cap (cap, GL_TRUE);
 }
 
+static v_bool_t 
+_gl_index_is_too_large (gles2_state_t *state, GLuint index)
+{
+    if (index >= state->max_vertex_attribs) {
+	if (! state->max_vertex_attribs_queried) {
+	/* XXX: command buffer */
+	    dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
+				  &(state->max_vertex_attribs));
+	}
+	if (index >= state->max_vertex_attribs) {
+	    if (state->error == GL_NO_ERROR)
+		state->error = GL_INVALID_VALUE;
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
 void glDisableVertexAttribArray (GLuint index) 
 {
     egl_state_t *egl_state;
@@ -1254,6 +1276,8 @@ void glDisableVertexAttribArray (GLuint index)
     v_vertex_attrib_t *attribs = attrib_list->attribs;
     int count = attrib_list->count;
     int i, found_index = -1;
+
+    GLint bound_buffer;
 
     /* look into client state */
     for (i = 0; i < count; i++) {
@@ -1278,32 +1302,33 @@ void glDisableVertexAttribArray (GLuint index)
     egl_state = (egl_state_t *) active_state->data;
     /* gles2 spec says at least 8 */
     /* XXX: command buffer */
-    if (index >= egl_state->state.max_vertex_attribs) {
-	if (! egl_state->state.max_vertex_attribs_queried) {
-	/* XXX: command buffer */
-	    dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
-				  &(egl_state->state.max_vertex_attribs));
-	}
-	if (index >= egl_state->state.max_vertex_attribs) {
-	    if (egl_state->state.error == GL_NO_ERROR)
-		egl_state->state.error = GL_INVALID_VALUE;
-	    gpu_mutex_unlock (mutex);
-	    return;
-	}
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
     }
 
-    gpu_mutex_unlock (mutex);
+    bound_buffer = egl_state->state.array_buffer_binding;
 
     /* XXX: command buffer, error code generated */
     dispatch.DisableVertexAttribArray (index);
 
+    gpu_mutex_unlock (mutex);
     /* update client state */
     if (found_index != -1)
 	return;
 
     if (i < NUM_EMBEDDED) {
-	attribs[i].array_enabled = FALSE;
+	attribs[i].array_enabled = GL_FALSE;
 	attribs[i].index = index;
+	attribs[i].array_buffer_binding = bound_buffer;
+	attribs[i].size = 0;
+	attribs[i].stride = 0;
+	attribs[i].type = GL_FLOAT;
+	attribs[i].array_normalized = GL_FALSE;
+	attribs[i].pointer = NULL;
+	attribs[i].data = NULL;
+	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	attrib_list->count ++;
     }
     else {
 	v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
@@ -1312,9 +1337,16 @@ void glDisableVertexAttribArray (GLuint index)
 	if (attribs != attrib_list->embedded_attribs)
 	    free (attribs);
 
+	new_attribs[count].array_enabled = GL_FALSE;
 	new_attribs[count].index = index;
-	new_attribs[count].array_enabled = FALSE;
+	new_attribs[count].array_buffer_binding = bound_buffer;
+	new_attribs[count].size = 0;
+	new_attribs[count].stride = 0;
+	new_attribs[count].type = GL_FLOAT;
+	new_attribs[count].array_normalized = GL_FALSE;
+	new_attribs[count].pointer = NULL;
 	new_attribs[count].data = NULL;
+	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 	attrib_list->attribs = new_attribs;
 	attrib_list->count ++;
     }
@@ -1328,6 +1360,7 @@ void glEnableVertexAttribArray (GLuint index)
     v_vertex_attrib_t *attribs = attrib_list->attribs;
     int count = attrib_list->count;
     int i, found_index = -1;
+    GLint bound_buffer = 0;
 
     /* look into client state */
     for (i = 0; i < count; i++) {
@@ -1350,25 +1383,14 @@ void glEnableVertexAttribArray (GLuint index)
     egl_state = (egl_state_t *) active_state->data;
     /* gles2 spec says at least 8 */
     /* XXX: command buffer */
-    if (index >= egl_state->state.max_vertex_attribs) {
-	if (! egl_state->state.max_vertex_attribs_queried) {
-	/* XXX: command buffer */
-	    dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
-				  &(egl_state->state.max_vertex_attribs));
-	}
-	if (index >= egl_state->state.max_vertex_attribs) {
-	    if (egl_state->state.error == GL_NO_ERROR)
-		egl_state->state.error == GL_INVALID_VALUE;
-	    gpu_mutex_unlock (mutex);
-	    return;
-	}
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
     }
 
-    gpu_mutex_unlock (mutex);
-
+    bound_buffer = egl_state->state.array_buffer_binding;
     /* XXX: command buffer, error code generated */
     dispatch.EnableVertexAttribArray (index);
-    egl_state->state.need_get_error = TRUE;
 
     gpu_mutex_unlock (mutex);
 
@@ -1377,8 +1399,16 @@ void glEnableVertexAttribArray (GLuint index)
 	return;
 
     if (i < NUM_EMBEDDED) {
-	attribs[i].array_enabled = TRUE;
+	attribs[i].array_enabled = GL_TRUE;
 	attribs[i].index = index;
+	attribs[i].array_buffer_binding = bound_buffer;
+	attribs[i].size = 0;
+	attribs[i].stride = 0;
+	attribs[i].type = GL_FLOAT;
+	attribs[i].array_normalized = GL_FALSE;
+	attribs[i].pointer = NULL;
+	attribs[i].data = NULL;
+	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
     }
     else {
 	v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
@@ -1387,9 +1417,16 @@ void glEnableVertexAttribArray (GLuint index)
 	if (attribs != attrib_list->embedded_attribs)
 	    free (attribs);
 
+	new_attribs[count].array_enabled = GL_TRUE;
 	new_attribs[count].index = index;
-	new_attribs[count].array_enabled = TRUE;
+	new_attribs[count].array_buffer_binding = bound_buffer;
+	new_attribs[count].size = 0;
+	new_attribs[count].stride = 0;
+	new_attribs[count].type = GL_FLOAT;
+	new_attribs[count].array_normalized = GL_FALSE;
+	new_attribs[count].pointer = NULL;
 	new_attribs[count].data = NULL;
+	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 	attrib_list->attribs = new_attribs;
 	attrib_list->count ++;
     }
@@ -1690,11 +1727,17 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
 	}
     }
 
-    /* create indices */
-    data = _gl_create_indices_array (mode, type, count, (char *)indices);
+    /* create indices, when not using element array buffer */
+    if (egl_state->state.element_array_buffer_binding == 0) {
+	data = _gl_create_indices_array (mode, type, count, (char *)indices);
 
-    // we need put DrawArrays
-    dispatch.DrawElements (mode, type, count, (const GLvoid *)data);
+	// we need put DrawArrays
+ 	dispatch.DrawElements (mode, type, count, (const GLvoid *)data);
+    }
+    else {
+	data = NULL;
+	dispatch.DrawElements (mode, type, count, indices);
+    }
 
     array = array_data;
     while (array != NULL) {
@@ -1703,7 +1746,8 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
 	free (new_array_data->data);
 	free (new_array_data);
     }
-    free (data);
+    if (data)
+	free (data);
 
     egl_state->state.need_get_error = TRUE;
 
@@ -2236,6 +2280,9 @@ void glGetIntegerv (GLenum pname, GLint *params)
 	break;
     case GL_STENCIL_BACK_WRITEMASK:
 	*params = egl_state->state.stencil_back_writemask;
+	break;
+    case GL_VIEWPORT:
+	memcpy (params, egl_state->state.viewport, sizeof (GLint) * 4);
 	break;
     default:
 	/* XXX: command buffer, and wait for signal */
@@ -2779,18 +2826,9 @@ void glGetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)
     
     /* gles2 spec says at least 8 */
     /* XXX: command buffer */
-    if (index >= egl_state->state.max_vertex_attribs) {
-	if (! egl_state->state.max_vertex_attribs_queried) {
-	/* XXX: command buffer */
-	    dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
-				  &(egl_state->state.max_vertex_attribs));
-	}
-	if (index >= egl_state->state.max_vertex_attribs) {
-	    if (egl_state->state.error = GL_NO_ERROR)
-		egl_state->state.error = GL_INVALID_VALUE;
-	    gpu_mutex_unlock (mutex);
-	    return;
-	}
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
     }
 
     gpu_mutex_unlock (mutex);
@@ -2891,18 +2929,9 @@ void glGetVertexAttribPointerv (GLuint index, GLenum pname, GLvoid **pointer)
     
     /* gles2 spec says at least 8 */
     /* XXX: command buffer */
-    if (index >= egl_state->state.max_vertex_attribs) {
-	if (! egl_state->state.max_vertex_attribs_queried) {
-	/* XXX: command buffer */
-	    dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
-				  &(egl_state->state.max_vertex_attribs));
-	}
-	if (index >= egl_state->state.max_vertex_attribs) {
-	    if (egl_state->state.error = GL_NO_ERROR)
-		egl_state->state.error = GL_INVALID_VALUE;
-	    gpu_mutex_unlock (mutex);
-	    return;
-	}
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
     }
 
     gpu_mutex_unlock (mutex);
@@ -3821,7 +3850,7 @@ void glTexSubImage2D (GLenum target, GLint level,
 
     egl_state = (egl_state_t *) active_state->data;
     
-    /* XXX: create command buffer, wait for signal */
+    /* XXX: create command buffer, no wait */
     dispatch.TexSubImage2D (target, level, xoffset, yoffset, 
 			    width, height, format, type, data);
     egl_state->state.need_get_error = TRUE;
@@ -3829,3 +3858,654 @@ void glTexSubImage2D (GLenum target, GLint level,
 FINISH:
     gpu_mutex_unlock (mutex);
 }
+
+void glUniform1f (GLint location, GLfloat v0)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform1f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.Uniform1f (location, v0);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform2f (GLint location, GLfloat v0, GLfloat v1)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform2f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.Uniform2f (location, v0, v1);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform3f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform3f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.Uniform3f (location, v0, v1, v2);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform4f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2,
+		  GLfloat v3)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform4f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.Uniform4f (location, v0, v1, v2, v3);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform1i (GLint location, GLint v0)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform1i))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, not wait */
+    dispatch.Uniform1i (location, v0);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform2i (GLint location, GLint v0, GLint v1)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform2i))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, not wait */
+    dispatch.Uniform2i (location, v0, v1);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform3i (GLint location, GLint v0, GLint v1, GLint v2)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform3i))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.Uniform3i (location, v0, v1, v2);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform4i (GLint location, GLint v0, GLint v1, GLint v2,
+		  GLint v3)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Uniform4i))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, not wait */
+    dispatch.Uniform4i (location, v0, v1, v2, v3);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+static void 
+_gl_uniform_fv (int i, GLint location, 
+		GLsizei count, const GLfloat *value)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if (i == 1) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform1fv))
+	goto FINISH;
+    }
+    else if (i == 2) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform2fv))
+	goto FINISH;
+    }
+    else if (i == 3) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform3fv))
+	goto FINISH;
+    }
+    else {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform4fv))
+	goto FINISH;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, not wait */
+    if (i == 1)
+	dispatch.Uniform1fv (location, count, value);
+    else if (i == 2)
+	dispatch.Uniform2fv (location, count, value);
+    else if (i == 3)
+	dispatch.Uniform3fv (location, count, value);
+    else
+	dispatch.Uniform4fv (location, count, value);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform1fv (GLint location, GLsizei count, const GLfloat *value)
+{
+    _gl_uniform_fv (1, location, count, value);
+}
+
+void glUniform2fv (GLint location, GLsizei count, const GLfloat *value)
+{
+    _gl_uniform_fv (2, location, count, value);
+}
+
+void glUniform3fv (GLint location, GLsizei count, const GLfloat *value)
+{
+    _gl_uniform_fv (3, location, count, value);
+}
+
+void glUniform4fv (GLint location, GLsizei count, const GLfloat *value)
+{
+    _gl_uniform_fv (4, location, count, value);
+}
+
+static void 
+_gl_uniform_iv (int i, GLint location, 
+		GLsizei count, const GLint *value)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if (i == 1) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform1iv))
+	goto FINISH;
+    }
+    else if (i == 2) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform2iv))
+	goto FINISH;
+    }
+    else if (i == 3) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform3iv))
+	goto FINISH;
+    }
+    else {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.Uniform4iv))
+	goto FINISH;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    if (i == 1)
+	dispatch.Uniform1iv (location, count, value);
+    else if (i == 2)
+	dispatch.Uniform2iv (location, count, value);
+    else if (i == 3)
+	dispatch.Uniform3iv (location, count, value);
+    else
+	dispatch.Uniform4iv (location, count, value);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glUniform1iv (GLint location, GLsizei count, const GLint *value)
+{
+    _gl_uniform_iv (1, location, count, value);
+}
+
+void glUniform2iv (GLint location, GLsizei count, const GLint *value)
+{
+    _gl_uniform_iv (2, location, count, value);
+}
+
+void glUniform3iv (GLint location, GLsizei count, const GLint *value)
+{
+    _gl_uniform_iv (3, location, count, value);
+}
+
+void glUniform4iv (GLint location, GLsizei count, const GLint *value)
+{
+    _gl_uniform_iv (4, location, count, value);
+}
+
+void glUseProgram (GLuint program) 
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.UseProgram))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (egl_state->state.current_program == program)
+	goto FINISH;
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.UseProgram (program);
+    /* FIXME: this maybe not right because this texture may be invalid
+     * object, we save here to save time in glGetError() */
+    egl_state->state.current_program = program;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glValidateProgram (GLuint program)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ValidateProgram))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (egl_state->state.current_program == program)
+	goto FINISH;
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.ValidateProgram (program);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glVertexAttrib1f (GLuint index, GLfloat v0)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.VertexAttrib1f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.VertexAttrib1f (index, v0);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glVertexAttrib2f (GLuint index, GLfloat v0, GLfloat v1)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.VertexAttrib2f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.VertexAttrib2f (index, v0, v1);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glVertexAttrib3f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.VertexAttrib3f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.VertexAttrib3f (index, v0, v1, v2);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glVertexAttrib4f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2,
+		       GLfloat v3)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.VertexAttrib4f))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.VertexAttrib4f (index, v0, v1, v2, v3);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+static void 
+_gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if (i == 1) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.VertexAttrib1fv))
+	goto FINISH;
+    }
+    else if (i == 2) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.VertexAttrib2fv))
+	goto FINISH;
+    }
+    else if (i == 3) {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.VertexAttrib3fv))
+	goto FINISH;
+    }
+    else {
+	if(! _is_error_state_or_func (active_state, 
+				      dispatch.VertexAttrib4fv))
+	goto FINISH;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
+    /* XXX: create command buffer, no wait signal */
+    if (i == 1)
+	dispatch.VertexAttrib1fv (index, v);
+    else if (i == 2)
+	dispatch.VertexAttrib2fv (index, v);
+    else if (i == 3)
+	dispatch.VertexAttrib3fv (index, v);
+    else
+	dispatch.VertexAttrib4fv (index, v);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+void glVertexAttrib1fv (GLuint index, const GLfloat *v)
+{
+    _gl_vertex_attrib_fv (1, index, v);
+}
+
+void glVertexAttrib2fv (GLuint index, const GLfloat *v)
+{
+    _gl_vertex_attrib_fv (2, index, v);
+}
+
+void glVertexAttrib3fv (GLuint index, const GLfloat *v)
+{
+    _gl_vertex_attrib_fv (3, index, v);
+}
+
+void glVertexAttrib4fv (GLuint index, const GLfloat *v)
+{
+    _gl_vertex_attrib_fv (4, index, v);
+}
+
+void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
+			    GLboolean normalized, GLsizei stride,
+			    const GLvoid *pointer)
+{
+    egl_state_t *egl_state;
+    v_vertex_attrib_list_t *attrib_list = &cli_states.vertex_attribs;
+    v_vertex_attrib_t *attribs = attrib_list->attribs;
+    int count = attrib_list->count;
+    int i, found_index = -1;
+    GLint bound_buffer = 0;
+
+    /* check existing client state */
+    for (i = 0; i < count; i++) {
+	if (attribs[i].index == index) {
+	    if (attribs[i].size == size &&
+		attribs[i].type == type &&
+		attribs[i].stride == stride) {
+		attribs[i].array_normalized = normalized;
+		attribs[i].pointer = (GLvoid *)pointer;
+		return;
+	    }
+	    else {
+		found_index = i;
+		break;
+	    }
+	}
+    }
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.VertexAttribPointer)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    if (! (type == GL_BYTE 		||
+	   type == GL_UNSIGNED_BYTE	||
+	   type == GL_SHORT		||
+	   type == GL_UNSIGNED_SHORT	||
+	   type == GL_FLOAT)) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    else if (size > 4 || size < 1 || stride < 0) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_VALUE;
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+
+    /* check max_vertex_attribs */
+    if (_gl_index_is_too_large (&egl_state->state, index)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+
+    bound_buffer = egl_state->state.array_buffer_binding;
+
+    gpu_mutex_unlock (mutex);
+
+    if (found_index != -1) {
+	attribs[found_index].size = size;
+	attribs[found_index].stride = stride;
+	attribs[found_index].type = type;
+	attribs[found_index].array_normalized = normalized;
+	attribs[found_index].pointer = (GLvoid *)pointer;
+	return;
+    }
+   
+    /* we have not found index */ 
+    if (i < NUM_EMBEDDED) {
+	attribs[i].index = index;
+	attribs[i].size = size;
+	attribs[i].stride = stride;
+	attribs[i].type = type;
+	attribs[i].array_normalized = normalized;
+	attribs[i].pointer = (GLvoid *)pointer;
+	attribs[i].data = NULL;
+	attribs[i].array_enabled = GL_FALSE;
+	attribs[i].array_buffer_binding = bound_buffer;
+	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	attrib_list->count ++;
+    }
+    else {
+	v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
+
+	memcpy (new_attribs, attribs, (count+1) * sizeof (v_vertex_attrib_t));
+	if (attribs != attrib_list->embedded_attribs)
+	    free (attribs);
+	
+	new_attribs[count].index = index;
+	new_attribs[count].size = size;
+	new_attribs[count].stride = stride;
+	new_attribs[count].type = type;
+	new_attribs[count].array_normalized = normalized;
+	new_attribs[count].pointer = (GLvoid *)pointer;
+	new_attribs[count].data = NULL;
+	new_attribs[count].array_enabled = GL_FALSE;
+	new_attribs[count].array_buffer_binding = bound_buffer;
+	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
+
+	attrib_list->attribs = new_attribs;
+	attrib_list->count ++;
+    }
+}
+
+void glViewport (GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.Viewport))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (egl_state->state.viewport[0] == x &&
+	egl_state->state.viewport[1] == y &&
+	egl_state->state.viewport[2] == width &&
+	egl_state->state.viewport[3] == height)
+	goto FINISH;
+    
+    if (x < 0 || y < 0) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_VALUE;
+	goto FINISH;
+    }
+
+    egl_state->state.viewport[0] = x;
+    egl_state->state.viewport[1] = y;
+    egl_state->state.viewport[2] = width;
+    egl_state->state.viewport[3] = height;
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.Viewport (x, y, width, height);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+/* end of GLES2 core profile */
