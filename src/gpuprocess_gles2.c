@@ -1,3 +1,5 @@
+#include <GLES/gl.h>
+#include <GLES/glext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <string.h>
@@ -64,15 +66,14 @@ void glActiveTexture (GLenum texture)
 
     egl_state = (egl_state_t *) active_state->data;
 
-    if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
+    if (egl_state->state.active_texture == texture)
+	goto FINISH;
+    else if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_ENUM;
 	goto FINISH;
     }
    
-    if (texture == egl_state->state.active_texture)
-	goto FINISH;
-
     /* XXX: create a command buffer */
     dispatch.ActiveTexture (texture);
 
@@ -125,7 +126,20 @@ FINISH:
 void glBindBuffer (GLenum target, GLuint buffer)
 {
     egl_state_t *egl_state;
+    v_vertex_attrib_list_t *attrib_list = &cli_states.vertex_attribs;
+    v_vertex_attrib_t *attribs = attrib_list->attribs;
+    int count = attrib_list->count;
+    int i;
+    
     gpu_mutex_lock (mutex);
+
+    if (target == GL_ARRAY_BUFFER && 
+	buffer == egl_state->state.array_buffer_binding)
+	goto FINISH;
+    else if (target == GL_ELEMENT_ARRAY_BUFFER &&
+	     buffer == egl_state->state.elementary_array_buffer_binding)
+	goto FINISH; 
+    }
 
     if (!(target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER) ||
 	! _is_error_state_or_func (active_state, dispatch.BindBuffer))
@@ -144,6 +158,13 @@ void glBindBuffer (GLenum target, GLuint buffer)
 
 FINISH:
     gpu_mutex_unlock (mutex);
+
+    /* update client state */
+    if (target == GL_ARRAY_BUFFER) {
+	for (i = 0; i < count; i++) {
+	    attribs[i].array_buffer_binding = buffer;
+	}
+    }
 }
 
 void glBindFramebuffer (GLenum target, GLuint framebuffer)
@@ -154,6 +175,10 @@ void glBindFramebuffer (GLenum target, GLuint framebuffer)
 
     if(! _is_error_state_or_func (active_state, 
 				  dispatch.BindFramebuffer))
+	goto FINISH;
+
+    if (target == GL_FRAMEBUFFER && 
+	egl_state->state.framebuffer_binding == framebuffer)
 	goto FINISH;
 
     if (target != GL_FRAMEBUFFER 
@@ -173,8 +198,11 @@ void glBindFramebuffer (GLenum target, GLuint framebuffer)
 	    egl_state->state.error = GL_INVALID_ENUM;
 	goto FINISH;
     }
+
     /* XXX: create a command buffer, according to spec, no error generated */
     dispatch.BindFramebuffer (target, framebuffer);
+    /* should we save it ? */
+    egl_state->state.framebuffer_binding = framebuffer;
 
     //egl_state->state.need_get_error = TRUE;
 
@@ -216,6 +244,18 @@ void glBindTexture (GLenum target, GLuint texture)
 				  dispatch.BindTexture))
 	goto FINISH;
 
+    if (target == GL_TEXTURE_2D &&
+	egl_state->state.texture_binding[0] == texture)
+	goto FINISH;
+    else if (target == GL_TEXTURE_CUBE_MAP &&
+	     egl_state->state.texture_binding[1] == texture)
+	goto FINISH;
+#ifdef GL_OES_texture_3D
+    else if (target == GL_TEXTURE_3D_OES &&
+	     egl_state->state.texture_binding_3d == texture)
+	goto FINISH;
+#endif
+
     if (! (target == GL_TEXTURE_2D || target == GL_TEXTURE_CUBE_MAP
 #ifdef GL_OES_texture_3D
 	   || target == GL_TEXTURE_3D_OES
@@ -239,6 +279,8 @@ void glBindTexture (GLenum target, GLuint texture)
     else
 	egl_state->state.texture_binding_3d = texture;
 #endif
+
+    //egl_state->state.need_get_error = TRUE;
 
 FINISH:
     gpu_mutex_unlock (mutex);
@@ -1222,8 +1264,8 @@ _gl_set_cap (GLenum cap, GLboolean enable)
 	}
 	break;
     default:
-	if (state->error == GL_NO_ERROR)
-	    state->error = GL_INVALID_ENUM;
+	needs_call = TRUE;
+	state->need_get_error = TRUE;
 	break;
     }
 
@@ -1277,7 +1319,7 @@ void glDisableVertexAttribArray (GLuint index)
     int count = attrib_list->count;
     int i, found_index = -1;
 
-    GLint bound_buffer;
+    GLint bound_buffer = 0;
 
     /* look into client state */
     for (i = 0; i < count; i++) {
@@ -1307,12 +1349,12 @@ void glDisableVertexAttribArray (GLuint index)
 	return;
     }
 
-    bound_buffer = egl_state->state.array_buffer_binding;
-
     /* XXX: command buffer, error code generated */
     dispatch.DisableVertexAttribArray (index);
 
+    bound_buffer = egl_state->state.array_buffer_binding;
     gpu_mutex_unlock (mutex);
+
     /* update client state */
     if (found_index != -1)
 	return;
@@ -1320,14 +1362,14 @@ void glDisableVertexAttribArray (GLuint index)
     if (i < NUM_EMBEDDED) {
 	attribs[i].array_enabled = GL_FALSE;
 	attribs[i].index = index;
-	attribs[i].array_buffer_binding = bound_buffer;
 	attribs[i].size = 0;
 	attribs[i].stride = 0;
 	attribs[i].type = GL_FLOAT;
 	attribs[i].array_normalized = GL_FALSE;
 	attribs[i].pointer = NULL;
 	attribs[i].data = NULL;
-	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	attribs[i].array_buffer_binding = bound_buffer;
 	attrib_list->count ++;
     }
     else {
@@ -1339,14 +1381,14 @@ void glDisableVertexAttribArray (GLuint index)
 
 	new_attribs[count].array_enabled = GL_FALSE;
 	new_attribs[count].index = index;
-	new_attribs[count].array_buffer_binding = bound_buffer;
 	new_attribs[count].size = 0;
 	new_attribs[count].stride = 0;
 	new_attribs[count].type = GL_FLOAT;
 	new_attribs[count].array_normalized = GL_FALSE;
 	new_attribs[count].pointer = NULL;
 	new_attribs[count].data = NULL;
-	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
+	new_attribs[count].array_buffer_binding = bound_buffer;
+	memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 	attrib_list->attribs = new_attribs;
 	attrib_list->count ++;
     }
@@ -1388,9 +1430,10 @@ void glEnableVertexAttribArray (GLuint index)
 	return;
     }
 
-    bound_buffer = egl_state->state.array_buffer_binding;
     /* XXX: command buffer, error code generated */
     dispatch.EnableVertexAttribArray (index);
+
+    bound_buffer = egl_state->state.array_buffer_binding;
 
     gpu_mutex_unlock (mutex);
 
@@ -1401,14 +1444,14 @@ void glEnableVertexAttribArray (GLuint index)
     if (i < NUM_EMBEDDED) {
 	attribs[i].array_enabled = GL_TRUE;
 	attribs[i].index = index;
-	attribs[i].array_buffer_binding = bound_buffer;
 	attribs[i].size = 0;
 	attribs[i].stride = 0;
 	attribs[i].type = GL_FLOAT;
 	attribs[i].array_normalized = GL_FALSE;
 	attribs[i].pointer = NULL;
 	attribs[i].data = NULL;
-	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	attribs[i].array_buffer_binding = bound_buffer;
+	memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
     }
     else {
 	v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
@@ -1419,14 +1462,14 @@ void glEnableVertexAttribArray (GLuint index)
 
 	new_attribs[count].array_enabled = GL_TRUE;
 	new_attribs[count].index = index;
-	new_attribs[count].array_buffer_binding = bound_buffer;
 	new_attribs[count].size = 0;
 	new_attribs[count].stride = 0;
 	new_attribs[count].type = GL_FLOAT;
 	new_attribs[count].array_normalized = GL_FALSE;
 	new_attribs[count].pointer = NULL;
 	new_attribs[count].data = NULL;
-	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
+	new_attribs[count].array_buffer_binding = bound_buffer;
+	memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 	attrib_list->attribs = new_attribs;
 	attrib_list->count ++;
     }
@@ -1478,10 +1521,14 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
     int i, found_index = -1;
     int n = 0;
     
-    if(! _is_error_state_or_func (active_state, 
-				  dispatch.DrawArrays))
-	return;
+    gpu_mutex_lock (mutex);
 
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DrawArrays)) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+    
     egl_state = (egl_state_t *)active_state->data;
 
     if (mode != GL_POINTS && mode != GL_LINE_STRIP &&
@@ -1490,23 +1537,32 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
 	mode != GL_TRIANGLES) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_ENUM;
+	gpu_mutex_unlock (mutex);
 	return;
     }
     else if (count < 0) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_VALUE;
+	gpu_mutex_unlock (mutex);
 	return;
     }
+
+#ifdef GL_OES_vertex_array_object
+    if (egl_state->state.vertex_array_binding) {
+	dispatch.DrawArrays (mode, first, count);
+	egl_state->state.need_get_error = TRUE;
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+#endif
 
     /* check buffer binding, if there is a buffer, we don't need to 
      * copy data
      */
-    gpu_mutex_lock (mutex);
-
     for (i = 0; i < attrib_list->count; i++) {
 	if (! attribs[i].array_enabled)
 	    continue;
-	else if (attribs[i].array_buffer_binding) {
+	else if (egl_state->state.array_buffer_binding) {
 	    dispatch.VertexAttribPointer (attribs[i].index,
 					  attribs[i].size,
 					  attribs[i].type,
@@ -1656,11 +1712,23 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     int i, found_index = -1;
     int n = 0;
     
+    gpu_mutex_lock (mutex);
+    
     if(! _is_error_state_or_func (active_state, 
-				  dispatch.DrawArrays))
+				  dispatch.DrawElements)) {
+	gpu_mutex_unlock (mutex);
 	return;
-
+    }
     egl_state = (egl_state_t *)active_state->data;
+
+#ifdef GL_OES_vertex_array_object
+    if (egl_state->state.vertex_array_binding) {
+	dispatch.DrawElements (mode, count, type, indices);
+	egl_state->state.need_get_error = TRUE;
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+#endif
 
     if (mode != GL_POINTS && mode != GL_LINE_STRIP &&
 	mode != GL_LINE_LOOP && mode != GL_LINES &&
@@ -1668,28 +1736,30 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
 	mode != GL_TRIANGLES) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_ENUM;
+	gpu_mutex_unlock (mutex);
 	return;
     }
     else if (type != GL_UNSIGNED_BYTE && type != GL_UNSIGNED_SHORT) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_ENUM;
+	gpu_mutex_unlock (mutex);
 	return;
     }
     else if (count < 0) {
 	if (egl_state->state.error == GL_NO_ERROR)
 	    egl_state->state.error = GL_INVALID_VALUE;
+	gpu_mutex_unlock (mutex);
 	return;
     }
 
     /* check buffer binding, if there is a buffer, we don't need to 
      * copy data
      */
-    gpu_mutex_lock (mutex);
 
     for (i = 0; i < attrib_list->count; i++) {
 	if (! attribs[i].array_enabled)
 	    continue;
-	else if ( attribs[i].array_buffer_binding) {
+	else if (egl_state->state.array_buffer_binding) {
 	    dispatch.VertexAttribPointer (attribs[i].index,
 					  attribs[i].size,
 					  attribs[i].type,
@@ -2131,6 +2201,10 @@ FINISH:
 void glGetIntegerv (GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
+    v_vertex_attrib_list_t *attrib_list = &cli_states.vertex_attribs;
+    v_vertex_attrib_t *attribs = attrib_list->attribs;
+    int count = attrib_list->count;
+    int i;
 
     gpu_mutex_lock (mutex);
 
@@ -2291,6 +2365,19 @@ void glGetIntegerv (GLenum pname, GLint *params)
     }
   
 FINISH:
+    if (pname == GL_ARRAY_BUFFER_BINDING) {
+	egl_state->state.array_buffer_binding = *params;
+	/* update client state */
+	for (i = 0; i < count; i++) {
+	    attribs[i].array_buffer_binding = *params;
+	}
+    }
+    else if (pname = GL_ELEMENT_ARRAY_BUFFER_BINDING)
+	egl_state->state.array_buffer_binding = *params;
+#ifdef GL_OES_vertex_array_object
+    else if (pname = GL_VERTEX_ARRAY_BINDING_OES)
+	egl_state->state.vertex_array_binding = *params;
+#endif
     gpu_mutex_unlock (mutex);
 }
 
@@ -2830,6 +2917,15 @@ void glGetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)
 	gpu_mutex_unlock (mutex);
 	return;
     }
+    
+#ifdef GL_OES_vertex_array_object
+    /* we cannot use client state */
+    if (egl_state->state.vertex_array_binding) {
+	dispatch.GetVertexAttribfv (index, pname, params);
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+#endif
 
     gpu_mutex_unlock (mutex);
 
@@ -2884,7 +2980,7 @@ void glGetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)
 	*params = GL_FALSE;
 	break;
     default:
-	memcpy (params, 0, sizeof (GLfloat) * 4);
+	memset (params, 0, sizeof (GLfloat) * 4);
 	break;
     }
 }
@@ -4373,6 +4469,22 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
     int i, found_index = -1;
     GLint bound_buffer = 0;
 
+#ifdef GL_OES_vertex_array_object
+    gpu_mutex_lock (mutex);
+    if (! active_state && ! active_state->data) {
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+    if (egl_state->state.vertex_array_binding) {
+	dispatch.VertexAttribPointer (index, size, type, normalized,
+				      stride, pointer);
+	egl_state->state.need_get_error = TRUE;
+	gpu_mutex_unlock (mutex);
+	return;
+    }
+#endif
     /* check existing client state */
     for (i = 0; i < count; i++) {
 	if (attribs[i].index == index) {
@@ -4390,16 +4502,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 	}
     }
 
-    gpu_mutex_lock (mutex);
-
-    if(! _is_error_state_or_func (active_state, 
-				  dispatch.VertexAttribPointer)) {
-	gpu_mutex_unlock (mutex);
-	return;
-    }
-
-    egl_state = (egl_state_t *) active_state->data;
-    
     if (! (type == GL_BYTE 		||
 	   type == GL_UNSIGNED_BYTE	||
 	   type == GL_SHORT		||
@@ -4445,9 +4547,9 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 	attribs[i].array_normalized = normalized;
 	attribs[i].pointer = (GLvoid *)pointer;
 	attribs[i].data = NULL;
-	attribs[i].array_enabled = GL_FALSE;
+	attribs[i].array_enabled = GL_FALSE;	
 	attribs[i].array_buffer_binding = bound_buffer;
-	memcpy (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+	memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
 	attrib_list->count ++;
     }
     else {
@@ -4466,7 +4568,7 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 	new_attribs[count].data = NULL;
 	new_attribs[count].array_enabled = GL_FALSE;
 	new_attribs[count].array_buffer_binding = bound_buffer;
-	memcpy (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
+	memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 
 	attrib_list->attribs = new_attribs;
 	attrib_list->count ++;
@@ -4509,3 +4611,1580 @@ FINISH:
     gpu_mutex_unlock (mutex);
 }
 /* end of GLES2 core profile */
+
+#ifdef GL_OES_EGL_image
+GL_APICALL void GL_APIENTRY
+glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.EGLImageTargetTexture2DOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (target != GL_TEXTURE_2D) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.EGLImageTargetTexture2DOES (target, image);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY 
+glEGLImageTargetRenderbufferStorageOES (GLenum target, GLeglImageOES image)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.EGLImageTargetRenderbufferStorageOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (target != GL_RENDERBUFFER_OES) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    
+    /* XXX: create command buffer, no wait signal */
+    dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_OES_get_program_binary
+GL_APICALL void GL_APIENTRY
+glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei *length,
+		       GLenum *binaryFormat, GLvoid *binary)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetProgramBinaryOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait signal */
+    dispatch.GetProgramBinaryOES (program, bufSize, length, binaryFormat,
+				  binary);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glProgramBinaryOES (GLuint program, GLenum binaryFormat, 
+		    const GLvoid *binary, GLint length)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ProgramBinaryOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait signal */
+    dispatch.ProgramBinaryOES (program, binaryFormat, binary, length);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_OES_mapbuffer
+GL_APICALL void* GL_APIENTRY glMapBufferOES (GLenum target, GLenum access)
+{
+    egl_state_t *egl_state;
+    void *result = NULL;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.MapBufferOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (access != GL_WRITE_ONLY_OES) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+    else if (! (target == GL_ARRAY_BUFFER ||
+		target == GL_ELEMENT_ARRAY_BUFFER)) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    /* XXX: create command buffer, wait signal */
+    result = dispatch.MapBufferOES (target, access);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+    return result;
+}
+
+GL_APICALL GLboolean GL_APIENTRY 
+glUnmapBufferOES (GLenum target)
+{
+    egl_state_t *egl_state;
+    GLboolean result = GL_FALSE;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.UnmapBufferOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (! (target == GL_ARRAY_BUFFER ||
+	   target == GL_ELEMENT_ARRAY_BUFFER)) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    /* XXX: create command buffer, wait signal */
+    result = dispatch.UnmapBufferOES (target);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+    return result;
+}
+
+GL_APICALL void GL_APIENTRY
+glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid **params)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetBufferPointervOES)) {
+	*params = NULL;
+	goto FINISH;
+    }
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (! (target == GL_ARRAY_BUFFER ||
+	   target == GL_ELEMENT_ARRAY_BUFFER)) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	    *params = NULL;
+	goto FINISH;
+    }
+
+    /* XXX: create command buffer, wait signal */
+    dispatch.GetBufferPointervOES (target, pname, params);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_OES_texture_3D
+GL_APICALL void GL_APIENTRY
+glTexImage3DOES (GLenum target, GLint level, GLenum internalformat, 
+		 GLsizei width, GLsizei height, GLsizei depth,
+		 GLint border, GLenum format, GLenum type,
+		 const GLvoid *pixels)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.TexImage3DOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, wait for signal */
+    dispatch.TexImage3DOES (target, level, internalformat, width, height, 
+			    depth, border, format, type, pixels);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glTexSubImage3DOES (GLenum target, GLint level, 
+		    GLint xoffset, GLint yoffset, GLint zoffset,
+		    GLsizei width, GLsizei height, GLsizei depth, 
+		    GLenum format, GLenum type, const GLvoid *data)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.TexSubImage3DOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.TexSubImage3DOES (target, level, xoffset, yoffset, zoffset, 
+			       width, height, depth, format, type, data);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY 
+glCopyTexSubImage3DOES (GLenum target, GLint level, 
+			GLint xoffset, GLint yoffset, GLint zoffset,
+			GLint x, GLint y, 
+			GLint width, GLint height)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.CopyTexSubImage3DOES))
+	goto FINISH;
+
+    /* XXX: command buffer */
+    dispatch.CopyTexSubImage3DOES (target, level, 
+				   xoffset, yoffset, zoffset,
+				   x, y, width, height);
+    egl_state = (egl_state_t *) active_state->data;
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY 
+glCompressedTexImage3DOES (GLenum target, GLint level, 
+			   GLenum internalformat, 
+			   GLsizei width, GLsizei height, GLsizei depth,
+			   GLint border, GLsizei imageSize,
+			   const GLvoid *data)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.CompressedTexImage3DOES))
+	goto FINISH;
+
+    /* XXX: command buffer */
+    dispatch.CompressedTexImage3DOES (target, level, internalformat,
+				      width, height, depth, 
+				      border, imageSize, data);
+    egl_state = (egl_state_t *) active_state->data;
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glCompressedTexSubImage3DOES (GLenum target, GLint level,
+			      GLint xoffset, GLint yoffset, GLint zoffset,
+			      GLsizei width, GLsizei height, GLsizei depth,
+			      GLenum format, GLsizei imageSize,
+			      const GLvoid *data)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.CompressedTexSubImage3DOES))
+	goto FINISH;
+
+    /* XXX: command buffer */
+    dispatch.CompressedTexSubImage3DOES (target, level, 
+					 xoffset, yoffset, zoffset,
+					 width, height, depth, 
+					 format, imageSize, data);
+    egl_state = (egl_state_t *) active_state->data;
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+GL_APICALL void GL_APIENTRY
+glFramebufferTexture3DOES (GLenum target, GLenum attachment,
+			   GLenum textarget, GLuint texture, 
+			   GLint level, GLint zoffset)
+{
+    egl_state_t *egl_state;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.FramebufferTexture3DOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    if (target != GL_FRAMEBUFFER) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    dispatch.FramebufferTexture3DOES (target, attachment, textarget,
+				      texture, level, zoffset);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_OES_vertex_array_object
+/* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
+ * spec says it generates GL_INVALID_OPERATION if 
+ * (1) array is not generated by glGenVertexArrayOES()
+ * (2) the array object has been deleted by glDeleteVertexArrayOES()
+ * 
+ * SPECIAL ATTENTION:
+ * this call also affect glVertexAttribPointer() and glDrawXXXX(),
+ * if there is a vertex_array_binding, instead of using client state, 
+ * we pass them to server.
+ */
+GL_APICALL void GL_APIENTRY
+glBindVertexArrayOES (GLuint array)
+{
+    egl_state_t *egl_state;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.BindVertexArrayOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.BindVertexArrayOES (array);
+    egl_state->state.need_get_error = TRUE;
+    /* should we save this ? */
+    egl_state->state.vertex_array_binding = array;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glDeleteVertexArraysOES (GLsizei n, const GLuint *arrays)
+{
+    egl_state_t *egl_state;
+    int i;
+
+    /* XXX: any error generated ? */
+    if (n <= 0)
+	return;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DeleteVertexArraysOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.DeleteVertexArraysOES (n, arrays);
+    
+    /* matching vertex_array_binding ? */
+    for (i = 0; i < n; i++) {
+	if (arrays[i] == egl_state->state.vertex_array_binding) {
+	    egl_state->state.vertex_array_binding = 0;
+	    break;
+	}
+    }
+    
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGenVertexArraysOES (GLsizei n, GLuint *arrays)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: any error generated ? */
+    if (n <= 0)
+	return;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GenVertexArraysOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GenVertexArraysOES (n, arrays);
+    
+    
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glIsVertexArrayOES (GLuint array)
+{
+    egl_state_t *egl_state;
+    GLboolean result = GL_FALSE;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.IsVertexArrayOES))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    result = dispatch.IsVertexArrayOES (array);
+
+    if (result == GL_FALSE && egl_state->state.vertex_array_binding == array)
+	egl_state->state.vertex_array_binding = 0;
+    
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_AMD_performance_monitor
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorGroupsAMD (GLint *numGroups, GLsizei groupSize, 
+			   GLuint *groups)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorGroupsAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    dispatch.GetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorCountersAMD (GLuint group, GLint *numCounters, 
+			     GLint *maxActiveCounters, GLsizei counterSize,
+			     GLuint *counters)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorCountersAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GetPerfMonitorCountersAMD (group, numCounters,
+					maxActiveCounters,
+					counterSize, counters);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorGroupStringAMD (GLuint group, GLsizei bufSize, 
+				GLsizei *length, GLchar *groupString)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorGroupStringAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GetPerfMonitorGroupStringAMD (group, bufSize, length,
+					   groupString);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorCounterStringAMD (GLuint group, GLuint counter, 
+				  GLsizei bufSize, 
+				  GLsizei *length, GLchar *counterString)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorCounterStringAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GetPerfMonitorCounterStringAMD (group, counter, bufSize, 
+					     length, counterString);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorCounterInfoAMD (GLuint group, GLuint counter, 
+				GLenum pname, GLvoid *data)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorCounterInfoAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GetPerfMonitorCounterInfoAMD (group, counter, pname, data); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGenPerfMonitorsAMD (GLsizei n, GLuint *monitors) 
+{
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GenPerfMonitorsAMD))
+	goto FINISH;
+
+    dispatch.GenPerfMonitorsAMD (n, monitors); 
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glDeletePerfMonitorsAMD (GLsizei n, GLuint *monitors) 
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DeletePerfMonitorsAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.DeletePerfMonitorsAMD (n, monitors); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glSelectPerfMonitorCountersAMD (GLuint monitor, GLboolean enable,
+				GLuint group, GLint numCounters,
+				GLuint *countersList) 
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.SelectPerfMonitorCountersAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.SelectPerfMonitorCountersAMD (monitor, enable, group,
+					   numCounters, countersList); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glBeginPerfMonitorAMD (GLuint monitor)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.BeginPerfMonitorAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.BeginPerfMonitorAMD (monitor); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glEndPerfMonitorAMD (GLuint monitor)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.EndPerfMonitorAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.EndPerfMonitorAMD (monitor); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
+				GLsizei dataSize, GLuint *data,
+				GLint *bytesWritten)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetPerfMonitorCounterDataAMD))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.GetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
+					   data, bytesWritten); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_ANGLE_framebuffer_blit
+GL_APICALL void GL_APIENTRY
+glBlitFramebufferANGLE (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
+			GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
+			GLbitfield mask, GLenum filter)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.BlitFramebufferANGLE))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.BlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
+				   dstX0, dstY0, dstX1, dstY1,
+				   mask, filter);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_ANGLE_framebuffer_multisample
+GL_APICALL void GL_APIENTRY
+glRenderbufferStorageMultisampleANGLE (GLenum target, GLsizei samples, 
+				       GLenum internalformat, 
+				       GLsizei width, GLsizei height)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.RenderbufferStorageMultisampleANGLE))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.RenderbufferStorageMultisampleANGLE (target, samples,
+						  internalformat,
+						  width, height);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_APPLE_framebuffer_multisample
+GL_APICALL void GL_APIENTRY
+glRenderbufferStorageMultisampleAPPLE (GLenum target, GLsizei samples, 
+				       GLenum internalformat, 
+				       GLsizei width, GLsizei height)
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.RenderbufferStorageMultisampleAPPLE))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.RenderbufferStorageMultisampleAPPLE (target, samples,
+						  internalformat,
+						  width, height);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glResolveMultisampleFramebufferAPPLE (void) 
+{
+    egl_state_t *egl_state;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ResolveMultisampleFramebufferAPPLE))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    dispatch.ResolveMultisampleFramebufferAPPLE ();
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_EXT_discard_framebuffer
+GL_APICALL void GL_APIENTRY
+glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments,
+			 const GLenum *attachments)
+{
+    egl_state_t *egl_state;
+    int i;
+
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DiscardFramebufferEXT))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    if (target != GL_FRAMEBUFFER) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    for (i = 0; i < numAttachments; i++) {
+	if (! (attachments[i] == GL_COLOR_ATTACHMENT0  ||
+	       attachments[i] == GL_DEPTH_ATTACHMENT   ||
+	       attachments[i] == GL_STENCIL_ATTACHMENT ||
+	       attachments[i] == GL_COLOR_EXT	       ||
+	       attachments[i] == GL_DEPTH_EXT	       ||
+	       attachments[i] == GL_STENCIL_EXT)) {
+	    if (egl_state->state.error == GL_NO_ERROR)
+		egl_state->state.error = GL_INVALID_ENUM;
+	    goto FINISH;
+	}
+    }
+
+    dispatch.DiscardFramebufferEXT (target, numAttachments, attachments);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_EXT_multi_draw_arrays
+GL_APICALL void GL_APIENTRY
+glMultiDrawArraysEXT (GLenum mode, const GLint *first, 
+		      const GLsizei *count, GLsizei primcount)
+{
+    /* not implemented */
+}
+
+GL_APICALL void GL_APIENTRY
+glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
+			const GLvoid **indices, GLsizei primcount)
+{
+    /* not implemented */
+}
+#endif
+
+#ifdef GL_EXT_multisampled_render_to_texture
+GL_APICALL void GL_APIENTRY
+glRenderbufferStorageMultisampleEXT (GLenum target, GLsizei samples,
+				     GLenum internalformat,
+				     GLsizei width, GLsizei height)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.RenderbufferStorageMultisampleEXT))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.RenderbufferStorageMultisampleEXT (target, samples, 
+						internalformat, 
+						width, height);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glFramebufferTexture2DMultisampleEXT (GLenum target, GLenum attachment,
+				      GLenum textarget, GLuint texture,
+				      GLint level, GLsizei samples)
+{
+    egl_state_t *egl_state;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.FramebufferTexture2DMultisampleEXT))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    if (target != GL_FRAMEBUFFER) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    dispatch.FramebufferTexture2DMultisampleEXT (target, attachment, 
+						 textarget, texture, 
+						 level, samples);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+				     
+#ifdef GL_IMG_multisampled_render_to_texture
+GL_APICALL void GL_APIENTRY
+glRenderbufferStorageMultisampleIMG (GLenum target, GLsizei samples,
+				     GLenum internalformat,
+				     GLsizei width, GLsizei height)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.RenderbufferStorageMultisampleIMG))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.RenderbufferStorageMultisampleIMG (target, samples, 
+						internalformat, 
+						width, height);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glFramebufferTexture2DMultisampleIMG (GLenum target, GLenum attachment,
+				      GLenum textarget, GLuint texture,
+				      GLint level, GLsizei samples)
+{
+    egl_state_t *egl_state;
+    
+    /* XXX: put to a command buffer, no wait for signal */
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.FramebufferTexture2DMultisampleIMG))
+	goto FINISH;
+
+    egl_state = (egl_state_t *)active_state->data;
+
+    if (target != GL_FRAMEBUFFER) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+
+    dispatch.FramebufferTexture2DMultisampleIMG (target, attachment, 
+						 textarget, texture, 
+						 level, samples);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_NV_fence
+GL_APICALL void GL_APIENTRY
+glDeleteFencesNV (GLsizei n, const GLuint *fences)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DeleteFencesNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.DeleteFencesNV (n, fences); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGenFencesNV (GLsizei n, GLuint *fences)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GenFencesNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.GenFencesNV (n, fences); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glIsFenceNV (GLuint fence)
+{
+    egl_state_t *egl_state;
+    GLboolean result = GL_FALSE;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.IsFenceNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    result = dispatch.IsFenceNV (fence); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+    return result;
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glTestFenceNV (GLuint fence)
+{
+    egl_state_t *egl_state;
+    GLboolean result = GL_FALSE;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.TestFenceNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    result = dispatch.TestFenceNV (fence); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+    return result;
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glGetFenceivNV (GLuint fence, GLenum pname, int *params)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetFenceivNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.GetFenceivNV (fence, pname, params); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glFinishFenceivNV (GLuint fence)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.FinishFenceNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.FinishFenceNV (fence); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glSetFenceNV (GLuint fence, GLenum condition)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.SetFenceNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.SetFenceNV (fence, condition); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_NV_coverage_sample
+GL_APICALL void GL_APIENTRY
+glCoverageMaskNV (GLboolean mask)
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.CoverageMaskNV))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.CoverageMaskNV (mask); 
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glCoverageOperationNV (GLenum operation)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.CoverageOperationNV))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    if (! (operation == GL_COVERAGE_ALL_FRAGMENTS_NV  ||
+	   operation == GL_COVERAGE_EDGE_FRAGMENTS_NV ||
+	   operation == GL_COVERAGE_AUTOMATIC_NV)) {
+	if (egl_state->state.error == GL_NO_ERROR)
+	    egl_state->state.error = GL_INVALID_ENUM;
+	goto FINISH;
+    }
+    
+    /* XXX: create command buffer, no wait */
+    dispatch.CoverageOperationNV (operation); 
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_QCOM_driver_control
+GL_APICALL void GL_APIENTRY
+glGetDriverControlsQCOM (GLint *num, GLsizei size, GLuint *driverControls)
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetDriverControlsQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.GetDriverControlsQCOM (num, size, driverControls); 
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize,
+			      GLsizei *length, GLchar *driverControlString)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.GetDriverControlStringQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.GetDriverControlStringQCOM (driverControl, bufSize,
+					 length, driverControlString); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glEnableDriverControlQCOM (GLuint driverControl)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.EnableDriverControlQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.EnableDriverControlQCOM (driverControl);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glDisableDriverControlQCOM (GLuint driverControl)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.DisableDriverControlQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.DisableDriverControlQCOM (driverControl);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_QCOM_extended_get
+GL_APICALL void GL_APIENTRY
+glExtGetTexturesQCOM (GLuint *textures, GLint maxTextures, 
+		      GLint *numTextures)
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetTexturesQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetTexturesQCOM (textures, maxTextures, numTextures);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetBuffersQCOM (GLuint *buffers, GLint maxBuffers, GLint *numBuffers) 
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetBuffersQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetBuffersQCOM (buffers, maxBuffers, numBuffers);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetRenderbuffersQCOM (GLuint *renderbuffers, GLint maxRenderbuffers, 
+			   GLint *numRenderbuffers) 
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetRenderbuffersQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetRenderbuffersQCOM (renderbuffers, maxRenderbuffers, 
+				      numRenderbuffers);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetFramebuffersQCOM (GLuint *framebuffers, GLint maxFramebuffers, 
+			  GLint *numFramebuffers) 
+{
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetFramebuffersQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetFramebuffersQCOM (framebuffers, maxFramebuffers, 
+				     numFramebuffers);
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetTexLevelParameterivQCOM (GLuint texture, GLenum face, GLint level,
+				 GLenum pname, GLint *params)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetTexLevelParameterivQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetTexLevelParameterivQCOM (texture, face, level,
+					    pname, params);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtTexObjectStateOverrideiQCOM (GLenum target, GLenum pname, GLint param)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtTexObjectStateOverrideiQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtTexObjectStateOverrideiQCOM (target, pname, param);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetTexSubImageQCOM (GLenum target, GLint level, 
+			 GLint xoffset, GLint yoffset, GLint zoffset,
+			 GLsizei width, GLsizei height, GLsizei depth,
+			 GLenum format, GLenum type, GLvoid *texels)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetTexSubImageQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetTexSubImageQCOM (target, level, 
+				    xoffset, yoffset, zoffset,
+				    width, height, depth,
+				    format, type, texels);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetBufferPointervQCOM (GLenum target, GLvoid **params) 
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetBufferPointervQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetBufferPointervQCOM (target, params); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_QCOM_extended_get2
+GL_APICALL void GL_APIENTRY
+glExtGetShadersQCOM (GLuint *shaders, GLint maxShaders, GLint *numShaders)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetShadersQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetShadersQCOM (shaders, maxShaders, numShaders); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetProgramsQCOM (GLuint *programs, GLint maxPrograms, 
+		      GLint *numPrograms)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetProgramsQCOM))
+	goto FINISH;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetProgramsQCOM (programs, maxPrograms, numPrograms); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL GLboolean GL_APIENTRY
+glExtIsProgramBinaryQCOM (GLuint program) 
+{
+    egl_state_t *egl_state;
+    v_bool_t result = FALSE;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtIsProgramBinaryQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    result = dispatch.ExtIsProgramBinaryQCOM (program); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+    return result;
+}
+
+GL_APICALL void GL_APIENTRY
+glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
+				 GLchar *source, GLint *length) 
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.ExtGetProgramBinarySourceQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.ExtGetProgramBinarySourceQCOM (program, shadertype, 
+					    source, length); 
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
+
+#ifdef GL_QCOM_tiled_rendering
+GL_APICALL void GL_APIENTRY
+glStartTilingQCOM (GLuint x, GLuint y, GLuint width, GLuint height, 
+		   GLbitfield preserveMask)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.StartTilingQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.StartTilingQCOM (x, y, width, height, preserveMask);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+
+GL_APICALL void GL_APIENTRY
+glEndTilingQCOM (GLbitfield preserveMask)
+{
+    egl_state_t *egl_state;
+
+    gpu_mutex_lock (mutex);
+
+    if(! _is_error_state_or_func (active_state, 
+				  dispatch.EndTilingQCOM))
+	goto FINISH;
+
+    egl_state = (egl_state_t *) active_state->data;
+
+    /* XXX: create command buffer, no wait */
+    dispatch.EndTilingQCOM (preserveMask);
+    egl_state->state.need_get_error = TRUE;
+
+FINISH:
+    gpu_mutex_unlock (mutex);
+}
+#endif
