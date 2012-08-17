@@ -141,7 +141,7 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     state->sample_alpha_to_coverage = 0;
     state->sample_coverage = GL_FALSE;
     
-    memcpy (state->scissor_box, 0, sizeof (GLint) * 4);
+    memset (state->scissor_box, 0, sizeof (GLint) * 4);
     state->scissor_test = GL_FALSE;
 
     /* XXX: should we set this */
@@ -164,12 +164,13 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     memset (&state->stencil_writemask, 0xff, sizeof (GLint));
     memset (&state->stencil_back_writemask, 0xff, sizeof (GLint));
 
+
     memset (state->texture_binding, 0, sizeof (GLint) * 2);
 
     memset (state->viewport, 0, sizeof (GLint) * 4);
 
     for (i = 0; i < 32; i++) {
-	for (j = 0; i < 3; j++) {
+	for (j = 0; j < 3; j++) {
 	    state->texture_mag_filter[i][j] = GL_LINEAR;
 	    state->texture_mag_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
 	    state->texture_wrap_s[i][j] = GL_REPEAT;
@@ -180,10 +181,8 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
 #endif
     }
 
-
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
-
     /* XXX: initialize a thread */
 }
 
@@ -244,10 +243,10 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 		    state->active = FALSE;
 	    }
 	}
-	_gpuprocess_terminate (prev_dpy);
-	_gpuprocess_destroy_context (prev_dpy, prev_ctx);
-	_gpuprocess_destroy_surface (prev_dpy, prev_draw);
-	_gpuprocess_destroy_surface (prev_dpy, prev_read);
+	_gpuprocess_srv_terminate (prev_dpy);
+	_gpuprocess_srv_destroy_context (prev_dpy, prev_ctx);
+	_gpuprocess_srv_destroy_surface (prev_dpy, prev_draw);
+	_gpuprocess_srv_destroy_surface (prev_dpy, prev_read);
 	
 	*active_state = NULL;
 
@@ -300,10 +299,10 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 
     /* destroy pending eglTerminate (display) */
     if (match_state) {
-	_gpuprocess_terminate (prev_dpy);
-	_gpuprocess_destroy_context (prev_dpy, prev_ctx);
-	_gpuprocess_destroy_surface (prev_dpy, prev_draw);
-	_gpuprocess_destroy_surface (prev_dpy, prev_read);
+	_gpuprocess_srv_terminate (prev_dpy);
+	_gpuprocess_srv_destroy_context (prev_dpy, prev_ctx);
+	_gpuprocess_srv_destroy_surface (prev_dpy, prev_draw);
+	_gpuprocess_srv_destroy_surface (prev_dpy, prev_read);
 
 	*active_state = match_state;
 
@@ -365,7 +364,7 @@ _gpuprocess_srv_destroy_context (EGLDisplay display,
 	list = list->next;
 	state = (egl_state_t *)current->data;
     
-	if (_gpuprocess_has_context (state, display, context)) {
+	if (_gpuprocess_srv_has_context (state, display, context)) {
 	    state->destroy_ctx = TRUE;
 	    if (state->active == FALSE) {
 		if (srv_states.states == current)

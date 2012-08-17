@@ -8,14 +8,14 @@
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
 #include "gpuprocess_gles2_srv_private.h"
-extern gpuprocess_dispatch_t	dispatch;
+gpuprocess_dispatch_t	dispatch;
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_gles2_cli_private.h"
 
 /* XXX: initialize static mutex on srv */
-gpu_mutex_static_init (mutex);
+gpu_mutex_t	mutex;
 extern gl_srv_states_t	srv_states;
 extern __thread v_link_list_t *active_state;
 
@@ -223,7 +223,7 @@ eglQueryAPI (void)
 {
     EGLenum result = EGL_NONE;
 
-    _egl_make_pending_current ();
+    //_egl_make_pending_current ();
     if (dispatch.eglQueryAPI) 
 	result = dispatch.eglQueryAPI ();
 
@@ -273,15 +273,15 @@ eglReleaseThread (void)
 
 	    gpu_mutex_lock (mutex);
 
-	    success = _gpuprocess_make_current (state->display, 
-						EGL_NO_SURFACE,
-						EGL_NO_SURFACE, 
-						EGL_NO_CONTEXT,
-						state->display, 
-						state->drawable,
-						state->readable, 
-						state->context,
-						&active_state);
+	    success = _gpuprocess_srv_make_current (state->display, 
+						    EGL_NO_SURFACE,
+						    EGL_NO_SURFACE, 
+						    EGL_NO_CONTEXT,
+						    state->display, 
+						    state->drawable,
+						    state->readable, 
+						    state->context,
+						    &active_state);
 
 	    gpu_mutex_unlock (mutex);
 	}
@@ -374,7 +374,7 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 
 	if (result == GL_TRUE) {
 	    gpu_mutex_lock (mutex);
-	    _gpuprocdess_srv_destroy_context (dpy, ctx);
+	    _gpuprocess_srv_destroy_context (dpy, ctx);
 	    gpu_mutex_unlock (mutex);
 	}
     }
