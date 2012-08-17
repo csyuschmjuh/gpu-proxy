@@ -21,7 +21,7 @@ gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
 				 gpuprocess_sym_load_type_t type,
 				 const char* lib_name)
 {
-   void *handle = dlopen (lib_name, RTLD_LAZY);
+   void *handle = dlopen (lib_name, RTLD_LAZY|RTLD_DEEPBIND);
    gpuprocess_dispatch_entry_t *entry = entries;
    char *error;
 
