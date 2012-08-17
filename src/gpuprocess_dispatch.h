@@ -378,7 +378,7 @@ gpuprocess_dispatch_entry_t dispatch_opengl_entries[] = {
     DISPATCH_ENTRY_GL(BlitFramebufferANGLE),
 #endif
 
-#ifndef GL_ANGLE_framebuffer_multisample
+#ifdef GL_ANGLE_framebuffer_multisample
     DISPATCH_ENTRY_GL(RenderbufferStorageMultisampleANGLE),
 #endif
 

@@ -193,7 +193,7 @@ typedef struct _gpuprocess_dispatch {
 
 #ifdef EGL_MESA_drm_image
     EGLImageKHR (*eglCreateDRMImageMESA) (EGLDisplay, const EGLint *);
-    EGLBoolean (*eglExportDRMImageMESA) (EGLDisplay, EGLImageKHR, EGLint *, EGLint *, EGLint);
+    EGLBoolean (*eglExportDRMImageMESA) (EGLDisplay, EGLImageKHR, EGLint *, EGLint *, EGLint *);
 #endif
 
 #ifdef EGL_POST_SUB_BUFFER_SUPPORTED_NV
@@ -262,7 +262,7 @@ typedef struct _gpuprocess_dispatch {
 				  GLbitfield, GLenum);
 #endif
 
-#ifndef GL_ANGLE_framebuffer_multisample
+#ifdef GL_ANGLE_framebuffer_multisample
     void (*RenderbufferStorageMultisampleANGLE) (GLenum, GLsizei, GLenum, GLsizei, GLsizei);
 #endif
 

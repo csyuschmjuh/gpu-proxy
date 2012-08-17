@@ -56,6 +56,9 @@ _gpuprocess_srv_make_current (EGLDisplay display,
 gpuprocess_private void
 _gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context);
 
+gpuprocess_private void
+_gpuprocess_srv_destroy_surface (EGLDisplay display, EGLSurface surface);
+
 gpuprocess_private v_bool_t
 _gpuprocess_srv_is_equal (egl_state_t *state,
 			  EGLDisplay  display,
