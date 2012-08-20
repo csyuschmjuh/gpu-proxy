@@ -4,6 +4,7 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include "gpuprocess_gles2_states.h"
+#include "gpuprocess_thread_private.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,6 +26,9 @@ typedef struct egl_state {
     v_bool_t		destroy_draw;
 
     v_ref_count_t		ref_count;
+
+    gpu_mutex_t mutex;
+    gpu_signal_t signal;
 } egl_state_t;
 
 #ifdef __cplusplus
