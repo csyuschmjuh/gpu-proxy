@@ -8,14 +8,14 @@
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
 #include "gpuprocess_gles2_srv_private.h"
-gpuprocess_dispatch_t	dispatch;
+gpuprocess_dispatch_t        dispatch;
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_gles2_cli_private.h"
 
 /* XXX: initialize static mutex on srv */
-extern gl_srv_states_t	srv_states;
+extern gl_srv_states_t        srv_states;
 extern __thread v_link_list_t *active_state;
 gpu_mutex_t global_mutex;
 
@@ -25,7 +25,7 @@ eglGetError (void)
     EGLint error = EGL_NOT_INITIALIZED;
 
     if (! dispatch.eglGetError)
-	return error;
+        return error;
 
     error = dispatch.eglGetError();
 
@@ -65,7 +65,7 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglInitialize) 
-	result = dispatch.eglInitialize (dpy, major, minor);
+        result = dispatch.eglInitialize (dpy, major, minor);
 
     return result;
 }
@@ -83,17 +83,17 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
     gpu_mutex_lock (global_mutex);
 
     if (dispatch.eglTerminate) {
-	result = dispatch.eglTerminate (dpy);
+        result = dispatch.eglTerminate (dpy);
 
-	if (result == EGL_TRUE) {
- 	     gpu_mutex_lock (state->mutex);
+        if (result == EGL_TRUE) {
+              gpu_mutex_lock (state->mutex);
 
-	    /* XXX: remove srv structure */
-	    _gpuprocess_srv_terminate (dpy);
+            /* XXX: remove srv structure */
+            _gpuprocess_srv_terminate (dpy);
 
-	    gpu_mutex_unlock (state->mutex);
+            gpu_mutex_unlock (state->mutex);
 
-    	}
+            }
     }
 
     gpu_mutex_unlock (global_mutex);
@@ -107,85 +107,85 @@ eglQueryString (EGLDisplay dpy, EGLint name)
     const char *result = NULL;
 
     if (dispatch.eglQueryString)
-	result = dispatch.eglQueryString (dpy, name);
+        result = dispatch.eglQueryString (dpy, name);
 
     return result;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglGetConfigs (EGLDisplay dpy, EGLConfig *configs, 
-	       EGLint config_size, EGLint *num_config)
+               EGLint config_size, EGLint *num_config)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglGetConfigs)
-	result = dispatch.eglGetConfigs (dpy, configs, config_size, num_config);
+        result = dispatch.eglGetConfigs (dpy, configs, config_size, num_config);
 
     return result;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
-		 EGLConfig *configs, EGLint config_size, 
-		 EGLint *num_config)
+                 EGLConfig *configs, EGLint config_size, 
+                 EGLint *num_config)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglChooseConfig) 
-	result = dispatch.eglChooseConfig (dpy, attrib_list, configs,
-					   config_size, num_config);
+        result = dispatch.eglChooseConfig (dpy, attrib_list, configs,
+                                           config_size, num_config);
 
     return result;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute, 
-		    EGLint *value)
+                    EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglGetConfigAttrib)
-	result = dispatch.eglGetConfigAttrib (dpy, config, attribute, value);
+        result = dispatch.eglGetConfigAttrib (dpy, config, attribute, value);
 
     return result;
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
 eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
-			EGLNativeWindowType win, 
-			const EGLint *attrib_list)
+                        EGLNativeWindowType win, 
+                        const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
     if (dispatch.eglCreateWindowSurface)
-	surface = dispatch.eglCreateWindowSurface (dpy, config, win,
-						   attrib_list);
+        surface = dispatch.eglCreateWindowSurface (dpy, config, win,
+                                                   attrib_list);
 
     return surface;
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
 eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
-			 const EGLint *attrib_list)
+                         const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
     
     if (dispatch.eglCreatePbufferSurface)
-	surface = dispatch.eglCreatePbufferSurface (dpy, config, attrib_list);
+        surface = dispatch.eglCreatePbufferSurface (dpy, config, attrib_list);
 
     return surface;
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
 eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
-			EGLNativePixmapType pixmap, 
-			const EGLint *attrib_list)
+                        EGLNativePixmapType pixmap, 
+                        const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
     
     if (dispatch.eglCreatePixmapSurface)
-	surface = dispatch.eglCreatePixmapSurface (dpy, config, pixmap,
-						   attrib_list);
+        surface = dispatch.eglCreatePixmapSurface (dpy, config, pixmap,
+                                                   attrib_list);
 
     return surface;
 }
@@ -204,14 +204,14 @@ eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
     state = (egl_state_t *) active_state->data;
 
     if (dispatch.eglDestroySurface) { 
-	result = dispatch.eglDestroySurface (dpy, surface);
-	
-	if (result == EGL_TRUE) {
-	    /* update srv states */
-	    gpu_mutex_lock (state->mutex);
-	    _gpuprocess_srv_destroy_surface (dpy, surface);
-	    gpu_mutex_unlock (state->mutex);
-    	}
+        result = dispatch.eglDestroySurface (dpy, surface);
+        
+        if (result == EGL_TRUE) {
+            /* update srv states */
+            gpu_mutex_lock (state->mutex);
+            _gpuprocess_srv_destroy_surface (dpy, surface);
+            gpu_mutex_unlock (state->mutex);
+            }
     }
 
     gpu_mutex_unlock (global_mutex);
@@ -221,12 +221,12 @@ eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
-		 EGLint attribute, EGLint *value)
+                 EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglQuerySurface) 
-	result = dispatch.eglQuerySurface (dpy, surface, attribute, value);
+        result = dispatch.eglQuerySurface (dpy, surface, attribute, value);
 
     return result;
 }
@@ -237,7 +237,7 @@ eglBindAPI (EGLenum api)
     EGLBoolean result = EGL_FALSE;
 
     if (dispatch.eglBindAPI) 
-	result = dispatch.eglBindAPI (api);
+        result = dispatch.eglBindAPI (api);
 
     return result;
 }
@@ -249,7 +249,7 @@ eglQueryAPI (void)
 
     //_egl_make_pending_current ();
     if (dispatch.eglQueryAPI) 
-	result = dispatch.eglQueryAPI ();
+        result = dispatch.eglQueryAPI ();
 
     return result;
 }
@@ -261,17 +261,17 @@ eglWaitClient (void)
     egl_state_t *state;
 
     if (!active_state)
-	return result;
+        return result;
 
     state = (egl_state_t *) active_state->data;
     if (state->context == EGL_NO_CONTEXT || 
-	state->display == EGL_NO_DISPLAY)
-	return result;
+        state->display == EGL_NO_DISPLAY)
+        return result;
     
     gpu_mutex_lock (state->mutex);
     /* XXX: we should create a command buffer for it, and wait for signal */
     if (dispatch.eglWaitClient)
-	result = dispatch.eglWaitClient ();
+        result = dispatch.eglWaitClient ();
 
     gpu_mutex_unlock (state->mutex);
 
@@ -287,30 +287,30 @@ eglReleaseThread (void)
 
     /* XXX: we should create a command buffer for it, and wait for signal */
     if (dispatch.eglReleaseThread) {
-	result = dispatch.eglReleaseThread ();
+        result = dispatch.eglReleaseThread ();
 
-	if (result = EGL_TRUE) {
-	    if (! active_state)
-		return result;
+        if (result = EGL_TRUE) {
+            if (! active_state)
+                return result;
 
-	    gpu_mutex_lock (global_mutex);
-	    state = (egl_state_t *) active_state->data;
+            gpu_mutex_lock (global_mutex);
+            state = (egl_state_t *) active_state->data;
 
-	    gpu_mutex_lock (state->mutex);
+            gpu_mutex_lock (state->mutex);
 
-	    success = _gpuprocess_srv_make_current (state->display,
-						    EGL_NO_SURFACE,
-						    EGL_NO_SURFACE,
-						    EGL_NO_CONTEXT,
-						    state->display,
-						    state->drawable,
-						    state->readable,
-						    state->context,
-						    &active_state);
+            success = _gpuprocess_srv_make_current (state->display,
+                                                    EGL_NO_SURFACE,
+                                                    EGL_NO_SURFACE,
+                                                    EGL_NO_CONTEXT,
+                                                    state->display,
+                                                    state->drawable,
+                                                    state->readable,
+                                                    state->context,
+                                                    &active_state);
 
-	    gpu_mutex_unlock (state->mutex);
-	    gpu_mutex_unlock (global_mutex);
-	}
+            gpu_mutex_unlock (state->mutex);
+            gpu_mutex_unlock (global_mutex);
+        }
     }
 
     return result;
@@ -318,27 +318,27 @@ eglReleaseThread (void)
 
 EGLAPI EGLSurface EGLAPIENTRY
 eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
-				  EGLClientBuffer buffer, 
-				  EGLConfig config, const EGLint *attrib_list)
+                                  EGLClientBuffer buffer, 
+                                  EGLConfig config, const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
     
     if (dispatch.eglCreatePbufferFromClientBuffer)
-	surface = dispatch.eglCreatePbufferFromClientBuffer (dpy, buftype,
-							     buffer, config,
-							     attrib_list);
+        surface = dispatch.eglCreatePbufferFromClientBuffer (dpy, buftype,
+                                                             buffer, config,
+                                                             attrib_list);
 
     return surface;
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface, 
-		  EGLint attribute, EGLint value)
+                  EGLint attribute, EGLint value)
 {
     EGLBoolean result = EGL_FALSE;
     
     if (dispatch.eglSurfaceAttrib)
-	result = dispatch.eglSurfaceAttrib (dpy, surface, attribute, value);
+        result = dispatch.eglSurfaceAttrib (dpy, surface, attribute, value);
 
     return result;
 }
@@ -349,7 +349,7 @@ eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
     EGLBoolean result = EGL_FALSE;
     
     if (dispatch.eglBindTexImage)
-	result = dispatch.eglBindTexImage (dpy, surface, buffer);
+        result = dispatch.eglBindTexImage (dpy, surface, buffer);
 
     return result;
 }
@@ -360,7 +360,7 @@ eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
     EGLBoolean result = EGL_FALSE;
     
     if (dispatch.eglReleaseTexImage)
-	result = dispatch.eglReleaseTexImage (dpy, surface, buffer);
+        result = dispatch.eglReleaseTexImage (dpy, surface, buffer);
 
     return result;
 }
@@ -371,21 +371,21 @@ eglSwapInterval (EGLDisplay dpy, EGLint interval)
     EGLBoolean result = EGL_FALSE;
     
     if (dispatch.eglSwapInterval)
-	result = dispatch.eglSwapInterval (dpy, interval);
+        result = dispatch.eglSwapInterval (dpy, interval);
 
     return result;
 }
 
 EGLAPI EGLContext EGLAPIENTRY
 eglCreateContext (EGLDisplay dpy, EGLConfig config,
-		  EGLContext share_context,
-		  const EGLint *attrib_list)
+                  EGLContext share_context,
+                  const EGLint *attrib_list)
 {
     EGLContext result = EGL_NO_CONTEXT;
     
     if (dispatch.eglCreateContext)
-	result = dispatch.eglCreateContext (dpy, config, share_context, 
-					    attrib_list);
+        result = dispatch.eglCreateContext (dpy, config, share_context, 
+                                            attrib_list);
 
     return result;
 }
@@ -404,13 +404,13 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
     state = (egl_state_t *) active_state->data;
 
     if (dispatch.eglDestroyContext) {
-	result = dispatch.eglDestroyContext (dpy, ctx); 
+        result = dispatch.eglDestroyContext (dpy, ctx); 
 
-	if (result == GL_TRUE) {
-	    gpu_mutex_lock (state->mutex);
-	    _gpuprocess_srv_destroy_context (dpy, ctx);
-	    gpu_mutex_unlock (state->mutex);
-	}
+        if (result == GL_TRUE) {
+            gpu_mutex_lock (state->mutex);
+            _gpuprocess_srv_destroy_context (dpy, ctx);
+            gpu_mutex_unlock (state->mutex);
+        }
     }
 
     gpu_mutex_unlock (global_mutex);
@@ -424,7 +424,7 @@ eglGetCurrentContext (void)
     egl_state_t *state;
     
     if (!active_state)
-	return EGL_NO_CONTEXT;
+        return EGL_NO_CONTEXT;
 
     state = (egl_state_t *) active_state->data;
     return state->context;
@@ -436,7 +436,7 @@ eglGetCurrentDisplay (void)
     egl_state_t *state;
     
     if (!active_state)
-	return EGL_NO_DISPLAY;
+        return EGL_NO_DISPLAY;
 
     state = (egl_state_t *) active_state->data;
     return state->display;
@@ -449,19 +449,19 @@ eglGetCurrentSurface (EGLint readdraw)
     EGLSurface surface = EGL_NO_SURFACE;
     
     if (!active_state)
-	return EGL_NO_SURFACE;
+        return EGL_NO_SURFACE;
 
     state = (egl_state_t *) active_state->data;
 
     gpu_mutex_lock (state->mutex);
     
     if (state->display == EGL_NO_DISPLAY || state->context == EGL_NO_CONTEXT)
-	goto FINISH;
+        goto FINISH;
 
     if (readdraw == EGL_DRAW)
-	surface = state->drawable;
+        surface = state->drawable;
     else
-	surface = state->readable;
+        surface = state->readable;
  FINISH:
     gpu_mutex_unlock (state->mutex);
     return surface;
@@ -469,13 +469,13 @@ eglGetCurrentSurface (EGLint readdraw)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglQueryContext (EGLDisplay dpy, EGLContext ctx,
-		 EGLint attribute, EGLint *value)
+                 EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
     /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglQueryContext)
-	return result;
+        return result;
     
     result = dispatch.eglQueryContext (dpy, ctx, attribute, value);
 
@@ -492,7 +492,7 @@ eglWaitGL (void)
         return result;
 
     if (! dispatch.eglWaitGL)
-	return result;
+        return result;
 
     state = (egl_state_t *) active_state->data;
 
@@ -516,7 +516,7 @@ eglWaitNative (EGLint engine)
         return result;
 
     if (! dispatch.eglWaitNative)
-	return result;
+        return result;
     
     state = (egl_state_t *) active_state->data;
 
@@ -539,20 +539,20 @@ eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
     gpu_mutex_lock (global_mutex);
 
     if (!active_state)
-	return result;
+        return result;
 
     state = (egl_state_t *)active_state->data;
     if (state->display == EGL_NO_DISPLAY)
-	return result;
+        return result;
 
     gpu_mutex_lock (state->mutex);
 
     if (state->display != dpy)
-	goto FINISH;
+        goto FINISH;
 
     if (state->readable != surface || state->drawable != surface) {
-	result = EGL_BAD_SURFACE;
-	goto FINISH;
+        result = EGL_BAD_SURFACE;
+        goto FINISH;
     }
 
     /* put in a command buffer */
@@ -567,12 +567,12 @@ FINISH:
 
 EGLAPI EGLBoolean EGLAPIENTRY 
 eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, 
-		EGLNativePixmapType target)
+                EGLNativePixmapType target)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglCopyBuffers)
-	return result;
+        return result;
 
     result = dispatch.eglCopyBuffers (dpy, surface, target);
 
@@ -587,11 +587,11 @@ eglGetProcAddress (const char *procname)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
-		EGLContext ctx)
+                EGLContext ctx)
 {
     EGLBoolean result = EGL_FALSE;
     v_bool_t needs_call = FALSE;
-    egl_state_t	*state;
+    egl_state_t        *state;
     EGLDisplay current_dpy;
     EGLContext current_ctx;
     EGLSurface current_read;
@@ -599,86 +599,86 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     v_bool_t success = TRUE;
 
     if (! dispatch.eglMakeCurrent)
-	return result;
+        return result;
 
     gpu_mutex_lock (global_mutex);
 
     /* we are not in any valid context */
     if (! active_state) {
-	if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
-	    return EGL_TRUE;
-	else
-	   /* we switch to one of the valid context */
-	    success = _gpuprocess_srv_make_current (dpy, draw,
-						    read, ctx,
-						    EGL_NO_DISPLAY,
-						    EGL_NO_SURFACE,
-						    EGL_NO_SURFACE,
-						    EGL_NO_CONTEXT,
-						    &active_state);
+        if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
+            return EGL_TRUE;
+        else
+           /* we switch to one of the valid context */
+            success = _gpuprocess_srv_make_current (dpy, draw,
+                                                    read, ctx,
+                                                    EGL_NO_DISPLAY,
+                                                    EGL_NO_SURFACE,
+                                                    EGL_NO_SURFACE,
+                                                    EGL_NO_CONTEXT,
+                                                    &active_state);
     }
     /* we are in a valid context */
     else {
-	gpu_mutex_lock (state->mutex);
-	state = (egl_state_t *) active_state->data;
+        gpu_mutex_lock (state->mutex);
+        state = (egl_state_t *) active_state->data;
 
-	/* we are switch to an invalid context */
-	if (dpy == EGL_NO_SURFACE || EGL_NO_CONTEXT) {
-	    state->ref_count --;
-	    current_dpy = state->display;
-	    current_ctx = state->context;
-	    current_read = state->readable;
-	    current_draw = state->drawable;
+        /* we are switch to an invalid context */
+        if (dpy == EGL_NO_SURFACE || EGL_NO_CONTEXT) {
+            state->ref_count --;
+            current_dpy = state->display;
+            current_ctx = state->context;
+            current_read = state->readable;
+            current_draw = state->drawable;
 
-	    if (state->ref_count == 0)
-		state->active = FALSE;
-	    if (state->destroy_dpy && ! state->active) {
-		if (active_state->next)
-		    active_state->next->prev = active_state->prev;
-		if (active_state->prev)
-		    active_state->prev->next = active_state->next;
-		free (state);
-		free (active_state);
-	    }
-	    /* look for other states that have same dpy */
-	    success = _gpuprocess_srv_make_current (dpy, draw,
-						    read, ctx,
-						    current_dpy,
-						    current_draw,
-						    current_read,
-						    current_ctx,
-						    &active_state);
-	}
-	/* we are switch to a same context */
-	else if (dpy == state->display &&
-	    ctx == state->context) {
-	    /* previous DestroySurface called on drawable */
-	    if (state->drawable != draw && state->destroy_draw)
-		_gpuprocess_srv_destroy_surface (dpy, state->drawable);
-	    state->drawable = draw;
+            if (state->ref_count == 0)
+                state->active = FALSE;
+            if (state->destroy_dpy && ! state->active) {
+                if (active_state->next)
+                    active_state->next->prev = active_state->prev;
+                if (active_state->prev)
+                    active_state->prev->next = active_state->next;
+                free (state);
+                free (active_state);
+            }
+            /* look for other states that have same dpy */
+            success = _gpuprocess_srv_make_current (dpy, draw,
+                                                    read, ctx,
+                                                    current_dpy,
+                                                    current_draw,
+                                                    current_read,
+                                                    current_ctx,
+                                                    &active_state);
+        }
+        /* we are switch to a same context */
+        else if (dpy == state->display &&
+            ctx == state->context) {
+            /* previous DestroySurface called on drawable */
+            if (state->drawable != draw && state->destroy_draw)
+                _gpuprocess_srv_destroy_surface (dpy, state->drawable);
+            state->drawable = draw;
 
-	    /* previous DestroySurface called on readable */
-	    if (state->readable != read && state->destroy_read)
-		_gpuprocess_srv_destroy_surface (dpy, state->readable);
-	    state->readable = read;
-	}
-	/* we are switch to another valid context */
-	else {
-	    success = _gpuprocess_srv_make_current (dpy, draw,
-						    read, ctx,
-						    current_dpy,
-						    current_draw,
-						    current_read,
-						    current_ctx,
-						    &active_state);
-	}
-	gpu_mutex_unlock (state->mutex);
+            /* previous DestroySurface called on readable */
+            if (state->readable != read && state->destroy_read)
+                _gpuprocess_srv_destroy_surface (dpy, state->readable);
+            state->readable = read;
+        }
+        /* we are switch to another valid context */
+        else {
+            success = _gpuprocess_srv_make_current (dpy, draw,
+                                                    read, ctx,
+                                                    current_dpy,
+                                                    current_draw,
+                                                    current_read,
+                                                    current_ctx,
+                                                    &active_state);
+        }
+        gpu_mutex_unlock (state->mutex);
     }
 
     gpu_mutex_unlock (global_mutex);
 
     if (success == TRUE)
-	result = GL_TRUE;
+        result = GL_TRUE;
 
     return result;
 }
@@ -687,12 +687,12 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
 #ifdef EGL_KHR_lock_surface
 EGLAPI EGLBoolean EGLAPIENTRY
 eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
-		   const EGLint *attrib_list)
+                   const EGLint *attrib_list)
 {
     EGLBoolean result = EGL_FALSE;
     
     if (! dispatch.eglLockSurfaceKHR)
-	return result;
+        return result;
 
     result = dispatch.eglLockSurfaceKHR (display, surface, attrib_list);
 
@@ -705,7 +705,7 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglUnlockSurfaceKHR)
-	return result;
+        return result;
     
     result = dispatch.eglUnlockSurfaceKHR (display, surface);
 
@@ -716,18 +716,18 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
 #ifdef EGL_KHR_image
 EGLAPI EGLImageKHR EGLAPIENTRY
 eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
-		   EGLClientBuffer buffer, const EGLint *attrib_list)
+                   EGLClientBuffer buffer, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
     if (! dispatch.eglCreateImageKHR)
-	return result;
+        return result;
 
     if (dpy == EGL_NO_DISPLAY)
-	return result;
+        return result;
     
     result = dispatch.eglCreateImageKHR (dpy, ctx, target,
-					 buffer, attrib_list);
+                                         buffer, attrib_list);
 
     return result;
 }
@@ -738,7 +738,7 @@ eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglDestroyImageKHR)
-	return result;
+        return result;
     
     result = dispatch.eglDestroyImageKHR (dpy, image);
 
@@ -753,7 +753,7 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
     if (! dispatch.eglCreateSyncKHR)
-	return result;
+        return result;
     
     result = dispatch.eglCreateSyncKHR (dpy, type, attrib_list);
 
@@ -766,7 +766,7 @@ eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglDestroySyncKHR)
-	return result;
+        return result;
 
     result = dispatch.egltroySyncKHR (dpy, sync);
 
@@ -775,12 +775,12 @@ eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
 
 EGLAPI EGLint EGLAPIENTRY
 eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, 
-		      EGLTimeKHR timeout)
+                      EGLTimeKHR timeout)
 {
     EGLint result = EGL_FALSE;
 
     if (! dispatch.eglClientWaitSyncKHR)
-	return result;
+        return result;
     
     result = dispatch.eglClientWaitSyncKHR (dpy, sync, flags, timeout);
 
@@ -793,7 +793,7 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglSignalSyncKHR)
-	return result;
+        return result;
     
     result = dispatch.eglSignalSyncKHR (dpy, sync, mode);
 
@@ -802,12 +802,12 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
-		     EGLint attribute, EGLint *value)
+                     EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglGetSyncAttribKHR)
-	return result;
+        return result;
     
     result = dispatch.eglGetSyncAttribKHR (dpy, sync, attribute, value);
 
@@ -818,12 +818,12 @@ eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
 #ifdef EGL_NV_sync
 EGLSyncNV 
 eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition, 
-		      const EGLint *attrib_list)
+                      const EGLint *attrib_list)
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
     if (! dispatch.eglCreateFenceSyncNV)
-	return result;
+        return result;
     
     result = dispatch.eglCreateFenceSyncNV (dpy, condition, attrib_list);
 
@@ -836,7 +836,7 @@ eglDestroySyncNV (EGLSyncNV sync)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglDestroySyncNV)
-	return result;
+        return result;
     
     result = dispatch.eglDestroySyncNV (sync);
 
@@ -850,7 +850,7 @@ eglFenceNV (EGLSyncNV sync)
     egl_state_t *state;
 
     if (! active_state || ! dispatch.eglFenceNV)
-	return result;
+        return result;
 
     state = active_state->data;
     gpu_mutex_lock (state->mutex);
@@ -871,7 +871,7 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
     egl_state_t *state;
 
     if (! active_state || ! dispatch.eglClientWaitSyncNV)
-	return result;
+        return result;
 
     state = active_state->data;
 
@@ -892,7 +892,7 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
     egl_state_t *state;
 
     if (! active_state || ! dispatch.eglSignalSyncNV)
-	return result;
+        return result;
 
     state = active_state->data;
 
@@ -913,7 +913,7 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 
     /* XXX: We should put a command buffer instead calling here */
     if (! dispatch.eglGetSyncAttribNV)
-	return result;
+        return result;
 
     result = dispatch.eglGetSyncAttribNV (sync, attribute, value);
 
@@ -924,12 +924,12 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 #ifdef EGL_HI_clientpixmap
 EGLAPI EGLSurface EGLAPIENTRY
 eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
-			  struct EGLClientPixmapHI *pixmap)
+                          struct EGLClientPixmapHI *pixmap)
 {
     EGLSurface result = EGL_NO_SURFACE;
 
     if (! dispatch.eglCreatePixmapSurfaceHI)
-	return result;
+        return result;
     
     result = dispatch.eglCreatePixmapSurfaceHI (dpy, config, pixmap);
 
@@ -944,7 +944,7 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
     if (! dispatch.eglCreateDRMImageMESA)
-	return result;
+        return result;
     
     result = dispatch.eglCreateDRMImageMESA (dpy, attrib_list);
 
@@ -953,12 +953,12 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
-		       EGLint *name, EGLint *handle, EGLint *stride)
+                       EGLint *name, EGLint *handle, EGLint *stride)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglExportDRMImageMESA)
-	return result;
+        return result;
     
     result = dispatch.eglExportDRMImageMESA (dpy, image, name, handle, stride);
 
@@ -969,13 +969,13 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
 #ifdef EGL_NV_post_sub_buffer
 EGLAPI EGLBoolean EGLAPIENTRY 
 eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface, 
-		    EGLint x, EGLint y,
-		    EGLint width, EGLint height)
+                    EGLint x, EGLint y,
+                    EGLint width, EGLint height)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglExportDRMImageMESA)
-	return result;
+        return result;
 
     result = dispatch.eglPostSubBufferNV (dpy, surface, x, y, width, height);
 
@@ -990,7 +990,7 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
     void *result = NULL;
 
     if (! dispatch.eglMapImageSEC)
-	return result;
+        return result;
     
     result = dispatch.eglMapImageSEC (dpy, image);
 
@@ -1003,7 +1003,7 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglUnmapImageSEC)
-	return result;
+        return result;
     
     result = dispatch.eglUnmapImageSEC (dpy, image);
 
@@ -1012,12 +1012,12 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 
 EGLAPI EGLBoolean EGLAPIENTRY
 eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
-		      EGLint *value)
+                      EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
     if (! dispatch.eglGetImageAttribSEC)
-	return result;
+        return result;
     
     result = dispatch.eglGetImageAttribSEC (dpy, image, attribute, value);
 

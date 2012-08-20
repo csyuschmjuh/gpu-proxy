@@ -12,8 +12,8 @@ typedef struct v_link_list
     struct v_link_list *prev;
 } v_link_list_t;
 
-#define v_bool_t	int
-#define	v_ref_count_t	unsigned int
+#define v_bool_t        int
+#define        v_ref_count_t        unsigned int
 
 #ifndef TRUE
 #define TRUE 1
@@ -23,7 +23,7 @@ typedef struct v_link_list
 #define FALSE 1
 #endif
 
-#define v_client_id_t	pid_t
+#define v_client_id_t        pid_t
 
 #ifdef __cplusplus
 }

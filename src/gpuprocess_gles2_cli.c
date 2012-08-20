@@ -24,10 +24,10 @@ _gpuprocess_cli_destroy ()
     v_vertex_attrib_list_t *attribs = &cli_states.vertex_attribs;
 
     if (attribs->count == 0)
-	return;
+        return;
 
     if (attribs->count > NUM_EMBEDDED) 
-	free (attribs->attribs);
+        free (attribs->attribs);
 }
 
     

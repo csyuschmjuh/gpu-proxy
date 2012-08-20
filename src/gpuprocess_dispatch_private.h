@@ -22,23 +22,23 @@ typedef struct _gpuprocess_dispatch {
 #ifdef HAS_GL
 /* GLX */
     XVisualInfo* (*ChooseVisual) (Display *dpy, int screen,
-				  int *attribList);
+                                  int *attribList);
     GLXContext (*CreateContext) (Display *dpy, XVisualInfo *vis,
-				 GLXContext shareList, Bool direct);
+                                 GLXContext shareList, Bool direct);
     void (*DestroyContext) (Display *dpy, GLXContext ctx);
     Bool (*MakeCurrent) (Display *dpy, GLXDrawable drawable,
-			 GLXContext ctx);
+                         GLXContext ctx);
     void (*CopyContext) (Display *dpy, GLXContext src, GLXContext dst,
-			 unsigned long mask);
+                         unsigned long mask);
     void (*SwapBuffers) (Display *dpy, GLXDrawable drawable);
     GLXPixmap (*CreateGLXPixmap) (Display *dpy, XVisualInfo *visual,
-				  Pixmap pixmap);
+                                  Pixmap pixmap);
     void (*DestroyGLXPixmap) (Display *dpy, GLXPixmap pixmap);
     Bool (*QueryExtension) (Display *dpy, int *errorb, int *event);
     Bool (*QueryVersion) (Display *dpy, int *maj, int *min);
     Bool (*IsDirect) (Display *dpy, GLXContext ctx);
     int (*GetConfig) (Display *dpy, XVisualInfo *visual,
-		      int attrib, int *value);
+                      int attrib, int *value);
     GLXContext (*GetCurrentContext) (void);
     GLXDrawable (*GetCurrentDrawable) (void);
     void (*WaitGL) (void);
@@ -56,36 +56,36 @@ typedef struct _gpuprocess_dispatch {
 
 /* GLX 1.3 and later */
     GLXFBConfig * (*ChooseFBConfig) (Display *dpy, int screen,
-				     const int *attribList, int *nitems);
+                                     const int *attribList, int *nitems);
     int (*GetFBConfigAttrib) (Display *dpy, GLXFBConfig config,
-			      int attribute, int *value);
+                              int attribute, int *value);
     GLXFBConfig * (*GetFBConfigs) (Display *dpy, int screen,
-				   int *nelements);
+                                   int *nelements);
     XVisualInfo * (*GetVisualFromFBConfig) (Display *dpy,
-					    GLXFBConfig config);
+                                            GLXFBConfig config);
     GLXWindow (*CreateWindow) (Display *dpy, GLXFBConfig config,
-			       Window win, const int *attribList);
+                               Window win, const int *attribList);
     void (*DestroyWindow) (Display *dpy, GLXWindow window);
     GLXPixmap (*CreatePixmap) (Display *dpy, GLXFBConfig config,
-			       Pixmap pixmap, const int *attribList);
+                               Pixmap pixmap, const int *attribList);
     void (*DestroyPixmap) (Display *dpy, GLXPixmap pixmap);
     GLXPbuffer (*CreatePbuffer) (Display *dpy, GLXFBConfig config,
-				 const int *attribList);
+                                 const int *attribList);
     void (*DestroyPbuffer) (Display *dpy, GLXPbuffer pbuf);
     void (*QueryDrawable) (Display *dpy, GLXDrawable draw, int attribute,
-			   unsigned int *value);
+                           unsigned int *value);
     GLXContext (*CreateNewContext) (Display *dpy, GLXFBConfig config,
-				    int renderType, GLXContext shareList,
-				    Bool direct);
+                                    int renderType, GLXContext shareList,
+                                    Bool direct);
     Bool (*MakeContextCurrent) (Display *dpy, GLXDrawable draw,
-				GLXDrawable read, GLXContext ctx);
+                                GLXDrawable read, GLXContext ctx);
     GLXDrawable (*GetCurrentReadDrawable) (void);
     int (*QueryContext) (Display *dpy, GLXContext ctx, int attribute,
-			 int *value);
+                         int *value);
     void (*SelectEvent) (Display *dpy, GLXDrawable drawable,
-			 unsigned long mask);
+                         unsigned long mask);
     void (*GetSelectedEvent) (Display *dpy, GLXDrawable drawable,
-			      unsigned long *mask);
+                              unsigned long *mask);
 
 #ifdef GLX_EXT_texture_from_pixmap
     void (*BindTexImageEXT) (Display *display, GLXDrawable drawable, int buffer, const int *attrib_list);
@@ -104,24 +104,24 @@ typedef struct _gpuprocess_dispatch {
     const char * (*eglQueryString) (EGLDisplay, EGLint);
 
     EGLBoolean (*eglGetConfigs) (EGLDisplay, EGLConfig *,
-				 EGLint, EGLint *);
+                                 EGLint, EGLint *);
     EGLBoolean (*eglChooseConfig) (EGLDisplay, const EGLint *,
-				   EGLConfig *, EGLint,
-				   EGLint *);
+                                   EGLConfig *, EGLint,
+                                   EGLint *);
     EGLBoolean (*eglGetConfigAttrib) (EGLDisplay, EGLConfig,
-				      EGLint, EGLint *);
+                                      EGLint, EGLint *);
 
     EGLSurface (*eglCreateWindowSurface) (EGLDisplay, EGLConfig,
-					  EGLNativeWindowType,
-					  const EGLint *);
+                                          EGLNativeWindowType,
+                                          const EGLint *);
     EGLSurface (*eglCreatePbufferSurface) (EGLDisplay, EGLConfig,
-					   const EGLint *);
+                                           const EGLint *);
     EGLSurface (*eglCreatePixmapSurface) (EGLDisplay, EGLConfig,
-					  EGLNativePixmapType,
-					  const EGLint *);
+                                          EGLNativePixmapType,
+                                          const EGLint *);
     EGLBoolean (*eglDestroySurface) (EGLDisplay, EGLSurface);
     EGLBoolean (*eglQuerySurface) (EGLDisplay, EGLSurface,
-				   EGLint, EGLint *);
+                                   EGLint, EGLint *);
 
     EGLBoolean (*eglBindAPI) (EGLenum);
     EGLenum (*eglQueryAPI) (void);
@@ -131,34 +131,34 @@ typedef struct _gpuprocess_dispatch {
     EGLBoolean (*eglReleaseThread) (void);
 
     EGLSurface (*eglCreatePbufferFromClientBuffer) (
-	EGLDisplay, EGLenum, EGLClientBuffer,
-	EGLConfig, const EGLint *);
+        EGLDisplay, EGLenum, EGLClientBuffer,
+        EGLConfig, const EGLint *);
 
     EGLBoolean (*eglSurfaceAttrib) (EGLDisplay, EGLSurface,
-				    EGLint, EGLint);
+                                    EGLint, EGLint);
     EGLBoolean (*eglBindTexImage) (EGLDisplay, EGLSurface, EGLint);
     EGLBoolean (*eglReleaseTexImage) (EGLDisplay, EGLSurface, EGLint);
 
     EGLBoolean (*eglSwapInterval) (EGLDisplay, EGLint);
 
     EGLContext (*eglCreateContext) (EGLDisplay, EGLConfig,
-				    EGLContext,
-				    const EGLint *);
+                                    EGLContext,
+                                    const EGLint *);
     EGLBoolean (*eglDestroyContext) (EGLDisplay, EGLContext);
     EGLBoolean (*eglMakeCurrent) (EGLDisplay, EGLSurface,
-				  EGLSurface, EGLContext);
+                                  EGLSurface, EGLContext);
 
     EGLContext (*eglGetCurrentContext) (void);
     EGLSurface (*eglGetCurrentSurface) (EGLint);
     EGLDisplay (*eglGetCurrentDisplay) (void);
     EGLBoolean (*eglQueryContext) (EGLDisplay, EGLContext,
-				   EGLint, EGLint *);
+                                   EGLint, EGLint *);
 
     EGLBoolean (*eglWaitGL) (void);
     EGLBoolean (*eglWaitNative) (EGLint engine);
     EGLBoolean (*eglSwapBuffers) (EGLDisplay, EGLSurface);
     EGLBoolean (*eglCopyBuffers) (EGLDisplay, EGLSurface,
-				  EGLNativePixmapType);
+                                  EGLNativePixmapType);
 
 #ifdef EGL_KHR_lock_surface
     EGLBoolean (*eglLockSurfaceKHR) (EGLDisplay, EGLSurface, const EGLint *);
@@ -224,15 +224,15 @@ typedef struct _gpuprocess_dispatch {
 
 #ifdef GL_OES_texture_3D
     void (*TexImage3DOES) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint,
-			   GLenum, GLenum, const GLvoid*);
+                           GLenum, GLenum, const GLvoid*);
     void (*TexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei,
-			      GLsizei, GLenum, GLenum, const GLvoid*);
+                              GLsizei, GLenum, GLenum, const GLvoid*);
     void (*CopyTexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLint, GLint,
-				  GLsizei, GLsizei height);
+                                  GLsizei, GLsizei height);
     void (*CompressedTexImage3DOES) (GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei,
-				     GLint, GLsizei, const GLvoid*);
+                                     GLint, GLsizei, const GLvoid*);
     void (*CompressedTexSubImage3DOES) (GLenum, GLint, GLint, GLint, GLint, GLsizei,
-					GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*);
+                                        GLsizei, GLsizei, GLenum, GLsizei, const GLvoid*);
     void (*FramebufferTexture3DOES) (GLenum, GLenum, GLenum, GLuint, GLint, GLint);
 #endif
 
@@ -259,7 +259,7 @@ typedef struct _gpuprocess_dispatch {
 
 #ifdef GL_ANGLE_framebuffer_blit
     void (*BlitFramebufferANGLE) (GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLint,
-				  GLbitfield, GLenum);
+                                  GLbitfield, GLenum);
 #endif
 
 #ifdef GL_ANGLE_framebuffer_multisample
@@ -320,7 +320,7 @@ typedef struct _gpuprocess_dispatch {
     void (*ExtGetTexLevelParameterivQCOM) (GLuint, GLenum, GLint, GLenum, GLint *);
     void (*ExtTexObjectStateOverrideiQCOM) (GLenum, GLenum, GLint);
     void (*ExtGetTexSubImageQCOM) (GLenum, GLint, GLint, GLint, GLint, GLsizei,
-				   GLsizei, GLsizei, GLenum, GLenum, GLvoid *);
+                                   GLsizei, GLsizei, GLenum, GLenum, GLvoid *);
     void (*ExtGetBufferPointervQCOM) (GLenum, GLvoid **);
 #endif
 
