@@ -137,9 +137,8 @@ void glBindBuffer (GLenum target, GLuint buffer)
 	buffer == egl_state->state.array_buffer_binding)
 	goto FINISH;
     else if (target == GL_ELEMENT_ARRAY_BUFFER &&
-	     buffer == egl_state->state.elementary_array_buffer_binding)
+	     buffer == egl_state->state.element_array_buffer_binding)
 	goto FINISH; 
-    }
 
     if (!(target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER) ||
 	! _is_error_state_or_func (active_state, dispatch.BindBuffer))
