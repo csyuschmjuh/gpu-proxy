@@ -51,7 +51,10 @@ _gpuprocess_srv_terminate (EGLDisplay display)
                     current->next->prev = current->prev;
                 if (head == current)
                     head = current->next;
+                dispatch.eglMakeCurrent (EGL_NO_DISPLAY, EGL_NO_SURFACE,
+                                         EGL_NO_SURFACE, EGL_NO_CONTEXT);
                 free (current);
+                /* terminate the affected thread */
             }
           }
     }
@@ -379,6 +382,8 @@ _gpuprocess_srv_destroy_context (EGLDisplay display,
                 free (state);
                 srv_states.num_contexts --;
                 /* XXX: terminate affected thread */
+                dispatch.eglMakeCurrent (EGL_NO_DISPLAY, EGL_NO_SURFACE,
+                                         EGL_NO_SURFACE, EGL_NO_CONTEXT);
             }
         }
     }
