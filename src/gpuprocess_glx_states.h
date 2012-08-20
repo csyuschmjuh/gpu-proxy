@@ -11,13 +11,13 @@ extern "C" {
 
 
 typedef struct glx_state {
-    GLXContext		context;	/* active context, initial NULL */
-    Display		*display;	/* active display, initial NULL */
-    gl_state_t		state;		/* the cached states associated
-					 * with this context
-					 */
-    GLXDrawable		drawable;	/* active draw drawable, initial None */
-    GLXDrawable		readable;	/* active read drawable, initial None */
+    GLXContext                context;        /* active context, initial NULL */
+    Display                *display;        /* active display, initial NULL */
+    gl_state_t                state;                /* the cached states associated
+                                         * with this context
+                                         */
+    GLXDrawable                drawable;        /* active draw drawable, initial None */
+    GLXDrawable                readable;        /* active read drawable, initial None */
 
 } glx_state_t;
 

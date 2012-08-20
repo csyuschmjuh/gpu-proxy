@@ -17,9 +17,9 @@ typedef enum gpuprocess_sym_load_type {
 
 static void
 gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
-				 gpuprocess_dispatch_entry_t *entries,
-				 gpuprocess_sym_load_type_t type,
-				 const char* lib_name)
+                                 gpuprocess_dispatch_entry_t *entries,
+                                 gpuprocess_sym_load_type_t type,
+                                 const char* lib_name)
 {
    void *handle = dlopen (lib_name, RTLD_LAZY|RTLD_DEEPBIND);
    gpuprocess_dispatch_entry_t *entry = entries;
@@ -38,13 +38,13 @@ gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
           if (type == DLSYM)
               func = dlsym(handle, name);
           else {
-	      func = dispatch->GetProcAddress(name);
+              func = dispatch->GetProcAddress(name);
               if (!func)
                   func = dlsym(handle, name);
           }
-	  
-	  if (func)
-	      break;
+          
+          if (func)
+              break;
       }
       *((GenericFunc *) dispatch_ptr) = func;
 

@@ -10,10 +10,10 @@ extern "C" {
 
 typedef struct gl_cli_states
 {
-    v_vertex_attrib_list_t	vertex_attribs;
+    v_vertex_attrib_list_t        vertex_attribs;
 
-    GLint			pack_alignment; 	/* initial 4 */
-    GLint			unpack_alignment;	/* initial 4 */
+    GLint                        pack_alignment;         /* initial 4 */
+    GLint                        unpack_alignment;        /* initial 4 */
   
     /* XXX: for OpenGL, there are more client states for glPixelStore,
      * we have some of them on server, should we also bring to client? 
