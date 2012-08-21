@@ -14,10 +14,6 @@ extern gpuprocess_dispatch_t         dispatch;
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_gles2_cli_private.h"
 
-/* XXX: where should we put mutx ? */
-extern gpu_mutex_t        global_mutex;
-
-extern gpu_signal_t        cond;
 extern __thread gl_cli_states_t cli_states;
 extern __thread v_link_list_t *active_state;
 
