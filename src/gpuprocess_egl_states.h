@@ -28,7 +28,7 @@ typedef struct egl_state {
     v_ref_count_t                ref_count;
 
     gpu_mutex_t mutex;
-    gpu_signal_t signal;
+    gpu_signal_t cond;
 } egl_state_t;
 
 #ifdef __cplusplus

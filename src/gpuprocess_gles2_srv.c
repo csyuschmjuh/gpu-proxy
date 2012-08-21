@@ -80,6 +80,9 @@ _gpuprocess_srv_init_gles2_states (egl_state_t *egl_state)
     egl_state->destroy_draw = FALSE;
     egl_state->destroy_read = FALSE;
 
+    gpu_mutex_init (egl_state->mutex);
+    gpu_signal_init (egl_state->cond);
+
     state->max_combined_texture_image_units = 8;
     state->max_vertex_attribs_queried = FALSE;
     state->max_vertex_attribs = 8;
@@ -377,6 +380,9 @@ _gpuprocess_srv_destroy_context (EGLDisplay display,
                     current->prev->next = current->next;
                 if (current->next)
                     current->next->prev = current->prev;
+
+                gpu_mutex_destroy (state->mutex);
+                gpu_signal_destroy (state->cond);
 
                 free (current);
                 free (state);

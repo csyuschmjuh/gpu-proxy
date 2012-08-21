@@ -17,7 +17,7 @@ gpuprocess_dispatch_t        dispatch;
 /* XXX: initialize static mutex on srv */
 extern gl_srv_states_t        srv_states;
 extern __thread v_link_list_t *active_state;
-gpu_mutex_t global_mutex;
+gpu_mutex_static_init (global_mutex);
 
 EGLAPI EGLint EGLAPIENTRY
 eglGetError (void)
