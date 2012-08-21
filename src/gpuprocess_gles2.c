@@ -3326,6 +3326,24 @@ void glReadPixels (GLint x, GLint y,
     gpu_mutex_unlock (egl_state->mutex);
 }
 
+void glCompileShader (GLuint shader)
+{
+    egl_state_t *egl_state;
+
+    if(! _is_error_state_or_func (active_state,
+                                  dispatch.CompileShader))
+        return;
+
+    egl_state = (egl_state_t *) active_state->data;
+    gpu_mutex_lock (egl_state->mutex);
+
+    /* XXX: create command buffer, no wait */
+    dispatch.CompileShader (shader);
+    egl_state->state.need_get_error = TRUE;
+
+    gpu_mutex_unlock (egl_state->mutex);
+}
+
 void glReleaseShaderCompiler (void)
 {
     egl_state_t *egl_state;
