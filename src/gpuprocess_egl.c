@@ -39,13 +39,7 @@ EGLAPI EGLDisplay EGLAPIENTRY
 eglGetDisplay (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
-    egl_state_t *state;
     
-    if (!active_state)
-        return display;
-
-    state = (egl_state_t *) active_state->data;
-
     gpu_mutex_lock (global_mutex);
 
     /* XXX: we should initialize on srv */
