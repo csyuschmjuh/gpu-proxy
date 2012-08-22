@@ -52,14 +52,43 @@ gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
    }
 }
 
+static const char *
+gpuprocess_dispatch_libgl ()
+{
+#if HAS_GL
+    const char *libgl = getenv ("GPUPROCESS_LIBGL_PATH");
+#else
+    const char *libgl = getenv ("GPUPROCESS_LIBGLES_PATH");
+#endif
+    return ! libgl ? LIBNAME_GL : libgl;
+}
+
+#if HAS_GLES2
+static const char *
+gpuprocess_dispatch_libegl ()
+{
+    const char *libegl = getenv ("GPUPROCESS_LIBEGL_PATH");
+    return ! libegl ? LIBNAME_EGL : libegl;
+}
+#endif
+
 void
 gpuprocess_dispatch_init(gpuprocess_dispatch_t *dispatch)
 {
     // We should always load dispatch_glx/egl_entries first
 #ifdef HAS_GL
-    gpuprocess_dispatch_init_entries(dispatch, dispatch_glx_entries, DLSYM, LIBNAME_GL);
+    gpuprocess_dispatch_init_entries (dispatch,
+                                      dispatch_glx_entries,
+                                      DLSYM,
+                                      gpuprocess_dispatch_libgl());
 #else
-    gpuprocess_dispatch_init_entries(dispatch, dispatch_egl_entries, DLSYM, LIBNAME_EGL);
+    gpuprocess_dispatch_init_entries (dispatch,
+                                      dispatch_egl_entries,
+                                      DLSYM,
+                                      gpuprocess_dispatch_libegl());
 #endif
-    gpuprocess_dispatch_init_entries(dispatch, dispatch_opengl_entries, GETPROCADDR, LIBNAME_GL);
+    gpuprocess_dispatch_init_entries (dispatch,
+                                      dispatch_opengl_entries,
+                                      GETPROCADDR,
+                                      gpuprocess_dispatch_libgl());
 }
