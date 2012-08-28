@@ -7,14 +7,15 @@
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_gles2_srv_private.h"
-#include "gpuprocess_dispatch_private.h"
-
-extern gpuprocess_dispatch_t dispatch;
 
 __thread v_link_list_t *active_state
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 __thread gpu_thread *srv_thread
     __attribute__(( tls_model ("initial-exec"))) = NULL;
+
+/* client side cache unpack_alignment */
+__thread int unpack_alignment
+    __attribute__(( tls_model ("initial-exec"))) = 4;
 
 static inline void 
 _egl_create_srv_thread ()
@@ -513,6 +514,11 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
                 return result;
             }
         }
+    }
+    if (active_state) {
+        egl_state = (egl_state_t *) active_state->data;
+        if (egl_state->active)
+            unpack_alignment = egl_state->state.unpack_alignment;
     }
 }
 
