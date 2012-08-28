@@ -19,10 +19,10 @@ LIB_DIR="libs"
 
 AC_ARG_ENABLE(opengl,
 	      AS_HELP_STRING([--enable-opengl],
-			     [build with OpenGL support]),
-			     [opengl_arg="$enableval"])
+			    [build with OpenGL support]),
+			    [opengl_arg="$enableval"])
 
-AS_IF([test "x$opengl_arg" = "xyes"], [
+AS_IF([test "$opengl_arg" = "yes"], [
     PKG_CHECK_MODULES(GL, gl,
 		      [use_glx="yes"],
 		      [use_glx="no (GLX headers not found)"])
@@ -33,7 +33,7 @@ AC_ARG_ENABLE([opengles],
                               [build with OpenGLESv2 support])],
 			      [opengles_arg="$enableval"])
 
-AS_IF([test "x$opengles_arg" = "xyes"], [
+AS_IF([test "$opengles_arg" = "yes"], [
     PKG_CHECK_MODULES(EGL, egl,
 		      [use_gles="yes"],
 		      [use_gles="no (EGL headers not found)"])
