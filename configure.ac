@@ -46,14 +46,18 @@ AS_IF([test "x$opengles_arg" = "xyes"], [
 AM_CONDITIONAL(HAS_GL, test "$use_glx" = yes)
 AM_CONDITIONAL(HAS_GLES2, test "$use_gles" = yes)
 
-if test "x$use_glx" = "xyes"; then
+if test "$use_glx" = "yes"; then
     AC_DEFINE(HAS_GL, 1, [Define to 1 if you have GLX available])
     GPUPROCESS_CFLAGS="$GL_CFLAGS"
 fi
 
-if test "x$use_gles" = "xyes"; then
+if test "$use_gles" = "yes"; then
     AC_DEFINE(HAS_GLES2, 1, [Define to 1 if you have GLES2 available])
     GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"
+fi
+
+if test "$use_gles" != "yes" && test "$use_glx" != "yes"; then
+    AC_MSG_ERROR([Must select either GLX/Desktop GL or EGL/GLES2.])
 fi
 
 AC_SUBST([GPUPROCESS_CFLAGS])
