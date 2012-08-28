@@ -13,21 +13,8 @@ extern "C" {
 
 typedef struct gl_srv_states
 {
-    int num_contexts;
-
-    /* when glxMakeCurrent() or eglMakeCurrent(), if current context
-     * matches the request, we return quickly.  Otherwise, we save
-     * the request context/display/drawable to pending_xxxx, 
-     */
-/*
-    v_bool_t                 make_current_called;
-    EGLContext                pending_context;
-    EGLDisplay                pending_display;
-    EGLSurface                pending_drawable;
-    EGLSurface                pending_readable;
-
-    egl_state_t                *active_state;
-*/  
+    v_bool_t             initialized;
+    int                  num_contexts;
     v_link_list_t        *states;
 } gl_srv_states_t;
 
@@ -39,25 +26,24 @@ gpuprocess_private void
 _gpuprocess_srv_init ();
 
 gpuprocess_private void
-_gpuprocess_srv_terminate (EGLDisplay display);
+_gpuprocess_srv_terminate (EGLDisplay display, v_link_list_t *active_state);
 
 /* called within eglMakeCurrent () */
-gpuprocess_private v_bool_t
+gpuprocess_private void
 _gpuprocess_srv_make_current (EGLDisplay display, 
                               EGLSurface drawable, 
                               EGLSurface readable,
                               EGLContext context,
-                              EGLDisplay prev_dpy,
-                              EGLSurface prev_draw,
-                              EGLSurface prev_read,
-                              EGLContext prev_ctx,
-                              v_link_list_t **active_state);
+                              v_link_list_t *active_state,
+                              v_link_list_t **active_state_out);
 
 gpuprocess_private void
-_gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context);
+_gpuprocess_srv_destroy_context (EGLDisplay display, EGLContext context,
+                                 v_link_list_t *active_state);
 
 gpuprocess_private void
-_gpuprocess_srv_destroy_surface (EGLDisplay display, EGLSurface surface);
+_gpuprocess_srv_destroy_surface (EGLDisplay display, EGLSurface surface,
+                                 v_link_list_t *active_state);
 
 gpuprocess_private v_bool_t
 _gpuprocess_srv_is_equal (egl_state_t *state,
@@ -66,13 +52,20 @@ _gpuprocess_srv_is_equal (egl_state_t *state,
                           EGLSurface  readable,
                           EGLContext  context);
 
-gpuprocess_private void
+gpuprocess_private v_bool_t
+_gpuprocess_match (EGLDisplay display,
+                   EGLSurface drawable,
+                   EGLSurface readable,
+                   EGLContext context,
+                   v_link_list_t **state);
+
+/*gpuprocess_private void
 _gpuprocess_srv_remove_context (EGLDisplay display,
                                 EGLSurface draw,
                                 EGLSurface read,
                                 EGLContext context);
 
-
+*/
 #ifdef __cplusplus
 }
 #endif
