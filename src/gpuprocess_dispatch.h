@@ -1,6 +1,8 @@
 #ifndef GPUPROCESS_DISPATCH_H
 #define GPUPROCESS_DISPATCH_H
 
+#include <stdlib.h>
+
 #include "gpuprocess_dispatch_private.h"
 
 #define DISPATCH_ENTRY_GLX(name) { { "glX"#name, NULL, NULL }, \
