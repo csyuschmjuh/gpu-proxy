@@ -155,17 +155,26 @@ typedef struct gl_state {
 
     /* used all */
     GLint         max_combined_texture_image_units; /* at least 8 */
+    v_bool_t      max_combined_texture_image_units_queried;
     GLint         max_cube_map_texture_size;        /* at least 16 */
+    v_bool_t      max_cube_map_texture_size_queried;
     GLint         max_fragment_uniform_vectors;     /* at least 16 */
+    v_bool_t      max_fragment_uniform_vectors_queried;
     GLint         max_renderbuffer_size;            /* at least 1 */
+    v_bool_t      max_renderbuffer_size_queried;
     GLint         max_texture_image_units;          /* at least 8 */
+    v_bool_t      max_texture_image_units_queried;
     GLint         max_texture_size;                 /* at least 64 */
+    v_bool_t       max_texture_size_queried;
     GLint         max_varying_vectors;              /* at least 8 */
+    v_bool_t      max_varying_vectors_queried;
     GLint         max_vertex_uniform_vectors;       /* at least 128 */
+    v_bool_t      max_vertex_uniform_vectors_queried;
     /* used all */
     v_bool_t      max_vertex_attribs_queried;       /* false */
     GLint         max_vertex_attribs;               /* at least 8 */
     GLint         max_vertex_texture_image_units;   /* may be 0 */
+    v_bool_t      max_vertex_texture_image_units_queried;
     GLint         max_viewport_dims;                /* as large as visible */
     /* used all */
     GLint         num_compressed_texture_formats;   /* min is 0 */
@@ -303,6 +312,7 @@ typedef struct gl_state {
     /* used */
     GLint        texture_binding_3d;
     GLint        max_3d_texture_size;
+    v_bool_t     max_3d_texture_size_queried;
     /* used */
     GLint        texture_3d_wrap_r[32];         /* initial GL_REPEAT */
 #endif
@@ -351,6 +361,7 @@ typedef struct gl_state {
 
 #if defined GL_ANGLE_framebuffer_multisample || GL_EXT_multisampled_render_to_texture || GL_IMG_multisampled_render_to_texture
     GLint        max_samples;
+    v_bool_t     max_samples_queried;
 #endif
 
 #ifdef GL_APPLE_rgb_422
