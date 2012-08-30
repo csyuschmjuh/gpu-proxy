@@ -7,12 +7,8 @@
 
 /* XXX: we should move it to the srv */
 #include "gpuprocess_dispatch_private.h"
-#include "gpuprocess_egl_server_private.h"
-
-#include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
-
-#include "gpuprocess_gles2_client_private.h"
+#include "gpuprocess_egl_states.h"
 
 extern __thread v_link_list_t        *active_state;
 extern gpuprocess_dispatch_t         dispatch;
@@ -158,13 +154,6 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
         }
         else {
             _gl_set_error (GL_INVALID_ENUM);
-        }
-                
-        /* update client state */
-        if (target == GL_ARRAY_BUFFER) {
-            for (i = 0; i < count; i++) {
-                attribs[i].array_buffer_binding = buffer;
-            }
         }
     }
 }
@@ -829,7 +818,7 @@ static void _gl_cull_face (GLenum mode)
     }
 }
 
-void glDeleteBuffers (GLsizei n, const GLuint *buffers)
+static void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
 {
     egl_state_t *egl_state;
     v_vertex_attrib_list_t *attrib_list;
@@ -1344,19 +1333,12 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
             return;
         } else
 #endif
-        /* do we use bindbuffer()?
-         */
-        if (state->array_buffer_binding) {
-            dispatch.DrawArrays (mode, first, count);
-            state->need_get_error = TRUE;
-            return;
-        } 
   
         for (i = 0; i < attrib_list->count; i++) {
             if (! attribs[i].array_enabled)
                 continue;
             /* we need to create a separate buffer for it */
-            else {
+            else if (! attribs[i].array_buffer_binding) {
                 data = _gl_create_data_array (&attribs[i], count);
                 if (! data)
                     continue;
@@ -1496,19 +1478,12 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
             goto FINISH;
         } else
 #endif
-        /* do we use bindbuffer()?
-         */
-        if (state->array_buffer_binding) {
-            dispatch.DrawElements (mode, count, type, indices);
-            state->need_get_error = TRUE;
-            goto FINISH;
-        } 
 
         for (i = 0; i < attrib_list->count; i++) {
             if (! attribs[i].array_enabled)
                 continue;
             /* we need to create a separate buffer for it */
-            else {
+            else if (! attribs[i].array_buffer_binding) {
                 data = _gl_create_data_array (&attribs[i], count);
                 if (! data)
                     continue;
@@ -1839,9 +1814,9 @@ static void _gl_get_floatv (GLenum pname, GLfloat *params)
 static void _gl_get_integerv (GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
-    v_vertex_attrib_list_t *attrib_list = &cli_states.vertex_attribs;
-    v_vertex_attrib_t *attribs = attrib_list->attribs;
-    int count = attrib_list->count;
+    v_vertex_attrib_list_t *attrib_list;
+    v_vertex_attrib_t *attribs;
+    int count;
     int i;
     
     if (_gl_is_valid_func (dispatch.GetIntegerv) &&
@@ -2923,8 +2898,8 @@ static void _gl_shader_binary (GLsizei n, const GLuint *shaders,
         free ((void *)binary);
 }
 
-void glShaderSource (GLuint shader, GLsizei count,
-                     const GLchar **string, const GLint *length)
+static void _gl_shader_source (GLuint shader, GLsizei count,
+                               const GLchar **string, const GLint *length)
 {
     egl_state_t *egl_state;
     int i;
@@ -3604,578 +3579,569 @@ static void _gl_validate_program (GLuint program)
     }
 }
 
-void glVertexAttrib1f (GLuint index, GLfloat v0)
+static void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.VertexAttrib1f))
-        return;
+    if (_gl_is_valid_func (dispatch.VertexAttrib1f) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (_gl_index_is_too_large (&egl_state->state, index)) {
+            return;
+        }
 
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (_gl_index_is_too_large (&egl_state->state, index)) {
-        return;
+        dispatch.VertexAttrib1f (index, v0);
     }
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.VertexAttrib1f (index, v0);
 }
 
-void glVertexAttrib2f (GLuint index, GLfloat v0, GLfloat v1)
+static void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.VertexAttrib2f) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (_gl_index_is_too_large (&egl_state->state, index)) {
+            return;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.VertexAttrib2f))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (_gl_index_is_too_large (&egl_state->state, index)) {
-        return;
+        dispatch.VertexAttrib2f (index, v0, v1);
     }
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.VertexAttrib2f (index, v0, v1);
 }
 
-void glVertexAttrib3f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2)
+static void _gl_vertex_attrib3f (GLuint index, GLfloat v0, 
+                                 GLfloat v1, GLfloat v2)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.VertexAttrib3f) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (_gl_index_is_too_large (&egl_state->state, index)) {
+            return;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.VertexAttrib3f))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (_gl_index_is_too_large (&egl_state->state, index)) {
-        return;
+        dispatch.VertexAttrib3f (index, v0, v1, v2);
     }
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.VertexAttrib3f (index, v0, v1, v2);
 }
 
-void glVertexAttrib4f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2,
-                       GLfloat v3)
+static void _gl_vertex_attrib4f (GLuint index, GLfloat v0, GLfloat v1, 
+                                 GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.VertexAttrib3f) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (_gl_index_is_too_large (&egl_state->state, index))
+            return;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.VertexAttrib4f))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (_gl_index_is_too_large (&egl_state->state, index))
-      return;
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.VertexAttrib4f (index, v0, v1, v2, v3);
+        dispatch.VertexAttrib4f (index, v0, v1, v2, v3);
+    }
 }
 
 static void
 _gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
 {
     egl_state_t *egl_state;
-
-    if (i == 1) {
-        if(! _is_error_state_or_func (active_state,
-                                      dispatch.VertexAttrib1fv))
-            return;
-    }
-    else if (i == 2) {
-        if(! _is_error_state_or_func (active_state,
-                                      dispatch.VertexAttrib2fv))
-            return;
-    }
-    else if (i == 3) {
-        if(! _is_error_state_or_func (active_state,
-                                      dispatch.VertexAttrib3fv))
-            return;
-    }
-    else {
-        if(! _is_error_state_or_func (active_state,
-                                      dispatch.VertexAttrib4fv))
-            return;
-    }
-
+    
+    if (! _is_valid_context ())
+        goto FINISH;
+    
     egl_state = (egl_state_t *) active_state->data;
 
     if (_gl_index_is_too_large (&egl_state->state, index))
-        return;
+        goto FINISH;
 
-    /* XXX: create command buffer, no wait signal */
-    if (i == 1)
-        dispatch.VertexAttrib1fv (index, v);
-    else if (i == 2)
-        dispatch.VertexAttrib2fv (index, v);
-    else if (i == 3)
-        dispatch.VertexAttrib3fv (index, v);
-    else
-        dispatch.VertexAttrib4fv (index, v);
+    switch (i) {
+        case 1:
+            if(! _is_valid_func (dispatch.VertexAttrib1fv))
+                goto FINISH;
+            dispatch.VertexAttrib1fv (index, v);
+            break;
+        case 2:
+            if(! _is_valid_func (dispatch.VertexAttrib2fv))
+                goto FINISH;
+            dispatch.VertexAttrib2fv (index, v);
+            break;
+        case 3:
+            if(! _is_valid_func (dispatch.VertexAttrib3fv))
+                goto FINISH;
+            dispatch.VertexAttrib3fv (index, v);
+            break;
+        default:
+            if(! _is_valid_func (dispatch.VertexAttrib4fv))
+                goto FINISH;
+            dispatch.VertexAttrib4fv (index, v);
+            break;
+    }
+
+FINISH:
+    if (v)
+        free ((GLfloat *)v);
 }
 
-void glVertexAttrib1fv (GLuint index, const GLfloat *v)
+static void _gl_vertex_attrib1fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (1, index, v);
 }
 
-void glVertexAttrib2fv (GLuint index, const GLfloat *v)
+static void _gl_vertex_attrib2fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (2, index, v);
 }
 
-void glVertexAttrib3fv (GLuint index, const GLfloat *v)
+static void _gl_vertex_attrib3fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (3, index, v);
 }
 
-void glVertexAttrib4fv (GLuint index, const GLfloat *v)
+static void _gl_vertex_attrib4fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (4, index, v);
 }
 
-void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
-                            GLboolean normalized, GLsizei stride,
-                            const GLvoid *pointer)
+static void _gl_vertex_attrib_pointer (GLuint index, GLint size, 
+                                       GLenum type, GLboolean normalized, 
+                                       GLsizei stride, const GLvoid *pointer)
 {
     egl_state_t *egl_state;
-    v_vertex_attrib_list_t *attrib_list = &cli_states.vertex_attribs;
-    v_vertex_attrib_t *attribs = attrib_list->attribs;
-    int count = attrib_list->count;
+    gles2_state_t *state;
+    char *data;
+    v_link_list_t *array_data = NULL;
+    v_link_list_t *array, *new_array_data;
+
+    v_vertex_attrib_list_t *attrib_list;
+    v_vertex_attrib_t *attribs;
     int i, found_index = -1;
+    int count;
+    int n = 0;
     GLint bound_buffer = 0;
 
-    if (! active_state && ! active_state->data)
-        return;
+    if (_gl_is_valid_func (dispatch.VertexAttribPointer) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        state = &egl_state->state;
+        attrib_list = &state->vertex_attribs;
+        attribs = attrib_list->attribs;
+        count = attrib_list->count;
+        
+        if (! (type == GL_BYTE                 ||
+               type == GL_UNSIGNED_BYTE        ||
+               type == GL_SHORT                ||
+               type == GL_UNSIGNED_SHORT       ||
+               type == GL_FLOAT)) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
+        else if (size > 4 || size < 1 || stride < 0) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
 
-    egl_state = (egl_state_t *) active_state->data;
-
+        /* check max_vertex_attribs */
+        if (_gl_index_is_too_large (&egl_state->state, index)) {
+            return;
+        }
+        
 #ifdef GL_OES_vertex_array_object
-
-    if (egl_state->state.vertex_array_binding) {
-        dispatch.VertexAttribPointer (index, size, type, normalized,
-                                      stride, pointer);
-        egl_state->state.need_get_error = TRUE;
-        return;
-    }
+        if (egl_state->state.vertex_array_binding) {
+            dispatch.VertexAttribPointer (index, size, type, normalized,
+                                          stride, pointer);
+            //egl_state->state.need_get_error = TRUE;
+            return;
+        }
 #endif
-    /* check existing client state */
-    for (i = 0; i < count; i++) {
-        if (attribs[i].index == index) {
-            if (attribs[i].size == size &&
-                attribs[i].type == type &&
-                attribs[i].stride == stride) {
-                attribs[i].array_normalized = normalized;
-                attribs[i].pointer = (GLvoid *)pointer;
-                return;
-            }
-            else {
-                found_index = i;
-                break;
+        bound_buffer = egl_state->state.array_buffer_binding;
+        /* check existing client state */
+        for (i = 0; i < count; i++) {
+            if (attribs[i].index == index) {
+                if (attribs[i].size == size &&
+                    attribs[i].type == type &&
+                    attribs[i].stride == stride) {
+                    attribs[i].array_normalized = normalized;
+                    attribs[i].pointer = (GLvoid *)pointer;
+                    attribs[i].array_buffer_binding == bound_buffer;
+                    return;
+                }
+                else {
+                    found_index = i;
+                    break;
+                }
             }
         }
-    }
 
-    if (! (type == GL_BYTE                 ||
-           type == GL_UNSIGNED_BYTE        ||
-           type == GL_SHORT                ||
-           type == GL_UNSIGNED_SHORT        ||
-           type == GL_FLOAT)) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
-    }
-    else if (size > 4 || size < 1 || stride < 0) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_VALUE;
-        return;
-    }
+        /* use array_buffer? */
+        if (bound_buffer) {
+            dispatch.VertexAttribPointer (index, size, type, normalized,
+                                          stride, pointer);
+            //egl_state->state.need_get_error = TRUE;
+        }
 
-    /* check max_vertex_attribs */
-    if (_gl_index_is_too_large (&egl_state->state, index)) {
-        return;
-    }
+        if (found_index != -1) {
+            attribs[found_index].size = size;
+            attribs[found_index].stride = stride;
+            attribs[found_index].type = type;
+            attribs[found_index].array_normalized = normalized;
+            attribs[found_index].pointer = (GLvoid *)pointer;
+            attribs[found_index].array_buffer_binding = bound_buffer;
+            return;
+        }
 
-    bound_buffer = egl_state->state.array_buffer_binding;
+        /* we have not found index */
+        if (i < NUM_EMBEDDED) {
+            attribs[i].index = index;
+            attribs[i].size = size;
+            attribs[i].stride = stride;
+            attribs[i].type = type;
+            attribs[i].array_normalized = normalized;
+            attribs[i].pointer = (GLvoid *)pointer;
+            attribs[i].data = NULL;
+            attribs[i].array_enabled = GL_FALSE;
+            attribs[i].array_buffer_binding = bound_buffer;
+            memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
+            attrib_list->count ++;
+        }
+        else {
+            v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
 
-    if (found_index != -1) {
-        attribs[found_index].size = size;
-        attribs[found_index].stride = stride;
-        attribs[found_index].type = type;
-        attribs[found_index].array_normalized = normalized;
-        attribs[found_index].pointer = (GLvoid *)pointer;
-        return;
-    }
+            memcpy (new_attribs, attribs, (count+1) * sizeof (v_vertex_attrib_t));
+            if (attribs != attrib_list->embedded_attribs)
+                free (attribs);
 
-    /* we have not found index */
-    if (i < NUM_EMBEDDED) {
-        attribs[i].index = index;
-        attribs[i].size = size;
-        attribs[i].stride = stride;
-        attribs[i].type = type;
-        attribs[i].array_normalized = normalized;
-        attribs[i].pointer = (GLvoid *)pointer;
-        attribs[i].data = NULL;
-        attribs[i].array_enabled = GL_FALSE;
-        attribs[i].array_buffer_binding = bound_buffer;
-        memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
-        attrib_list->count ++;
-    }
-    else {
-        v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
+            new_attribs[count].index = index;
+            new_attribs[count].size = size;
+            new_attribs[count].stride = stride;
+            new_attribs[count].type = type;
+            new_attribs[count].array_normalized = normalized;
+            new_attribs[count].pointer = (GLvoid *)pointer;
+            new_attribs[count].data = NULL;
+            new_attribs[count].array_enabled = GL_FALSE;
+            new_attribs[count].array_buffer_binding = bound_buffer;
+            memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 
-        memcpy (new_attribs, attribs, (count+1) * sizeof (v_vertex_attrib_t));
-        if (attribs != attrib_list->embedded_attribs)
-            free (attribs);
-
-        new_attribs[count].index = index;
-        new_attribs[count].size = size;
-        new_attribs[count].stride = stride;
-        new_attribs[count].type = type;
-        new_attribs[count].array_normalized = normalized;
-        new_attribs[count].pointer = (GLvoid *)pointer;
-        new_attribs[count].data = NULL;
-        new_attribs[count].array_enabled = GL_FALSE;
-        new_attribs[count].array_buffer_binding = bound_buffer;
-        memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
-
-        attrib_list->attribs = new_attribs;
-        attrib_list->count ++;
+            attrib_list->attribs = new_attribs;
+            attrib_list->count ++;
+        }
     }
 }
 
-void glViewport (GLint x, GLint y, GLsizei width, GLsizei height)
+static void _gl_viewport (GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.Viewport) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (egl_state->state.viewport[0] == x     &&
+            egl_state->state.viewport[1] == y     &&
+            egl_state->state.viewport[2] == width &&
+            egl_state->state.viewport[3] == height)
+            return;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.Viewport))
-        return;
+        if (x < 0 || y < 0) {
+            _gl_set_error (GL_INVALID_VALUE);
+            return;
+        }
 
-    egl_state = (egl_state_t *) active_state->data;
+        egl_state->state.viewport[0] = x;
+        egl_state->state.viewport[1] = y;
+        egl_state->state.viewport[2] = width;
+        egl_state->state.viewport[3] = height;
 
-    if (egl_state->state.viewport[0] == x &&
-        egl_state->state.viewport[1] == y &&
-        egl_state->state.viewport[2] == width &&
-        egl_state->state.viewport[3] == height)
-        return;
-
-    if (x < 0 || y < 0) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_VALUE;
-          return;
+        dispatch.Viewport (x, y, width, height);
     }
-
-    egl_state->state.viewport[0] = x;
-    egl_state->state.viewport[1] = y;
-    egl_state->state.viewport[2] = width;
-    egl_state->state.viewport[3] = height;
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.Viewport (x, y, width, height);
 }
 /* end of GLES2 core profile */
 
 #ifdef GL_OES_EGL_image
-GL_APICALL void GL_APIENTRY
-glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
+static void
+_gl_egl_image_target_texture_2d_oes (GLenum target, GLeglImageOES image)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.EGLImageTargetTexture2DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (target != GL_TEXTURE_2D) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.EGLImageTargetTexture2DOES))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (target != GL_TEXTURE_2D) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        dispatch.EGLImageTargetTexture2DOES (target, image);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.EGLImageTargetTexture2DOES (target, image);
-    egl_state->state.need_get_error = TRUE;
 }
 
-GL_APICALL void GL_APIENTRY
-glEGLImageTargetRenderbufferStorageOES (GLenum target, GLeglImageOES image)
+static void
+_gl_egl_image_target_renderbuffer_storage_oes (GLenum target, 
+                                               GLeglImageOES image)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.EGLImageTargetRenderbufferStorageOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (target != GL_RENDERBUFFER_OES) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.EGLImageTargetRenderbufferStorageOES))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (target != GL_RENDERBUFFER_OES) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
-    egl_state->state.need_get_error = TRUE;
 }
 #endif
 
 #ifdef GL_OES_get_program_binary
-GL_APICALL void GL_APIENTRY
-glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei *length,
-                       GLenum *binaryFormat, GLvoid *binary)
+static void
+_gl_get_program_binary_oes (GLuint program, GLsizei bufSize, 
+                            GLsizei *length, GLenum *binaryFormat, 
+                            GLvoid *binary)
 {
     egl_state_t *egl_state;
-
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GetProgramBinaryOES))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.GetProgramBinaryOES (program, bufSize, length, binaryFormat,
-                                  binary);
-    egl_state->state.need_get_error = TRUE;
+    
+    if (_gl_is_valid_func (dispatch.GetProgramBinaryOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.GetProgramBinaryOES (program, bufSize, length, 
+                                      binaryFormat, binary);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glProgramBinaryOES (GLuint program, GLenum binaryFormat,
-                    const GLvoid *binary, GLint length)
+static void
+_gl_program_binary_oes (GLuint program, GLenum binaryFormat,
+                        const GLvoid *binary, GLint length)
 {
     egl_state_t *egl_state;
+    
+    if (_gl_is_valid_func (dispatch.ProgramBinaryOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ProgramBinaryOES (program, binaryFormat, binary, length);
+        egl_state->state.need_get_error = TRUE;
+    }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ProgramBinaryOES))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait signal */
-    dispatch.ProgramBinaryOES (program, binaryFormat, binary, length);
-    egl_state->state.need_get_error = TRUE;
+    if (binary)
+        free ((void *)binary);
 }
 #endif
 
 #ifdef GL_OES_mapbuffer
-GL_APICALL void* GL_APIENTRY glMapBufferOES (GLenum target, GLenum access)
+static void* 
+_gl_map_buffer_oes (GLenum target, GLenum access)
 {
     egl_state_t *egl_state;
     void *result = NULL;
+    
+    if (_gl_is_valid_func (dispatch.MapBufferOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.MapBufferOES))
-        return result;
+        if (access != GL_WRITE_ONLY_OES) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return result;
+        }
+        else if (! (target == GL_ARRAY_BUFFER ||
+                    target == GL_ELEMENT_ARRAY_BUFFER)) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return result;
+        }
 
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (access != GL_WRITE_ONLY_OES) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return result;
+        result = dispatch.MapBufferOES (target, access);
+        egl_state->state.need_get_error = TRUE;
     }
-    else if (! (target == GL_ARRAY_BUFFER ||
-                target == GL_ELEMENT_ARRAY_BUFFER)) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return result;
-    }
-
-    /* XXX: create command buffer, wait signal */
-    result = dispatch.MapBufferOES (target, access);
-    egl_state->state.need_get_error = TRUE;
+    return result;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glUnmapBufferOES (GLenum target)
+static GLboolean
+_gl_unmap_buffer_oes (GLenum target)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.UnmapBufferOES))
-        return result;
+    if (_gl_is_valid_func (dispatch.UnmapBufferOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *) active_state->data;
+        if (! (target == GL_ARRAY_BUFFER ||
+               target == GL_ELEMENT_ARRAY_BUFFER)) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return result;
+        }
 
-    if (! (target == GL_ARRAY_BUFFER ||
-           target == GL_ELEMENT_ARRAY_BUFFER)) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return result;
+        result = dispatch.UnmapBufferOES (target);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    /* XXX: create command buffer, wait signal */
-    result = dispatch.UnmapBufferOES (target);
-    egl_state->state.need_get_error = TRUE;
+    return result;
 }
 
-GL_APICALL void GL_APIENTRY
-glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid **params)
+static void
+_gl_get_buffer_pointerv_oes (GLenum target, GLenum pname, GLvoid **params)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GetBufferPointervOES)) {
-        *params = NULL;
-        return;
+    if (_gl_is_valid_func (dispatch.GetBufferPointervOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+
+        if (! (target == GL_ARRAY_BUFFER ||
+               target == GL_ELEMENT_ARRAY_BUFFER)) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
+
+        dispatch.GetBufferPointervOES (target, pname, params);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (! (target == GL_ARRAY_BUFFER ||
-           target == GL_ELEMENT_ARRAY_BUFFER)) {
-        if (egl_state->state.error == GL_NO_ERROR)
-          egl_state->state.error = GL_INVALID_ENUM;
-        *params = NULL;
-        return;
-    }
-
-    /* XXX: create command buffer, wait signal */
-    dispatch.GetBufferPointervOES (target, pname, params);
-    egl_state->state.need_get_error = TRUE;
 }
 #endif
 
 #ifdef GL_OES_texture_3D
-GL_APICALL void GL_APIENTRY
-glTexImage3DOES (GLenum target, GLint level, GLenum internalformat,
-                 GLsizei width, GLsizei height, GLsizei depth,
-                 GLint border, GLenum format, GLenum type,
-                 const GLvoid *pixels)
+static void
+_gl_tex_image_3d_oes (GLenum target, GLint level, GLenum internalformat,
+                      GLsizei width, GLsizei height, GLsizei depth,
+                      GLint border, GLenum format, GLenum type,
+                      const GLvoid *pixels)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.TexImage3DOES))
-        return;
+    if (_gl_is_valid_func (dispatch.TexImage3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, wait for signal */
-    dispatch.TexImage3DOES (target, level, internalformat, width, height,
-                            depth, border, format, type, pixels);
-    egl_state->state.need_get_error = TRUE;
+        dispatch.TexImage3DOES (target, level, internalformat, 
+                                width, height, depth, 
+                                border, format, type, pixels);
+        egl_state->state.need_get_error = TRUE;
+    }
+    if (pixels)
+        free ((void *)pixels);
 }
 
-GL_APICALL void GL_APIENTRY
-glTexSubImage3DOES (GLenum target, GLint level,
-                    GLint xoffset, GLint yoffset, GLint zoffset,
-                    GLsizei width, GLsizei height, GLsizei depth,
-                    GLenum format, GLenum type, const GLvoid *data)
+static void
+_gl_tex_sub_image_3d_oes (GLenum target, GLint level,
+                          GLint xoffset, GLint yoffset, GLint zoffset,
+                          GLsizei width, GLsizei height, GLsizei depth,
+                          GLenum format, GLenum type, const GLvoid *data)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.TexSubImage3DOES))
-        return;
+    if (_gl_is_valid_func (dispatch.TexSubImage3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.TexSubImage3DOES (target, level, xoffset, yoffset, zoffset,
-                               width, height, depth, format, type, data);
-    egl_state->state.need_get_error = TRUE;
-}
-
-GL_APICALL void GL_APIENTRY
-glCopyTexSubImage3DOES (GLenum target, GLint level,
-                        GLint xoffset, GLint yoffset, GLint zoffset,
-                        GLint x, GLint y,
-                        GLint width, GLint height)
-{
-    egl_state_t *egl_state;
-
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.CopyTexSubImage3DOES))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: command buffer */
-    dispatch.CopyTexSubImage3DOES (target, level,
+        dispatch.TexSubImage3DOES (target, level, 
                                    xoffset, yoffset, zoffset,
-                                   x, y, width, height);
-
-    egl_state->state.need_get_error = TRUE;
+                                   width, height, depth, 
+                                   format, type, data);
+        egl_state->state.need_get_error = TRUE;
+    }
+    if (data)
+        free ((void *)data);
 }
 
-GL_APICALL void GL_APIENTRY
-glCompressedTexImage3DOES (GLenum target, GLint level,
-                           GLenum internalformat,
-                           GLsizei width, GLsizei height, GLsizei depth,
-                           GLint border, GLsizei imageSize,
-                           const GLvoid *data)
+static void
+_gl_copy_tex_sub_image_3d_oes (GLenum target, GLint level,
+                               GLint xoffset, GLint yoffset, GLint zoffset,
+                               GLint x, GLint y,
+                               GLint width, GLint height)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.CompressedTexImage3DOES))
-        return;
+    if (_gl_is_valid_func (dispatch.CopyTexSubImage3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *) active_state->data;
+        dispatch.CopyTexSubImage3DOES (target, level,
+                                       xoffset, yoffset, zoffset,
+                                       x, y, width, height);
 
-    /* XXX: command buffer */
-    dispatch.CompressedTexImage3DOES (target, level, internalformat,
-                                      width, height, depth,
-                                      border, imageSize, data);
-
-    egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glCompressedTexSubImage3DOES (GLenum target, GLint level,
-                              GLint xoffset, GLint yoffset, GLint zoffset,
-                              GLsizei width, GLsizei height, GLsizei depth,
-                              GLenum format, GLsizei imageSize,
-                              const GLvoid *data)
+static void
+_gl_compressed_tex_image_3d_oes (GLenum target, GLint level,
+                                 GLenum internalformat,
+                                 GLsizei width, GLsizei height, 
+                                 GLsizei depth,
+                                 GLint border, GLsizei imageSize,
+                                 const GLvoid *data)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.CompressedTexSubImage3DOES))
-        return;
+    if (_gl_is_valid_func (dispatch.CompressedTexImage3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *) active_state->data;
+        dispatch.CompressedTexImage3DOES (target, level, internalformat,
+                                          width, height, depth,
+                                          border, imageSize, data);
 
-    /* XXX: command buffer */
-    dispatch.CompressedTexSubImage3DOES (target, level,
-                                         xoffset, yoffset, zoffset,
-                                         width, height, depth,
-                                         format, imageSize, data);
-
-    egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = TRUE;
+    }
+    if (data)
+        free ((void *)data);
 }
 
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture3DOES (GLenum target, GLenum attachment,
-                           GLenum textarget, GLuint texture,
-                           GLint level, GLint zoffset)
+static void
+_gl_compressed_tex_sub_image_3d_oes (GLenum target, GLint level,
+                                     GLint xoffset, GLint yoffset, 
+                                     GLint zoffset,
+                                     GLsizei width, GLsizei height, 
+                                     GLsizei depth,
+                                     GLenum format, GLsizei imageSize,
+                                     const GLvoid *data)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.FramebufferTexture3DOES))
-        return;
+    if (_gl_is_valid_func (dispatch.CompressedTexSubImage3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
+        dispatch.CompressedTexSubImage3DOES (target, level,
+                                             xoffset, yoffset, zoffset,
+                                             width, height, depth,
+                                             format, imageSize, data);
 
-    if (target != GL_FRAMEBUFFER) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        egl_state->state.need_get_error = TRUE;
     }
 
-    dispatch.FramebufferTexture3DOES (target, attachment, textarget,
-                                      texture, level, zoffset);
-    egl_state->state.need_get_error = TRUE;
+    if (data)
+        free ((void *)data);
+}
+
+static void
+_gl_framebuffer_texture_3d_oes (GLenum target, GLenum attachment,
+                                GLenum textarget, GLuint texture,
+                                GLint level, GLint zoffset)
+{
+    egl_state_t *egl_state;
+
+    if (_gl_is_valid_func (dispatch.FramebufferTexture3DOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+
+        if (target != GL_FRAMEBUFFER) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
+
+        dispatch.FramebufferTexture3DOES (target, attachment, textarget,
+                                          texture, level, zoffset);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
@@ -4190,988 +4156,921 @@ glFramebufferTexture3DOES (GLenum target, GLenum attachment,
  * if there is a vertex_array_binding, instead of using client state, 
  * we pass them to server.
  */
-GL_APICALL void GL_APIENTRY
-glBindVertexArrayOES (GLuint array)
+static void
+_gl_bind_vertex_array_oes (GLuint array)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.BindVertexArrayOES))
-        return;
+    if (_gl_is_valid_func (dispatch.BindVertexArrayOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
 
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
+        if (egl_state->state.vertex_array_binding == array)
+            return;
 
-    dispatch.BindVertexArrayOES (array);
-    egl_state->state.need_get_error = TRUE;
-    /* should we save this ? */
-    egl_state->state.vertex_array_binding = array;
+        dispatch.BindVertexArrayOES (array);
+        egl_state->state.need_get_error = TRUE;
+        /* FIXME: should we save this ? */
+        egl_state->state.vertex_array_binding = array;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glDeleteVertexArraysOES (GLsizei n, const GLuint *arrays)
+static void
+_gl_delete_vertex_arrays_oes (GLsizei n, const GLuint *arrays)
 {
     egl_state_t *egl_state;
     int i;
 
-    /* XXX: any error generated ? */
-    if (n <= 0)
-        return;
+    if (_gl_is_valid_func (dispatch.DeleteVertexArraysOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        if (n <= 0) {
+            _gl_set_error (GL_INVALID_VALUE);
+            goto FINISH;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.DeleteVertexArraysOES))
-        return;
+        dispatch.DeleteVertexArraysOES (n, arrays);
 
-    egl_state = (egl_state_t *)active_state->data;
-        /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.DeleteVertexArraysOES (n, arrays);
-
-    /* matching vertex_array_binding ? */
-    for (i = 0; i < n; i++) {
-        if (arrays[i] == egl_state->state.vertex_array_binding) {
-            egl_state->state.vertex_array_binding = 0;
-            break;
+        /* matching vertex_array_binding ? */
+        for (i = 0; i < n; i++) {
+            if (arrays[i] == egl_state->state.vertex_array_binding) {
+                egl_state->state.vertex_array_binding = 0;
+                break;
+            }
         }
     }
+
+FINISH:
+    if (arrays)
+        free ((void *)arrays);
 }
 
-GL_APICALL void GL_APIENTRY
-glGenVertexArraysOES (GLsizei n, GLuint *arrays)
+static void
+_gl_gen_vertex_arrays_oes (GLsizei n, GLuint *arrays)
 {
     egl_state_t *egl_state;
 
-    /* XXX: any error generated ? */
-    if (n <= 0)
-        return;
+    if (_gl_is_valid_func (dispatch.GenVertexArraysOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        if (n <= 0) {
+            _gl_set_error (GL_INVALID_VALUE);
+            return;
+        }
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GenVertexArraysOES))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GenVertexArraysOES (n, arrays);
+        dispatch.GenVertexArraysOES (n, arrays);
+    }
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glIsVertexArrayOES (GLuint array)
+static GLboolean
+_gl_is_vertex_array_oes (GLuint array)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.IsVertexArrayOES))
-        return result;
+    if (_gl_is_valid_func (dispatch.IsVertexArrayOES) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        result = dispatch.IsVertexArrayOES (array);
 
-    egl_state = (egl_state_t *) active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    result = dispatch.IsVertexArrayOES (array);
-
-    if (result == GL_FALSE && egl_state->state.vertex_array_binding == array)
-        egl_state->state.vertex_array_binding = 0;
-
+        if (result == GL_FALSE && 
+            egl_state->state.vertex_array_binding == array)
+            egl_state->state.vertex_array_binding = 0;
+    }
     return result;
 }
 #endif
 
 #ifdef GL_AMD_performance_monitor
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorGroupsAMD (GLint *numGroups, GLsizei groupSize, 
-                           GLuint *groups)
+static void
+_gl_get_perf_monitor_groups_amd (GLint *numGroups, GLsizei groupSize, 
+                                 GLuint *groups)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorGroupsAMD))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorGroupsAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
 GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCountersAMD (GLuint group, GLint *numCounters, 
-                             GLint *maxActiveCounters, GLsizei counterSize,
-                             GLuint *counters)
+_gl_get_perf_monitor_counters_amd (GLuint group, GLint *numCounters, 
+                                   GLint *maxActiveCounters, 
+                                   GLsizei counterSize,
+                                   GLuint *counters)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorCountersAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorCountersAMD (group, numCounters,
-                                        maxActiveCounters,
-                                        counterSize, counters);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorCountersAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorCountersAMD (group, numCounters,
+                                            maxActiveCounters,
+                                            counterSize, counters);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorGroupStringAMD (GLuint group, GLsizei bufSize, 
-                                GLsizei *length, GLchar *groupString)
+static void
+_gl_get_perf_monitor_group_string_amd (GLuint group, GLsizei bufSize, 
+                                       GLsizei *length, 
+                                       GLchar *groupString)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorGroupStringAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorGroupStringAMD (group, bufSize, length,
-                                           groupString);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorGroupStringAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorGroupStringAMD (group, bufSize, length,
+                                               groupString);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterStringAMD (GLuint group, GLuint counter, 
-                                  GLsizei bufSize, 
-                                  GLsizei *length, GLchar *counterString)
+static void
+_gl_get_perf_monitor_counter_string_amd (GLuint group, GLuint counter, 
+                                         GLsizei bufSize, 
+                                         GLsizei *length, 
+                                         GLchar *counterString)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorCounterStringAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorCounterStringAMD (group, counter, bufSize, 
-                                             length, counterString);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterStringAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorCounterStringAMD (group, counter, bufSize, 
+                                                 length, counterString);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterInfoAMD (GLuint group, GLuint counter, 
-                                GLenum pname, GLvoid *data)
+static void
+_gl_get_perf_monitor_counter_info_amd (GLuint group, GLuint counter, 
+                                       GLenum pname, GLvoid *data)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorCounterInfoAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorCounterInfoAMD (group, counter, pname, data); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterInfoAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorCounterInfoAMD (group, counter, 
+                                               pname, data); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGenPerfMonitorsAMD (GLsizei n, GLuint *monitors) 
+static void
+_gl_gen_perf_monitors_amd (GLsizei n, GLuint *monitors) 
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GenPerfMonitorsAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GenPerfMonitorsAMD (n, monitors); 
+    if (_gl_is_valid_func (dispatch.GenPerfMonitorsAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GenPerfMonitorsAMD (n, monitors); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glDeletePerfMonitorsAMD (GLsizei n, GLuint *monitors) 
+static void
+_gl_delete_perf_monitors_amd (GLsizei n, GLuint *monitors) 
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.DeletePerfMonitorsAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.DeletePerfMonitorsAMD (n, monitors); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.DeletePerfMonitorsAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.DeletePerfMonitorsAMD (n, monitors); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glSelectPerfMonitorCountersAMD (GLuint monitor, GLboolean enable,
-                                GLuint group, GLint numCounters,
-                                GLuint *countersList) 
+static void
+_gl_select_perf_monitor_counters_amd (GLuint monitor, GLboolean enable,
+                                      GLuint group, GLint numCounters,
+                                      GLuint *countersList) 
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.SelectPerfMonitorCountersAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.SelectPerfMonitorCountersAMD (monitor, enable, group,
-                                           numCounters, countersList); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.SelectPerfMonitorCountersAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.SelectPerfMonitorCountersAMD (monitor, enable, group,
+                                               numCounters, countersList); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glBeginPerfMonitorAMD (GLuint monitor)
+static void
+_gl_begin_perf_monitor_amd (GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.BeginPerfMonitorAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.BeginPerfMonitorAMD (monitor); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.BeginPerfMonitorAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.BeginPerfMonitorAMD (monitor); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glEndPerfMonitorAMD (GLuint monitor)
+static void
+_gl_end_perf_monitor_amd (GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.EndPerfMonitorAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.EndPerfMonitorAMD (monitor); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.EndPerfMonitorAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.EndPerfMonitorAMD (monitor); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
-                                GLsizei dataSize, GLuint *data,
-                                GLint *bytesWritten)
+static void
+_gl_get_perf_monitor_counter_data_amd (GLuint monitor, GLenum pname,
+                                       GLsizei dataSize, GLuint *data,
+                                       GLint *bytesWritten)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GetPerfMonitorCounterDataAMD))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-        /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.GetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
-                                           data, bytesWritten); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterDataAMD) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.GetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
+                                               data, bytesWritten); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_ANGLE_framebuffer_blit
-GL_APICALL void GL_APIENTRY
-glBlitFramebufferANGLE (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                        GLbitfield mask, GLenum filter)
+static void
+_gl_blit_framebuffer_angle (GLint srcX0, GLint srcY0, 
+                            GLint srcX1, GLint srcY1,
+                            GLint dstX0, GLint dstY0, 
+                            GLint dstX1, GLint dstY1,
+                            GLbitfield mask, GLenum filter)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.BlitFramebufferANGLE))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.BlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
-                                   dstX0, dstY0, dstX1, dstY1,
-                                   mask, filter);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.BlitFramebufferANGLE) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.BlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
+                                       dstX0, dstY0, dstX1, dstY1,
+                                       mask, filter);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_ANGLE_framebuffer_multisample
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleANGLE (GLenum target, GLsizei samples, 
-                                       GLenum internalformat, 
-                                       GLsizei width, GLsizei height)
+static void
+_gl_renderbuffer_storage_multisample_angle (GLenum target, GLsizei samples,
+                                            GLenum internalformat,
+                                            GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.RenderbufferStorageMultisampleANGLE))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.RenderbufferStorageMultisampleANGLE (target, samples,
-                                                  internalformat,
-                                                  width, height);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleANGLE) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.RenderbufferStorageMultisampleANGLE (target, samples,
+                                                      internalformat,
+                                                      width, height);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_APPLE_framebuffer_multisample
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleAPPLE (GLenum target, GLsizei samples, 
-                                       GLenum internalformat, 
-                                       GLsizei width, GLsizei height)
+static void
+_gl_renderbuffer_storage_multisample_apple (GLenum target, GLsizei samples,
+                                            GLenum internalformat, 
+                                            GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.RenderbufferStorageMultisampleAPPLE))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.RenderbufferStorageMultisampleAPPLE (target, samples,
-                                                  internalformat,
-                                                  width, height);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleAPPLE) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.RenderbufferStorageMultisampleAPPLE (target, samples,
+                                                      internalformat,
+                                                      width, height);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glResolveMultisampleFramebufferAPPLE (void) 
+static void
+gl_resovle_multisample_framebuffer_apple (void) 
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.ResolveMultisampleFramebufferAPPLE))
-        return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    dispatch.ResolveMultisampleFramebufferAPPLE ();
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.ResovleMultisampleFramebufferAPPLE) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.ResolveMultisampleFramebufferAPPLE ();
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_EXT_discard_framebuffer
-GL_APICALL void GL_APIENTRY
-glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments,
-                         const GLenum *attachments)
+static void
+gl_discard_framebuffer_ext (GLenum target, GLsizei numAttachments,
+                            const GLenum *attachments)
 {
     egl_state_t *egl_state;
     int i;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.DiscardFramebufferEXT))
-      return;
-
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    if (target != GL_FRAMEBUFFER) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
-    }
-
-    for (i = 0; i < numAttachments; i++) {
-        if (! (attachments[i] == GL_COLOR_ATTACHMENT0  ||
-               attachments[i] == GL_DEPTH_ATTACHMENT   ||
-               attachments[i] == GL_STENCIL_ATTACHMENT ||
-               attachments[i] == GL_COLOR_EXT               ||
-               attachments[i] == GL_DEPTH_EXT               ||
-               attachments[i] == GL_STENCIL_EXT)) {
-            if (egl_state->state.error == GL_NO_ERROR)
-                egl_state->state.error = GL_INVALID_ENUM;
-            return;
+    if (_gl_is_valid_func (dispatch.DiscardFramebufferEXT) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        if (target != GL_FRAMEBUFFER) {
+            _gl_set_error (GL_INVALID_ENUM);
+            goto FINISH;
         }
-    }
 
-    dispatch.DiscardFramebufferEXT (target, numAttachments, attachments);
+        for (i = 0; i < numAttachments; i++) {
+            if (! (attachments[i] == GL_COLOR_ATTACHMENT0  ||
+                   attachments[i] == GL_DEPTH_ATTACHMENT   ||
+                   attachments[i] == GL_STENCIL_ATTACHMENT ||
+                   attachments[i] == GL_COLOR_EXT          ||
+                   attachments[i] == GL_DEPTH_EXT          ||
+                   attachments[i] == GL_STENCIL_EXT)) {
+                _gl_set_error (GL_INVALID_ENUM);
+                goto FINISH;
+            }
+        }
+        dispatch.DiscardFramebufferEXT (target, numAttachments, 
+                                        attachments);
+    }
+FINISH:
+    if (attachments)
+        free ((void *)attachments);
 }
 #endif
 
 #ifdef GL_EXT_multi_draw_arrays
-GL_APICALL void GL_APIENTRY
-glMultiDrawArraysEXT (GLenum mode, const GLint *first, 
-                      const GLsizei *count, GLsizei primcount)
+static void
+_gl_multi_draw_arrays_ext (GLenum mode, const GLint *first, 
+                           const GLsizei *count, GLsizei primcount)
 {
     /* not implemented */
 }
 
-GL_APICALL void GL_APIENTRY
-glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
-                        const GLvoid **indices, GLsizei primcount)
+void 
+gl_multi_draw_elements_ext (GLenum mode, const GLsizei *count, GLenum type,
+                            const GLvoid **indices, GLsizei primcount)
 {
     /* not implemented */
 }
 #endif
 
 #ifdef GL_EXT_multisampled_render_to_texture
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleEXT (GLenum target, GLsizei samples,
-                                     GLenum internalformat,
-                                     GLsizei width, GLsizei height)
+static void
+_gl_renderbuffer_storage_multisample_ext (GLenum target, GLsizei samples,
+                                          GLenum internalformat,
+                                          GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.RenderbufferStorageMultisampleEXT))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.RenderbufferStorageMultisampleEXT (target, samples, 
-                                                internalformat, 
-                                                width, height);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleEXT) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.RenderbufferStorageMultisampleEXT (target, samples, 
+                                                    internalformat, 
+                                                    width, height);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture2DMultisampleEXT (GLenum target, GLenum attachment,
-                                      GLenum textarget, GLuint texture,
-                                      GLint level, GLsizei samples)
+static void
+_gl_framebuffer_texture_2d_multisample_ext (GLenum target, 
+                                            GLenum attachment,
+                                            GLenum textarget, 
+                                            GLuint texture,
+                                            GLint level, GLsizei samples)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.FramebufferTexture2DMultisampleEXT))
-        return;
+    if (_gl_is_valid_func (dispatch.FramebufferTexture2DMultisampleEXT) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        if (target != GL_FRAMEBUFFER) {
+           _gl_set_error (GL_INVALID_ENUM);
+           return;
+        }
 
-    egl_state = (egl_state_t *)active_state->data;
-    /* XXX: put to a command buffer, no wait for signal */
-
-    if (target != GL_FRAMEBUFFER) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        dispatch.FramebufferTexture2DMultisampleEXT (target, attachment, 
+                                                     textarget, texture, 
+                                                     level, samples);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    dispatch.FramebufferTexture2DMultisampleEXT (target, attachment, 
-                                                 textarget, texture, 
-                                                 level, samples);
-    egl_state->state.need_get_error = TRUE;
 }
 #endif
 
 #ifdef GL_IMG_multisampled_render_to_texture
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleIMG (GLenum target, GLsizei samples,
-                                     GLenum internalformat,
-                                     GLsizei width, GLsizei height)
+static void
+_gl_renderbuffer_storage_multisample_img (GLenum target, GLsizei samples,
+                                          GLenum internalformat,
+                                          GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.RenderbufferStorageMultisampleIMG))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.RenderbufferStorageMultisampleIMG (target, samples, 
-                                                internalformat, 
-                                                width, height);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleIMG) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        dispatch.RenderbufferStorageMultisampleIMG (target, samples, 
+                                                    internalformat, 
+                                                    width, height);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture2DMultisampleIMG (GLenum target, GLenum attachment,
-                                      GLenum textarget, GLuint texture,
-                                      GLint level, GLsizei samples)
+static void
+_gl_framebuffer_texture_2d_multisample_img (GLenum target, 
+                                            GLenum attachment,
+                                            GLenum textarget, 
+                                            GLuint texture,
+                                            GLint level, GLsizei samples)
 {
     egl_state_t *egl_state;
 
-    /* XXX: put to a command buffer, no wait for signal */
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.FramebufferTexture2DMultisampleIMG))
-        return;
+    if (_gl_is_valid_func (dispatch.FramebufferTexture2DMultisampleIMG) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+        
+        if (target != GL_FRAMEBUFFER) {
+           _gl_set_error (GL_INVALID_ENUM);
+           return;
+        }
 
-    egl_state = (egl_state_t *)active_state->data;
-
-    if (target != GL_FRAMEBUFFER) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        dispatch.FramebufferTexture2DMultisampleIMG (target, attachment,
+                                                     textarget, texture,
+                                                     level, samples);
+        egl_state->state.need_get_error = TRUE;
     }
-
-    dispatch.FramebufferTexture2DMultisampleIMG (target, attachment,
-                                                 textarget, texture,
-                                                 level, samples);
-    egl_state->state.need_get_error = TRUE;
 }
 #endif
 
 #ifdef GL_NV_fence
-GL_APICALL void GL_APIENTRY
-glDeleteFencesNV (GLsizei n, const GLuint *fences)
+static void
+_gl_delete_fences_nv (GLsizei n, const GLuint *fences)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.DeleteFencesNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.DeleteFencesNV (n, fences); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.DeleteFencesNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (n <= 0) {
+            _gl_set_error (GL_INVALID_VALUE);
+            goto FINISH;
+        }
+    
+        dispatch.DeleteFencesNV (n, fences); 
+        egl_state->state.need_get_error = TRUE;
+    }
+FINISH:
+    if (fences)
+        free ((void *)fences);
 }
 
-GL_APICALL void GL_APIENTRY
-glGenFencesNV (GLsizei n, GLuint *fences)
+static void
+_gl_gen_fences_nv (GLsizei n, GLuint *fences)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state, 
-                                  dispatch.GenFencesNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.GenFencesNV (n, fences); 
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GenFencesNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (n <= 0) {
+            _gl_set_error (GL_INVALID_VALUE);
+            return;
+        }
+    
+        dispatch.GenFencesNV (n, fences); 
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glIsFenceNV (GLuint fence)
+static GLboolean
+_gl_is_fence_nv (GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.IsFenceNV))
-        return result;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    result = dispatch.IsFenceNV (fence);
-    egl_state->state.need_get_error = TRUE;
-
+    if (_gl_is_valid_func (dispatch.IsFenceNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        result = dispatch.IsFenceNV (fence);
+        egl_state->state.need_get_error = TRUE;
+    }
     return result;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glTestFenceNV (GLuint fence)
+static GLboolean
+_gl_test_fence_nv (GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.TestFenceNV))
-        return result;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    result = dispatch.TestFenceNV (fence);
-    egl_state->state.need_get_error = TRUE;
-
+    if (_gl_is_valid_func (dispatch.TestFenceNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        result = dispatch.TestFenceNV (fence);
+        egl_state->state.need_get_error = TRUE;
+    }
     return result;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glGetFenceivNV (GLuint fence, GLenum pname, int *params)
+static void 
+_gl_get_fenceiv_nv (GLuint fence, GLenum pname, int *params)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GetFenceivNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.GetFenceivNV (fence, pname, params);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetFenceivNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.GetFenceivNV (fence, pname, params);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glFinishFenceivNV (GLuint fence)
+static void
+_gl_finish_fence_nv (GLuint fence)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.FinishFenceNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.FinishFenceNV (fence);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.FinishFenceNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.FinishFenceNV (fence);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glSetFenceNV (GLuint fence, GLenum condition)
+static void
+_gl_set_fence_nv (GLuint fence, GLenum condition)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.SetFenceNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.SetFenceNV (fence, condition);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.SetFenceNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.SetFenceNV (fence, condition);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_NV_coverage_sample
-GL_APICALL void GL_APIENTRY
-glCoverageMaskNV (GLboolean mask)
+static void
+_gl_coverage_mask_nv (GLboolean mask)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.CoverageMaskNV))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.CoverageMaskNV (mask);
+    if (_gl_is_valid_func (dispatch.CoverageMaskNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.CoverageMaskNV (mask);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glCoverageOperationNV (GLenum operation)
+static void
+_gl_coverage_operation_nv (GLenum operation)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.CoverageOperationNV))
-        return;
+    if (_gl_is_valid_func (dispatch.CoverageOperationNV) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        if (! (operation == GL_COVERAGE_ALL_FRAGMENTS_NV  ||
+               operation == GL_COVERAGE_EDGE_FRAGMENTS_NV ||
+               operation == GL_COVERAGE_AUTOMATIC_NV)) {
+            _gl_set_error (GL_INVALID_ENUM);
+            return;
+        }
 
-    egl_state = (egl_state_t *) active_state->data;
-
-    if (! (operation == GL_COVERAGE_ALL_FRAGMENTS_NV  ||
-           operation == GL_COVERAGE_EDGE_FRAGMENTS_NV ||
-           operation == GL_COVERAGE_AUTOMATIC_NV)) {
-        if (egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = GL_INVALID_ENUM;
-        return;
+        dispatch.CoverageOperationNV (operation);
     }
-
-    /* XXX: create command buffer, no wait */
-    dispatch.CoverageOperationNV (operation);
 }
 #endif
 
 #ifdef GL_QCOM_driver_control
-GL_APICALL void GL_APIENTRY
-glGetDriverControlsQCOM (GLint *num, GLsizei size, GLuint *driverControls)
+static void
+_gl_get_driver_controls_qcom (GLint *num, GLsizei size, 
+                              GLuint *driverControls)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GetDriverControlsQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.GetDriverControlsQCOM (num, size, driverControls);
+    if (_gl_is_valid_func (dispatch.GetDriverControlsQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.GetDriverControlsQCOM (num, size, driverControls);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize,
-                              GLsizei *length, GLchar *driverControlString)
+static void
+_gl_get_driver_control_string_qcom (GLuint driverControl, GLsizei bufSize,
+                                    GLsizei *length, 
+                                    GLchar *driverControlString)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.GetDriverControlStringQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.GetDriverControlStringQCOM (driverControl, bufSize,
-                                         length, driverControlString);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.GetDriverControlStringQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.GetDriverControlStringQCOM (driverControl, bufSize,
+                                             length, driverControlString);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glEnableDriverControlQCOM (GLuint driverControl)
+static void
+_gl_enable_driver_control_qcom (GLuint driverControl)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.EnableDriverControlQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.EnableDriverControlQCOM (driverControl);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.EnableDriverControlQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.EnableDriverControlQCOM (driverControl);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glDisableDriverControlQCOM (GLuint driverControl)
+static void
+_gl_disable_driver_control_qcom (GLuint driverControl)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.DisableDriverControlQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.DisableDriverControlQCOM (driverControl);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.DisableDriverControlQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.DisableDriverControlQCOM (driverControl);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_QCOM_extended_get
-GL_APICALL void GL_APIENTRY
-glExtGetTexturesQCOM (GLuint *textures, GLint maxTextures, 
-                      GLint *numTextures)
+static void
+_gl_ext_get_textures_qcom (GLuint *textures, GLint maxTextures, 
+                           GLint *numTextures)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetTexturesQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetTexturesQCOM (textures, maxTextures, numTextures);
+    if (_gl_is_valid_func (dispatch.ExtGetTexturesQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetTexturesQCOM (textures, maxTextures, numTextures);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetBuffersQCOM (GLuint *buffers, GLint maxBuffers, GLint *numBuffers) 
+static void
+_gl_ext_get_buffers_qcom (GLuint *buffers, GLint maxBuffers, 
+                          GLint *numBuffers) 
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetBuffersQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetBuffersQCOM (buffers, maxBuffers, numBuffers);
+    if (_gl_is_valid_func (dispatch.ExtGetBuffersQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetBuffersQCOM (buffers, maxBuffers, numBuffers);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetRenderbuffersQCOM (GLuint *renderbuffers, GLint maxRenderbuffers,
-                           GLint *numRenderbuffers)
+static void
+_gl_ext_get_renderbuffers_qcom (GLuint *renderbuffers, 
+                                GLint maxRenderbuffers,
+                                GLint *numRenderbuffers)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetRenderbuffersQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetRenderbuffersQCOM (renderbuffers, maxRenderbuffers,
-                                      numRenderbuffers);
+    if (_gl_is_valid_func (dispatch.ExtGetRenderbuffersQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetRenderbuffersQCOM (renderbuffers, maxRenderbuffers,
+                                          numRenderbuffers);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetFramebuffersQCOM (GLuint *framebuffers, GLint maxFramebuffers,
-                          GLint *numFramebuffers)
+static void
+_gl_ext_get_framebuffers_qcom (GLuint *framebuffers, GLint maxFramebuffers,
+                               GLint *numFramebuffers)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetFramebuffersQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetFramebuffersQCOM (framebuffers, maxFramebuffers,
-                                     numFramebuffers);
+    if (_gl_is_valid_func (dispatch.ExtGetFramebuffersQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetFramebuffersQCOM (framebuffers, maxFramebuffers,
+                                         numFramebuffers);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetTexLevelParameterivQCOM (GLuint texture, GLenum face, GLint level,
-                                 GLenum pname, GLint *params)
+static void
+_gl_ext_get_tex_level_parameteriv_qcom (GLuint texture, GLenum face, 
+                                        GLint level, GLenum pname, 
+                                        GLint *params)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetTexLevelParameterivQCOM))
-        return;
+    if (_gl_is_valid_func (dispatch.ExtGetTexLevelParameterivQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetTexLevelParameterivQCOM (texture, face, level,
+                                                pname, params);
+        egl_state->state.need_get_error = TRUE;
+    }
+}
 
-    egl_state = (egl_state_t *) active_state->data;
+static void
+_gl_ext_tex_object_state_overridei_qcom (GLenum target, GLenum pname, 
+                                         GLint param)
+{
+    egl_state_t *egl_state;
 
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetTexLevelParameterivQCOM (texture, face, level,
-                                            pname, params);
+    if (_gl_is_valid_func (dispatch.ExtTexObjectStateOverrideiQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtTexObjectStateOverrideiQCOM (target, pname, param);
+        egl_state->state.need_get_error = TRUE;
+    }
+}
+
+static void
+_gl_ext_get_tex_sub_image_qcom (GLenum target, GLint level,
+                                GLint xoffset, GLint yoffset, 
+                                GLint zoffset,
+                                GLsizei width, GLsizei height, 
+                                GLsizei depth,
+                                GLenum format, GLenum type, GLvoid *texels)
+{
+    egl_state_t *egl_state;
+
+    if (_gl_is_valid_func (dispatch.ExtGetTexSubImageQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetTexSubImageQCOM (target, level,
+                                        xoffset, yoffset, zoffset,
+                                        width, height, depth,
+                                        format, type, texels);
     egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtTexObjectStateOverrideiQCOM (GLenum target, GLenum pname, GLint param)
+static void
+_gl_ext_get_buffer_pointerv_qcom (GLenum target, GLvoid **params)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtTexObjectStateOverrideiQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtTexObjectStateOverrideiQCOM (target, pname, param);
-    egl_state->state.need_get_error = TRUE;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetTexSubImageQCOM (GLenum target, GLint level,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
-                         GLsizei width, GLsizei height, GLsizei depth,
-                         GLenum format, GLenum type, GLvoid *texels)
-{
-    egl_state_t *egl_state;
-
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetTexSubImageQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetTexSubImageQCOM (target, level,
-                                    xoffset, yoffset, zoffset,
-                                    width, height, depth,
-                                    format, type, texels);
-    egl_state->state.need_get_error = TRUE;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetBufferPointervQCOM (GLenum target, GLvoid **params)
-{
-    egl_state_t *egl_state;
-
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetBufferPointervQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetBufferPointervQCOM (target, params);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.ExtGetBufferPointervQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetBufferPointervQCOM (target, params);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_QCOM_extended_get2
-GL_APICALL void GL_APIENTRY
-glExtGetShadersQCOM (GLuint *shaders, GLint maxShaders, GLint *numShaders)
+static void
+_gl_ext_get_shaders_qcom (GLuint *shaders, GLint maxShaders, 
+                          GLint *numShaders)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetShadersQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetShadersQCOM (shaders, maxShaders, numShaders);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.ExtGetShadersQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetShadersQCOM (shaders, maxShaders, numShaders);
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetProgramsQCOM (GLuint *programs, GLint maxPrograms,
-                      GLint *numPrograms)
+static void
+_gl_ext_get_programs_qcom (GLuint *programs, GLint maxPrograms,
+                           GLint *numPrograms)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetProgramsQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetProgramsQCOM (programs, maxPrograms, numPrograms);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.ExtGetProgramsQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetProgramsQCOM (programs, maxPrograms, numPrograms);
+    }
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glExtIsProgramBinaryQCOM (GLuint program)
+static GLboolean
+_gl_ext_is_program_binary_qcom (GLuint program)
 {
     egl_state_t *egl_state;
     v_bool_t result = FALSE;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtIsProgramBinaryQCOM))
-        return result;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    result = dispatch.ExtIsProgramBinaryQCOM (program);
-    egl_state->state.need_get_error = TRUE;
-
+    if (_gl_is_valid_func (dispatch.ExtIsProgramBinaryQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        result = dispatch.ExtIsProgramBinaryQCOM (program);
+        egl_state->state.need_get_error = TRUE;
+    }
     return result;
 }
 
-GL_APICALL void GL_APIENTRY
-glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
-                                 GLchar *source, GLint *length)
+static void
+_gl_ext_get_program_binary_source_qcom (GLuint program, GLenum shadertype,
+                                        GLchar *source, GLint *length)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.ExtGetProgramBinarySourceQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.ExtGetProgramBinarySourceQCOM (program, shadertype,
-                                            source, length);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.ExtGetProgramBinarySourceQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.ExtGetProgramBinarySourceQCOM (program, shadertype,
+                                                source, length);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
 
 #ifdef GL_QCOM_tiled_rendering
-GL_APICALL void GL_APIENTRY
-glStartTilingQCOM (GLuint x, GLuint y, GLuint width, GLuint height,
-                   GLbitfield preserveMask)
+static void
+_gl_start_tiling_qcom (GLuint x, GLuint y, GLuint width, GLuint height,
+                       GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.StartTilingQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.StartTilingQCOM (x, y, width, height, preserveMask);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.StartTilingQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.StartTilingQCOM (x, y, width, height, preserveMask);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 
-GL_APICALL void GL_APIENTRY
-glEndTilingQCOM (GLbitfield preserveMask)
+static void
+_gl_end_tiling_qcom (GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
 
-    if(! _is_error_state_or_func (active_state,
-                                  dispatch.EndTilingQCOM))
-        return;
-
-    egl_state = (egl_state_t *) active_state->data;
-
-    /* XXX: create command buffer, no wait */
-    dispatch.EndTilingQCOM (preserveMask);
-    egl_state->state.need_get_error = TRUE;
+    if (_gl_is_valid_func (dispatch.EndTilingQCOM) &&
+        _gl_is_valid_context ()) {
+        egl_state = (egl_state_t *) active_state->data;
+    
+        dispatch.EndTilingQCOM (preserveMask);
+        egl_state->state.need_get_error = TRUE;
+    }
 }
 #endif
