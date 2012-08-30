@@ -1,1 +1,1 @@
-SUBDIRS = tests/srv
+SUBDIRS = src tests/srv
