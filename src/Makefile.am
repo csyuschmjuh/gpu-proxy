@@ -21,8 +21,8 @@ libGPUProcess_la_SOURCES += \
 	gpuprocess_egl_srv_helper.c \
 	gpuprocess_egl_states.h \
 	gpuprocess_gles2_api.c \
-	gpuprocess_gles2_cli.c
-	gpuprocess_gles2_cli_private.h \
+	gpuprocess_gles2_client.c
+	gpuprocess_gles2_client_private.h \
 	gpuprocess_gles2_srv.c \
 	gpuprocess_gles2_states.h
 endif

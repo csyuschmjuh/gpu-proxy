@@ -1,13 +1,13 @@
-#include "gpuprocess_gles2_cli_private.h"
+#include "gpuprocess_gles2_client_private.h"
 #include <stdlib.h>
 
 /* thread local client states */
-__thread  gl_cli_states_t cli_states 
+__thread  gl_client_states_t cli_states 
     __attribute__(( tls_model ("initial-exec")));
 extern __thread v_link_list_t *active_state;
 
 void 
-_gpuprocess_cli_init ()
+_gpuprocess_client_init ()
 {
     cli_states.vertex_attribs.count = 0;
 
@@ -15,7 +15,7 @@ _gpuprocess_cli_init ()
 }
 
 void 
-_gpuprocess_cli_destroy ()
+_gpuprocess_client_destroy ()
 {
     int i;
 
