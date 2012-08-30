@@ -17,4 +17,7 @@ gpuprocess_test_SOURCES = \
 
 gpuprocess_test_LDFLAGS = \
 	-lcheck -lX11 -ldl
+
+gpuprocess_test_CFLAGS = \
+	-Werror
 endif

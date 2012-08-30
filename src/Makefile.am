@@ -1,8 +1,9 @@
-BUILT_SOURCES :=
+BUILT_SOURCES =
 
 lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
-	-Igenerated
+	-Igenerated \
+	-Werror
 
 libGPUProcess_la_SOURCES = \
 	gpuprocess_compiler_private.h \
