@@ -2,6 +2,8 @@ AC_PREREQ(2.60)
 define([VERSION_NUMBER], [0.0.0]) # For sharing the version number
 AC_INIT([GPUPROCESSS], [VERSION_NUMBER], [http://www.samsung.com])
 
+AM_SILENT_RULES([yes])
+
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
