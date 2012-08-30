@@ -7,7 +7,7 @@
 
 /* XXX: we should move it to the srv */
 #include "gpuprocess_dispatch_private.h"
-#include "gpuprocess_egl_srv_private.h"
+#include "gpuprocess_egl_server_private.h"
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
