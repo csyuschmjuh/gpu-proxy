@@ -6,7 +6,7 @@
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
-#include "gpuprocess_gles2_srv_private.h"
+#include "gpuprocess_egl_srv_private.h"
 
 __thread v_link_list_t *active_state
     __attribute__(( tls_model ("initial-exec"))) = NULL;

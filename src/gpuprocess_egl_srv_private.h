@@ -1,5 +1,5 @@
-#ifndef GPUPROCESS_GLES2_SRV_PRIVATE_H
-#define GPUPROCESS_GLES2_SRV_PRIVATE_H
+#ifndef GPUPROCESS_EGL_SRV_PRIVATE_H
+#define GPUPROCESS_EGL_SRV_PRIVATE_H
 
 #include "gpuprocess_compiler_private.h"
 #include "gpuprocess_egl_states.h"
@@ -71,4 +71,4 @@ _gpuprocess_srv_remove_context (EGLDisplay display,
 #endif
 
 
-#endif /* GPUPROCESS_GLES2_SRV_PRIVATE_H */
+#endif /* GPUPROCESS_EGL_SRV_PRIVATE_H */

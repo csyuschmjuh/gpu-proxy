@@ -16,9 +16,9 @@ libGPUProcess_la_SOURCES += \
 else
 libGPUProcess_la_SOURCES += \
 	gpuprocess_egl_states.h \
+	gpuprocess_egl_srv_private.h \
 	gpuprocess_egl.c \
 	gpuprocess_gles2_cli_private.h \
-	gpuprocess_gles2_srv_private.h \
 	gpuprocess_gles2_states.h \
 	gpuprocess_gles2_srv.c \
 	gpuprocess_gles2.c \

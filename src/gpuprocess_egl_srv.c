@@ -7,7 +7,7 @@
 /* XXX: we should move it to the srv */
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
-#include "gpuprocess_gles2_srv_private.h"
+#include "gpuprocess_egl_srv_private.h"
 
 gpuprocess_dispatch_t        dispatch;
 extern gpu_mutex_t           mutex;
@@ -497,13 +497,13 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
         active_state = exist;
 
         /* call real makeCurrent */
-        return eglMakeCurrent (dpy, draw, read, ctx);
+        return dispatch.eglMakeCurrent (dpy, draw, read, ctx);
     }
 
     /* We could not find in the saved state, we don't know whether
      * parameters are valid or not 
      */
-    result = eglMakeCurrent (dpy, draw, read, ctx);
+    result = dispatch.eglMakeCurrent (dpy, draw, read, ctx);
     if (result == EGL_TRUE) {
         _gpuprocess_srv_make_current (dpy, draw, read, ctx,
                                       active_state, 

@@ -1,4 +1,4 @@
-#include "gpuprocess_gles2_srv_private.h"
+#include "gpuprocess_egl_srv_private.h"
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_thread_private.h"
 #include <stdlib.h>
@@ -285,7 +285,7 @@ _gpuprocess_srv_terminate (EGLDisplay display, v_link_list_t *active_state)
 
     if (srv_states.initialized = FALSE ||
         srv_states.num_contexts == 0 || ! srv_states.states) {
-        gpuy_mutex_unlock (mutex);
+        gpu_mutex_unlock (mutex);
         return;
     }
     
