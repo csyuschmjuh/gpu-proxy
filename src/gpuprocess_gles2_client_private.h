@@ -8,7 +8,7 @@
 extern "C" {
 #endif
 
-typedef struct gl_cli_states
+typedef struct gl_client_states
 {
     v_vertex_attrib_list_t        vertex_attribs;
 
@@ -18,18 +18,18 @@ typedef struct gl_cli_states
     /* XXX: for OpenGL, there are more client states for glPixelStore,
      * we have some of them on server, should we also bring to client? 
      */
-} gl_cli_states_t;
+} gl_client_states_t;
 
 /* thread local client states */
-extern __thread  gl_cli_states_t cli_states;
+extern __thread  gl_client_states_t cli_states;
 
 /*
 gpuprocess_private void 
-_gpuprocess_cli_init ();
+_gpuprocess_client_init ();
 */
 
 gpuprocess_private void
-_gpuprocess_cli_destroy ();
+_gpuprocess_client_destroy ();
 
 #ifdef __cplusplus
 }

@@ -12,7 +12,7 @@
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
 
-#include "gpuprocess_gles2_cli_private.h"
+#include "gpuprocess_gles2_client_private.h"
 
 extern __thread v_link_list_t        *active_state;
 extern gpuprocess_dispatch_t         dispatch;
