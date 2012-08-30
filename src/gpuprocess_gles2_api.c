@@ -2187,16 +2187,14 @@ glTestFenceNV (GLuint fence)
     return result;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
+GL_APICALL void GL_APIENTRY
 glGetFenceivNV (GLuint fence, GLenum pname, int *params)
 {
-    GLboolean result = GL_FALSE;
-
     if (_is_error_state ())
-        return result;
+        return;
 
     /* XXX: post command and wait */
-    return result;
+    return;
 }
 
 GL_APICALL void GL_APIENTRY
