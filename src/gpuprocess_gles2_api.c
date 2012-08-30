@@ -33,104 +33,7 @@ _is_error_state (void )
     return FALSE;
 }
 
-/* GLES2 core profile API */
-void glActiveTexture (GLenum texture)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command buffer and no wait */
-}
-
-void glAttachShader (GLuint program, GLuint shader)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBindAttribLocation (GLuint program, GLuint index, const GLchar *name)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBindBuffer (GLenum target, GLuint buffer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBindFramebuffer (GLenum target, GLuint framebuffer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBindRenderbuffer (GLenum target, GLuint renderbuffer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBindTexture (GLenum target, GLuint texture)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBlendColor (GLclampf red, GLclampf green,
-                   GLclampf blue, GLclampf alpha)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBlendEquation (GLenum mode)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBlendEquationSeparate (GLenum modeRGB, GLenum modeAlpha)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBlendFunc (GLenum sfactor, GLenum dfactor)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glBlendFuncSeparate (GLenum srcRGB, GLenum dstRGB,
-                          GLenum srcAlpha, GLenum dstAlpha)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
+#include "gpuprocess_gles2_api_autogen.c"
 
 void glBufferData (GLenum target, GLsizeiptr size,
                    const GLvoid *data, GLenum usage)
@@ -174,48 +77,6 @@ GLenum glCheckFramebufferStatus (GLenum target)
     return result;
 }
 
-void glClear (GLbitfield mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glClearColor (GLclampf red, GLclampf green,
-                   GLclampf blue, GLclampf alpha)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glClearDepthf (GLclampf depth)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glClearStencil (GLint s)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glColorMask (GLboolean red, GLboolean green,
-                  GLboolean blue, GLboolean alpha)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
 /* total parameters 8 * sizeof (GLint) */
 void glCompressedTexImage2D (GLenum target, GLint level,
                              GLenum internalformat,
@@ -256,31 +117,6 @@ void glCompressedTexSubImage2D (GLenum target, GLint level,
     }
 }
 
-/* total parameters 8 * sizeof (GLint) */
-void glCopyTexImage2D (GLenum target, GLint level,
-                       GLenum internalformat,
-                       GLint x, GLint y,
-                       GLsizei width, GLsizei height,
-                       GLint border)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-/* total parameters 8 * sizeof (GLint) */
-void glCopyTexSubImage2D (GLenum target, GLint level,
-                          GLint xoffset, GLint yoffset,
-                          GLint x, GLint y,
-                          GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
 /* This is a sync call */
 GLuint glCreateProgram (void)
 {
@@ -305,13 +141,6 @@ GLuint glCreateShader (GLenum shaderType)
     return result;
 }
 
-void glCullFace (GLenum mode)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
 
 void glDeleteBuffers (GLsizei n, const GLuint *buffers)
 {
@@ -343,14 +172,6 @@ void glDeleteFramebuffers (GLsizei n, const GLuint *framebuffers)
     }
 }
 
-void glDeleteProgram (GLuint program)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
 void glDeleteRenderbuffers (GLsizei n, const GLuint *renderbuffers)
 {
     GLuint *renderbuffers_copy = NULL;
@@ -367,14 +188,6 @@ void glDeleteRenderbuffers (GLsizei n, const GLuint *renderbuffers)
     }
 }
 
-void glDeleteShader (GLuint shader)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
 void glDeleteTextures (GLsizei n, const GLuint *textures)
 {
     GLuint *textures_copy = NULL;
@@ -389,78 +202,6 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
         memcpy ((void *)textures_copy, (const void *)textures, 
                 sizeof (GLuint) * n);
     }
-}
-
-void glDepthFunc (GLenum func)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDepthMask (GLboolean flag)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDepthRangef (GLclampf nearVal, GLclampf farVal)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDetachShader (GLuint program, GLuint shader)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDisable (GLenum cap)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glEnable (GLenum cap)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDisableVertexAttribArray (GLuint index)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glEnableVertexAttribArray (GLuint index)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glDrawArrays (GLenum mode, GLint first, GLsizei count)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
 }
 
 void glDrawElements (GLenum mode, GLsizei count, GLenum type,
@@ -490,52 +231,6 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
                     sizeof (short) * count);
         }
     }
-}
-
-void glFinish (void)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glFlush (void)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: flush command buffer, post command and no wait */
-}
-
-/* total parameters 4 * sizeof (GLint) */
-void glFramebufferRenderbuffer (GLenum target, GLenum attachment,
-                                GLenum renderbuffertarget,
-                                GLenum renderbuffer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-/* total parameters 5 * sizeof (GLint) */
-void glFramebufferTexture2D (GLenum target, GLenum attachment,
-                             GLenum textarget, GLuint texture, GLint level)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-void glFrontFace (GLenum mode)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
 }
 
 void glGenBuffers (GLsizei n, GLuint *buffers)
@@ -568,14 +263,6 @@ void glGenTextures (GLsizei n, GLuint *textures)
         return;
 
     /* XXX: post command and wait */
-}
-
-void glGenerateMipmap (GLenum target)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
 }
 
 void glGetBooleanv (GLenum pname, GLboolean *params)
@@ -826,15 +513,6 @@ void glGetVertexAttribPointerv (GLuint index, GLenum pname, GLvoid **pointer)
     return;
 }
 
-void glHint (GLenum target, GLenum mode)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 GLboolean glIsBuffer (GLuint buffer)
 {
     GLboolean result = GL_FALSE;
@@ -912,24 +590,6 @@ GLboolean glIsTexture (GLuint texture)
     return result;
 }
 
-void glLineWidth (GLfloat width)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glLinkProgram (GLuint program)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 void glPixelStorei (GLenum pname, GLint param)
 {
     if (_is_error_state ())
@@ -940,15 +600,6 @@ void glPixelStorei (GLenum pname, GLint param)
     if (pname == GL_UNPACK_ALIGNMENT && 
         (param == 1 || param == 2 || param == 4 || param == 8))
         unpack_alignment = param;
-    return;
-}
-
-void glPolygonOffset (GLfloat factor, GLfloat units)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 
@@ -963,55 +614,6 @@ void glReadPixels (GLint x, GLint y,
     /* XXX: post command and wait */
     return;
 }
-
-void glCompileShader (GLuint shader)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glReleaseShaderCompiler (void)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-/* total parameters 4 * sizeof (GLint) */
-void glRenderbufferStorage (GLenum target, GLenum internalformat,
-                            GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glSampleCoverage (GLclampf value, GLboolean invert)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-/* total parameters 4 * sizeof (GLint) */
-void glScissor (GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 
 void glShaderBinary (GLsizei n, const GLuint *shaders,
                      GLenum binaryformat, const void *binary,
@@ -1066,62 +668,6 @@ void glShaderSource (GLuint shader, GLsizei count,
         }
     }
      
-    return;
-}
-
-void glStencilFunc (GLenum func, GLint ref, GLuint mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glStencilFuncSeparate (GLenum face, GLenum func,
-                            GLint ref, GLuint mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glStencilMaskSeparate (GLenum face, GLuint mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glStencilMask (GLuint mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glStencilOpSeparate (GLenum face, GLenum sfail, GLenum dpfail,
-                          GLenum dppass)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glStencilOp (GLenum sfail, GLenum dpfail, GLenum dppass)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 
@@ -1190,24 +736,6 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
     return;
 }
 
-void glTexParameteri (GLenum target, GLenum pname, GLint param)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glTexParameterf (GLenum target, GLenum pname, GLfloat param)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 /* total parameters 9 * sizeof (GLint) */
 void glTexSubImage2D (GLenum target, GLint level,
                       GLint xoffset, GLint yoffset,
@@ -1234,81 +762,6 @@ void glTexSubImage2D (GLenum target, GLint level,
     } 
     return;
 }
-
-void glUniform1f (GLint location, GLfloat v0)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform2f (GLint location, GLfloat v0, GLfloat v1)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform3f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform4f (GLint location, GLfloat v0, GLfloat v1, GLfloat v2,
-                  GLfloat v3)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform1i (GLint location, GLint v0)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform2i (GLint location, GLint v0, GLint v1)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform3i (GLint location, GLint v0, GLint v1, GLint v2)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glUniform4i (GLint location, GLint v0, GLint v1, GLint v2,
-                  GLint v3)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 
 void glUniform1fv (GLint location, GLsizei count, const GLfloat *value)
 {
@@ -1438,61 +891,6 @@ void glUniform4iv (GLint location, GLsizei count, const GLint *value)
     return;
 }
 
-void glUseProgram (GLuint program)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glValidateProgram (GLuint program)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glVertexAttrib1f (GLuint index, GLfloat v0)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glVertexAttrib2f (GLuint index, GLfloat v0, GLfloat v1)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glVertexAttrib3f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-void glVertexAttrib4f (GLuint index, GLfloat v0, GLfloat v1, GLfloat v2,
-                       GLfloat v3)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 void glVertexAttrib1fv (GLuint index, const GLfloat *v)
 {
     GLfloat *v_copy = NULL;
@@ -1570,14 +968,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
     return;
 }
 
-void glViewport (GLint x, GLint y, GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
 /* end of GLES2 core profile */
 
 #ifdef GL_OES_EGL_image

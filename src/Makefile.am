@@ -1,5 +1,8 @@
 lib_LTLIBRARIES = libGPUProcess.la
 
+libGPUProcess_la_CFLAGS = \
+	-Igenerated
+
 libGPUProcess_la_SOURCES = \
 	gpuprocess_compiler_private.h \
 	gpuprocess_dispatch_private.h \
@@ -9,11 +12,13 @@ libGPUProcess_la_SOURCES = \
 	gpuprocess_gl_states.h \
 	gpuprocess_thread_private.h \
 	gpuprocess_types_private.h
+
 if HAS_GL
 libGPUProcess_la_SOURCES += \
 	gpuprocess_glx_states.h
+endif
 
-else
+if HAS_GLES2
 libGPUProcess_la_SOURCES += \
 	gpuprocess_egl_api.c \
 	gpuprocess_egl_server.c \
@@ -21,8 +26,6 @@ libGPUProcess_la_SOURCES += \
 	gpuprocess_egl_server_helper.c \
 	gpuprocess_egl_states.h \
 	gpuprocess_gles2_api.c \
-	gpuprocess_gles2_client.c
-	gpuprocess_gles2_client_private.h \
 	gpuprocess_gles2_server.c \
 	gpuprocess_gles2_states.h
 endif
