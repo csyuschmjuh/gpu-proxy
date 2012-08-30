@@ -1,5 +1,6 @@
-lib_LTLIBRARIES = libGPUProcess.la
+BUILT_SOURCES :=
 
+lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
 	-Igenerated
 
@@ -28,6 +29,15 @@ libGPUProcess_la_SOURCES += \
 	gpuprocess_gles2_api.c \
 	gpuprocess_gles2_server.c \
 	gpuprocess_gles2_states.h
+
+nodist_libGPUProcess_la_SOURCES = \
+	generated/gpuprocess_gles2_api_autogen.c
+
+BUILT_SOURCES += \
+	$(nodist_libGPUProcess_la_SOURCES)
+
+generated/gpuprocess_gles2_api_autogen.c : generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
+	python generated/build_gles2_cmd_buffer.py
 endif
 
 libGPUProcess_la_LDFLAGS = -version-info 0:0:0
