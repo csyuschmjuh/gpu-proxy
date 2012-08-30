@@ -473,7 +473,7 @@ _egl_copy_buffers (EGLDisplay dpy, EGLSurface surface,
 static __eglMustCastToProperFunctionPointerType
 _egl_get_proc_address (const char *procname)
 {
-    return dispatch.GetProcAddress;
+    return dispatch.GetProcAddress (procname);
 }
 
 static EGLBoolean 
