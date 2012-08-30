@@ -5,7 +5,7 @@ libGPUProcess_la_SOURCES = \
 	gpuprocess_dispatch_private.h \
 	gpuprocess_dispatch.h \
 	gpuprocess_dispatch.c \
-	gpuprocess_gl_srv_private.h \
+	gpuprocess_gl_server_private.h \
 	gpuprocess_gl_states.h \
 	gpuprocess_thread_private.h \
 	gpuprocess_types_private.h
@@ -16,14 +16,14 @@ libGPUProcess_la_SOURCES += \
 else
 libGPUProcess_la_SOURCES += \
 	gpuprocess_egl_api.c \
-	gpuprocess_egl_srv.c \
-	gpuprocess_egl_srv_private.h \
-	gpuprocess_egl_srv_helper.c \
+	gpuprocess_egl_server.c \
+	gpuprocess_egl_server_private.h \
+	gpuprocess_egl_server_helper.c \
 	gpuprocess_egl_states.h \
 	gpuprocess_gles2_api.c \
 	gpuprocess_gles2_client.c
 	gpuprocess_gles2_client_private.h \
-	gpuprocess_gles2_srv.c \
+	gpuprocess_gles2_server.c \
 	gpuprocess_gles2_states.h
 endif
 

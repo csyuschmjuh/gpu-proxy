@@ -10,41 +10,41 @@ extern "C" {
 
 #define NUM_CONTEXTS
 
-typedef struct gl_srv_states
+typedef struct gl_server_states
 {
     int num_contexts;
 
     /* when glxMakeCurrent() or eglMakeCurrent(), if current context
      * matches the request, we return quickly.  Otherwise, we save
-     * the request context/display/drawable to pending_xxxx, 
+     * the request context/display/drawable to pending_xxxx,
      */
-    GLXContext                pending_context;        
-    Display                 *pending_display;
+    GLXContext          pending_context;
+    Display            *pending_display;
     GLXDrawable         pending_drawable;
     GLXDrawable         pending_readable;
 
-    glx_state_t                *active_state;
+    glx_state_t        *active_state;
 
-    glx_state_t                embedded_states[NUM_CONTEXTS];
-    glx_state_t                *states;
-} gl_srv_states_t;
+    glx_state_t         embedded_states[NUM_CONTEXTS];
+    glx_state_t        *states;
+} gl_server_states_t;
 
 /* global state variable */
-gl_srv_states_t        srv_states;
+gl_server_states_t        srv_states;
 
 /* called within eglInitialize () */
 gpuprocess_private void 
-_gpuprocess_srv_init ();
+_gpuprocess_server_init ();
 
 gpuprocess_private void 
-_gpuprocess_srv_destroy ();
+_gpuprocess_server_destroy ();
 
 /* called within eglMakeCurrent () */
 gpuprocess_private void
-_gpuprocess_srv_make_current (EGLDisplay display, 
-                              EGLSurface drawable, 
-                              EGLSurface readable,
-                              EGLContext context);
+_gpuprocess_server_make_current (EGLDisplay display,
+                                 EGLSurface drawable,
+                                 EGLSurface readable,
+                                 EGLContext context);
 
 #ifdef __cplusplus
 }

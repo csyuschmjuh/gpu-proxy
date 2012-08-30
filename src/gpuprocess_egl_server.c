@@ -7,7 +7,7 @@
 /* XXX: we should move it to the srv */
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
-#include "gpuprocess_egl_srv_private.h"
+#include "gpuprocess_egl_server_private.h"
 
 gpuprocess_dispatch_t        dispatch;
 extern gpu_mutex_t           mutex;
@@ -16,7 +16,7 @@ extern __thread v_link_list_t *active_state;
 #include "gpuprocess_types_private.h"
 
 /* XXX: initialize static mutex on srv */
-extern gl_srv_states_t        srv_states;
+extern gl_server_states_t        srv_states;
 
 static EGLint
 _egl_get_error (void)
@@ -42,7 +42,7 @@ _egl_get_display (EGLNativeDisplayType display_id)
     /* XXX: we should initialize once for both dispatch and srv structure */
     gpu_mutex_lock (mutex);
     gpuprocess_dispatch_init (&dispatch);
-    _gpuprocess_srv_init ();
+    _gpuprocess_server_init ();
     gpu_mutex_unlock (mutex);
 
     display = dispatch.eglGetDisplay (display_id);
@@ -72,7 +72,7 @@ _egl_terminate (EGLDisplay dpy)
 
         if (result == EGL_TRUE) {
             /* XXX: remove srv structure */
-            _gpuprocess_srv_terminate (dpy, active_state);
+            _gpuprocess_server_terminate (dpy, active_state);
         }
     }
 
@@ -182,7 +182,7 @@ _egl_destroy_surface (EGLDisplay dpy, EGLSurface surface)
         
         if (result == EGL_TRUE) {
             /* update srv states */
-            _gpuprocess_srv_destroy_surface (dpy, surface, active_state);
+            _gpuprocess_server_destroy_surface (dpy, surface, active_state);
         }
     }
 
@@ -252,12 +252,12 @@ _egl_release_thread (void)
             
             egl_state = (egl_state_t *) active_state->data;
 
-            _gpuprocess_srv_make_current (egl_state->display,
-                                          EGL_NO_SURFACE,
-                                          EGL_NO_SURFACE,
-                                          EGL_NO_CONTEXT,
-                                          active_state, 
-                                          &active_state_out);
+            _gpuprocess_server_make_current (egl_state->display,
+                                             EGL_NO_SURFACE,
+                                             EGL_NO_SURFACE,
+                                             EGL_NO_CONTEXT,
+                                             active_state,
+                                             &active_state_out);
 	    active_state = active_state_out;
 
         }
@@ -351,7 +351,7 @@ _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
         result = dispatch.eglDestroyContext (dpy, ctx); 
 
         if (result == GL_TRUE) {
-            _gpuprocess_srv_destroy_context (dpy, ctx, active_state);
+            _gpuprocess_server_destroy_context (dpy, ctx, active_state);
         }
     }
 
@@ -503,9 +503,9 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
      */
     result = dispatch.eglMakeCurrent (dpy, draw, read, ctx);
     if (result == EGL_TRUE) {
-        _gpuprocess_srv_make_current (dpy, draw, read, ctx,
-                                      active_state, 
-                                      active_state_out);
+        _gpuprocess_server_make_current (dpy, draw, read, ctx,
+                                         active_state, 
+                                         active_state_out);
         active_state = *active_state_out;
     }
     return result;

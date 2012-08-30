@@ -6,7 +6,7 @@
 
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_types_private.h"
-#include "gpuprocess_egl_srv_private.h"
+#include "gpuprocess_egl_server_private.h"
 
 __thread v_link_list_t *active_state
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -18,7 +18,7 @@ __thread int unpack_alignment
     __attribute__(( tls_model ("initial-exec"))) = 4;
 
 static inline void 
-_egl_create_srv_thread ()
+_egl_create_server_thread ()
 {
     if (! srv_thread) {
         /* XXX: create the srv thread here */
@@ -26,7 +26,7 @@ _egl_create_srv_thread ()
 }
 
 static void
-_egl_destroy_srv_thread ()
+_egl_destroy_server_thread ()
 {
     if (srv_thread) {
         /* join the thread */
@@ -38,7 +38,7 @@ eglGetError (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetError() and wait */
 
@@ -53,7 +53,7 @@ eglGetDisplay (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
     
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetDisplay and wait */
     return display;
@@ -64,7 +64,7 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglInitialize and wait */
     return result;
@@ -74,11 +74,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglTerminate and wait */
 
-    _egl_destroy_srv_thread ();
+    _egl_destroy_server_thread ();
     return result;
 }
 
@@ -87,7 +87,7 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 {
     const char *result = NULL;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglQueryString and wait */
     return result;
@@ -99,7 +99,7 @@ eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetConfigs and wait */
     return result;
@@ -112,7 +112,7 @@ eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglChooseConfig and wait */
     return result;
@@ -124,7 +124,7 @@ eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* post eglGetConfigAttrib and wait */
     return result;
@@ -185,7 +185,7 @@ eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglQuerySurface and wait */
     return result;
@@ -196,7 +196,7 @@ eglBindAPI (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglBindAPI and wait */
     return result;
@@ -207,7 +207,7 @@ eglQueryAPI (void)
 {
     EGLenum result = EGL_NONE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglQueryAPI and wait */
     return result;
@@ -219,7 +219,7 @@ eglWaitClient (void)
     egl_state_t *egl_state;
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     if (! active_state)
         return EGL_TRUE;
@@ -240,7 +240,7 @@ eglReleaseThread (void)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglReleaseThread and wait */
     return result;
@@ -253,7 +253,7 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreatePbufferFromClientBuffer and wait */
     return surface;
@@ -265,7 +265,7 @@ eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglSurfaceAttrib and wait */
     return result;
@@ -276,7 +276,7 @@ eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
  
     /* XXX: post eglBindTexImage and wait */
     return result;
@@ -287,7 +287,7 @@ eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglReleaseTexImage and wait */
     return result;
@@ -298,7 +298,7 @@ eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglSwapInterval and wait */
     return result;
@@ -311,7 +311,7 @@ eglCreateContext (EGLDisplay dpy, EGLConfig config,
 {
     EGLContext result = EGL_NO_CONTEXT;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreateContext and wait */
     return result;
@@ -322,7 +322,7 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglDestroyContext and wait */
     return result;
@@ -380,7 +380,7 @@ eglQueryContext (EGLDisplay dpy, EGLContext ctx,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglQueryContext and wait */
     return result;
@@ -402,7 +402,7 @@ eglWaitGL (void)
         egl_state->active == FALSE)
         return EGL_TRUE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglWaitGL and wait */
     return result;
@@ -417,7 +417,7 @@ eglWaitNative (EGLint engine)
     if (! active_state)
         return result;
     
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglWaitNative and wait */
     return result;
@@ -444,7 +444,7 @@ eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
         goto FINISH;
     }
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglSwapBuffers, no wait */
 
@@ -458,7 +458,7 @@ eglCopyBuffers (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    egl_create_srv_thread ();
+    egl_create_server_thread ();
  
     /* XXX: post eglCopyBuffers and wait */
     return result;
@@ -469,7 +469,7 @@ eglGetProcAddress (const char *procname)
 {
     void *address = NULL;
     
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetProcAddress and wait */
     return address;
@@ -482,7 +482,7 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     EGLBoolean result = EGL_FALSE;
     egl_state_t        *egl_state;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: we need to pass active_state in command buffer */
     /* we are not in any valid context */
@@ -530,7 +530,7 @@ eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglLockSurfaceKHR and wait */
     return result;
@@ -541,7 +541,7 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* post eglUnlockSurfaceKHR and wait */
     return result;
@@ -555,7 +555,7 @@ eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreateImageKHR and wait */
     return result;
@@ -566,7 +566,7 @@ eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglDestroyImageKHR and wait */
     return result;
@@ -579,7 +579,7 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreateSyncKHR and wait */
     return result;
@@ -590,7 +590,7 @@ eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglDestroySyncKHR and wait */
     return result;
@@ -602,7 +602,7 @@ eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
 {
     EGLint result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglClientWaitSyncKHR and wait */
     return result;
@@ -613,7 +613,7 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglSignalSyncKHR and wait */
     return result;
@@ -625,7 +625,7 @@ eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetSyncAttribKHR and wait */
     return result;
@@ -639,7 +639,7 @@ eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreateFenceSyncNV and wait */
     return result;
@@ -650,7 +650,7 @@ eglDestroySyncNV (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglDestroyFenceSyncNV and wait */
     return result;
@@ -662,7 +662,7 @@ eglFenceNV (EGLSyncNV sync)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     if (! active_state)
         return result;
@@ -685,7 +685,7 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
     egl_state_t *egl_state;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
     
     if (! active_state)
         return result;
@@ -707,7 +707,7 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
     
     if (! active_state)
         return result;
@@ -728,7 +728,7 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglGetSyncAttribNV and wait */
     return result;
@@ -742,7 +742,7 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface result = EGL_NO_SURFACE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreatePixmapSurfaceHI and wait */
     return result;
@@ -755,7 +755,7 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglCreateDRMImageMESA and wait */
     return result;
@@ -767,7 +767,7 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglExportDRMImageMESA and wait */
     return result;
@@ -782,7 +782,7 @@ eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglPostSubBufferNV and wait */
     return result;
@@ -795,7 +795,7 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     void *result = NULL;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglMapImageSEC and wait */
     return result;
@@ -806,7 +806,7 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglUnmapImageSEC and wait */
     return result;
@@ -818,7 +818,7 @@ eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    _egl_create_srv_thread ();
+    _egl_create_server_thread ();
 
     /* XXX: post eglgetImageAttribSEC and wait */
     return result;
