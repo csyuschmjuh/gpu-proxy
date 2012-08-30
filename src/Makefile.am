@@ -15,14 +15,16 @@ libGPUProcess_la_SOURCES += \
 
 else
 libGPUProcess_la_SOURCES += \
-	gpuprocess_egl_states.h \
+	gpuprocess_egl_api.c \
+	gpuprocess_egl_srv.c \
 	gpuprocess_egl_srv_private.h \
-	gpuprocess_egl.c \
-	gpuprocess_gles2_cli_private.h \
-	gpuprocess_gles2_states.h \
-	gpuprocess_gles2_srv.c \
-	gpuprocess_gles2.c \
+	gpuprocess_egl_srv_helper.c \
+	gpuprocess_egl_states.h \
+	gpuprocess_gles2_api.c \
 	gpuprocess_gles2_cli.c
+	gpuprocess_gles2_cli_private.h \
+	gpuprocess_gles2_srv.c \
+	gpuprocess_gles2_states.h
 endif
 
 libGPUProcess_la_LDFLAGS = -version-info 0:0:0
@@ -33,7 +35,7 @@ AM_LDFLAGS = \
 all-local: libGPUProcess.la
 	$(MKDIR_P) $(top_builddir)/$(LIB_DIR);
 	ln -f .libs/libGPUProcess.so.0.0.0 $(top_builddir)/$(LIB_DIR)/libGPUProcess.so
-if HAS_GL 
+if HAS_GL
 	ln -f $(top_builddir)/$(LIB_DIR)/libGPUProcess.so $(top_builddir)/$(LIB_DIR)/libGL.so
 else
 	ln -sf $(top_builddir)/$(LIB_DIR)/libGPUProcess.so $(top_builddir)/$(LIB_DIR)/libEGL.so

@@ -11,9 +11,7 @@
 
 gpuprocess_dispatch_t        dispatch;
 extern gpu_mutex_t           mutex;
-
-__thread v_link_list_t       *active_state
-    __attribute__(( tls_model ("initial-exec"))) = NULL;
+extern __thread v_link_list_t *active_state;
 
 #include "gpuprocess_types_private.h"
 
