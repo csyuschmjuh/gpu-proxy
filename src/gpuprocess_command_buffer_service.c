@@ -1,11 +1,14 @@
 
 #include "gpuprocess_command_buffer_service.h"
+#include "gpuprocess_egl_server_private.h"
 
 gpu_mutex_static_init (service_thread_started_mutex);
 
 static void *
 service_thread_func (void *ptr)
 {
+    /* populate dispatch table, create global egl_states structures */
+    _gpuprocess_server_init ();
     /* This signals the producer thread to start producing. */
     gpu_mutex_unlock (service_thread_started_mutex);
 
