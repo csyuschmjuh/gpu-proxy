@@ -11,7 +11,7 @@
 #define BUFFER_SIZE 10
 
 command_buffer_t *
-command_buffer_craete()
+command_buffer_create()
 {
     command_buffer_t *command_buffer;
     command_buffer = (command_buffer_t *)malloc(sizeof(command_buffer_t));
