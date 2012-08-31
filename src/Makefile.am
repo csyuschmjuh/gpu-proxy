@@ -10,12 +10,19 @@ libGPUProcess_la_LDFLAGS = \
 	-ldl
 
 libGPUProcess_la_SOURCES = \
+	gpuprocess_command.h \
+	gpuprocess_command_buffer.h \
+	gpuprocess_command_buffer.c \
+	gpuprocess_command_buffer_service.h \
+	gpuprocess_command_buffer_service.c \
 	gpuprocess_compiler_private.h \
 	gpuprocess_dispatch_private.h \
 	gpuprocess_dispatch.h \
 	gpuprocess_dispatch.c \
 	gpuprocess_gl_server_private.h \
 	gpuprocess_gl_states.h \
+	gpuprocess_ring_buffer.h \
+	gpuprocess_ring_buffer.c \
 	gpuprocess_thread_private.h \
 	gpuprocess_types_private.h
 
