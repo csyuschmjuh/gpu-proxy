@@ -1753,7 +1753,7 @@ glExtGetProgramsQCOM (GLuint *programs, GLint maxPrograms,
 GL_APICALL GLboolean GL_APIENTRY
 glExtIsProgramBinaryQCOM (GLuint program)
 {
-    GLboolean result = FALSE;
+    GLboolean result = false;
     
     if (_is_error_state ())
         return result;

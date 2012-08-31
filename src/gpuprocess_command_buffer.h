@@ -31,21 +31,19 @@ typedef struct command_buffer {
 gpuprocess_private command_buffer_t *
 command_buffer_create();
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 command_buffer_destroy(command_buffer_t *command_buffer);
 
 gpuprocess_private command_t *
-command_buffer_get_space_for_command(command_buffer_t *command_buffer, 
-                                     command_id_t command_id);
+command_buffer_get_space_for_command(command_buffer_t *command_buffer, command_id_t command_id);
 
-gpuprocess_private v_bool_t
-command_buffer_write_command(command_buffer_t *command_buffer, 
-                             command_t *command);
+gpuprocess_private bool
+command_buffer_write_command(command_buffer_t *command_buffer, command_t *command);
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 command_buffer_flush(command_buffer_t *command_buffer);
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 command_buffer_wait(command_buffer_t *command_buffer);
 
 gpuprocess_private void

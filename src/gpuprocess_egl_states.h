@@ -19,11 +19,11 @@ typedef struct egl_state {
     EGLSurface           drawable;        /* active draw drawable, initial EGL_NO_SURFACE */
     EGLSurface           readable;        /* active read drawable, initial EGL_NO_SURFACE */
 
-    v_bool_t             active;
-    v_bool_t             destroy_dpy;
-    v_bool_t             destroy_ctx;
-    v_bool_t             destroy_read;
-    v_bool_t             destroy_draw;
+    bool             active;
+    bool             destroy_dpy;
+    bool             destroy_ctx;
+    bool             destroy_read;
+    bool             destroy_draw;
 } egl_state_t;
 
 #ifdef __cplusplus

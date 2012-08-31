@@ -15,7 +15,7 @@ _gpuprocess_server_copy_egl_state (egl_state_t *dst, egl_state_t *src)
     memcpy (dst, src, sizeof (egl_state_t));
 }
 
-static v_bool_t
+static bool
 _gpuprocess_server_has_context (egl_state_t *state,
                              EGLDisplay  display,
                              EGLContext  context)
@@ -34,17 +34,17 @@ _gpuprocess_server_init_gles2_states (egl_state_t *egl_state)
     egl_state->drawable = EGL_NO_SURFACE;
     egl_state->readable = EGL_NO_SURFACE;
 
-    egl_state->active = FALSE;
+    egl_state->active = false;
 
-    egl_state->destroy_dpy = FALSE;
-    egl_state->destroy_ctx = FALSE;
-    egl_state->destroy_draw = FALSE;
-    egl_state->destroy_read = FALSE;
+    egl_state->destroy_dpy = false;
+    egl_state->destroy_ctx = false;
+    egl_state->destroy_draw = false;
+    egl_state->destroy_read = false;
 
     state->vertex_attribs.count = 0;
 
     state->max_combined_texture_image_units = 8;
-    state->max_vertex_attribs_queried = FALSE;
+    state->max_vertex_attribs_queried = false;
     state->max_vertex_attribs = 8;
     state->max_cube_map_texture_size = 16;
     state->max_fragment_uniform_vectors = 16;
@@ -57,7 +57,7 @@ _gpuprocess_server_init_gles2_states (egl_state_t *egl_state)
 
 
     state->error = GL_NO_ERROR;
-    state->need_get_error = FALSE;
+    state->need_get_error = false;
     state->programs = NULL;
    
     state->active_texture = GL_TEXTURE0;
@@ -188,11 +188,11 @@ _gpuprocess_server_remove_state (v_link_list_t *state)
 }
 
 static void 
-_gpuprocess_server_remove_surface (v_link_list_t *state, v_bool_t read)
+_gpuprocess_server_remove_surface (v_link_list_t *state, bool read)
 {
     egl_state_t *egl_state = (egl_state_t *) state->data;
 
-    if (read == TRUE)
+    if (read == true)
         egl_state->readable = EGL_NO_SURFACE;
     else
         egl_state->drawable = EGL_NO_SURFACE;
@@ -220,7 +220,7 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
         _gpuprocess_server_set_egl_states (new_state, dpy, draw, read, ctx); 
         _gpuprocess_server_init_gles2_states (new_state);
         srv_states.states->data = new_state;
-        new_state->active = TRUE;
+        new_state->active = true;
 	return srv_states.states;
     }
 
@@ -231,7 +231,7 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
         if (state->context == ctx &&
             state->display == dpy) {
             _gpuprocess_server_set_egl_states (state, dpy, draw, read, ctx);
-            state->active = TRUE;
+            state->active = true;
             return list;
         }
         list = list->next;
@@ -252,7 +252,7 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
     new_list->prev = list;
     new_list->next = NULL;
     new_list->data = new_state;
-    new_state->active = TRUE;
+    new_state->active = true;
     list->next = new_list;
 
     return new_list;
@@ -262,7 +262,7 @@ void
 _gpuprocess_server_init ()
 {
     gpu_mutex_lock (egl_mutex);
-    if (srv_states.initialized == FALSE) {
+    if (srv_states.initialized == false) {
         srv_states.num_contexts = 0;
         srv_states.states = NULL;
         
@@ -285,7 +285,7 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
 
     gpu_mutex_lock (egl_mutex);
 
-    if (srv_states.initialized = FALSE ||
+    if (srv_states.initialized = false ||
         srv_states.num_contexts == 0 || ! srv_states.states) {
         gpu_mutex_unlock (egl_mutex);
         return;
@@ -307,7 +307,7 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
     if (active_state) { 
         egl_state = (egl_state_t *) active_state->data;
         if (egl_state->display == display)
-	    egl_state->destroy_dpy = TRUE;
+	    egl_state->destroy_dpy = true;
     }
     /* XXX: should we stop current server thread ? */
     /*
@@ -317,7 +317,7 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
 }
 
 
-int
+bool
 _gpuprocess_server_is_equal (egl_state_t *state,
                              EGLDisplay  display,
                              EGLSurface  drawable,
@@ -359,10 +359,10 @@ _gpuprocess_server_make_current (EGLDisplay display,
             _gpuprocess_server_remove_state (active_state);
         
         if (egl_state->destroy_read)
-            _gpuprocess_server_remove_surface (active_state, TRUE);
+            _gpuprocess_server_remove_surface (active_state, true);
 
         if (egl_state->destroy_draw)
-            _gpuprocess_server_remove_surface (active_state, FALSE);
+            _gpuprocess_server_remove_surface (active_state, false);
 
         *active_state_out = NULL;
         gpu_mutex_unlock (egl_mutex);
@@ -372,7 +372,7 @@ _gpuprocess_server_make_current (EGLDisplay display,
     /* we are switch to one of the valid context */
     if (active_state) {
         egl_state = (egl_state_t *) active_state->data;
-        egl_state->active = FALSE;
+        egl_state->active = false;
         
         /* XXX did eglTerminate()/eglDestroyContext()/eglDestroySurface()
          * called affect us?
@@ -381,10 +381,10 @@ _gpuprocess_server_make_current (EGLDisplay display,
             _gpuprocess_server_remove_state (active_state);
         
         if (egl_state->destroy_read)
-            _gpuprocess_server_remove_surface (active_state, TRUE);
+            _gpuprocess_server_remove_surface (active_state, true);
 
         if (egl_state->destroy_draw)
-            _gpuprocess_server_remove_surface (active_state, FALSE);
+            _gpuprocess_server_remove_surface (active_state, false);
     }
 
     /* get existing state or create a new one */
@@ -418,8 +418,8 @@ _gpuprocess_server_destroy_context (EGLDisplay display,
         state = (egl_state_t *)current->data;
     
         if (_gpuprocess_server_has_context (state, display, context)) {
-            state->destroy_ctx = TRUE;
-            if (state->active == FALSE) 
+            state->destroy_ctx = true;
+            if (state->active == false) 
                 _gpuprocess_server_remove_state (current);
         }
     }
@@ -448,16 +448,16 @@ _gpuprocess_server_destroy_surface (EGLDisplay display,
 
         if (state->display == display) {
             if (state->readable == surface)
-                state->destroy_read = TRUE;
+                state->destroy_read = true;
             else if (state->drawable == surface)
-                state->destroy_draw = TRUE;
+                state->destroy_draw = true;
 
-            if (state->active == FALSE) {
+            if (state->active == false) {
                 if (state->readable == surface && 
-                    state->destroy_read == TRUE)
+                    state->destroy_read == true)
                     state->readable = EGL_NO_SURFACE;
                 if (state->drawable == surface && 
-                    state->destroy_draw == TRUE)
+                    state->destroy_draw == true)
                     state->drawable = EGL_NO_SURFACE;
             }
         }
@@ -466,7 +466,7 @@ _gpuprocess_server_destroy_surface (EGLDisplay display,
     gpu_mutex_unlock (egl_mutex);
 }
 
-v_bool_t
+bool
 _gpuprocess_match (EGLDisplay display,
                    EGLSurface drawable,
                    EGLSurface readable,
@@ -480,7 +480,7 @@ _gpuprocess_match (EGLDisplay display,
     gpu_mutex_lock (egl_mutex);
     if (srv_states.num_contexts == 0 || ! srv_states.states) {
         gpu_mutex_unlock (egl_mutex);
-        return FALSE;
+        return false;
     }
 
     while (list != NULL) {
@@ -492,15 +492,15 @@ _gpuprocess_match (EGLDisplay display,
             egl_state->context == context &&
             egl_state->drawable == drawable &&
             egl_state->readable == readable &&
-            egl_state->active == FALSE) {
-            egl_state->active = TRUE;
+            egl_state->active == false) {
+            egl_state->active = true;
             *state = current;
             gpu_mutex_unlock (egl_mutex);
-            return TRUE;
+            return true;
         }
 
     }
 
     gpu_mutex_unlock (egl_mutex);
-    return FALSE;
+    return false;
 }

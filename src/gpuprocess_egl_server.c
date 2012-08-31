@@ -236,7 +236,7 @@ static EGLBoolean
 _egl_release_thread (void)
 {
     EGLBoolean result = EGL_FALSE;
-    v_bool_t success;
+    bool success;
     egl_state_t *egl_state;
     v_link_list_t *active_state_out = NULL;
 
@@ -480,14 +480,14 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
 {
     EGLBoolean result = EGL_FALSE;
     v_link_list_t *exist = NULL;
-    v_bool_t found = FALSE;
+    bool found = false;
 
     if (! dispatch.eglMakeCurrent)
         return result;
 
     /* look for existing */
     found = _gpuprocess_match (dpy, draw, read, ctx, &exist);
-    if (found == TRUE) {
+    if (found == true) {
         /* set active to exist, tell client about it */
         active_state = exist;
 

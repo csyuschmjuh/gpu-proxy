@@ -22,46 +22,46 @@ typedef struct v_vertex_attrib
     GLenum        type;                   /* initial GL_FLOAT */
     GLvoid        *pointer;               /* initial is 0 */
     GLboolean     array_normalized;       /* initial is GL_FALSE */
-    GLfloat       current_attrib[4];       /* initial is (0, 0, 0, 1) */
+    GLfloat       current_attrib[4];      /* initial is (0, 0, 0, 1) */
     char          *data;
 } v_vertex_attrib_t;
 
 typedef struct v_vertex_attrib_list
 {
-    int                   count;                        /* initial 0 */
+    int                   count;          /* initial 0 */
     v_vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
     v_vertex_attrib_t     *attribs;
 } v_vertex_attrib_list_t;
 
 typedef struct v_program_status {
-    GLboolean        delete_status;
-    GLboolean        link_status;
-    GLboolean        validate_status;
+    GLboolean    delete_status;
+    GLboolean    link_status;
+    GLboolean    validate_status;
     GLint        info_log_length;                 /* initial 0 */
     GLint        attached_shaders;
     GLint        active_attributes;
-    GLint        active_attribute_max_length;        /* longest name + NULL */
+    GLint        active_attribute_max_length;     /* longest name + NULL */
     GLint        active_uniforms;
-    GLint        active_uniform_max_length;        /* longest name + NULL */
+    GLint        active_uniform_max_length;       /* longest name + NULL */
 } v_program_status_t;
 
 /* this struct for attribute */
 typedef struct v_program_attrib {
     GLuint        location;
     GLuint        index;
-    GLchar         *name;
+    GLchar        *name;
 } v_program_attrib_t;
 
 typedef struct v_program_attrib_list {
     int                 count;
-    v_program_attrib_t        *attribs;
+    v_program_attrib_t  *attribs;
 } v_program_attrib_list_t;
 
 typedef struct v_program_uniform {
     GLuint        location;
     GLchar        *name;
-    GLchar         *value;
-    GLint        num_bytes;        /* number of bytes occupied by value */
+    GLchar        *value;
+    GLint         num_bytes;        /* number of bytes occupied by value */
 } v_program_uniform_t;
 
 typedef struct v_program_uniform_list {
@@ -70,17 +70,17 @@ typedef struct v_program_uniform_list {
 } v_program_uniform_list_t;
 
 typedef struct v_program {
-    GLuint                         program;
+    GLuint                      program;
     v_program_status_t          status;
-    v_program_attrib_list_t         attribs;
-    v_program_uniform_list_t         uniforms;
+    v_program_attrib_list_t     attribs;
+    v_program_uniform_list_t    uniforms;
 } v_program_t;
 
 typedef struct gl_state {
-    GLenum        error;                      /* initial is GL_NO_ERROR */
-    v_bool_t      need_get_error;
-    v_link_list_t *programs;                  /* initial is NULL */
-    v_vertex_attrib_list_t vertex_attribs;    /* client states */
+    GLenum                  error;             /* initial is GL_NO_ERROR */
+    bool                    need_get_error;
+    v_link_list_t           *programs;         /* initial is NULL */
+    v_vertex_attrib_list_t  vertex_attribs;    /* client states */
 
 /* GL states from glGet () */
     /* used */
@@ -92,7 +92,6 @@ typedef struct gl_state {
                                                 */        
     /* used */
     GLint         array_buffer_binding;         /* initial 0 */
-   
     /* used */
     GLboolean     blend;                        /* initial GL_FALSE */
     /* used */
@@ -155,26 +154,26 @@ typedef struct gl_state {
 
     /* used all */
     GLint         max_combined_texture_image_units; /* at least 8 */
-    v_bool_t      max_combined_texture_image_units_queried;
+    bool          max_combined_texture_image_units_queried;
     GLint         max_cube_map_texture_size;        /* at least 16 */
-    v_bool_t      max_cube_map_texture_size_queried;
+    bool          max_cube_map_texture_size_queried;
     GLint         max_fragment_uniform_vectors;     /* at least 16 */
-    v_bool_t      max_fragment_uniform_vectors_queried;
+    bool          max_fragment_uniform_vectors_queried;
     GLint         max_renderbuffer_size;            /* at least 1 */
-    v_bool_t      max_renderbuffer_size_queried;
+    bool          max_renderbuffer_size_queried;
     GLint         max_texture_image_units;          /* at least 8 */
-    v_bool_t      max_texture_image_units_queried;
+    bool          max_texture_image_units_queried;
     GLint         max_texture_size;                 /* at least 64 */
-    v_bool_t       max_texture_size_queried;
+    bool          max_texture_size_queried;
     GLint         max_varying_vectors;              /* at least 8 */
-    v_bool_t      max_varying_vectors_queried;
+    bool          max_varying_vectors_queried;
     GLint         max_vertex_uniform_vectors;       /* at least 128 */
-    v_bool_t      max_vertex_uniform_vectors_queried;
+    bool          max_vertex_uniform_vectors_queried;
     /* used all */
-    v_bool_t      max_vertex_attribs_queried;       /* false */
+    bool          max_vertex_attribs_queried;       /*  false */
     GLint         max_vertex_attribs;               /* at least 8 */
     GLint         max_vertex_texture_image_units;   /* may be 0 */
-    v_bool_t      max_vertex_texture_image_units_queried;
+    bool          max_vertex_texture_image_units_queried;
     GLint         max_viewport_dims;                /* as large as visible */
     /* used all */
     GLint         num_compressed_texture_formats;   /* min is 0 */
@@ -312,7 +311,7 @@ typedef struct gl_state {
     /* used */
     GLint        texture_binding_3d;
     GLint        max_3d_texture_size;
-    v_bool_t     max_3d_texture_size_queried;
+    bool         max_3d_texture_size_queried;
     /* used */
     GLint        texture_3d_wrap_r[32];         /* initial GL_REPEAT */
 #endif
@@ -361,7 +360,7 @@ typedef struct gl_state {
 
 #if defined GL_ANGLE_framebuffer_multisample || GL_EXT_multisampled_render_to_texture || GL_IMG_multisampled_render_to_texture
     GLint        max_samples;
-    v_bool_t     max_samples_queried;
+    bool         max_samples_queried;
 #endif
 
 #ifdef GL_APPLE_rgb_422

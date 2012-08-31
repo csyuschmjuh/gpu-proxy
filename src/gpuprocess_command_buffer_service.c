@@ -31,7 +31,7 @@ command_buffer_service_initialize(buffer_t *buffer)
     return command_buffer_service;
 }
 
-v_bool_t
+bool
 command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 {
     command_buffer_service->buffer = NULL;
@@ -40,7 +40,7 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
     pthread_join(*command_buffer_service->thread, NULL);
     /* FIXME: GL termination. */
 
-    return TRUE;
+    return true;
 }
 
 void
