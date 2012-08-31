@@ -5,6 +5,10 @@ libGPUProcess_la_CFLAGS = \
 	-Igenerated \
 	-Werror
 
+libGPUProcess_la_LDFLAGS = \
+	-version-info 0:0:0 \
+	-ldl
+
 libGPUProcess_la_SOURCES = \
 	gpuprocess_compiler_private.h \
 	gpuprocess_dispatch_private.h \
@@ -41,17 +45,24 @@ generated/gpuprocess_gles2_api_autogen.c : generated/build_gles2_cmd_buffer.py g
 	python generated/build_gles2_cmd_buffer.py
 endif
 
-libGPUProcess_la_LDFLAGS = -version-info 0:0:0
+library_dir = $(top_builddir)/libs
+$(library_dir)/libGPUProcess.so: libGPUProcess.la
+	$(AM_V_at) $(MKDIR_P) $(library_dir)
+	$(AM_V_GEN) $(LN_S) -f .libs/libGPUProcess.so.0.0.0 $(library_dir)/libGPUProcess.so
+symlinks = $(library_dir)/libGPUProcess.so
 
-AM_LDFLAGS = \
-	-ldl
-
-all-local: libGPUProcess.la
-	$(MKDIR_P) $(top_builddir)/$(LIB_DIR);
-	ln -f .libs/libGPUProcess.so.0.0.0 $(top_builddir)/$(LIB_DIR)/libGPUProcess.so
-if HAS_GL
-	ln -f $(top_builddir)/$(LIB_DIR)/libGPUProcess.so $(top_builddir)/$(LIB_DIR)/libGL.so
-else
-	ln -sf $(top_builddir)/$(LIB_DIR)/libGPUProcess.so $(top_builddir)/$(LIB_DIR)/libEGL.so
-	ln -sf $(top_builddir)/$(LIB_DIR)/libGPUProcess.so $(top_builddir)/$(LIB_DIR)/libGLESv2.so
+if HAS_GLES2
+$(library_dir)/libEGL.so:
+	$(AM_V_GEN) $(LN_S) -f $(library_dir)/libGPUProcess.so $(library_dir)/libEGL.so
+$(library_dir)/libGLESv2.so:
+	$(AM_V_GEN) $(LN_S) -f $(library_dir)/libGPUProcess.so $(library_dir)/libGLESv2.so
+symlinks += $(library_dir)/libEGL.so $(library_dir)/libGLESv2.so
 endif
+
+if HAS_GL
+$(library_dir)/libGL.so:
+	ln -f $(library_dir)/libGPUProcess.so $(library_dir)/libGL.so
+symlinks += $(library_dir)/libGL.so
+endif
+
+all-local: $(symlinks)
