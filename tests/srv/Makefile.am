@@ -9,9 +9,9 @@ gpuprocess_test_SOURCES = \
 	$(rootsrcdir)/src/gpuprocess_dispatch.h \
 	$(rootsrcdir)/src/gpuprocess_dispatch.c \
 	$(rootsrcdir)/src/gpuprocess_egl_states.h \
-        $(rootsrcdir)/src/gpuprocess_egl_srv_private.h \
-	$(rootsrcdir)/src/gpuprocess_egl_srv.c \
-	$(rootsrcdir)/src/gpuprocess_egl_srv_helper.c \
+        $(rootsrcdir)/src/gpuprocess_egl_server_private.h \
+	$(rootsrcdir)/src/gpuprocess_egl_server.c \
+	$(rootsrcdir)/src/gpuprocess_egl_server_helper.c \
 	tst_egl.c \
 	main.c
 
