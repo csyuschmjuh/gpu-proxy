@@ -17,8 +17,6 @@ AC_PROG_LIBTOOL
 AC_DISABLE_STATIC
 AC_PROG_MKDIR_P
 
-LIB_DIR="libs"
-
 AC_ARG_ENABLE(opengl,
 	      AS_HELP_STRING([--enable-opengl],
 			    [build with OpenGL support]),
@@ -74,7 +72,6 @@ if test "$tests" = "yes"; then
 fi
 
 AC_SUBST([GPUPROCESS_CFLAGS])
-AC_SUBST([LIB_DIR])
 
 AC_CONFIG_FILES([
 Makefile
