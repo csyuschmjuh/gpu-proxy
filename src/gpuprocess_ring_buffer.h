@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
+#include "gpuprocess_compiler_private.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,21 +25,28 @@ typedef struct buffer
     volatile size_t fill_count;
 } buffer_t;
 
-void
+gpuprocess_private void
 buffer_create(buffer_t *buffer, unsigned long length);
-void
+
+gpuprocess_private void
 buffer_free(buffer_t *buffer);
-size_t
+
+gpuprocess_private size_t
 buffer_num_entries(buffer_t *buffer);
-void *
+
+gpuprocess_private void *
 buffer_write_address(buffer_t *buffer, size_t *writable_bytes);
-void
+
+gpuprocess_private void
 buffer_write_advance(buffer_t *buffer, size_t count_bytes);
-void *
+
+gpuprocess_private void *
 buffer_read_address(buffer_t *buffer, size_t *bytes_to_read);
-void
+
+gpuprocess_private void
 buffer_read_advance(buffer_t *buffer, size_t count_bytes);
-void
+
+gpuprocess_private void
 buffer_clear(buffer_t *buffer);
 
 #ifdef __cplusplus
