@@ -167,7 +167,7 @@ _gpuprocess_server_set_egl_states (egl_state_t *egl_state,
     egl_state->readable = readable;
 }
 
-static void 
+void 
 _gpuprocess_server_remove_state (v_link_list_t *state)
 {
     egl_state_t *egl_state = (egl_state_t *) state->data;

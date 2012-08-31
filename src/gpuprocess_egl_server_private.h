@@ -59,6 +59,9 @@ _gpuprocess_match (EGLDisplay display,
                    EGLContext context,
                    v_link_list_t **state);
 
+gpuprocess_private void 
+_gpuprocess_server_remove_state (v_link_list_t *state);
+
 /*gpuprocess_private void
 _gpuprocess_server_remove_context (EGLDisplay display,
                                 EGLSurface draw,
