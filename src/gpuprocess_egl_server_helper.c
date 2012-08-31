@@ -4,10 +4,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* global state variable */
+/* global state variable for all server threads */
 gl_server_states_t              srv_states;
-gpu_mutex_static_init (egl_mutex);
 gpuprocess_dispatch_t dispatch;
+
+gpu_mutex_static_init (egl_mutex);
 
 static void
 _gpuprocess_server_copy_egl_state (egl_state_t *dst, egl_state_t *src)

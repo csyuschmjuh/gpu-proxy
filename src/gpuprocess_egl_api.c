@@ -9,6 +9,7 @@
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_egl_server_private.h"
 
+/* thread local variable for client thread */
 __thread v_link_list_t *active_state
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 __thread command_buffer_t* command_buffer
