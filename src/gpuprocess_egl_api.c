@@ -258,8 +258,9 @@ eglReleaseThread (void)
         return result;
 
     /* current context to None */
+    /* XXX: post eglReleaseThread and wait, then set active state to NULL */
     active_state = NULL;
-    /* XXX: post eglReleaseThread and wait */
+    command_buffer_set_active_state ( command_buffer, NULL);
     return result;
 }
 
@@ -512,39 +513,54 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     /* XXX: we need to pass active_state in command buffer */
     /* we are not in any valid context */
     if (! active_state) {
-        if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
-            return EGL_TRUE;
+        if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
+            result = EGL_TRUE;
+            goto FINISH;
+        }
         else {
           /* XXX: post eglMakeCurrent and wait */
           /* update active_state */
-          return result;
+          goto FINISH;
         }
     }
     else {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             /* XXX: post eglMakeCurrent and no wait */
             active_state = NULL;
-            return EGL_TRUE;
+            result = EGL_TRUE;
+            goto FINISH;
         }
         else {
             egl_state = (egl_state_t *) active_state->data;
             if (egl_state->display == dpy &&
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
-                egl_state->readable == read)
-                return GL_TRUE;
+                egl_state->readable == read) {
+                result = GL_TRUE;
+               goto FINISH;
+            }
             else {
                 /* XXX: post eglMakeCurrent and wait */
                 /* update active_state */
-                return result;
+                goto FINISH;
             }
         }
     }
+FINISH:
+
     if (active_state) {
         egl_state = (egl_state_t *) active_state->data;
-        if (egl_state->active)
+        if (egl_state->active) {
             unpack_alignment = egl_state->state.unpack_alignment;
+        
+            command_buffer_set_active_state (command_buffer, egl_state);
+        }
+        else
+            command_buffer_set_active_state (command_buffer, NULL);
     }
+    else
+        command_buffer_set_active_state (command_buffer, NULL);
+    
 }
 
 /* start of eglext.h */

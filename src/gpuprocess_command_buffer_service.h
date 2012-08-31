@@ -10,6 +10,7 @@
 #include "gpuprocess_ring_buffer.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_thread_private.h"
+#include "gpuprocess_egl_states.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +18,7 @@ extern "C" {
 
 typedef struct command_buffer_service {
     buffer_t *buffer;
-    v_link_list_t *active_state;
+    egl_state_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     gpu_thread_t *thread;
 } command_buffer_service_t;
@@ -31,7 +32,7 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 gpuprocess_private void
 command_buffer_service_set_active_state (
                      command_buffer_service_t *command_buffer_service,
-                     v_link_list_t            *active_state);
+                     egl_state_t              *active_state);
 
 #ifdef __cplusplus
 }

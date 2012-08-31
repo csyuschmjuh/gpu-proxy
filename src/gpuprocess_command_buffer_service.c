@@ -49,7 +49,7 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 void
 command_buffer_service_set_active_state (
                            command_buffer_service_t *command_buffer_service,
-                           v_link_list_t            *active_state)
+                           egl_state_t              *active_state)
 {
     command_buffer_service->active_state = active_state;
 }
