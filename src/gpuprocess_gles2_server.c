@@ -4483,11 +4483,11 @@ _gl_renderbuffer_storage_multisample_apple (GLenum target, GLsizei samples,
 }
 
 static void
-gl_resovle_multisample_framebuffer_apple (void) 
+gl_resolve_multisample_framebuffer_apple (void)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ResovleMultisampleFramebufferAPPLE) &&
+    if (_gl_is_valid_func (dispatch.ResolveMultisampleFramebufferAPPLE) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
