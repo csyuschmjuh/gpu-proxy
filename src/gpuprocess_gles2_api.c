@@ -883,7 +883,7 @@ void glVertexAttrib2fv (GLuint index, const GLfloat *v)
     /* copy data in v */
     if (v) {
         v_copy = (GLfloat *) malloc (sizeof (GLfloat) * 2);
-        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat *) * 2);
+        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat) * 2);
     }
     return;
 }
@@ -899,7 +899,7 @@ void glVertexAttrib3fv (GLuint index, const GLfloat *v)
     /* copy data in v */
     if (v) {
         v_copy = (GLfloat *) malloc (sizeof (GLfloat) * 3);
-        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat *) * 3);
+        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat) * 3);
     }
     return;
 }
@@ -915,7 +915,7 @@ void glVertexAttrib4fv (GLuint index, const GLfloat *v)
     /* copy data in v */
     if (v) {
         v_copy = (GLfloat *) malloc (sizeof (GLfloat) * 4);
-        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat *) * 3);
+        memcpy ((void *)v_copy, (const void *)v, sizeof (GLfloat) * 3);
     }
     return;
 }
