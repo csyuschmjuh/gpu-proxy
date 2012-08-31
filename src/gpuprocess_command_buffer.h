@@ -2,6 +2,7 @@
 #ifndef GPUPROCESS_COMMAND_BUFFER_H
 #define GPUPROCESS_COMMAND_BUFFER_H
 
+#include "gpuprocess_compiler_private.h"
 #include "gpuprocess_command.h"
 #include "gpuprocess_command_buffer_service.h"
 #include "gpuprocess_ring_buffer.h"
@@ -27,18 +28,29 @@ typedef struct command_buffer {
     command_buffer_service_t *service;
 } command_buffer_t;
 
-command_buffer_t *
+gpuprocess_private command_buffer_t *
 command_buffer_create();
-v_bool_t
+
+gpuprocess_private v_bool_t
 command_buffer_destroy(command_buffer_t *command_buffer);
-command_t *
-command_buffer_get_space_for_command(command_buffer_t *command_buffer, command_id_t command_id);
-v_bool_t
-command_buffer_write_command(command_buffer_t *command_buffer, command_t *command);
-v_bool_t
+
+gpuprocess_private command_t *
+command_buffer_get_space_for_command(command_buffer_t *command_buffer, 
+                                     command_id_t command_id);
+
+gpuprocess_private v_bool_t
+command_buffer_write_command(command_buffer_t *command_buffer, 
+                             command_t *command);
+
+gpuprocess_private v_bool_t
 command_buffer_flush(command_buffer_t *command_buffer);
-v_bool_t
+
+gpuprocess_private v_bool_t
 command_buffer_wait(command_buffer_t *command_buffer);
+
+gpuprocess_private void
+command_buffer_set_active_state (command_buffer_t *command_buffer, 
+                                 v_link_list_t *active_state);
 
 #ifdef __cplusplus
 }
