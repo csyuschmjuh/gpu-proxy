@@ -1,3 +1,4 @@
+/* This file defines a partial cached gles states */
 #ifndef GPUPROCESS_GLES2_STATE_H
 #define GPUPROCESS_GLES2_STATE_H
 

@@ -1,3 +1,5 @@
+/* This file implements gles2 functions.
+ */
 #include "gpuprocess_gles2_api_private.h"
 
 void glBufferData (GLenum target, GLsizeiptr size,

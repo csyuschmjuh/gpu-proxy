@@ -1,3 +1,23 @@
+/* Implemented egl and eglext.h functions.
+ * This is the egl functions entry point in the client thread.
+ * 
+ * The server thread is initialized and be ready during eglGetDisplay()
+ * and is terminated during eglTerminate() when the current context is 
+ * None. If a client calls egl functions before eglGetDisplay(), an error 
+ * is returned.
+ * We also keep three thread local variables:
+ * (1) active_context - a pointer to the current state that is in 
+ * global server_states.  If it is NULL, the current client is not in
+ * any valid egl context.
+ * (2) command_buffer - a pointer to the command buffer that is shared
+ * between client thread and server thread.  The client posts command to
+ * command buffer, while the server thread reads from the command from
+ * the command buffer
+ * (3) unpack_alignment - this the client cache of server side state. It
+ * is used by gpuprocess_gles2_server.c to compute padding for image during
+ * image uploading (glTexImage2D(), glTexSubImage2D(), glTexImage3DOES(),
+ * and glTexSubImage3DOES() 
+ */
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <stdlib.h>
@@ -10,7 +30,7 @@
 #include "gpuprocess_egl_server_private.h"
 
 /* thread local variable for client thread */
-__thread v_link_list_t *active_state
+__thread v_link_list_t *active_context
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 __thread command_buffer_t* command_buffer
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -86,7 +106,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
      * and application exit?  Obviously, there are still valid context
      * on the driver side, what about our server thread ? 
      */
-    if (! active_state)
+    if (! active_context)
         _egl_destroy_command_buffer ();
     
     return result;
@@ -243,10 +263,10 @@ eglWaitClient (void)
     if (! command_buffer)
         return result;
 
-    if (! active_state)
+    if (! active_context)
         return EGL_TRUE;
 
-    egl_state = (egl_state_t *) active_state->data;
+    egl_state = (egl_state_t *) active_context->data;
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -267,8 +287,8 @@ eglReleaseThread (void)
 
     /* current context to None */
     /* XXX: post eglReleaseThread and wait, then set active state to NULL */
-    active_state = NULL;
-    command_buffer_set_active_state ( command_buffer, NULL);
+    active_context = NULL;
+    command_buffer_set_active_context ( command_buffer, NULL);
     return result;
 }
 
@@ -366,10 +386,10 @@ eglGetCurrentContext (void)
 {
     egl_state_t *state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return EGL_NO_CONTEXT;
 
-    state = (egl_state_t *) active_state->data;
+    state = (egl_state_t *) active_context->data;
     return state->context;
 }
 
@@ -378,10 +398,10 @@ eglGetCurrentDisplay (void)
 {
     egl_state_t *state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return EGL_NO_DISPLAY;
 
-    state = (egl_state_t *) active_state->data;
+    state = (egl_state_t *) active_context->data;
     return state->display;
 }
 
@@ -391,10 +411,10 @@ eglGetCurrentSurface (EGLint readdraw)
     egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return EGL_NO_SURFACE;
 
-    state = (egl_state_t *) active_state->data;
+    state = (egl_state_t *) active_context->data;
 
     if (state->display == EGL_NO_DISPLAY || state->context == EGL_NO_CONTEXT)
         goto FINISH;
@@ -426,10 +446,10 @@ eglWaitGL (void)
     EGLBoolean result = EGL_TRUE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return result;
 
-    egl_state = (egl_state_t *) active_state->data;
+    egl_state = (egl_state_t *) active_context->data;
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -446,7 +466,7 @@ eglWaitNative (EGLint engine)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *state;
 
-    if (! command_buffer || active_state)
+    if (! command_buffer || active_context)
         return result;
 
     /* XXX: post eglWaitNative and wait */
@@ -462,10 +482,10 @@ eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
     if (! command_buffer)
         return result;
 
-    if (!active_state)
+    if (!active_context)
         return result;
 
-    state = (egl_state_t *)active_state->data;
+    state = (egl_state_t *)active_context->data;
     if (state->display == EGL_NO_DISPLAY)
         return result;
 
@@ -518,28 +538,28 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     if (! command_buffer)
         return result;
 
-    /* XXX: we need to pass active_state in command buffer */
+    /* XXX: we need to pass active_context in command buffer */
     /* we are not in any valid context */
-    if (! active_state) {
+    if (! active_context) {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             result = EGL_TRUE;
             goto FINISH;
         }
         else {
           /* XXX: post eglMakeCurrent and wait */
-          /* update active_state */
+          /* update active_context */
           goto FINISH;
         }
     }
     else {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             /* XXX: post eglMakeCurrent and no wait */
-            active_state = NULL;
+            active_context = NULL;
             result = EGL_TRUE;
             goto FINISH;
         }
         else {
-            egl_state = (egl_state_t *) active_state->data;
+            egl_state = (egl_state_t *) active_context->data;
             if (egl_state->display == dpy &&
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
@@ -549,21 +569,21 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
             }
             else {
                 /* XXX: post eglMakeCurrent and wait */
-                /* update active_state */
+                /* update active_context */
                 goto FINISH;
             }
         }
     }
 FINISH:
 
-    if (active_state) {
-        egl_state = (egl_state_t *) active_state->data;
+    if (active_context) {
+        egl_state = (egl_state_t *) active_context->data;
         if (egl_state->active) {
             unpack_alignment = egl_state->state.unpack_alignment;
         }
     }
 
-    command_buffer_set_active_state (command_buffer, active_state);
+    command_buffer_set_active_context (command_buffer, active_context);
     
 }
 
@@ -718,10 +738,10 @@ eglFenceNV (EGLSyncNV sync)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return result;
 
-    egl_state = (egl_state_t *) active_state->data;
+    egl_state = (egl_state_t *) active_context->data;
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -739,10 +759,10 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return result;
 
-    egl_state = (egl_state_t *) active_state->data;
+    egl_state = (egl_state_t *) active_context->data;
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -759,10 +779,10 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_state)
+    if (! command_buffer || ! active_context)
         return result;
 
-    egl_state = (egl_state_t *) active_state->data;
+    egl_state = (egl_state_t *) active_context->data;
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||

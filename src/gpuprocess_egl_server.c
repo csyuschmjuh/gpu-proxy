@@ -1,3 +1,18 @@
+/* This file implements the server thread side of egl functions.
+ * After the server thread reads the command buffer, if it is 
+ * egl calls, it is routed to here.
+ *
+ * It keeps two global variables for all server threads:
+ * (1) dispatch - a dispatch table to real egl and gl calls. It 
+ * is initialized during eglGetDisplay() -> _egl_get_display()
+ * (2) server_states - this is a double-linked structure contains
+ * all active and inactive egl states.  When a client switches context,
+ * the previous egl_state is set to be inactive and thus is subject to
+ * be destroyed during _egl_terminate(), _egl_destroy_context() and
+ * _egl_release_thread()  The inactive context's surface can also be 
+ * destroyed by _egl_destroy_surface().
+ * (3) active_state - this is the pointer to the current active state.
+ */
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <stdlib.h>
@@ -8,14 +23,17 @@
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_egl_states.h"
 #include "gpuprocess_egl_server_private.h"
-
-gpuprocess_dispatch_t        dispatch;
-extern __thread v_link_list_t *active_state;
-
 #include "gpuprocess_types_private.h"
 
-/* XXX: initialize static mutex on srv */
-extern gl_server_states_t        srv_states;
+/* server thread global variables, referenced from 
+ * gpuprocess_egl_server_helper.c
+ */
+extern gpuprocess_dispatch_t      dispatch;
+extern gl_server_states_t         server_states;
+
+/* server thread local variable */
+__thread v_link_list_t    *active_state
+  __attribute__(( tls_model ("initial-exec"))) = NULL;
 
 static EGLint
 _egl_get_error (void)
