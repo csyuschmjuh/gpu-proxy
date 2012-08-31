@@ -10,7 +10,7 @@
 #include "gpuprocess_egl_states.h"
 
 extern __thread v_link_list_t *active_state;
-extern __thread gpu_thread *srv_thread;
+extern __thread gpu_thread_t *srv_thread;
 extern __thread int unpack_alignment;
 
 static inline v_bool_t
