@@ -14,7 +14,7 @@ extern "C" {
 /* Initialize the commands in the buffer using the following sequence
  * of calls:
  *   COMMAND_NAME_t *command =
- *       COMMAND_NAME_T(command_buffer_get_command(command_buffer, command_id));
+ *       COMMAND_NAME_T(command_buffer_get_space_for_command(command_buffer, command_id));
  *   COMMAND_NAME_initialize(command, parameter1, parameter2, ...);
  *   command_buffer_write_command(command_buffer, command);
  */
@@ -32,7 +32,7 @@ command_buffer_create();
 v_bool_t
 command_buffer_destroy(command_buffer_t *command_buffer);
 command_t *
-command_buffer_get_command(command_buffer_t *command_buffer, command_id_t command_id);
+command_buffer_get_space_for_command(command_buffer_t *command_buffer, command_id_t command_id);
 v_bool_t
 command_buffer_write_command(command_buffer_t *command_buffer, command_t *command);
 v_bool_t

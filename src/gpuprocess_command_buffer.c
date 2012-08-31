@@ -33,7 +33,7 @@ command_buffer_destroy(command_buffer_t *command_buffer)
 }
 
 command_t *
-command_buffer_get_command(command_buffer_t *command_buffer, command_id_t command_id)
+command_buffer_get_space_for_command(command_buffer_t *command_buffer, command_id_t command_id)
 {
     return NULL;
 }
