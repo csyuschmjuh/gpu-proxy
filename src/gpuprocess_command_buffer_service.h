@@ -8,6 +8,7 @@
 #include "gpuprocess_egl_server_private.h"
 #include "gpuprocess_ring_buffer.h"
 #include "gpuprocess_types_private.h"
+#include "gpuprocess_thread_private.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -17,7 +18,7 @@ typedef struct command_buffer_service {
     buffer_t *buffer;
     gl_server_states_t *states;
     /* FIXME: Create a wrapper to avoid thread dependency. */
-    pthread_t *thread;
+    gpu_thread_t *thread;
 } command_buffer_service_t;
 
 command_buffer_service_t *
