@@ -23,7 +23,7 @@ command_buffer_create()
     return command_buffer;
 }
 
-v_bool_t
+bool
 command_buffer_destroy(command_buffer_t *command_buffer)
 {
     buffer_free(command_buffer->buffer);
@@ -38,22 +38,22 @@ command_buffer_get_space_for_command(command_buffer_t *command_buffer, command_i
     return NULL;
 }
 
-v_bool_t
+bool
 command_buffer_write_command(command_buffer_t *command_buffer, command_t *command)
 {
-    return TRUE;
+    return true;
 }
 
-v_bool_t
+bool
 command_buffer_flush(command_buffer_t *command_buffer)
 {
-    return TRUE;
+    return true;
 }
 
-v_bool_t
+bool
 command_buffer_wait(command_buffer_t *command_buffer)
 {
-    return TRUE;
+    return true;
 }
 
 void

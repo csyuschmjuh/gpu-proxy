@@ -13,7 +13,7 @@ extern "C" {
 
 typedef struct gl_server_states
 {
-    v_bool_t             initialized;
+    bool             initialized;
     int                  num_contexts;
     v_link_list_t        *states;
 } gl_server_states_t;
@@ -45,14 +45,14 @@ gpuprocess_private void
 _gpuprocess_server_destroy_surface (EGLDisplay display, EGLSurface surface,
                                     v_link_list_t *active_state);
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 _gpuprocess_server_is_equal (egl_state_t *state,
                              EGLDisplay  display,
                              EGLSurface  drawable,
                              EGLSurface  readable,
                              EGLContext  context);
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 _gpuprocess_match (EGLDisplay display,
                    EGLSurface drawable,
                    EGLSurface readable,

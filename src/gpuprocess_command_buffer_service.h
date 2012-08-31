@@ -25,7 +25,7 @@ typedef struct command_buffer_service {
 gpuprocess_private command_buffer_service_t *
 command_buffer_service_initialize();
 
-gpuprocess_private v_bool_t
+gpuprocess_private bool
 command_buffer_service_destroy(command_buffer_service_t *command_buffer_service);
 
 gpuprocess_private void

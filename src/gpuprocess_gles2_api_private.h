@@ -13,23 +13,23 @@ extern __thread v_link_list_t *active_state;
 extern __thread gpu_thread_t *srv_thread;
 extern __thread int unpack_alignment;
 
-static inline v_bool_t
+static inline bool
 _is_error_state (void )
 {
     egl_state_t *state;
 
     if (! active_state || ! srv_thread)
-        return TRUE;
+        return true;
 
     state = (egl_state_t *) active_state->data;
 
     if (! state ||
         ! (state->display == EGL_NO_DISPLAY ||
            state->context == EGL_NO_CONTEXT) ||
-	state->active == FALSE) {
-        return TRUE;
+	state->active == false) {
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 

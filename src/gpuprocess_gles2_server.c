@@ -13,37 +13,37 @@
 extern __thread v_link_list_t        *active_state;
 extern gpuprocess_dispatch_t         dispatch;
 
-static inline v_bool_t
+static inline bool
 _gl_is_valid_func (void *func)
 {
     egl_state_t *egl_state;
 
     if (func)
-        return TRUE;
+        return true;
 
     if (active_state) {
         egl_state = (egl_state_t *) active_state->data;
     
-        if (egl_state->active == TRUE &&
+        if (egl_state->active == true &&
             egl_state->state.error == GL_NO_ERROR) {
             egl_state->state.error = GL_INVALID_OPERATION;
-            return FALSE;
+            return false;
         }
     }
-    return FALSE;
+    return false;
 }
 
-static inline v_bool_t
+static inline bool
 _gl_is_valid_context (void)
 {
     egl_state_t *egl_state;
 
-    v_bool_t is_valid = FALSE;
+    bool is_valid = false;
 
     if (active_state) {
         egl_state = (egl_state_t *)active_state->data;
         if (egl_state->active)
-            return TRUE;
+            return true;
     }
     return is_valid;
 }
@@ -96,7 +96,7 @@ static void _gl_attach_shader (GLuint program, GLuint shader)
 
         dispatch.AttachShader (program, shader);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -109,7 +109,7 @@ static void _gl_bind_attrib_location (GLuint program, GLuint index, const GLchar
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.BindAttribLocation (program, index, name);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (name)
         free ((char *)name);
@@ -135,7 +135,7 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
                 return;
             else {
                 dispatch.BindBuffer (target, buffer);
-                egl_state->state.need_get_error = TRUE;
+                egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
                egl_state->state.array_buffer_binding = buffer;
@@ -146,7 +146,7 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
                 return;
             else {
                 dispatch.BindBuffer (target, buffer);
-                egl_state->state.need_get_error = TRUE;
+                egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
                egl_state->state.element_array_buffer_binding = buffer;
@@ -191,7 +191,7 @@ static void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
          */
         egl_state->state.framebuffer_binding = framebuffer;
 
-        /* egl_state->state.need_get_error = TRUE; */
+        /* egl_state->state.need_get_error = true; */
     }
 }
 
@@ -208,7 +208,7 @@ static void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
         }
 
         dispatch.BindRenderbuffer (target, renderbuffer);
-        /* egl_state->state.need_get_error = TRUE; */
+        /* egl_state->state.need_get_error = true; */
     }
 }
 
@@ -242,7 +242,7 @@ void _gl_bind_texture (GLenum target, GLuint texture)
         }
 
         dispatch.BindTexture (target, texture);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
 
         /* FIXME: do we need to save them ? */
         if (target == GL_TEXTURE_2D)
@@ -254,7 +254,7 @@ void _gl_bind_texture (GLenum target, GLuint texture)
             egl_state->state.texture_binding_3d = texture;
 #endif
 
-        /* egl_state->state.need_get_error = TRUE; */
+        /* egl_state->state.need_get_error = true; */
     }
 }
 
@@ -504,7 +504,7 @@ static void _gl_buffer_data (GLenum target, GLsizeiptr size,
          */
         dispatch.BufferData (target, size, data, usage);
         egl_state = (egl_state_t *) active_state->data;
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (data)
@@ -525,7 +525,7 @@ static void _gl_buffer_sub_data (GLenum target, GLintptr offset,
          * bound
          */
         dispatch.BufferSubData (target, offset, size, data);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (data)
@@ -688,7 +688,7 @@ static void _gl_compressed_tex_image_2d (GLenum target, GLint level,
                                        width, height, border, imageSize,
                                        data);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (data)
@@ -712,7 +712,7 @@ static void _gl_compressed_tex_sub_image_2d (GLenum target, GLint level,
                                           width, height, format, imageSize,
                                           data);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (data)
@@ -734,7 +734,7 @@ static void _gl_copy_tex_image_2d (GLenum target, GLint level,
         dispatch.CopyTexImage2D (target, level, internalformat,
                                  x, y, width, height, border);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -752,7 +752,7 @@ static void _gl_copy_tex_sub_image_2d (GLenum target, GLint level,
         dispatch.CopyTexSubImage2D (target, level, xoffset, yoffset,
                                     x, y, width, height);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -906,7 +906,7 @@ static void _gl_delete_program (GLuint program)
 
         dispatch.DeleteProgram (program);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -941,7 +941,7 @@ static void _gl_delete_shader (GLuint shader)
 
         dispatch.DeleteShader (shader);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -1041,7 +1041,7 @@ static void _gl_detach_shader (GLuint program, GLuint shader)
 
         /* XXX: command buffer, error code generated */
         dispatch.DetachShader (program, shader);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -1050,7 +1050,7 @@ _gl_set_cap (GLenum cap, GLboolean enable)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
-    v_bool_t needs_call = FALSE;
+    bool needs_call = false;
 
     if (_gl_is_valid_func (dispatch.Disable) &&
         _gl_is_valid_func (dispatch.Enable) &&
@@ -1063,60 +1063,60 @@ _gl_set_cap (GLenum cap, GLboolean enable)
         case GL_BLEND:
             if (state->blend != enable) {
                 state->blend = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_CULL_FACE:
             if (state->cull_face != enable) {
                 state->cull_face = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_DEPTH_TEST:
             if (state->depth_test != enable) {
                 state->depth_test = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_DITHER:
             if (state->dither != enable) {
                 state->dither = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_POLYGON_OFFSET_FILL:
             if (state->polygon_offset_fill != enable) {
                 state->polygon_offset_fill = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_SAMPLE_ALPHA_TO_COVERAGE:
             if (state->sample_alpha_to_coverage != enable) {
                 state->sample_alpha_to_coverage = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_SAMPLE_COVERAGE:
             if (state->sample_coverage != enable) {
                 state->sample_coverage = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_SCISSOR_TEST:
             if (state->scissor_test != enable) {
                 state->scissor_test = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_STENCIL_TEST:
             if (state->stencil_test != enable) {
                 state->stencil_test = enable;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         default:
-            needs_call = TRUE;
-            state->need_get_error = TRUE;
+            needs_call = true;
+            state->need_get_error = true;
             break;
         }
 
@@ -1139,7 +1139,7 @@ static void _gl_enable (GLenum cap)
     _gl_set_cap (cap, GL_TRUE);
 }
 
-static v_bool_t
+static bool
 _gl_index_is_too_large (gles2_state_t *state, GLuint index)
 {
     if (index >= state->max_vertex_attribs) {
@@ -1151,11 +1151,11 @@ _gl_index_is_too_large (gles2_state_t *state, GLuint index)
         if (index >= state->max_vertex_attribs) {
             if (state->error == GL_NO_ERROR)
                 state->error = GL_INVALID_VALUE;
-            return TRUE;
+            return true;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static void 
@@ -1329,7 +1329,7 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
         /* if vertex array binding is not 0 */
         if (state->vertex_array_binding) {
             dispatch.DrawArrays (mode, first, count);
-            state->need_get_error = TRUE;
+            state->need_get_error = true;
             return;
         } else
 #endif
@@ -1383,7 +1383,7 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
         /* should we need this?  The only error we could not catch is
          * GL_INVALID_FRAMEBUFFER_OPERATION
          */
-        //egl_state->state.need_get_error = TRUE;
+        //egl_state->state.need_get_error = true;
     }
 }
 
@@ -1474,7 +1474,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
 #ifdef GL_OES_vertex_array_object
         if (state->vertex_array_binding) {
             dispatch.DrawElements (mode, count, type, indices);
-            state->need_get_error = TRUE;
+            state->need_get_error = true;
             goto FINISH;
         } else
 #endif
@@ -1527,7 +1527,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
         /* should we need this?  The only error we could not catch is
          * GL_INVALID_FRAMEBUFFER_OPERATION
          */
-        //egl_state->state.need_get_error = TRUE;
+        //egl_state->state.need_get_error = true;
     }
 FINISH:
     if (indices)
@@ -1581,7 +1581,7 @@ static void _gl_framebuffer_renderbuffer (GLenum target, GLenum attachment,
         dispatch.FramebufferRenderbuffer (target, attachment,
                                           renderbuffertarget, 
                                           renderbuffer);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -1602,7 +1602,7 @@ static void _gl_framebuffer_texture_2d (GLenum target, GLenum attachment,
 
         dispatch.FramebufferTexture2D (target, attachment, textarget,
                                        texture, level);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -1703,7 +1703,7 @@ static void _gl_generate_mipmap (GLenum target)
         }
 
         dispatch.GenerateMipmap (target);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -1849,7 +1849,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
         case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_combined_texture_image_units_queried) {
                 dispatch.GetIntegerv (pname, params);
-                egl_state->state.max_combined_texture_image_units_queried = TRUE;
+                egl_state->state.max_combined_texture_image_units_queried = true;
                 egl_state->state.max_combined_texture_image_units = *params;
             } else
                 *params = egl_state->state.max_combined_texture_image_units;
@@ -1858,7 +1858,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_cube_map_texture_size_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_cube_map_texture_size = *params;
-                egl_state->state.max_cube_map_texture_size_queried = TRUE;
+                egl_state->state.max_cube_map_texture_size_queried = true;
             } else
                 *params = egl_state->state.max_cube_map_texture_size;
         break;
@@ -1866,7 +1866,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_fragment_uniform_vectors_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_fragment_uniform_vectors = *params;
-                egl_state->state.max_fragment_uniform_vectors_queried = TRUE;
+                egl_state->state.max_fragment_uniform_vectors_queried = true;
             } else
                 *params = egl_state->state.max_fragment_uniform_vectors;
             break;
@@ -1874,7 +1874,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_renderbuffer_size_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_renderbuffer_size = *params;
-                egl_state->state.max_renderbuffer_size_queried = TRUE;
+                egl_state->state.max_renderbuffer_size_queried = true;
             } else
                 *params = egl_state->state.max_renderbuffer_size;
             break;
@@ -1882,7 +1882,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_texture_image_units_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_texture_image_units = *params;
-                egl_state->state.max_texture_image_units_queried = TRUE;
+                egl_state->state.max_texture_image_units_queried = true;
             } else
                 *params = egl_state->state.max_texture_image_units;
             break;
@@ -1890,7 +1890,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_varying_vectors_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_varying_vectors = *params;
-                egl_state->state.max_varying_vectors_queried = TRUE;
+                egl_state->state.max_varying_vectors_queried = true;
             } else
                 *params = egl_state->state.max_varying_vectors;
             break;
@@ -1898,7 +1898,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_texture_size_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_texture_size = *params;
-                egl_state->state.max_texture_size_queried = TRUE;
+                egl_state->state.max_texture_size_queried = true;
             } else
                 *params = egl_state->state.max_texture_size;
             break;
@@ -1906,7 +1906,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_vertex_attribs_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_vertex_attribs = *params;
-                egl_state->state.max_vertex_attribs_queried = TRUE;
+                egl_state->state.max_vertex_attribs_queried = true;
             } else
                 *params = egl_state->state.max_vertex_attribs;
             break;
@@ -1914,7 +1914,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_vertex_texture_image_units_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_vertex_texture_image_units = *params;
-                egl_state->state.max_vertex_texture_image_units_queried = TRUE;
+                egl_state->state.max_vertex_texture_image_units_queried = true;
             } else
                 *params = egl_state->state.max_vertex_texture_image_units;
             break;
@@ -1922,7 +1922,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
             if (! egl_state->state.max_vertex_uniform_vectors_queried) {
                 dispatch.GetIntegerv (pname, params);
                 egl_state->state.max_vertex_uniform_vectors = *params;
-                egl_state->state.max_vertex_uniform_vectors_queried = TRUE;
+                egl_state->state.max_vertex_uniform_vectors_queried = true;
             } else
                 *params = egl_state->state.max_vertex_uniform_vectors;
             break;
@@ -2013,7 +2013,7 @@ static void _gl_get_active_attrib (GLuint program, GLuint index,
 
         dispatch.GetActiveAttrib (program, index, bufsize, length,
                                   size, type, name);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2030,7 +2030,7 @@ static void _gl_get_active_uniform (GLuint program, GLuint index,
 
         dispatch.GetActiveUniform (program, index, bufsize, length,
                                    size, type, name);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2045,7 +2045,7 @@ static void _gl_get_attached_shaders (GLuint program, GLsizei maxCount,
     
         dispatch.GetAttachedShaders (program, maxCount, count, shaders);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2059,7 +2059,7 @@ static GLint _gl_get_attrib_location (GLuint program, const GLchar *name)
     
         dispatch.GetAttribLocation (program, name);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2073,7 +2073,7 @@ static void _gl_get_buffer_parameteriv (GLenum target, GLenum value, GLint *data
     
         dispatch.GetBufferParameteriv (target, value, data);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2094,7 +2094,7 @@ static GLenum _gl_get_error (void)
 
         error = dispatch.GetError ();
 
-        egl_state->state.need_get_error = FALSE;
+        egl_state->state.need_get_error = false;
         egl_state->state.error = GL_NO_ERROR;
     }
 
@@ -2119,7 +2119,7 @@ static void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
 
         dispatch.GetFramebufferAttachmentParameteriv (target, attachment,
                                                       pname, params);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2134,7 +2134,7 @@ static void _gl_get_program_info_log (GLuint program, GLsizei maxLength,
 
         dispatch.GetProgramInfoLog (program, maxLength, length, infoLog);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2148,7 +2148,7 @@ static void _gl_get_programiv (GLuint program, GLenum pname, GLint *params)
 
         dispatch.GetProgramiv (program, pname, params);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2169,7 +2169,7 @@ static void _gl_get_renderbuffer_parameteriv (GLenum target,
 
         dispatch.GetRenderbufferParameteriv (target, pname, params);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2184,7 +2184,7 @@ static void _gl_get_shader_info_log (GLuint program, GLsizei maxLength,
 
         dispatch.GetShaderInfoLog (program, maxLength, length, infoLog);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2202,7 +2202,7 @@ static void _gl_get_shader_precision_format (GLenum shaderType,
         dispatch.GetShaderPrecisionFormat (shaderType, precisionType,
                                            range, precision);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2217,7 +2217,7 @@ static void _gl_get_shader_source  (GLuint shader, GLsizei bufSize,
 
         dispatch.GetShaderSource (shader, bufSize, length, source);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2231,7 +2231,7 @@ static void _gl_get_shaderiv (GLuint shader, GLenum pname, GLint *params)
 
         dispatch.GetShaderiv (shader, pname, params);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2254,7 +2254,7 @@ static const GLubyte *_gl_get_string (GLenum name)
 
         result = (GLubyte *)dispatch.GetString (name);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return (const GLubyte *)result;
 }
@@ -2336,7 +2336,7 @@ static void _gl_get_uniformiv (GLuint program, GLint location,
 
         dispatch.GetUniformiv (program, location, params);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2351,7 +2351,7 @@ static void _gl_get_uniformfv (GLuint program, GLint location,
 
         dispatch.GetUniformfv (program, location, params);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2366,7 +2366,7 @@ static GLint _gl_get_uniform_location (GLuint program, const GLchar *name)
 
         result = dispatch.GetUniformLocation (program, name);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -2448,7 +2448,7 @@ static void _gl_get_vertex_attribfv (GLuint index, GLenum pname,
             *params = egl_state->state.array_buffer_binding;
             break;
         case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
-            *params = FALSE;
+            *params = false;
             break;
         case GL_VERTEX_ATTRIB_ARRAY_SIZE:
             *params = 4;
@@ -2516,7 +2516,7 @@ static void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname,
         /* we cannot use client state */
         if (egl_state->state.vertex_array_binding) {
             dispatch.GetVertexAttribPointerv (index, pname, pointer);
-            egl_state->state.need_get_error = TRUE;
+            egl_state->state.need_get_error = true;
             return;
         }
 #endif
@@ -2556,7 +2556,7 @@ static void _gl_hint (GLenum target, GLenum mode)
         dispatch.Hint (target, mode);
 
         if (target != GL_GENERATE_MIPMAP_HINT)
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2719,7 +2719,7 @@ static void _gl_link_program (GLuint program)
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.LinkProgram (program);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2790,7 +2790,7 @@ static void _gl_read_pixels (GLint x, GLint y,
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.ReadPixels (x, y, width, height, format, type, data);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2803,7 +2803,7 @@ void _gl_compile_shader (GLuint shader)
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.CompileShader (shader);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2816,7 +2816,7 @@ static void _gl_release_shader_compiler (void)
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.ReleaseShaderCompiler ();
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2830,7 +2830,7 @@ static void _gl_renderbuffer_storage (GLenum target, GLenum internalformat,
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.RenderbufferStorage (target, internalformat, width, height);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -2892,7 +2892,7 @@ static void _gl_shader_binary (GLsizei n, const GLuint *shaders,
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.ShaderBinary (n, shaders, binaryformat, binary, length);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (binary)
         free ((void *)binary);
@@ -2909,7 +2909,7 @@ static void _gl_shader_source (GLuint shader, GLsizei count,
         egl_state = (egl_state_t *) active_state->data;
 
         dispatch.ShaderSource (shader, count, string, length);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (length)
@@ -2929,7 +2929,7 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
     egl_state_t *egl_state;
-    v_bool_t needs_call = FALSE;
+    bool needs_call = false;
     
     if (_gl_is_valid_func (dispatch.StencilFuncSeparate) &&
         _gl_is_valid_context ()) {
@@ -2961,7 +2961,7 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
                 egl_state->state.stencil_func = func;
                 egl_state->state.stencil_ref = ref;
                 egl_state->state.stencil_value_mask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_BACK:
@@ -2971,7 +2971,7 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
                 egl_state->state.stencil_back_func = func;
                 egl_state->state.stencil_back_ref = ref;
                 egl_state->state.stencil_back_value_mask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         default:
@@ -2987,7 +2987,7 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
                 egl_state->state.stencil_ref;
                 egl_state->state.stencil_back_value_mask = mask;
                 egl_state->state.stencil_value_mask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         }
@@ -3005,7 +3005,7 @@ static void _gl_stencil_func (GLenum func, GLint ref, GLuint mask)
 static void _gl_stencil_mask_separate (GLenum face, GLuint mask)
 {
     egl_state_t *egl_state;
-    v_bool_t needs_call = FALSE;
+    bool needs_call = false;
     
     if (_gl_is_valid_func (dispatch.StencilMaskSeparate) &&
         _gl_is_valid_context ()) {
@@ -3022,13 +3022,13 @@ static void _gl_stencil_mask_separate (GLenum face, GLuint mask)
         case GL_FRONT:
             if (mask != egl_state->state.stencil_writemask) {
                 egl_state->state.stencil_writemask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_BACK:
             if (mask != egl_state->state.stencil_back_writemask) {
                 egl_state->state.stencil_back_writemask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         default:
@@ -3036,7 +3036,7 @@ static void _gl_stencil_mask_separate (GLenum face, GLuint mask)
                 mask != egl_state->state.stencil_writemask) {
                 egl_state->state.stencil_back_writemask = mask;
                 egl_state->state.stencil_writemask = mask;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         }
@@ -3054,7 +3054,7 @@ static void _gl_stencil_op_separate (GLenum face, GLenum sfail,
                                      GLenum dpfail, GLenum dppass)
 {
     egl_state_t *egl_state;
-    v_bool_t needs_call = FALSE;
+    bool needs_call = false;
     
     if (_gl_is_valid_func (dispatch.StencilOpSeparate) &&
         _gl_is_valid_context ()) {
@@ -3108,7 +3108,7 @@ static void _gl_stencil_op_separate (GLenum face, GLenum sfail,
                 egl_state->state.stencil_fail = sfail;
                 egl_state->state.stencil_pass_depth_fail = dpfail;
                 egl_state->state.stencil_pass_depth_pass = dppass;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         case GL_BACK:
@@ -3118,7 +3118,7 @@ static void _gl_stencil_op_separate (GLenum face, GLenum sfail,
                 egl_state->state.stencil_back_fail = sfail;
                 egl_state->state.stencil_back_pass_depth_fail = dpfail;
                 egl_state->state.stencil_back_pass_depth_pass = dppass;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         default:
@@ -3134,7 +3134,7 @@ static void _gl_stencil_op_separate (GLenum face, GLenum sfail,
                 egl_state->state.stencil_back_fail = sfail;
                 egl_state->state.stencil_back_pass_depth_fail = dpfail;
                 egl_state->state.stencil_back_pass_depth_pass = dppass;
-                needs_call = TRUE;
+                needs_call = true;
             }
             break;
         }
@@ -3163,7 +3163,7 @@ static void _gl_tex_image_2d (GLenum target, GLint level,
     
         dispatch.TexImage2D (target, level, internalformat, width, height,
                              border, format, type, data);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (data)
       free ((void *)data);
@@ -3305,7 +3305,7 @@ static void _gl_tex_sub_image_2d (GLenum target, GLint level,
     
         dispatch.TexSubImage2D (target, level, xoffset, yoffset,
                                 width, height, format, type, data);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (data)
         free ((void *)data);
@@ -3320,7 +3320,7 @@ static void _gl_uniform1f (GLint location, GLfloat v0)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform1f (location, v0);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3333,7 +3333,7 @@ static void _gl_uniform2f (GLint location, GLfloat v0, GLfloat v1)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform2f (location, v0, v1);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3347,7 +3347,7 @@ static void _gl_uniform3f (GLint location, GLfloat v0, GLfloat v1,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform3f (location, v0, v1, v2);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3361,7 +3361,7 @@ static void _gl_uniform4f (GLint location, GLfloat v0, GLfloat v1,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform4f (location, v0, v1, v2, v3);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3374,7 +3374,7 @@ static void _gl_uniform1i (GLint location, GLint v0)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform1i (location, v0);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3387,7 +3387,7 @@ static void _gl_uniform_2i (GLint location, GLint v0, GLint v1)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform2i (location, v0, v1);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3400,7 +3400,7 @@ static void _gl_uniform3i (GLint location, GLint v0, GLint v1, GLint v2)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform3i (location, v0, v1, v2);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3414,7 +3414,7 @@ static void _gl_uniform4i (GLint location, GLint v0, GLint v1,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.Uniform4i (location, v0, v1, v2, v3);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3451,7 +3451,7 @@ _gl_uniform_fv (int i, GLint location,
     }
 
     egl_state = (egl_state_t *) active_state->data;
-    egl_state->state.need_get_error = TRUE;
+    egl_state->state.need_get_error = true;
 
 FINISH:
     if (value)
@@ -3515,7 +3515,7 @@ _gl_uniform_iv (int i, GLint location,
     }
 
     egl_state = (egl_state_t *) active_state->data;
-    egl_state->state.need_get_error = TRUE;
+    egl_state->state.need_get_error = true;
 
 FINISH:
     if (value)
@@ -3562,7 +3562,7 @@ static void _gl_use_program (GLuint program)
          * object, we save here to save time in glGetError() */
         egl_state->state.current_program = program;
         /* FIXME: do we need to have this ? */
-        // egl_state->state.need_get_error = TRUE;
+        // egl_state->state.need_get_error = true;
     }
 }
 
@@ -3575,7 +3575,7 @@ static void _gl_validate_program (GLuint program)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.ValidateProgram (program);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3752,7 +3752,7 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
         if (egl_state->state.vertex_array_binding) {
             dispatch.VertexAttribPointer (index, size, type, normalized,
                                           stride, pointer);
-            //egl_state->state.need_get_error = TRUE;
+            //egl_state->state.need_get_error = true;
             return;
         }
 #endif
@@ -3779,7 +3779,7 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
         if (bound_buffer) {
             dispatch.VertexAttribPointer (index, size, type, normalized,
                                           stride, pointer);
-            //egl_state->state.need_get_error = TRUE;
+            //egl_state->state.need_get_error = true;
         }
 
         if (found_index != -1) {
@@ -3875,7 +3875,7 @@ _gl_egl_image_target_texture_2d_oes (GLenum target, GLeglImageOES image)
         }
 
         dispatch.EGLImageTargetTexture2DOES (target, image);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3895,7 +3895,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (GLenum target,
         }
 
         dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -3914,7 +3914,7 @@ _gl_get_program_binary_oes (GLuint program, GLsizei bufSize,
     
         dispatch.GetProgramBinaryOES (program, bufSize, length, 
                                       binaryFormat, binary);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -3929,7 +3929,7 @@ _gl_program_binary_oes (GLuint program, GLenum binaryFormat,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.ProgramBinaryOES (program, binaryFormat, binary, length);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (binary)
@@ -3959,7 +3959,7 @@ _gl_map_buffer_oes (GLenum target, GLenum access)
         }
 
         result = dispatch.MapBufferOES (target, access);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -3981,7 +3981,7 @@ _gl_unmap_buffer_oes (GLenum target)
         }
 
         result = dispatch.UnmapBufferOES (target);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -4002,7 +4002,7 @@ _gl_get_buffer_pointerv_oes (GLenum target, GLenum pname, GLvoid **params)
         }
 
         dispatch.GetBufferPointervOES (target, pname, params);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4023,7 +4023,7 @@ _gl_tex_image_3d_oes (GLenum target, GLint level, GLenum internalformat,
         dispatch.TexImage3DOES (target, level, internalformat, 
                                 width, height, depth, 
                                 border, format, type, pixels);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (pixels)
         free ((void *)pixels);
@@ -4045,7 +4045,7 @@ _gl_tex_sub_image_3d_oes (GLenum target, GLint level,
                                    xoffset, yoffset, zoffset,
                                    width, height, depth, 
                                    format, type, data);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (data)
         free ((void *)data);
@@ -4067,7 +4067,7 @@ _gl_copy_tex_sub_image_3d_oes (GLenum target, GLint level,
                                        xoffset, yoffset, zoffset,
                                        x, y, width, height);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4089,7 +4089,7 @@ _gl_compressed_tex_image_3d_oes (GLenum target, GLint level,
                                           width, height, depth,
                                           border, imageSize, data);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     if (data)
         free ((void *)data);
@@ -4115,7 +4115,7 @@ _gl_compressed_tex_sub_image_3d_oes (GLenum target, GLint level,
                                              width, height, depth,
                                              format, imageSize, data);
 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 
     if (data)
@@ -4140,7 +4140,7 @@ _gl_framebuffer_texture_3d_oes (GLenum target, GLenum attachment,
 
         dispatch.FramebufferTexture3DOES (target, attachment, textarget,
                                           texture, level, zoffset);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4169,7 +4169,7 @@ _gl_bind_vertex_array_oes (GLuint array)
             return;
 
         dispatch.BindVertexArrayOES (array);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
         /* FIXME: should we save this ? */
         egl_state->state.vertex_array_binding = array;
     }
@@ -4256,7 +4256,7 @@ _gl_get_perf_monitor_groups_amd (GLint *numGroups, GLsizei groupSize,
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.GetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4275,7 +4275,7 @@ _gl_get_perf_monitor_counters_amd (GLuint group, GLint *numCounters,
         dispatch.GetPerfMonitorCountersAMD (group, numCounters,
                                             maxActiveCounters,
                                             counterSize, counters);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4292,7 +4292,7 @@ _gl_get_perf_monitor_group_string_amd (GLuint group, GLsizei bufSize,
         
         dispatch.GetPerfMonitorGroupStringAMD (group, bufSize, length,
                                                groupString);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4310,7 +4310,7 @@ _gl_get_perf_monitor_counter_string_amd (GLuint group, GLuint counter,
         
         dispatch.GetPerfMonitorCounterStringAMD (group, counter, bufSize, 
                                                  length, counterString);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4326,7 +4326,7 @@ _gl_get_perf_monitor_counter_info_amd (GLuint group, GLuint counter,
         
         dispatch.GetPerfMonitorCounterInfoAMD (group, counter, 
                                                pname, data); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4340,7 +4340,7 @@ _gl_gen_perf_monitors_amd (GLsizei n, GLuint *monitors)
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.GenPerfMonitorsAMD (n, monitors); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4354,7 +4354,7 @@ _gl_delete_perf_monitors_amd (GLsizei n, GLuint *monitors)
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.DeletePerfMonitorsAMD (n, monitors); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4371,7 +4371,7 @@ _gl_select_perf_monitor_counters_amd (GLuint monitor, GLboolean enable,
         
         dispatch.SelectPerfMonitorCountersAMD (monitor, enable, group,
                                                numCounters, countersList); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4385,7 +4385,7 @@ _gl_begin_perf_monitor_amd (GLuint monitor)
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.BeginPerfMonitorAMD (monitor); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4399,7 +4399,7 @@ _gl_end_perf_monitor_amd (GLuint monitor)
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.EndPerfMonitorAMD (monitor); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4416,7 +4416,7 @@ _gl_get_perf_monitor_counter_data_amd (GLuint monitor, GLenum pname,
         
         dispatch.GetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
                                                data, bytesWritten); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4438,7 +4438,7 @@ _gl_blit_framebuffer_angle (GLint srcX0, GLint srcY0,
         dispatch.BlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
                                        dstX0, dstY0, dstX1, dstY1,
                                        mask, filter);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4458,7 +4458,7 @@ _gl_renderbuffer_storage_multisample_angle (GLenum target, GLsizei samples,
         dispatch.RenderbufferStorageMultisampleANGLE (target, samples,
                                                       internalformat,
                                                       width, height);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4478,7 +4478,7 @@ _gl_renderbuffer_storage_multisample_apple (GLenum target, GLsizei samples,
         dispatch.RenderbufferStorageMultisampleAPPLE (target, samples,
                                                       internalformat,
                                                       width, height);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4492,7 +4492,7 @@ gl_resolve_multisample_framebuffer_apple (void)
         egl_state = (egl_state_t *) active_state->data;
         
         dispatch.ResolveMultisampleFramebufferAPPLE ();
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4565,7 +4565,7 @@ _gl_renderbuffer_storage_multisample_ext (GLenum target, GLsizei samples,
         dispatch.RenderbufferStorageMultisampleEXT (target, samples, 
                                                     internalformat, 
                                                     width, height);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4590,7 +4590,7 @@ _gl_framebuffer_texture_2d_multisample_ext (GLenum target,
         dispatch.FramebufferTexture2DMultisampleEXT (target, attachment, 
                                                      textarget, texture, 
                                                      level, samples);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4610,7 +4610,7 @@ _gl_renderbuffer_storage_multisample_img (GLenum target, GLsizei samples,
         dispatch.RenderbufferStorageMultisampleIMG (target, samples, 
                                                     internalformat, 
                                                     width, height);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4635,7 +4635,7 @@ _gl_framebuffer_texture_2d_multisample_img (GLenum target,
         dispatch.FramebufferTexture2DMultisampleIMG (target, attachment,
                                                      textarget, texture,
                                                      level, samples);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4656,7 +4656,7 @@ _gl_delete_fences_nv (GLsizei n, const GLuint *fences)
         }
     
         dispatch.DeleteFencesNV (n, fences); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 FINISH:
     if (fences)
@@ -4678,7 +4678,7 @@ _gl_gen_fences_nv (GLsizei n, GLuint *fences)
         }
     
         dispatch.GenFencesNV (n, fences); 
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4693,7 +4693,7 @@ _gl_is_fence_nv (GLuint fence)
         egl_state = (egl_state_t *) active_state->data;
     
         result = dispatch.IsFenceNV (fence);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -4709,7 +4709,7 @@ _gl_test_fence_nv (GLuint fence)
         egl_state = (egl_state_t *) active_state->data;
     
         result = dispatch.TestFenceNV (fence);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -4724,7 +4724,7 @@ _gl_get_fenceiv_nv (GLuint fence, GLenum pname, int *params)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.GetFenceivNV (fence, pname, params);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4738,7 +4738,7 @@ _gl_finish_fence_nv (GLuint fence)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.FinishFenceNV (fence);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4752,7 +4752,7 @@ _gl_set_fence_nv (GLuint fence, GLenum condition)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.SetFenceNV (fence, condition);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4820,7 +4820,7 @@ _gl_get_driver_control_string_qcom (GLuint driverControl, GLsizei bufSize,
     
         dispatch.GetDriverControlStringQCOM (driverControl, bufSize,
                                              length, driverControlString);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4834,7 +4834,7 @@ _gl_enable_driver_control_qcom (GLuint driverControl)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.EnableDriverControlQCOM (driverControl);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4848,7 +4848,7 @@ _gl_disable_driver_control_qcom (GLuint driverControl)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.DisableDriverControlQCOM (driverControl);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -4926,7 +4926,7 @@ _gl_ext_get_tex_level_parameteriv_qcom (GLuint texture, GLenum face,
     
         dispatch.ExtGetTexLevelParameterivQCOM (texture, face, level,
                                                 pname, params);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4941,7 +4941,7 @@ _gl_ext_tex_object_state_overridei_qcom (GLenum target, GLenum pname,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.ExtTexObjectStateOverrideiQCOM (target, pname, param);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4963,7 +4963,7 @@ _gl_ext_get_tex_sub_image_qcom (GLenum target, GLint level,
                                         xoffset, yoffset, zoffset,
                                         width, height, depth,
                                         format, type, texels);
-    egl_state->state.need_get_error = TRUE;
+    egl_state->state.need_get_error = true;
     }
 }
 
@@ -4977,7 +4977,7 @@ _gl_ext_get_buffer_pointerv_qcom (GLenum target, GLvoid **params)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.ExtGetBufferPointervQCOM (target, params);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -5015,14 +5015,14 @@ static GLboolean
 _gl_ext_is_program_binary_qcom (GLuint program)
 {
     egl_state_t *egl_state;
-    v_bool_t result = FALSE;
+    bool result = false;
 
     if (_gl_is_valid_func (dispatch.ExtIsProgramBinaryQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
         result = dispatch.ExtIsProgramBinaryQCOM (program);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -5039,7 +5039,7 @@ _gl_ext_get_program_binary_source_qcom (GLuint program, GLenum shadertype,
     
         dispatch.ExtGetProgramBinarySourceQCOM (program, shadertype,
                                                 source, length);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif
@@ -5056,7 +5056,7 @@ _gl_start_tiling_qcom (GLuint x, GLuint y, GLuint width, GLuint height,
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.StartTilingQCOM (x, y, width, height, preserveMask);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -5070,7 +5070,7 @@ _gl_end_tiling_qcom (GLbitfield preserveMask)
         egl_state = (egl_state_t *) active_state->data;
     
         dispatch.EndTilingQCOM (preserveMask);
-        egl_state->state.need_get_error = TRUE;
+        egl_state->state.need_get_error = true;
     }
 }
 #endif

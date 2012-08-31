@@ -227,7 +227,7 @@ eglWaitClient (void)
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == FALSE)
+        egl_state->active == false)
         return EGL_TRUE;
 
     /* XXX: post eglWaitClient and wait */
@@ -398,7 +398,7 @@ eglWaitGL (void)
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == FALSE)
+        egl_state->active == false)
         return EGL_TRUE;
 
     _egl_create_command_buffer ();
@@ -670,7 +670,7 @@ eglFenceNV (EGLSyncNV sync)
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == FALSE)
+        egl_state->active == false)
         return result;
 
     /* XXX: post eglFenceNV and wait */
@@ -693,7 +693,7 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == FALSE)
+        egl_state->active == false)
         return result;
 
     /* XXX: post eglClientWaitSyncNV and wait */
@@ -715,7 +715,7 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == FALSE)
+        egl_state->active == false)
         return result;
 
     /* XXX: post eglSignalSyncNV and wait */
