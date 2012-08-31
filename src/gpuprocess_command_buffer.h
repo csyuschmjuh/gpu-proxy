@@ -49,7 +49,7 @@ command_buffer_wait(command_buffer_t *command_buffer);
 
 gpuprocess_private void
 command_buffer_set_active_state (command_buffer_t *command_buffer, 
-                                 egl_state_t *active_state);
+                                 v_link_list_t     *active_state);
 
 #ifdef __cplusplus
 }

@@ -42,6 +42,10 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 
     pthread_join(*command_buffer_service->thread, NULL);
     /* FIXME: GL termination. */
+    if (command_buffer_service->active_state) {
+        _gpuprocess_server_remove_state (command_buffer_service->active_state);
+        command_buffer_service->active_state = NULL;
+    }
 
     return true;
 }
@@ -49,7 +53,7 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 void
 command_buffer_service_set_active_state (
                            command_buffer_service_t *command_buffer_service,
-                           egl_state_t              *active_state)
+                           v_link_list_t            *active_state)
 {
     command_buffer_service->active_state = active_state;
 }

@@ -18,7 +18,7 @@ extern "C" {
 
 typedef struct command_buffer_service {
     buffer_t *buffer;
-    egl_state_t *active_state;
+    v_link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     gpu_thread_t *thread;
 } command_buffer_service_t;
@@ -32,7 +32,7 @@ command_buffer_service_destroy(command_buffer_service_t *command_buffer_service)
 gpuprocess_private void
 command_buffer_service_set_active_state (
                      command_buffer_service_t *command_buffer_service,
-                     egl_state_t              *active_state);
+                     v_link_list_t            *active_state);
 
 #ifdef __cplusplus
 }

@@ -74,13 +74,20 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
-
+   
     if (! command_buffer)
         return result;
 
     /* XXX: post eglTerminate and wait */
 
-    _egl_destroy_command_buffer ();
+    /* FIXME: only if we are in None Context, we will destroy the server 
+     * according to egl spec.  What happens if we are in valid context
+     * and application exit?  Obviously, there are still valid context
+     * on the driver side, what about our server thread ? 
+     */
+    if (! active_state)
+        _egl_destroy_command_buffer ();
+    
     return result;
 }
 
@@ -552,14 +559,10 @@ FINISH:
         egl_state = (egl_state_t *) active_state->data;
         if (egl_state->active) {
             unpack_alignment = egl_state->state.unpack_alignment;
-        
-            command_buffer_set_active_state (command_buffer, egl_state);
         }
-        else
-            command_buffer_set_active_state (command_buffer, NULL);
     }
-    else
-        command_buffer_set_active_state (command_buffer, NULL);
+
+    command_buffer_set_active_state (command_buffer, active_state);
     
 }
 
