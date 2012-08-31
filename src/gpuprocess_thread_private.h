@@ -18,7 +18,7 @@ typedef pthread_mutex_t                        gpu_mutex_t;
 /* pthread condition */
 typedef pthread_cond_t                  gpu_signal_t;
 
-typedef pthread_t                       gpu_thread;
+typedef pthread_t                       gpu_thread_t;
 
 #define gpu_wait_signal(name1, name2)   pthread_cond_wait (&(name1), &(name2))
 #define gpu_signal(name)                pthread_cond_signal (&(name))
