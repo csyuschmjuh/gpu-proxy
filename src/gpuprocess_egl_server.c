@@ -40,10 +40,7 @@ _egl_get_display (EGLNativeDisplayType display_id)
     EGLDisplay display = EGL_NO_DISPLAY;
    
     /* XXX: we should initialize once for both dispatch and srv structure */
-    gpu_mutex_lock (mutex);
-    gpuprocess_dispatch_init (&dispatch);
     _gpuprocess_server_init ();
-    gpu_mutex_unlock (mutex);
 
     display = dispatch.eglGetDisplay (display_id);
 

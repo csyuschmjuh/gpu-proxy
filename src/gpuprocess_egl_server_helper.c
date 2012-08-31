@@ -7,7 +7,7 @@
 /* global state variable */
 gl_server_states_t              srv_states;
 gpu_mutex_static_init (mutex);
-extern gpuprocess_dispatch_t dispatch;
+gpuprocess_dispatch_t dispatch;
 
 static void
 _gpuprocess_server_copy_egl_state (egl_state_t *dst, egl_state_t *src)
@@ -265,6 +265,8 @@ _gpuprocess_server_init ()
     if (srv_states.initialized == FALSE) {
         srv_states.num_contexts = 0;
         srv_states.states = NULL;
+        
+        gpuprocess_dispatch_init (&dispatch);
     }
     gpu_mutex_unlock (mutex);
 }
