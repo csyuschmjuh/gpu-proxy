@@ -1,3 +1,6 @@
+/* This file is a helper file for some of the private functions that
+ * manipulate the server_states variable 
+ */
 #include "gpuprocess_egl_server_private.h"
 #include "gpuprocess_dispatch_private.h"
 #include "gpuprocess_thread_private.h"
@@ -5,8 +8,8 @@
 #include <string.h>
 
 /* global state variable for all server threads */
-gl_server_states_t              srv_states;
-gpuprocess_dispatch_t dispatch;
+gl_server_states_t              server_states;
+gpuprocess_dispatch_t           dispatch;
 
 gpuprocess_mutex_static_init (egl_mutex);
 

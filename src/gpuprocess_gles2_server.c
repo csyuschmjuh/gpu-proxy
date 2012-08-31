@@ -1,3 +1,11 @@
+/* This file implements the server thread side of GLES2 functions.  Thses
+ * functions are called by the command buffer.
+ *
+ * It references to the server thread side of active_state.
+ * if active_state is NULL or there is no symbol for the corresponding
+ * gl functions, the cached error state is set to GL_INVALID_OPERATION
+ * if the cached error has not been set to one of the errors.
+ */
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 #include <GLES2/gl2.h>
