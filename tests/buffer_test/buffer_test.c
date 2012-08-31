@@ -8,7 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "ring_buffer.h"
+#include "../../src/gpuprocess_ring_buffer.h"
 
 // The number of chunks to produce for the run.
 #define AMOUNT_TO_PRODUCE 100
@@ -21,7 +21,7 @@
 // may be larger.
 #define BUFFER_SIZE 10
 
-buffer test_buffer;
+buffer_t test_buffer;
 
 pthread_mutex_t consumer_thread_started_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -176,7 +176,7 @@ print_clock_resolution ()
 {
    struct timespec clock_resolution;
    clock_getres (CLOCK_THREAD_CPUTIME_ID, &clock_resolution);
-   printf ("Clock resolution seconds = %ld, nanoseconds = %ld\n", clock_resolution.tv_sec, clock_resolution.tv_nsec); 
+   printf ("Clock resolution seconds = %ld, nanoseconds = %ld\n", clock_resolution.tv_sec, clock_resolution.tv_nsec);
 }
 
 int main (int argc, char **argv)

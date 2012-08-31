@@ -1,3 +1,4 @@
+
 #include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
@@ -6,27 +7,18 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-typedef struct ring_buffer
-{
-    void *address;
-
-    size_t length;
-    size_t tail;
-    size_t head;
-
-    volatile size_t fill_count;
-} buffer;
+#include "gpuprocess_ring_buffer.h"
 
 static void
-report_exceptional_condition (const char* error)
+report_exceptional_condition(const char* error)
 {
-    fprintf (stderr, "%s: %s\n", error, strerror (errno));
-    abort ();
+    fprintf(stderr, "%s: %s\n", error, strerror (errno));
+    abort();
 }
 
 void
-buffer_create (buffer *buffer,
-               unsigned long length)
+buffer_create(buffer_t *buffer,
+              unsigned long length)
 {
     char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
@@ -35,13 +27,13 @@ buffer_create (buffer *buffer,
 
     file_descriptor = mkstemp (path);
     if (file_descriptor < 0) {
-        report_exceptional_condition ("Could not get a file descriptor.");
+        report_exceptional_condition("Could not get a file descriptor.");
         return;
     }
 
-    status = unlink (path);
+    status = unlink(path);
     if (status)
-        report_exceptional_condition ("Could not unlink.");
+        report_exceptional_condition("Could not unlink.");
 
     // Round up the length to the nearest page boundary.
     long page_size = sysconf(_SC_PAGESIZE);
@@ -50,54 +42,54 @@ buffer_create (buffer *buffer,
     buffer->fill_count = 0;
     buffer->head = buffer->tail = 0;
 
-    status = ftruncate (file_descriptor, buffer->length);
+    status = ftruncate(file_descriptor, buffer->length);
     if (status)
-        report_exceptional_condition ("Could not truncate.");
+        report_exceptional_condition("Could not truncate.");
 
     buffer->address = mmap (NULL, buffer->length << 1, PROT_NONE,
                                                     MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
- 
+
     if (buffer->address == MAP_FAILED)
-        report_exceptional_condition ("Failed to map full memory.");
+        report_exceptional_condition("Failed to map full memory.");
 
     address =
         mmap (buffer->address, buffer->length, PROT_READ | PROT_WRITE,
                     MAP_FIXED | MAP_SHARED, file_descriptor, 0);
 
     if (address != buffer->address)
-        report_exceptional_condition ("Failed to map initial memory.");
+        report_exceptional_condition("Failed to map initial memory.");
 
     address = mmap (buffer->address + buffer->length,
                                     buffer->length, PROT_READ | PROT_WRITE,
                                     MAP_FIXED | MAP_SHARED, file_descriptor, 0);
 
     if (address != buffer->address + buffer->length)
-        report_exceptional_condition ("Failed to map mirror memory.");
+        report_exceptional_condition("Failed to map mirror memory.");
 
-    status = close (file_descriptor);
+    status = close(file_descriptor);
     if (status)
-        report_exceptional_condition ("Could not close file descriptor.");
+        report_exceptional_condition("Could not close file descriptor.");
 }
 
 void
-buffer_free (buffer *buffer)
+buffer_free(buffer_t *buffer)
 {
     int status;
 
     status = munmap (buffer->address, buffer->length << 1);
     if (status)
-        report_exceptional_condition ("Could not unmap memory.");
+        report_exceptional_condition("Could not unmap memory.");
 }
 
 size_t
-buffer_num_entries (buffer *buffer)
+buffer_num_entries(buffer_t *buffer)
 {
     return buffer->fill_count;
 }
 
 void *
-buffer_write_address (buffer *buffer,
-                      size_t *writable_bytes)
+buffer_write_address(buffer_t *buffer,
+                     size_t *writable_bytes)
 {
     *writable_bytes = (buffer->length - buffer->fill_count);
     if (*writable_bytes == 0)
@@ -106,16 +98,16 @@ buffer_write_address (buffer *buffer,
 }
 
 void
-buffer_write_advance (buffer *buffer,
-                      size_t count_bytes)
+buffer_write_advance(buffer_t *buffer,
+                     size_t count_bytes)
 {
     buffer->head = (buffer->head + count_bytes) % buffer->length;
     __sync_add_and_fetch (&buffer->fill_count, count_bytes);
 }
 
 void *
-buffer_read_address (buffer *buffer,
-                     size_t *bytes_to_read)
+buffer_read_address(buffer_t *buffer,
+                    size_t *bytes_to_read)
 {
     *bytes_to_read = buffer->fill_count;
     if (*bytes_to_read == 0)
@@ -124,15 +116,15 @@ buffer_read_address (buffer *buffer,
 }
 
 void
-buffer_read_advance (buffer *buffer,
-                     size_t count_bytes)
+buffer_read_advance(buffer_t *buffer,
+                    size_t count_bytes)
 {
     buffer->tail = (buffer->tail + count_bytes) % buffer->length;
     __sync_sub_and_fetch (&buffer->fill_count, count_bytes);
 }
 
 void
-buffer_clear (buffer *buffer)
+buffer_clear(buffer_t *buffer)
 {
     buffer->head = buffer->tail = 0;
     buffer->fill_count = 0;
