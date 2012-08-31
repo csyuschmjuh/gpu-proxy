@@ -56,3 +56,10 @@ command_buffer_wait(command_buffer_t *command_buffer)
     return TRUE;
 }
 
+void
+command_buffer_set_active_state (command_buffer_t *command_buffer, 
+                                 v_link_list_t    *active_state)
+{
+    command_buffer_service_set_active_state (command_buffer->service,
+                                             active_state);
+}
