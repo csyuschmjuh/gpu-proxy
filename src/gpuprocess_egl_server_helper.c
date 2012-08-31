@@ -8,7 +8,7 @@
 gl_server_states_t              srv_states;
 gpuprocess_dispatch_t dispatch;
 
-gpu_mutex_static_init (egl_mutex);
+gpuprocess_mutex_static_init (egl_mutex);
 
 static void
 _gpuprocess_server_copy_egl_state (egl_state_t *dst, egl_state_t *src)
@@ -262,14 +262,14 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
 void 
 _gpuprocess_server_init ()
 {
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
     if (srv_states.initialized == false) {
         srv_states.num_contexts = 0;
         srv_states.states = NULL;
         
         gpuprocess_dispatch_init (&dispatch);
     }
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
 }
 
 /* the server first calls eglTerminate (display),
@@ -284,11 +284,11 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
 
     egl_state_t *egl_state;
 
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
 
     if (srv_states.initialized = false ||
         srv_states.num_contexts == 0 || ! srv_states.states) {
-        gpu_mutex_unlock (egl_mutex);
+        gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
     
@@ -314,7 +314,7 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
     /*
     else if (! active_state) {
     } */
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
 }
 
 
@@ -345,13 +345,13 @@ _gpuprocess_server_make_current (EGLDisplay display,
     v_link_list_t *new_list;
     v_link_list_t *match_state = NULL;
 
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
     /* we are switching to None context */
     if (context == EGL_NO_CONTEXT || display == EGL_NO_DISPLAY) {
         /* current is None too */
         if (! active_state) {
             *active_state_out = NULL;
-            gpu_mutex_unlock (egl_mutex);
+            gpuprocess_mutex_unlock (egl_mutex);
             return;
         }
         
@@ -366,7 +366,7 @@ _gpuprocess_server_make_current (EGLDisplay display,
             _gpuprocess_server_remove_surface (active_state, false);
 
         *active_state_out = NULL;
-        gpu_mutex_unlock (egl_mutex);
+        gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
 
@@ -391,7 +391,7 @@ _gpuprocess_server_make_current (EGLDisplay display,
     /* get existing state or create a new one */
     *active_state_out = _gpuprocess_server_get_state (display, drawable,
                                                    readable, context);
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
 }
 
 /* called by eglDestroyContext() - once we know there is matching context
@@ -407,9 +407,9 @@ _gpuprocess_server_destroy_context (EGLDisplay display,
     v_link_list_t *list = srv_states.states;
     v_link_list_t *current;
 
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
     if (srv_states.num_contexts == 0 || ! srv_states.states) {
-        gpu_mutex_unlock (egl_mutex);
+        gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
 
@@ -424,7 +424,7 @@ _gpuprocess_server_destroy_context (EGLDisplay display,
                 _gpuprocess_server_remove_state (current);
         }
     }
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
 }
 
 void
@@ -436,9 +436,9 @@ _gpuprocess_server_destroy_surface (EGLDisplay display,
     v_link_list_t *list = srv_states.states;
     v_link_list_t *current;
 
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
     if (srv_states.num_contexts == 0 || ! srv_states.states) {
-        gpu_mutex_unlock (egl_mutex);
+        gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
 
@@ -464,7 +464,7 @@ _gpuprocess_server_destroy_surface (EGLDisplay display,
         }
     }
 
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
 }
 
 bool
@@ -478,9 +478,9 @@ _gpuprocess_match (EGLDisplay display,
     v_link_list_t *list = srv_states.states;
     v_link_list_t *current;
 
-    gpu_mutex_lock (egl_mutex);
+    gpuprocess_mutex_lock (egl_mutex);
     if (srv_states.num_contexts == 0 || ! srv_states.states) {
-        gpu_mutex_unlock (egl_mutex);
+        gpuprocess_mutex_unlock (egl_mutex);
         return false;
     }
 
@@ -496,12 +496,12 @@ _gpuprocess_match (EGLDisplay display,
             egl_state->active == false) {
             egl_state->active = true;
             *state = current;
-            gpu_mutex_unlock (egl_mutex);
+            gpuprocess_mutex_unlock (egl_mutex);
             return true;
         }
 
     }
 
-    gpu_mutex_unlock (egl_mutex);
+    gpuprocess_mutex_unlock (egl_mutex);
     return false;
 }

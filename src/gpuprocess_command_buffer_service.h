@@ -31,7 +31,7 @@ typedef struct command_buffer_service {
      */
     v_link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
-    gpu_thread_t *thread;
+    gpuprocess_thread_t *thread;
 } command_buffer_service_t;
 
 gpuprocess_private command_buffer_service_t *

@@ -10,7 +10,6 @@
 #include "gpuprocess_egl_server_private.h"
 
 gpuprocess_dispatch_t        dispatch;
-extern gpu_mutex_t           mutex;
 extern __thread v_link_list_t *active_state;
 
 #include "gpuprocess_types_private.h"
