@@ -18,6 +18,17 @@ extern "C" {
 
 typedef struct command_buffer_service {
     buffer_t *buffer;
+    /* FIXME: do we this?  We have thread local variable for client thread
+     * in gpuprocess_egl_api.c.
+     * We also have thread local variable for server thread in 
+     * gpuprocess_egl_server.c and gpuprocess_gles2_server.c.
+     *
+     * both variable are kept as same value in
+     * gpuprocess_egl_api.c - eglMakeCurrent() and eglReleaseThread() on 
+     * the client side, and
+     * gpuprocess_egl_server.c - _egl_make_current() and 
+     * _egl_release_thread()
+     */
     v_link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     gpu_thread_t *thread;
