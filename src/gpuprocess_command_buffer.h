@@ -7,6 +7,7 @@
 #include "gpuprocess_command_buffer_service.h"
 #include "gpuprocess_ring_buffer.h"
 #include "gpuprocess_types_private.h"
+#include "gpuprocess_egl_states.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,7 +49,7 @@ command_buffer_wait(command_buffer_t *command_buffer);
 
 gpuprocess_private void
 command_buffer_set_active_state (command_buffer_t *command_buffer, 
-                                 v_link_list_t *active_state);
+                                 egl_state_t *active_state);
 
 #ifdef __cplusplus
 }
