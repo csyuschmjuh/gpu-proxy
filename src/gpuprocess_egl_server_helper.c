@@ -188,7 +188,7 @@ _gpuprocess_server_remove_state (v_link_list_t *state)
     free (egl_state);
     free (state);
 
-    srv_states.num_contexts --;
+    server_states.num_contexts --;
 }
 
 static void 
@@ -211,21 +211,21 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
 {
     v_link_list_t *new_list;
     egl_state_t   *new_state;
-    v_link_list_t *list = srv_states.states;
+    v_link_list_t *list = server_states.states;
 
-    if (srv_states.num_contexts == 0 || ! srv_states.states) {
-        srv_states.num_contexts = 1;
-        srv_states.states = (v_link_list_t *)malloc (sizeof (v_link_list_t));
-        srv_states.states->prev = NULL;
-        srv_states.states->next = NULL;
+    if (server_states.num_contexts == 0 || ! server_states.states) {
+        server_states.num_contexts = 1;
+        server_states.states = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+        server_states.states->prev = NULL;
+        server_states.states->next = NULL;
 
         new_state = (egl_state_t *)malloc (sizeof (egl_state_t));
 
         _gpuprocess_server_set_egl_states (new_state, dpy, draw, read, ctx); 
         _gpuprocess_server_init_gles2_states (new_state);
-        srv_states.states->data = new_state;
+        server_states.states->data = new_state;
         new_state->active = true;
-	return srv_states.states;
+	return server_states.states;
     }
 
     /* look for matching context in existing states */
@@ -246,9 +246,9 @@ _gpuprocess_server_get_state (EGLDisplay dpy,
 
     _gpuprocess_server_set_egl_states (new_state, dpy, draw, read, ctx); 
     _gpuprocess_server_init_gles2_states (new_state);
-    srv_states.num_contexts ++;
+    server_states.num_contexts ++;
 
-    list = srv_states.states;
+    list = server_states.states;
     while (list->next != NULL)
         list = list->next;
 
@@ -266,9 +266,9 @@ void
 _gpuprocess_server_init ()
 {
     gpuprocess_mutex_lock (egl_mutex);
-    if (srv_states.initialized == false) {
-        srv_states.num_contexts = 0;
-        srv_states.states = NULL;
+    if (server_states.initialized == false) {
+        server_states.num_contexts = 0;
+        server_states.states = NULL;
         
         gpuprocess_dispatch_init (&dispatch);
     }
@@ -281,7 +281,7 @@ _gpuprocess_server_init ()
 void 
 _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state) 
 {
-    v_link_list_t *head = srv_states.states;
+    v_link_list_t *head = server_states.states;
     v_link_list_t *list = head;
     v_link_list_t *current;
 
@@ -289,8 +289,8 @@ _gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state)
 
     gpuprocess_mutex_lock (egl_mutex);
 
-    if (srv_states.initialized = false ||
-        srv_states.num_contexts == 0 || ! srv_states.states) {
+    if (server_states.initialized = false ||
+        server_states.num_contexts == 0 || ! server_states.states) {
         gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
@@ -344,7 +344,7 @@ _gpuprocess_server_make_current (EGLDisplay display,
                                  v_link_list_t **active_state_out)
 {
     egl_state_t *new_state, *egl_state;
-    v_link_list_t *list = srv_states.states;
+    v_link_list_t *list = server_states.states;
     v_link_list_t *new_list;
     v_link_list_t *match_state = NULL;
 
@@ -407,11 +407,11 @@ _gpuprocess_server_destroy_context (EGLDisplay display,
                                     v_link_list_t *active_state)
 {
     egl_state_t *state;
-    v_link_list_t *list = srv_states.states;
+    v_link_list_t *list = server_states.states;
     v_link_list_t *current;
 
     gpuprocess_mutex_lock (egl_mutex);
-    if (srv_states.num_contexts == 0 || ! srv_states.states) {
+    if (server_states.num_contexts == 0 || ! server_states.states) {
         gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
@@ -436,11 +436,11 @@ _gpuprocess_server_destroy_surface (EGLDisplay display,
                                     v_link_list_t *active_state)
 {
     egl_state_t *state;
-    v_link_list_t *list = srv_states.states;
+    v_link_list_t *list = server_states.states;
     v_link_list_t *current;
 
     gpuprocess_mutex_lock (egl_mutex);
-    if (srv_states.num_contexts == 0 || ! srv_states.states) {
+    if (server_states.num_contexts == 0 || ! server_states.states) {
         gpuprocess_mutex_unlock (egl_mutex);
         return;
     }
@@ -478,11 +478,11 @@ _gpuprocess_match (EGLDisplay display,
                    v_link_list_t **state)
 {
     egl_state_t *egl_state;
-    v_link_list_t *list = srv_states.states;
+    v_link_list_t *list = server_states.states;
     v_link_list_t *current;
 
     gpuprocess_mutex_lock (egl_mutex);
-    if (srv_states.num_contexts == 0 || ! srv_states.states) {
+    if (server_states.num_contexts == 0 || ! server_states.states) {
         gpuprocess_mutex_unlock (egl_mutex);
         return false;
     }
