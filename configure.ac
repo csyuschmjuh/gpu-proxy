@@ -51,7 +51,7 @@ AC_ARG_ENABLE([tests],
 
 AM_CONDITIONAL(HAS_GL, test "$use_glx" = yes)
 AM_CONDITIONAL(HAS_GLES2, test "$use_gles" = yes)
-AM_CONDITIONAL(CHECK, test "$tests" = yes)
+AM_CONDITIONAL(HAS_UNIT_TESTS, test "$tests" = yes)
 
 if test "$use_glx" = "yes"; then
     AC_DEFINE(HAS_GL, 1, [Define to 1 if you have GLX available])

@@ -1,4 +1,4 @@
-if CHECK
+if HAS_UNIT_TESTS
 noinst_PROGRAMS = \
 	gpuprocess_test
 
@@ -12,11 +12,13 @@ gpuprocess_test_SOURCES = \
         $(rootsrcdir)/src/gpuprocess_egl_server_private.h \
 	$(rootsrcdir)/src/gpuprocess_egl_server.c \
 	$(rootsrcdir)/src/gpuprocess_egl_server_helper.c \
+	gpuprocess_test.h \
+	gpuprocess_test.c \
 	tst_egl.c \
 	main.c
 
 gpuprocess_test_LDFLAGS = \
-	-lcheck -lX11 -ldl
+	-lX11 -ldl
 
 gpuprocess_test_CFLAGS = \
 	-Werror
