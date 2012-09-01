@@ -7,14 +7,26 @@
 Display *dpy = NULL;
 EGLDisplay egl_dpy;
 
+extern EGLint
+_egl_get_error (void);
+
+EGLDisplay
+_egl_get_display (EGLNativeDisplayType display_id);
+
+extern EGLBoolean
+_egl_initialize (EGLDisplay dpy, EGLint *major, EGLint *minor);
+
+extern EGLBoolean
+_egl_terminate (EGLDisplay dpy);
+
 static void
 setup (void)
 {
     dpy = XOpenDisplay (NULL);
-    fail_if (dpy == NULL, "XOpenDisplay should work");
+    GPUPROCESS_FAIL_IF (dpy == NULL, "XOpenDisplay should work");
 
     egl_dpy = _egl_get_display (dpy);
-    fail_if (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
+    GPUPROCESS_FAIL_IF (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
 }
 
 static void
@@ -23,7 +35,7 @@ teardown (void)
    XCloseDisplay(dpy);
 }
 
-START_TEST
+GPUPROCESS_START_TEST
 (test_egl_srv_initialize)
 {
     EGLint major;
@@ -32,23 +44,23 @@ START_TEST
     EGLBoolean result;
 
     result = _egl_initialize (NULL, &major, &minor);
-    fail_if (result, "_egl_initialize can not be created by an invalid display");
+    GPUPROCESS_FAIL_IF (result, "_egl_initialize can not be created by an invalid display");
 
     get_error_result = _egl_get_error ();
-    fail_unless (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
+    GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
 
     major = -1;
     minor = -1;
     result = _egl_initialize (egl_dpy, &major, &minor);
-    fail_if (!result, "_egl_initialize failed");
-    fail_if (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
+    GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
+    GPUPROCESS_FAIL_IF (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
 
-    result = _egl_terminate (egl_dpy);   
-    fail_if (!result, "_egl_terminate failed");
+    result = _egl_terminate (egl_dpy);
+    GPUPROCESS_FAIL_IF (!result, "_egl_terminate failed");
 }
-END_TEST
+GPUPROCESS_END_TEST
 
-START_TEST
+GPUPROCESS_START_TEST
 (test_egl_srv_terminate)
 {
     EGLint major;
@@ -57,35 +69,33 @@ START_TEST
     EGLint get_error_result;
 
     result = _egl_terminate (NULL);
-    fail_if (result, "_egl_terminate can not terminate an invalid EGL display connection");
+    GPUPROCESS_FAIL_IF (result, "_egl_terminate can not terminate an invalid EGL display connection");
 
-    get_error_result = _egl_get_error (); 
-    fail_unless (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
+    get_error_result = _egl_get_error ();
+    GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
 
     result = _egl_initialize (egl_dpy, NULL, NULL);
-    fail_if (!result, "_egl_initialize failed");
+    GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
 
     result = _egl_terminate (egl_dpy);
-    fail_if (!result, "_egl_terminate failed");
+    GPUPROCESS_FAIL_IF (!result, "_egl_terminate failed");
 }
-END_TEST
+GPUPROCESS_END_TEST
 
-Suite *
+gpuprocess_suite_t *
 egl_testsuite_create (void)
 {
-    Suite *s;
-    TCase *tc = NULL;
-    int timeout_seconds = 10;
-    tc = tcase_create("egl");
+    gpuprocess_suite_t *s;
+    gpuprocess_testcase_t *tc = NULL;
 
-    tcase_add_checked_fixture (tc, setup, teardown);
-    tcase_set_timeout (tc, timeout_seconds);
+    tc = gpuprocess_testcase_create("egl");
+    gpuprocess_testcase_add_fixture (tc, setup, teardown);
 
-    tcase_add_test (tc, test_egl_srv_initialize);
-    tcase_add_test (tc, test_egl_srv_terminate);
+    gpuprocess_testcase_add_test (tc, test_egl_srv_initialize);
+    gpuprocess_testcase_add_test (tc, test_egl_srv_terminate);
 
-    s = suite_create ("egl");
-    suite_add_tcase (s, tc);
+    s = gpuprocess_suite_create ("egl");
+    gpuprocess_suite_add_testcase (s, tc);
 
     return s;
 }
