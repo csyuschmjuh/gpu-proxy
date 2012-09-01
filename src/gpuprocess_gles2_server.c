@@ -6,10 +6,15 @@
  * gl functions, the cached error state is set to GL_INVALID_OPERATION
  * if the cached error has not been set to one of the errors.
  */
+#include "config.h"
+
+#ifndef HAS_GLES2
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#else
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 
@@ -3900,11 +3905,12 @@ _gl_egl_image_target_renderbuffer_storage_oes (GLenum target,
     if (_gl_is_valid_func (dispatch.EGLImageTargetRenderbufferStorageOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
-    
+#ifndef HAS_GLES2
         if (target != GL_RENDERBUFFER_OES) {
             _gl_set_error (GL_INVALID_ENUM);
             return;
         }
+#endif
 
         dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
         egl_state->state.need_get_error = true;
