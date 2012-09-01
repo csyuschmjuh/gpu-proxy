@@ -23,7 +23,8 @@ teardown (void)
    XCloseDisplay(dpy);
 }
 
-START_TEST (test_egl_srv_initialize)
+START_TEST
+(test_egl_srv_initialize)
 {
     EGLint major;
     EGLint minor;
@@ -41,6 +42,31 @@ START_TEST (test_egl_srv_initialize)
     result = _egl_initialize (egl_dpy, &major, &minor);
     fail_if (!result, "_egl_initialize failed");
     fail_if (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
+
+    result = _egl_terminate (egl_dpy);   
+    fail_if (!result, "_egl_terminate failed");
+}
+END_TEST
+
+START_TEST
+(test_egl_srv_terminate)
+{
+    EGLint major;
+    EGLint minor;
+    EGLBoolean result;
+    EGLint get_error_result;
+
+    result = _egl_terminate (NULL);
+    fail_if (result, "_egl_terminate can not terminate an invalid EGL display connection");
+
+    get_error_result = _egl_get_error (); 
+    fail_unless (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
+
+    result = _egl_initialize (egl_dpy, NULL, NULL);
+    fail_if (!result, "_egl_initialize failed");
+
+    result = _egl_terminate (egl_dpy);
+    fail_if (!result, "_egl_terminate failed");
 }
 END_TEST
 
@@ -56,6 +82,7 @@ egl_testsuite_create (void)
     tcase_set_timeout (tc, timeout_seconds);
 
     tcase_add_test (tc, test_egl_srv_initialize);
+    tcase_add_test (tc, test_egl_srv_terminate);
 
     s = suite_create ("egl");
     suite_add_tcase (s, tc);
