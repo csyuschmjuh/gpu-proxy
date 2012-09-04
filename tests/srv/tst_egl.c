@@ -4,6 +4,8 @@
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
 
+#include <stdlib.h>
+
 Display *dpy = NULL;
 EGLDisplay egl_dpy;
 
@@ -82,6 +84,43 @@ GPUPROCESS_START_TEST
 }
 GPUPROCESS_END_TEST
 
+GPUPROCESS_START_TEST
+(test_egl_get_configs)
+{
+    EGLBoolean result;
+    EGLint config_list_length;
+    EGLint old_config_list_length;
+    EGLConfig *config_list = NULL;
+    EGLint get_error_result;
+
+    result = _egl_initialize (egl_dpy, NULL, NULL);
+    GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
+
+    result = _egl_get_configs (egl_dpy, NULL, 0, &config_list_length);
+    GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
+    GPUPROCESS_FAIL_IF (config_list_length <= 0, "config list should not be <= 0");
+
+    config_list = (EGLConfig *) malloc (config_list_length * sizeof (EGLConfig));
+    GPUPROCESS_FAIL_IF (!config_list, "error allocating config_list");
+
+    old_config_list_length = config_list_length;
+    result = _egl_get_configs (egl_dpy, config_list, config_list_length, &config_list_length);
+    GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
+    GPUPROCESS_FAIL_UNLESS (config_list_length == old_config_list_length, "They should have the same lenght");
+
+    result = _egl_get_configs (NULL, NULL, 0, &config_list_length);
+    GPUPROCESS_FAIL_IF (result, "_egl_get_configs should return false");
+
+    get_error_result = _egl_get_error ();
+    GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
+
+    result = _egl_terminate (egl_dpy);
+    GPUPROCESS_FAIL_IF (!result, "_egl_terminate failed");
+
+    free (config_list);
+}
+GPUPROCESS_END_TEST
+
 gpuprocess_suite_t *
 egl_testsuite_create (void)
 {
@@ -93,6 +132,7 @@ egl_testsuite_create (void)
 
     gpuprocess_testcase_add_test (tc, test_egl_srv_initialize);
     gpuprocess_testcase_add_test (tc, test_egl_srv_terminate);
+    gpuprocess_testcase_add_test (tc, test_egl_get_configs);
 
     s = gpuprocess_suite_create ("egl");
     gpuprocess_suite_add_testcase (s, tc);
