@@ -69,6 +69,8 @@ buffer_create(buffer_t *buffer,
     status = close(file_descriptor);
     if (status)
         report_exceptional_condition("Could not close file descriptor.");
+
+    buffer->last_token = 0;
 }
 
 void

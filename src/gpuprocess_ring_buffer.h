@@ -21,6 +21,7 @@ typedef struct buffer
     size_t length;
     size_t tail;
     size_t head;
+    unsigned int last_token;
 
     volatile size_t fill_count;
 } buffer_t;
