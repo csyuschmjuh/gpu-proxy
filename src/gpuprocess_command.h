@@ -7,13 +7,24 @@ extern "C" {
 
 typedef struct command {
     unsigned int id;
-    unsigned int size;
+    size_t size;
 } command_t;
 
 typedef enum command_id {
-    COMMAND_NO_OP
+    COMMAND_NO_OP,
+    COMMAND_SET_TOKEN
     /* FIXME: autogenerate the ID for every command in the API. */
 } command_id_t;
+
+/* SetToken command, it writes a token in the command buffer, allowing
+  the client to check when it is consumed in the service. */
+typedef struct command_set_token {
+    command_t header;
+    unsigned int token;
+} command_set_token_t;
+
+void
+command_set_token_init(command_set_token_t *command, unsigned int token);
 
 #ifdef __cplusplus
 }
