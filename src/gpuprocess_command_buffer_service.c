@@ -28,9 +28,7 @@ command_buffer_service_initialize(buffer_t *buffer)
     /* We use a mutex here to wait until the thread has started. */
     gpuprocess_mutex_lock (service_thread_started_mutex);
     pthread_create(command_buffer_service->thread, NULL, service_thread_func, NULL);
-    /* FIXME:  Alex - is it a bug here to lock again without unlock ? */
     gpuprocess_mutex_lock(service_thread_started_mutex);
-    gpuprocess_mutex_unlock (service_thread_started_mutex);
 
     return command_buffer_service;
 }
