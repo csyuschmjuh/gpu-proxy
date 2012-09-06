@@ -58,20 +58,20 @@ endif
 library_dir = $(top_builddir)/libs
 $(library_dir)/libGPUProcess.so: libGPUProcess.la
 	$(AM_V_at) $(MKDIR_P) $(library_dir)
-	$(AM_V_GEN) $(LN_S) -f .libs/libGPUProcess.so.0.0.0 $(library_dir)/libGPUProcess.so
+	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so.0.0.0 $(library_dir)/libGPUProcess.so
 symlinks = $(library_dir)/libGPUProcess.so
 
 if HAS_GLES2
 $(library_dir)/libEGL.so:
-	$(AM_V_GEN) $(LN_S) -f $(library_dir)/libGPUProcess.so $(library_dir)/libEGL.so
+	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so $(library_dir)/libEGL.so
 $(library_dir)/libGLESv2.so:
-	$(AM_V_GEN) $(LN_S) -f $(library_dir)/libGPUProcess.so $(library_dir)/libGLESv2.so
+	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so $(library_dir)/libGLESv2.so
 symlinks += $(library_dir)/libEGL.so $(library_dir)/libGLESv2.so
 endif
 
 if HAS_GL
 $(library_dir)/libGL.so:
-	ln -f $(library_dir)/libGPUProcess.so $(library_dir)/libGL.so
+	ln -f ../src/.libs/libGPUProcess.so $(library_dir)/libGL.so
 symlinks += $(library_dir)/libGL.so
 endif
 
