@@ -44,7 +44,7 @@ command_buffer_get_thread_local ()
     return thread_local_command_buffer;
 }
 
-gpuprocess_private void
+private void
 command_buffer_destroy_thread_local ()
 {
     if (! thread_local_command_buffer)

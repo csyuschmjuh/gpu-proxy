@@ -26,28 +26,28 @@ typedef struct buffer
     volatile size_t fill_count;
 } buffer_t;
 
-gpuprocess_private void
+private void
 buffer_create(buffer_t *buffer, unsigned long length);
 
-gpuprocess_private void
+private void
 buffer_free(buffer_t *buffer);
 
-gpuprocess_private size_t
+private size_t
 buffer_num_entries(buffer_t *buffer);
 
-gpuprocess_private void *
+private void *
 buffer_write_address(buffer_t *buffer, size_t *writable_bytes);
 
-gpuprocess_private void
+private void
 buffer_write_advance(buffer_t *buffer, size_t count_bytes);
 
-gpuprocess_private void *
+private void *
 buffer_read_address(buffer_t *buffer, size_t *bytes_to_read);
 
-gpuprocess_private void
+private void
 buffer_read_advance(buffer_t *buffer, size_t count_bytes);
 
-gpuprocess_private void
+private void
 buffer_clear(buffer_t *buffer);
 
 #ifdef __cplusplus

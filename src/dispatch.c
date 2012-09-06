@@ -9,19 +9,19 @@
 #define LIBNAME_EGL "libEGL.so"
 #endif
 
-typedef enum gpuprocess_sym_load_type {
+typedef enum sym_load_type {
     DLSYM,
     GETPROCADDR
-} gpuprocess_sym_load_type_t;
+} sym_load_type_t;
 
 static void
-gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
-                                 gpuprocess_dispatch_entry_t *entries,
-                                 gpuprocess_sym_load_type_t type,
+dispatch_init_entries(dispatch_t *dispatch,
+                                 dispatch_entry_t *entries,
+                                 sym_load_type_t type,
                                  const char* lib_name)
 {
    void *handle = dlopen (lib_name, RTLD_LAZY|RTLD_DEEPBIND);
-   gpuprocess_dispatch_entry_t *entry = entries;
+   dispatch_entry_t *entry = entries;
    char *error;
 
    while (entry->name[GPUPROCESS_GL_DISPATCH_NAME_CORE] != NULL) {
@@ -52,7 +52,7 @@ gpuprocess_dispatch_init_entries(gpuprocess_dispatch_t *dispatch,
 }
 
 static const char *
-gpuprocess_dispatch_libgl ()
+dispatch_libgl ()
 {
 #if HAS_GL
     const char *libgl = getenv ("GPUPROCESS_LIBGL_PATH");
@@ -64,7 +64,7 @@ gpuprocess_dispatch_libgl ()
 
 #if HAS_GLES2
 static const char *
-gpuprocess_dispatch_libegl ()
+dispatch_libegl ()
 {
     const char *libegl = getenv ("GPUPROCESS_LIBEGL_PATH");
     return ! libegl ? LIBNAME_EGL : libegl;
@@ -72,22 +72,22 @@ gpuprocess_dispatch_libegl ()
 #endif
 
 void
-gpuprocess_dispatch_init(gpuprocess_dispatch_t *dispatch)
+dispatch_init(dispatch_t *dispatch)
 {
     // We should always load dispatch_glx/egl_entries first
 #ifdef HAS_GL
-    gpuprocess_dispatch_init_entries (dispatch,
+    dispatch_init_entries (dispatch,
                                       dispatch_glx_entries,
                                       DLSYM,
-                                      gpuprocess_dispatch_libgl());
+                                      dispatch_libgl());
 #else
-    gpuprocess_dispatch_init_entries (dispatch,
+    dispatch_init_entries (dispatch,
                                       dispatch_egl_entries,
                                       DLSYM,
-                                      gpuprocess_dispatch_libegl());
+                                      dispatch_libegl());
 #endif
-    gpuprocess_dispatch_init_entries (dispatch,
+    dispatch_init_entries (dispatch,
                                       dispatch_opengl_entries,
                                       GETPROCADDR,
-                                      gpuprocess_dispatch_libgl());
+                                      dispatch_libgl());
 }

@@ -22,48 +22,48 @@ typedef struct gl_server_states
 extern gl_server_states_t        srv_states;
 
 /* called within eglGetDisplay () */
-gpuprocess_private void
-_gpuprocess_server_init ();
+private void
+_server_init ();
 
-gpuprocess_private void
-_gpuprocess_server_terminate (EGLDisplay display, v_link_list_t *active_state);
+private void
+_server_terminate (EGLDisplay display, v_link_list_t *active_state);
 
 /* called within eglMakeCurrent () */
-gpuprocess_private void
-_gpuprocess_server_make_current (EGLDisplay display, 
+private void
+_server_make_current (EGLDisplay display, 
                                  EGLSurface drawable, 
                                  EGLSurface readable,
                                  EGLContext context,
                                  v_link_list_t *active_state,
                                  v_link_list_t **active_state_out);
 
-gpuprocess_private void
-_gpuprocess_server_destroy_context (EGLDisplay display, EGLContext context,
+private void
+_server_destroy_context (EGLDisplay display, EGLContext context,
                                     v_link_list_t *active_state);
 
-gpuprocess_private void
-_gpuprocess_server_destroy_surface (EGLDisplay display, EGLSurface surface,
+private void
+_server_destroy_surface (EGLDisplay display, EGLSurface surface,
                                     v_link_list_t *active_state);
 
-gpuprocess_private bool
-_gpuprocess_server_is_equal (egl_state_t *state,
+private bool
+_server_is_equal (egl_state_t *state,
                              EGLDisplay  display,
                              EGLSurface  drawable,
                              EGLSurface  readable,
                              EGLContext  context);
 
-gpuprocess_private bool
-_gpuprocess_match (EGLDisplay display,
+private bool
+_match (EGLDisplay display,
                    EGLSurface drawable,
                    EGLSurface readable,
                    EGLContext context,
                    v_link_list_t **state);
 
-gpuprocess_private void 
-_gpuprocess_server_remove_state (v_link_list_t *state);
+private void 
+_server_remove_state (v_link_list_t *state);
 
-/*gpuprocess_private void
-_gpuprocess_server_remove_context (EGLDisplay display,
+/*private void
+_server_remove_context (EGLDisplay display,
                                 EGLSurface draw,
                                 EGLSurface read,
                                 EGLContext context);

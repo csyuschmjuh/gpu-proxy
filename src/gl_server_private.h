@@ -33,15 +33,15 @@ typedef struct gl_server_states
 gl_server_states_t        srv_states;
 
 /* called within eglInitialize () */
-gpuprocess_private void 
-_gpuprocess_server_init ();
+private void 
+_server_init ();
 
-gpuprocess_private void 
-_gpuprocess_server_destroy ();
+private void 
+_server_destroy ();
 
 /* called within eglMakeCurrent () */
-gpuprocess_private void
-_gpuprocess_server_make_current (EGLDisplay display,
+private void
+_server_make_current (EGLDisplay display,
                                  EGLSurface drawable,
                                  EGLSurface readable,
                                  EGLContext context);

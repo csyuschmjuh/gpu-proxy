@@ -18,7 +18,7 @@
 
 typedef void (*FunctionPointerType)(void);
 
-typedef struct _gpuprocess_dispatch {
+typedef struct _dispatch {
 #ifdef HAS_GL
 /* GLX */
     XVisualInfo* (*ChooseVisual) (Display *dpy, int screen,
@@ -1371,9 +1371,9 @@ typedef struct _gpuprocess_dispatch {
     void  (*GetQueryObjectui64vEXT)(GLuint, GLenum, GLuint64EXT *);
     void  (*EGLImageTargetRenderbufferStorageOES)(GLenum, GLvoid *);
 #endif
-} gpuprocess_dispatch_t;
+} dispatch_t;
 
-gpuprocess_private void
-gpuprocess_dispatch_init(gpuprocess_dispatch_t *dispatch);
+private void
+dispatch_init(dispatch_t *dispatch);
 
 #endif

@@ -30,31 +30,31 @@ typedef struct command_buffer {
     unsigned int token;
 } command_buffer_t;
 
-gpuprocess_private command_buffer_t *
+private command_buffer_t *
 command_buffer_get_thread_local ();
 
-gpuprocess_private void
+private void
 command_buffer_destroy_thread_local ();
 
-gpuprocess_private command_t *
+private command_t *
 command_buffer_get_space_for_command (command_buffer_t *command_buffer,
                                       command_id_t command_id);
 
-gpuprocess_private bool
+private bool
 command_buffer_write_command (command_buffer_t *command_buffer,
                               command_t *command);
 
-gpuprocess_private bool
+private bool
 command_buffer_flush (command_buffer_t *command_buffer);
 
-gpuprocess_private unsigned int
+private unsigned int
 command_buffer_insert_token (command_buffer_t *command_buffer);
 
-gpuprocess_private bool
+private bool
 command_buffer_wait_for_token (command_buffer_t *command_buffer,
                                unsigned int token);
 
-gpuprocess_private void
+private void
 command_buffer_set_active_state (command_buffer_t *command_buffer,
                                  v_link_list_t     *active_state);
 
