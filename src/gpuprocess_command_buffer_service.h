@@ -24,10 +24,10 @@ typedef struct command_buffer_service {
      * gpuprocess_egl_server.c and gpuprocess_gles2_server.c.
      *
      * both variable are kept as same value in
-     * gpuprocess_egl_api.c - eglMakeCurrent() and eglReleaseThread() on 
+     * gpuprocess_egl_api.c - eglMakeCurrent () and eglReleaseThread () on 
      * the client side, and
-     * gpuprocess_egl_server.c - _egl_make_current() and 
-     * _egl_release_thread()
+     * gpuprocess_egl_server.c - _egl_make_current () and 
+     * _egl_release_thread ()
      */
     v_link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
@@ -35,15 +35,14 @@ typedef struct command_buffer_service {
 } command_buffer_service_t;
 
 gpuprocess_private command_buffer_service_t *
-command_buffer_service_initialize();
+command_buffer_service_initialize ();
 
 gpuprocess_private bool
-command_buffer_service_destroy(command_buffer_service_t *command_buffer_service);
+command_buffer_service_destroy (command_buffer_service_t *command_buffer_service);
 
 gpuprocess_private void
-command_buffer_service_set_active_state (
-                     command_buffer_service_t *command_buffer_service,
-                     v_link_list_t            *active_state);
+command_buffer_service_set_active_state (command_buffer_service_t *command_buffer_service,
+                                         v_link_list_t *active_state);
 
 #ifdef __cplusplus
 }
