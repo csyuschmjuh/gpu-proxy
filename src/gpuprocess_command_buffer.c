@@ -18,7 +18,7 @@ command_buffer_create ()
 
     buffer_create (command_buffer->buffer, BUFFER_SIZE);
 
-    command_buffer->service = command_buffer_service_initialize (command_buffer->buffer);
+    command_buffer->server = command_buffer_server_initialize (command_buffer->buffer);
     command_buffer->token = 0;
 
     return command_buffer;
@@ -29,7 +29,7 @@ command_buffer_destroy (command_buffer_t *command_buffer)
 {
     buffer_free (command_buffer->buffer);
     command_buffer->buffer = NULL;
-    command_buffer_service_destroy (command_buffer->service);
+    command_buffer_server_destroy (command_buffer->server);
     free (command_buffer);
 }
 
@@ -109,6 +109,6 @@ void
 command_buffer_set_active_state (command_buffer_t *command_buffer,
                                  v_link_list_t *active_state)
 {
-    command_buffer_service_set_active_state (command_buffer->service,
-                                             active_state);
+    command_buffer_server_set_active_state (command_buffer->server,
+                                            active_state);
 }

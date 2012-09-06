@@ -4,7 +4,7 @@
 
 #include "gpuprocess_compiler_private.h"
 #include "gpuprocess_command.h"
-#include "gpuprocess_command_buffer_service.h"
+#include "gpuprocess_command_buffer_server.h"
 #include "gpuprocess_ring_buffer.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_egl_states.h"
@@ -26,7 +26,7 @@ extern "C" {
  */
 typedef struct command_buffer {
     buffer_t *buffer;
-    command_buffer_service_t *service;
+    command_buffer_server_t *server;
     unsigned int token;
 } command_buffer_t;
 

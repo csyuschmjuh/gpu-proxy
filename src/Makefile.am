@@ -13,8 +13,8 @@ libGPUProcess_la_SOURCES = \
 	gpuprocess_command.h \
 	gpuprocess_command_buffer.h \
 	gpuprocess_command_buffer.c \
-	gpuprocess_command_buffer_service.h \
-	gpuprocess_command_buffer_service.c \
+	gpuprocess_command_buffer_server.h \
+	gpuprocess_command_buffer_server.c \
 	gpuprocess_compiler_private.h \
 	gpuprocess_dispatch_private.h \
 	gpuprocess_dispatch.h \
