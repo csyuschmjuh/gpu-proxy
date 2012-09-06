@@ -1941,6 +1941,10 @@ class TypeHandler(object):
     file.Write("};\n")
     file.Write("\n")
 
+  def WriteEnumName(self, func, file):
+    """Writes an enum name that matches the name of a function."""
+    file.Write("COMMAND_" + func.name.upper() + ",\n")
+
   def WriteHandlerImplementation(self, func, file):
     """Writes the handler implementation for this command."""
     file.Write("  %s(%s);\n" %
@@ -2435,6 +2439,10 @@ class HandWrittenHandler(CustomHandler):
     func.can_auto_generate = False
 
   def WriteStruct(self, func, file):
+    """Overrriden from TypeHandler."""
+    pass
+
+  def WriteEnumName(self, func, file):
     """Overrriden from TypeHandler."""
     pass
 
@@ -5359,6 +5367,9 @@ class Function(object):
   def WriteStruct(self, file):
     self.type_handler.WriteStruct(self, file)
 
+  def WriteEnumName(self, file):
+    self.type_handler.WriteEnumName(self, file)
+
   def WriteDocs(self, file):
     self.type_handler.WriteDocs(self, file)
 
@@ -5844,6 +5855,16 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
+  def WriteCommandEnum(self, filename):
+    """Writes the command format"""
+    file = CWriter(filename)
+    for func in self.functions:
+      if not self.IsSimpleFunction(func):
+        continue
+      func.WriteEnumName(file)
+    file.Write("\n")
+    file.Close()
+
   def WriteDocs(self, filename):
     """Writes the command buffer doc version of the commands"""
     file = CWriter(filename)
@@ -6320,22 +6341,7 @@ def main(argv):
   else:
     gen.WriteSimpleFunctions("gpuprocess_gles2_api_autogen.c")
     gen.WriteCommandFormat("gpuprocess_gles2_api_command_format.h")
-    #gen.WriteFormat("gles2_cmd_format_autogen.h")
-    #gen.WriteCommandIds("common/gles2_cmd_ids_autogen.h")
-    #gen.WriteFormat("gles2_cmd_format_autogen.h")
-    #gen.WriteFormatTest("common/gles2_cmd_format_test_autogen.h")
-    #gen.WriteGLES2ImplementationHeader("client/gles2_implementation_autogen.h")
-    #gen.WriteGLES2ImplementationUnitTests(
-    #    "client/gles2_implementation_unittest_autogen.h")
-    #gen.WriteGLES2CLibImplementation("client/gles2_c_lib_autogen.h")
-    #gen.WriteCmdHelperHeader("client/gles2_cmd_helper_autogen.h")
-    #gen.WriteServiceImplementation("service/gles2_cmd_decoder_autogen.h")
-    #gen.WriteServiceUnitTests("service/gles2_cmd_decoder_unittest_%d_autogen.h")
-    #gen.WriteServiceUtilsHeader("service/gles2_cmd_validation_autogen.h")
-    #gen.WriteServiceUtilsImplementation(
-    #    "service/gles2_cmd_validation_implementation_autogen.h")
-    #gen.WriteCommonUtilsHeader("common/gles2_cmd_utils_autogen.h")
-    #gen.WriteCommonUtilsImpl("common/gles2_cmd_utils_implementation_autogen.h")
+    gen.WriteCommandEnum("gpuprocess_command_id_autogen.h")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors

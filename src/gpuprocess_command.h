@@ -12,8 +12,8 @@ typedef struct command {
 
 typedef enum command_id {
     COMMAND_NO_OP,
-    COMMAND_SET_TOKEN
-    /* FIXME: autogenerate the ID for every command in the API. */
+    COMMAND_SET_TOKEN,
+#include "generated/gpuprocess_command_id_autogen.h"
 } command_id_t;
 
 /* SetToken command, it writes a token in the command buffer, allowing
