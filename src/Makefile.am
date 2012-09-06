@@ -10,48 +10,48 @@ libGPUProcess_la_LDFLAGS = \
 	-ldl
 
 libGPUProcess_la_SOURCES = \
-	gpuprocess_command.h \
-	gpuprocess_command_buffer.h \
-	gpuprocess_command_buffer.c \
-	gpuprocess_command_buffer_server.h \
-	gpuprocess_command_buffer_server.c \
-	gpuprocess_compiler_private.h \
-	gpuprocess_dispatch_private.h \
-	gpuprocess_dispatch.h \
-	gpuprocess_dispatch.c \
-	gpuprocess_gl_server_private.h \
-	gpuprocess_gl_states.h \
-	gpuprocess_ring_buffer.h \
-	gpuprocess_ring_buffer.c \
-	gpuprocess_thread_private.h \
-	gpuprocess_types_private.h
+	command.h \
+	command_buffer.h \
+	command_buffer.c \
+	command_buffer_server.h \
+	command_buffer_server.c \
+	compiler_private.h \
+	dispatch_private.h \
+	dispatch.h \
+	dispatch.c \
+	gl_server_private.h \
+	gl_states.h \
+	ring_buffer.h \
+	ring_buffer.c \
+	thread_private.h \
+	types_private.h
 
 if HAS_GL
 libGPUProcess_la_SOURCES += \
-	gpuprocess_glx_states.h
+	glx_states.h
 endif
 
 if HAS_GLES2
 libGPUProcess_la_SOURCES += \
-	gpuprocess_egl_api.c \
-	gpuprocess_egl_server.c \
-	gpuprocess_egl_server_private.h \
-	gpuprocess_egl_server_helper.c \
-	gpuprocess_egl_states.h \
-	gpuprocess_gles2_api.c \
-	gpuprocess_gles2_server.c \
-	gpuprocess_gles2_states.h
+	egl_api.c \
+	egl_server.c \
+	egl_server_private.h \
+	egl_server_helper.c \
+	egl_states.h \
+	gles2_api.c \
+	gles2_server.c \
+	gles2_states.h
 
 nodist_libGPUProcess_la_SOURCES = \
-	generated/gpuprocess_gles2_api_autogen.c \
-	generated/gpuprocess_command_autogen.c \
-	generated/gpuprocess_command_autogen.h \
-	generated/gpuprocess_command_id_autogen.h
+	generated/gles2_api_autogen.c \
+	generated/command_autogen.c \
+	generated/command_autogen.h \
+	generated/command_id_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-generated/gpuprocess_gles2_api_autogen.c : generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
+generated/gles2_api_autogen.c : generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 

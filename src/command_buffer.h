@@ -2,12 +2,12 @@
 #ifndef GPUPROCESS_COMMAND_BUFFER_H
 #define GPUPROCESS_COMMAND_BUFFER_H
 
-#include "gpuprocess_compiler_private.h"
-#include "gpuprocess_command.h"
-#include "gpuprocess_command_buffer_server.h"
-#include "gpuprocess_ring_buffer.h"
-#include "gpuprocess_types_private.h"
-#include "gpuprocess_egl_states.h"
+#include "compiler_private.h"
+#include "command.h"
+#include "command_buffer_server.h"
+#include "ring_buffer.h"
+#include "types_private.h"
+#include "egl_states.h"
 
 #ifdef __cplusplus
 extern "C" {

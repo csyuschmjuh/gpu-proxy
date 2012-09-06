@@ -10,11 +10,11 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "gpuprocess_command.h"
-#include "gpuprocess_command_buffer.h"
-#include "gpuprocess_types_private.h"
-#include "gpuprocess_thread_private.h"
-#include "gpuprocess_egl_states.h"
+#include "command.h"
+#include "command_buffer.h"
+#include "types_private.h"
+#include "thread_private.h"
+#include "egl_states.h"
 
 extern __thread v_link_list_t *active_state;
 extern __thread gpuprocess_thread_t *srv_thread;

@@ -14,7 +14,7 @@
  * command buffer, while the server thread reads from the command from
  * the command buffer
  * (3) unpack_alignment - this the client cache of server side state. It
- * is used by gpuprocess_gles2_server.c to compute padding for image during
+ * is used by gles2_server.c to compute padding for image during
  * image uploading (glTexImage2D(), glTexSubImage2D(), glTexImage3DOES(),
  * and glTexSubImage3DOES() 
  */
@@ -24,10 +24,10 @@
 
 #include "config.h"
 
-#include "gpuprocess_command_buffer.h"
-#include "gpuprocess_thread_private.h"
-#include "gpuprocess_types_private.h"
-#include "gpuprocess_egl_server_private.h"
+#include "command_buffer.h"
+#include "thread_private.h"
+#include "types_private.h"
+#include "egl_server_private.h"
 
 /* thread local variable for client thread */
 __thread v_link_list_t *active_context

@@ -4,7 +4,7 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include "gpuprocess_types_private.h"
+#include "types_private.h"
 
 #ifdef __cplusplus
 extern "C" {

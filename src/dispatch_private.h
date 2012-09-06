@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-#include "gpuprocess_compiler_private.h"
+#include "compiler_private.h"
 
 #ifdef HAS_GL
 #include <GL/glx.h>

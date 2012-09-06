@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 
-#include "gpuprocess_dispatch_private.h"
+#include "dispatch_private.h"
 
 #define DISPATCH_ENTRY_GLX(name) { { "glX"#name, NULL, NULL }, \
                                    offsetof(gpuprocess_dispatch_t, name) }

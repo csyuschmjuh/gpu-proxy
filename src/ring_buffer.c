@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#include "gpuprocess_ring_buffer.h"
+#include "ring_buffer.h"
 
 static void
 report_exceptional_condition(const char* error)

@@ -3,8 +3,8 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "gpuprocess_gles2_states.h"
-#include "gpuprocess_thread_private.h"
+#include "gles2_states.h"
+#include "thread_private.h"
 
 #ifdef __cplusplus
 extern "C" {

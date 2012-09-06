@@ -1,9 +1,9 @@
 #ifndef GPUPROCESS_EGL_SRV_PRIVATE_H
 #define GPUPROCESS_EGL_SRV_PRIVATE_H
 
-#include "gpuprocess_compiler_private.h"
-#include "gpuprocess_egl_states.h"
-#include "gpuprocess_types_private.h"
+#include "compiler_private.h"
+#include "egl_states.h"
+#include "types_private.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,9 +1,9 @@
 /* This file is a helper file for some of the private functions that
  * manipulate the server_states variable 
  */
-#include "gpuprocess_egl_server_private.h"
-#include "gpuprocess_dispatch_private.h"
-#include "gpuprocess_thread_private.h"
+#include "egl_server_private.h"
+#include "dispatch_private.h"
+#include "thread_private.h"
 #include <stdlib.h>
 #include <string.h>
 
