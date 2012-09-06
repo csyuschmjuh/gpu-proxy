@@ -1944,7 +1944,17 @@ class TypeHandler(object):
   def WriteCommandInit(self, func, file):
     self.WriteInitSignature(func, file)
     file.Write("\n{\n")
-    file.Write("\n")
+
+    subclass_command_type = "command_%s_t" % func.name.lower()
+    file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
+
+    args = func.GetCmdArgs()
+    for arg in args:
+      if arg.type.find("char*") != -1:
+        file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
+      else:
+        file.Write("    command->%s = %s;\n" % (arg.name, arg.name))
+
     file.Write("}\n\n")
 
   def WriteInitSignature(self, func, file):
@@ -1955,15 +1965,14 @@ class TypeHandler(object):
     indent = " " * len(name)
     file.Write(name)
 
+    file.Write("command_t *abstract_command")
+
     args = func.GetCmdArgs()
     if not len(args):
-        file.Write("void)\n")
+        file.Write(")")
         return
 
-    arg = args[0]
-    file.Write("%s %s" % (arg.cmd_type, arg.name))
-
-    for arg in args[1:]:
+    for arg in args:
       file.Write(",\n%s%s %s" % (indent, arg.cmd_type, arg.name))
 
     file.Write(")")
@@ -5912,7 +5921,8 @@ class GLGenerator(object):
     """Writes the command implementation for the client-side"""
     file = CWriter(filename)
 
-    file.Write("#include \"gpuprocess_command.h\"\n\n")
+    file.Write("#include \"gpuprocess_command.h\"\n")
+    file.Write("#include <string.h>\n\n")
 
     simple_functions = filter(self.IsSimpleFunction, self.functions)
 
