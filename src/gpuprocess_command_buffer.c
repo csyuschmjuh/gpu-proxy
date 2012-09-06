@@ -54,14 +54,19 @@ command_t *
 command_buffer_get_space_for_command (command_buffer_t *command_buffer,
                                      command_id_t command_id)
 {
-    switch (command_id) {
-        case COMMAND_NO_OP: break;
-        case COMMAND_SET_TOKEN:
-            return command_buffer_get_space_for_size (command_buffer, sizeof (command_set_token_t));
-            break;
-        }
+    command_t *command = NULL;
 
-    return NULL;
+    switch (command_id) {
+    case COMMAND_NO_OP: break;
+    case COMMAND_SET_TOKEN: {
+        size_t size = sizeof (command_set_token_t);
+        command = command_buffer_get_space_for_size (command_buffer, size);
+        command->size = size;
+        break;
+    }
+    }
+
+    return command;
 }
 
 unsigned int
@@ -71,6 +76,8 @@ command_buffer_insert_token (command_buffer_t *command_buffer)
         command_buffer_get_space_for_command (command_buffer, COMMAND_SET_TOKEN);
     /* FIXME: Check max size and wrap. */
     unsigned int token = command_buffer->token++;
+
+    assert (set_token_command != NULL);
 
     command_set_token_init ((command_set_token_t *)set_token_command, token);
 
@@ -84,7 +91,7 @@ command_buffer_wait_for_token (command_buffer_t *command_buffer,
                               unsigned int token)
 {
     while (command_buffer->buffer->last_token < token) {
-        /* FIXME: Do not wait forever. */
+        /* FIXME: Do not wait forever and force flush. */
     }
 
     return true;
