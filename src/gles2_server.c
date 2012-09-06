@@ -19,9 +19,9 @@
 #include <stdlib.h>
 
 /* XXX: we should move it to the srv */
-#include "gpuprocess_dispatch_private.h"
-#include "gpuprocess_types_private.h"
-#include "gpuprocess_egl_states.h"
+#include "dispatch_private.h"
+#include "types_private.h"
+#include "egl_states.h"
 
 /* server local variable, referenced from gpuprocess_egl_server.c */
 extern __thread v_link_list_t        *active_state;

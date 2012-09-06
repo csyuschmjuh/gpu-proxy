@@ -1,6 +1,5 @@
+#include "dispatch.h"
 #include <dlfcn.h>
-
-#include "gpuprocess_dispatch.h"
 
 //These lib names should be defined by autotools
 #ifdef HAS_GL

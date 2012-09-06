@@ -5887,7 +5887,7 @@ class GLGenerator(object):
   def WriteSimpleFunctions(self, filename):
     """Writes the command buffer format"""
     file = CWriter(filename)
-    file.Write('#include "gpuprocess_gles2_api_private.h"\n')
+    file.Write('#include "gles2_api_private.h"\n')
 
     for func in self.functions: 
         header = self.GetSimpleFunctionSignature(func)
@@ -5936,7 +5936,7 @@ class GLGenerator(object):
     """Writes the command implementation for the client-side"""
     file = CWriter(filename)
 
-    file.Write("#include \"gpuprocess_command.h\"\n")
+    file.Write("#include \"command.h\"\n")
     file.Write("#include <string.h>\n\n")
 
     simple_functions = filter(self.IsSimpleFunction, self.functions)
@@ -6456,10 +6456,10 @@ def main(argv):
         "native_client/src/shared/ppapi_proxy/plugin_opengles.cc")
 
   else:
-    gen.WriteSimpleFunctions("gpuprocess_gles2_api_autogen.c")
-    gen.WriteCommandHeader("gpuprocess_command_autogen.h")
-    gen.WriteCommandEnum("gpuprocess_command_id_autogen.h")
-    gen.WriteClientImplementations("gpuprocess_command_autogen.c")
+    gen.WriteSimpleFunctions("gles2_api_autogen.c")
+    gen.WriteCommandHeader("command_autogen.h")
+    gen.WriteCommandEnum("command_id_autogen.h")
+    gen.WriteClientImplementations("command_autogen.c")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors

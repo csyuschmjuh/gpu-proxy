@@ -3,7 +3,7 @@
 
 #include <GL/glx.h>
 #include <GL/glxext.h>
-#include "gpuprocess_gl_states.h"
+#include "gl_states.h"
 
 #ifdef __cplusplus
 extern "C" {

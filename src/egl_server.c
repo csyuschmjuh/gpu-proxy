@@ -20,13 +20,13 @@
 #include "config.h"
 
 /* XXX: we should move it to the srv */
-#include "gpuprocess_dispatch_private.h"
-#include "gpuprocess_egl_states.h"
-#include "gpuprocess_egl_server_private.h"
-#include "gpuprocess_types_private.h"
+#include "dispatch_private.h"
+#include "egl_states.h"
+#include "egl_server_private.h"
+#include "types_private.h"
 
 /* server thread global variables, referenced from 
- * gpuprocess_egl_server_helper.c
+ * egl_server_helper.c
  */
 extern gpuprocess_dispatch_t      dispatch;
 extern gl_server_states_t         server_states;

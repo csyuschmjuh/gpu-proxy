@@ -8,7 +8,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include "gpuprocess_compiler_private.h"
+#include "compiler_private.h"
 
 #ifdef __cplusplus
 extern "C" {

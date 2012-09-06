@@ -17,7 +17,7 @@ typedef enum command_id {
     COMMAND_NO_OP,
     COMMAND_SET_TOKEN,
 
-#include "generated/gpuprocess_command_id_autogen.h"
+#include "generated/command_id_autogen.h"
 
     COMMAND_MAX_COMMAND
 } command_id_t;
@@ -39,7 +39,7 @@ void
 command_set_token_init (command_set_token_t *command,
                         unsigned int token);
 
-#include "generated/gpuprocess_command_autogen.h"
+#include "generated/command_autogen.h"
 
 #ifdef __cplusplus
 }

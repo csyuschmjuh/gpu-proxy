@@ -3,7 +3,7 @@
 
 #include "config.h"
 
-#include "gpuprocess_command_buffer.h"
+#include "command_buffer.h"
 
 // The size of the buffer (in bytes). Note that for some buffers
 // such as the memory-mirrored ring buffer the actual buffer size

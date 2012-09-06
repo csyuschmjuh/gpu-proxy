@@ -1,7 +1,7 @@
 
-#include "gpuprocess_command_buffer_server.h"
-#include "gpuprocess_egl_server_private.h"
-#include "gpuprocess_thread_private.h"
+#include "command_buffer_server.h"
+#include "egl_server_private.h"
+#include "thread_private.h"
 
 gpuprocess_mutex_static_init (server_thread_started_mutex);
 
