@@ -2,6 +2,27 @@
  */
 #include "gles2_api_private.h"
 
+bool
+_is_error_state (void)
+{
+    egl_state_t *state;
+
+    if (! active_state || ! srv_thread)
+        return true;
+
+    state = (egl_state_t *) active_state->data;
+
+    if (! state ||
+        ! (state->display == EGL_NO_DISPLAY ||
+           state->context == EGL_NO_CONTEXT) ||
+           state->active == false) {
+        return true;
+    }
+
+    return false;
+}
+
+
 void glBufferData (GLenum target, GLsizeiptr size,
                    const GLvoid *data, GLenum usage)
 {
