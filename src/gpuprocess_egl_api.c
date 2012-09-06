@@ -32,32 +32,17 @@
 /* thread local variable for client thread */
 __thread v_link_list_t *active_context
     __attribute__(( tls_model ("initial-exec"))) = NULL;
-__thread command_buffer_t* command_buffer
-    __attribute__(( tls_model ("initial-exec"))) = NULL;
 
 /* client side cache unpack_alignment */
 __thread int unpack_alignment
     __attribute__(( tls_model ("initial-exec"))) = 4;
-
-static inline void
-_egl_create_command_buffer ()
-{
-    if (unlikely (! command_buffer))
-        command_buffer = command_buffer_create();
-}
-
-static void
-_egl_destroy_command_buffer ()
-{
-    if (command_buffer)
-        command_buffer_destroy(command_buffer);
-}
 
 EGLAPI EGLint EGLAPIENTRY
 eglGetError (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return error;
 
@@ -74,7 +59,7 @@ eglGetDisplay (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
 
-    _egl_create_command_buffer ();
+    command_buffer_get_thread_local ();
 
     /* XXX: post eglGetDisplay and wait */
     return display;
@@ -85,6 +70,7 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     EGLBoolean result = EGL_FALSE;
     
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -96,6 +82,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
    
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -107,8 +94,8 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
      * on the driver side, what about our server thread ? 
      */
     if (! active_context)
-        _egl_destroy_command_buffer ();
-    
+        command_buffer_destroy_thread_local ();
+
     return result;
 }
 
@@ -117,6 +104,7 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 {
     const char *result = NULL;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -130,6 +118,7 @@ eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -144,6 +133,7 @@ eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -157,6 +147,7 @@ eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
     
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -171,6 +162,7 @@ eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return surface;
 
@@ -184,6 +176,7 @@ eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return surface;
 
@@ -198,6 +191,7 @@ eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return surface;
 
@@ -210,6 +204,7 @@ eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -223,6 +218,7 @@ eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -235,6 +231,7 @@ eglBindAPI (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -247,6 +244,7 @@ eglQueryAPI (void)
 {
     EGLenum result = EGL_NONE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -260,6 +258,7 @@ eglWaitClient (void)
     egl_state_t *egl_state;
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -282,6 +281,7 @@ eglReleaseThread (void)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -299,6 +299,7 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return surface;
 
@@ -312,6 +313,7 @@ eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -324,8 +326,10 @@ eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
+
 
     /* XXX: post eglBindTexImage and wait */
     return result;
@@ -336,6 +340,7 @@ eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -348,6 +353,7 @@ eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -362,6 +368,7 @@ eglCreateContext (EGLDisplay dpy, EGLConfig config,
 {
     EGLContext result = EGL_NO_CONTEXT;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -374,6 +381,7 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -386,7 +394,11 @@ eglGetCurrentContext (void)
 {
     egl_state_t *state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return EGL_NO_CONTEXT;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return EGL_NO_CONTEXT;
 
     state = (egl_state_t *) active_context->data;
@@ -398,7 +410,11 @@ eglGetCurrentDisplay (void)
 {
     egl_state_t *state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return EGL_NO_DISPLAY;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return EGL_NO_DISPLAY;
 
     state = (egl_state_t *) active_context->data;
@@ -411,7 +427,11 @@ eglGetCurrentSurface (EGLint readdraw)
     egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return EGL_NO_SURFACE;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return EGL_NO_SURFACE;
 
     state = (egl_state_t *) active_context->data;
@@ -433,6 +453,7 @@ eglQueryContext (EGLDisplay dpy, EGLContext ctx,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -446,7 +467,11 @@ eglWaitGL (void)
     EGLBoolean result = EGL_TRUE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     egl_state = (egl_state_t *) active_context->data;
@@ -466,7 +491,11 @@ eglWaitNative (EGLint engine)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *state;
 
-    if (! command_buffer || active_context)
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     /* XXX: post eglWaitNative and wait */
@@ -479,10 +508,11 @@ eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
     EGLBoolean result = EGL_BAD_DISPLAY;
     egl_state_t *state;
 
-    if (! command_buffer)
+    if (! active_context)
         return result;
 
-    if (!active_context)
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     state = (egl_state_t *)active_context->data;
@@ -509,6 +539,10 @@ eglCopyBuffers (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -521,6 +555,7 @@ eglGetProcAddress (const char *procname)
 {
     void *address = NULL;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return address;
 
@@ -535,6 +570,7 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     EGLBoolean result = EGL_FALSE;
     egl_state_t        *egl_state;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -595,6 +631,7 @@ eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -607,6 +644,7 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -622,6 +660,7 @@ eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -634,6 +673,7 @@ eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -648,6 +688,7 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -660,6 +701,7 @@ eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -673,6 +715,7 @@ eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
 {
     EGLint result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -685,6 +728,7 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -698,6 +742,7 @@ eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -713,6 +758,7 @@ eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -725,6 +771,7 @@ eglDestroySyncNV (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -738,7 +785,11 @@ eglFenceNV (EGLSyncNV sync)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     egl_state = (egl_state_t *) active_context->data;
@@ -759,7 +810,11 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     egl_state = (egl_state_t *) active_context->data;
@@ -779,7 +834,11 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! command_buffer || ! active_context)
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
+    if (! command_buffer)
         return result;
 
     egl_state = (egl_state_t *) active_context->data;
@@ -798,6 +857,10 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
+    if (! active_context)
+        return result;
+
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -813,6 +876,7 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface result = EGL_NO_SURFACE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -827,6 +891,7 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -840,6 +905,7 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -856,6 +922,7 @@ eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -870,6 +937,7 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     void *result = NULL;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -882,6 +950,7 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
@@ -895,6 +964,7 @@ eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
+    command_buffer_t *command_buffer = command_buffer_get_thread_local ();
     if (! command_buffer)
         return result;
 
