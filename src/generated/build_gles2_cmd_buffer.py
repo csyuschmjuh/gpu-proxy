@@ -1948,7 +1948,7 @@ class TypeHandler(object):
     subclass_command_type = "command_%s_t" % func.name.lower()
     file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
 
-    args = func.GetCmdArgs()
+    args = func.GetInitArgs()[:-1]
     for arg in args:
       if arg.type.find("char*") != -1:
         file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
@@ -1967,7 +1967,7 @@ class TypeHandler(object):
 
     file.Write("command_t *abstract_command")
 
-    args = func.GetCmdArgs()
+    args = func.GetInitArgs()[:-1]
     if not len(args):
         file.Write(")")
         return
@@ -5896,7 +5896,22 @@ class GLGenerator(object):
         file.Write(header + "\n")
         file.Write("{\n")
         file.Write("    if (_is_error_state ())\n")
-        file.Write("        return;\n")
+        file.Write("        return;\n\n")
+        file.Write("    command_buffer_t *command_buffer = command_buffer_get_thread_local ();\n");
+        file.Write("    command_t *command = command_buffer_get_space_for_command (command_buffer, COMMAND_%s);" %
+                   func.name.upper())
+
+        header = "     command_%s_init (" % func.name.lower()
+        indent = " " * len(header)
+        file.Write(header + "command")
+
+        args = func.GetInitArgs()[:-1]
+        for arg in args:
+            file.Write(",\n%s%s" % (indent, arg.name))
+        file.Write(");\n")
+
+        file.Write("    command_buffer_write_command (command_buffer, command);\n");
+
         file.Write("}\n\n")
     file.Close()
 

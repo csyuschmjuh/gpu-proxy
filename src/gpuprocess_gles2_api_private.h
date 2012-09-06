@@ -10,6 +10,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "gpuprocess_command.h"
+#include "gpuprocess_command_buffer.h"
 #include "gpuprocess_types_private.h"
 #include "gpuprocess_thread_private.h"
 #include "gpuprocess_egl_states.h"
