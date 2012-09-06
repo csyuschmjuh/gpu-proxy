@@ -17,7 +17,7 @@ typedef enum command_id {
 } command_id_t;
 
 /* SetToken command, it writes a token in the command buffer, allowing
-  the client to check when it is consumed in the service. */
+  the client to check when it is consumed in the server. */
 typedef struct command_set_token {
     command_t header;
     unsigned int token;

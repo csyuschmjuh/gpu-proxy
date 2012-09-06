@@ -1,6 +1,6 @@
 
-#ifndef GPUPROCESS_COMMAND_BUFFER_SERVICE_H
-#define GPUPROCESS_COMMAND_BUFFER_SERVICE_H
+#ifndef GPUPROCESS_COMMAND_BUFFER_SERVER_H
+#define GPUPROCESS_COMMAND_BUFFER_SERVER_H
 
 #include <pthread.h>
 
@@ -16,37 +16,37 @@
 extern "C" {
 #endif
 
-typedef struct command_buffer_service {
+typedef struct command_buffer_server {
     buffer_t *buffer;
     /* FIXME: do we this?  We have thread local variable for client thread
      * in gpuprocess_egl_api.c.
-     * We also have thread local variable for server thread in 
+     * We also have thread local variable for server thread in
      * gpuprocess_egl_server.c and gpuprocess_gles2_server.c.
      *
      * both variable are kept as same value in
-     * gpuprocess_egl_api.c - eglMakeCurrent () and eglReleaseThread () on 
+     * gpuprocess_egl_api.c - eglMakeCurrent () and eglReleaseThread () on
      * the client side, and
-     * gpuprocess_egl_server.c - _egl_make_current () and 
+     * gpuprocess_egl_server.c - _egl_make_current () and
      * _egl_release_thread ()
      */
     v_link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     gpuprocess_thread_t *thread;
-} command_buffer_service_t;
+} command_buffer_server_t;
 
-gpuprocess_private command_buffer_service_t *
-command_buffer_service_initialize ();
+gpuprocess_private command_buffer_server_t *
+command_buffer_server_initialize ();
 
 gpuprocess_private bool
-command_buffer_service_destroy (command_buffer_service_t *command_buffer_service);
+command_buffer_server_destroy (command_buffer_server_t *command_buffer_server);
 
 gpuprocess_private void
-command_buffer_service_set_active_state (command_buffer_service_t *command_buffer_service,
-                                         v_link_list_t *active_state);
+command_buffer_server_set_active_state (command_buffer_server_t *command_buffer_server,
+                                        v_link_list_t *active_state);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* GPUPROCESS_COMMAND_BUFFER_SERVICE_H */
+#endif /* GPUPROCESS_COMMAND_BUFFER_SERVER_H */
 
