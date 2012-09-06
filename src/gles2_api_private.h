@@ -20,7 +20,6 @@
 #include "egl_states.h"
 
 extern __thread v_link_list_t *active_state;
-extern __thread thread_t *srv_thread;
 extern __thread int unpack_alignment;
 
 private bool

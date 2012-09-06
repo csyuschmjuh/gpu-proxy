@@ -1,9 +1,7 @@
-
-#include <stdlib.h>
-
 #include "config.h"
-
 #include "command_buffer.h"
+#include <stdlib.h>
+#include <time.h>
 
 // The size of the buffer (in bytes). Note that for some buffers
 // such as the memory-mirrored ring buffer the actual buffer size
@@ -52,6 +50,15 @@ command_buffer_destroy_thread_local ()
 
      command_buffer_destroy (thread_local_command_buffer);
      thread_local_command_buffer = NULL;
+}
+
+static inline void
+sleep_nanoseconds (int num_nanoseconds)
+{
+    struct timespec spec;
+    spec.tv_sec = 0;
+    spec.tv_nsec = num_nanoseconds;
+    nanosleep (&spec, NULL);
 }
 
 static command_t *
