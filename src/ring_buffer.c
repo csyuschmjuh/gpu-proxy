@@ -9,7 +9,7 @@
 
 #include "ring_buffer.h"
 
-static void
+private void
 report_exceptional_condition(const char* error)
 {
     fprintf(stderr, "%s: %s\n", error, strerror (errno));

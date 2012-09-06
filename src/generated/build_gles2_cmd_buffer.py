@@ -5918,6 +5918,9 @@ class GLGenerator(object):
   def WriteCommandHeader(self, filename):
     """Writes the command format"""
     file = CWriter(filename)
+
+    file.Write("#include \"compiler_private.h\"\n\n")
+
     for func in self.functions:
       if not self.IsSimpleFunction(func):
         continue
@@ -5927,6 +5930,7 @@ class GLGenerator(object):
     for func in self.functions:
       if not self.IsSimpleFunction(func):
         continue
+      file.Write("private ");
       func.WriteInitSignature(file)
       file.Write(";\n\n")
     file.Write("\n")
