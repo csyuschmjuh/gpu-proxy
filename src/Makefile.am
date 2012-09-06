@@ -73,3 +73,5 @@ symlinks += $(library_dir)/libGL.so
 endif
 
 all-local: $(symlinks)
+clean-local:
+	rm generated/*.c generated/*.h
