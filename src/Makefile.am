@@ -55,7 +55,7 @@ libGPUProcess_la_SOURCES += \
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-generated/gles2_api_autogen.c : generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
+generated/gles2_api_autogen.c generated/command_autogen.c: generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 
