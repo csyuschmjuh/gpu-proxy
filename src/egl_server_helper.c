@@ -302,7 +302,7 @@ _server_terminate (EGLDisplay display, v_link_list_t *active_state)
 
         if (egl_state->display == display) {
             if (! egl_state->active)
-                _remove_server_state (current);
+                _server_remove_state (current);
                 /* XXX: Do we need to stop the thread? */
         }
     }
