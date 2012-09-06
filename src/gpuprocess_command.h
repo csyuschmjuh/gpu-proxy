@@ -1,6 +1,8 @@
 #ifndef GPUPROCESS_COMMAND_H
 #define GPUPROCESS_COMMAND_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,6 +28,8 @@ typedef struct command_set_token {
 void
 command_set_token_init (command_set_token_t *command,
                         unsigned int token);
+
+#include "generated/gpuprocess_command_autogen.h"
 
 #ifdef __cplusplus
 }
