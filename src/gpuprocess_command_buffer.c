@@ -81,7 +81,7 @@ command_buffer_insert_token (command_buffer_t *command_buffer)
 
     command_set_token_init ((command_set_token_t *)set_token_command, token);
 
-    buffer_write_advance (command_buffer->buffer, set_token_command->size);
+    command_buffer_write_command (command_buffer, set_token_command);
 
     return token;
 }
