@@ -1941,6 +1941,33 @@ class TypeHandler(object):
     file.Write("};\n")
     file.Write("\n")
 
+  def WriteCommandInit(self, func, file):
+    self.WriteInitSignature(func, file)
+    file.Write("\n{\n")
+    file.Write("\n")
+    file.Write("}\n\n")
+
+  def WriteInitSignature(self, func, file):
+    """Writes the declaration of the init function for a given function."""
+    file.Write("void\n") 
+
+    name = "command_%s_init (" % func.name.lower()
+    indent = " " * len(name)
+    file.Write(name)
+
+    args = func.GetCmdArgs()
+    if not len(args):
+        file.Write("void);\n\n")
+        return
+
+    arg = args[0]
+    file.Write("%s %s" % (arg.cmd_type, arg.name))
+
+    for arg in args[1:]:
+      file.Write(",\n%s%s %s" % (indent, arg.cmd_type, arg.name))
+
+    file.Write(")")
+
   def WriteEnumName(self, func, file):
     """Writes an enum name that matches the name of a function."""
     file.Write("COMMAND_" + func.name.upper() + ",\n")
@@ -2439,6 +2466,14 @@ class HandWrittenHandler(CustomHandler):
     func.can_auto_generate = False
 
   def WriteStruct(self, func, file):
+    """Overrriden from TypeHandler."""
+    pass
+
+  def WriteCommandInit(self, func, file):
+    """Overrriden from TypeHandler."""
+    pass
+
+  def WriteInitSignature(func, file):
     """Overrriden from TypeHandler."""
     pass
 
@@ -5369,6 +5404,12 @@ class Function(object):
   def WriteStruct(self, file):
     self.type_handler.WriteStruct(self, file)
 
+  def WriteCommandInit(self, file):
+    self.type_handler.WriteCommandInit(self, file)
+
+  def WriteInitSignature(self, file):
+    self.type_handler.WriteInitSignature(self, file)
+
   def WriteEnumName(self, file):
     self.type_handler.WriteEnumName(self, file)
 
@@ -5850,13 +5891,30 @@ class GLGenerator(object):
         file.Write("}\n\n")
     file.Close()
 
-  def WriteCommandFormat(self, filename):
+  def WriteCommandHeader(self, filename):
     """Writes the command format"""
     file = CWriter(filename)
     for func in self.functions:
       if not self.IsSimpleFunction(func):
         continue
       func.WriteStruct(file)
+    file.Write("\n")
+
+    for func in self.functions:
+      if not self.IsSimpleFunction(func):
+        continue
+      func.WriteInitSignature(file)
+      file.Write(";\n\n")
+    file.Write("\n")
+    file.Close()
+
+  def WriteClientImplementations(self, filename):
+    """Writes the command implementation for the client-side"""
+    file = CWriter(filename)
+    for func in self.functions:
+      if not self.IsSimpleFunction(func):
+        continue
+      func.WriteCommandInit(file)
     file.Write("\n")
     file.Close()
 
@@ -6345,8 +6403,9 @@ def main(argv):
 
   else:
     gen.WriteSimpleFunctions("gpuprocess_gles2_api_autogen.c")
-    gen.WriteCommandFormat("gpuprocess_command_autogen.h")
+    gen.WriteCommandHeader("gpuprocess_command_autogen.h")
     gen.WriteCommandEnum("gpuprocess_command_id_autogen.h")
+    gen.WriteClientImplementations("gpuprocess_command_autogen.c")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors
