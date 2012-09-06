@@ -3,7 +3,7 @@
 #include "egl_server_private.h"
 #include "thread_private.h"
 
-gpuprocess_mutex_static_init (server_thread_started_mutex);
+mutex_static_init (server_thread_started_mutex);
 
 static void
 command_buffer_server_handle_set_token (command_buffer_server_t *command_buffer_server,
@@ -31,9 +31,9 @@ server_thread_func (void *ptr)
     command_buffer_server_t *command_buffer_server = (command_buffer_server_t *)ptr;
 
     /* populate dispatch table, create global egl_states structures */
-    _gpuprocess_server_init ();
+    _server_init ();
     /* This signals the producer thread to start producing. */
-    gpuprocess_mutex_unlock (server_thread_started_mutex);
+    mutex_unlock (server_thread_started_mutex);
 
     /* FIXME: initialize GL state and start consuming commands in the loop. */
     /* FIXME: add exit condition of the loop. */
@@ -64,9 +64,9 @@ command_buffer_server_initialize (buffer_t *buffer)
     command_buffer_server->buffer = buffer;
 
     /* We use a mutex here to wait until the thread has started. */
-    gpuprocess_mutex_lock (server_thread_started_mutex);
+    mutex_lock (server_thread_started_mutex);
     pthread_create (command_buffer_server->thread, NULL, server_thread_func, command_buffer_server);
-    gpuprocess_mutex_lock (server_thread_started_mutex);
+    mutex_lock (server_thread_started_mutex);
 
     return command_buffer_server;
 }
@@ -80,7 +80,7 @@ command_buffer_server_destroy (command_buffer_server_t *command_buffer_server)
     pthread_join (*command_buffer_server->thread, NULL);
     /* FIXME: GL termination. */
     if (command_buffer_server->active_state) {
-        _gpuprocess_server_remove_state (command_buffer_server->active_state);
+        _server_remove_state (command_buffer_server->active_state);
         command_buffer_server->active_state = NULL;
     }
 

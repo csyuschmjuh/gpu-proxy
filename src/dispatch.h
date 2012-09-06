@@ -6,32 +6,32 @@
 #include "dispatch_private.h"
 
 #define DISPATCH_ENTRY_GLX(name) { { "glX"#name, NULL, NULL }, \
-                                   offsetof(gpuprocess_dispatch_t, name) }
+                                   offsetof(dispatch_t, name) }
 
 #define DISPATCH_ENTRY_EGL(name) { {#name, "egl"#name, NULL }, \
-                                   offsetof(gpuprocess_dispatch_t, name) }
+                                   offsetof(dispatch_t, name) }
 
 #define DISPATCH_ENTRY_GL(name) { { "gl"#name, "gl"#name"ARB", "gl"#name"EXT" }, \
-                                   offsetof(gpuprocess_dispatch_t, name) }
+                                   offsetof(dispatch_t, name) }
 
 #define DISPATCH_ENTRY_LAST { { NULL, NULL, NULL }, 0 }
 
 typedef void (*GenericFunc)(void);
-typedef GenericFunc (*gpuprocess_gl_get_proc_addr_func_t)(const char *procname);
+typedef GenericFunc (*gl_get_proc_addr_func_t)(const char *procname);
 
-typedef enum _gpuprocess_dispatch_name {
+typedef enum _dispatch_name {
     GPUPROCESS_GL_DISPATCH_NAME_CORE,
     GPUPROCESS_GL_DISPATCH_NAME_ARB,
     GPUPROCESS_GL_DISPATCH_NAME_EXT,
     GPUPROCESS_GL_DISPATCH_NAME_COUNT
-} gpuprocess_dispatch_name_t;
+} dispatch_name_t;
 
-typedef struct gpuprocess_dispatch_entry {
+typedef struct dispatch_entry {
     const char *name[GPUPROCESS_GL_DISPATCH_NAME_COUNT];
     size_t offset;
-} gpuprocess_dispatch_entry_t;
+} dispatch_entry_t;
 
-gpuprocess_dispatch_entry_t dispatch_glx_entries[] = {
+dispatch_entry_t dispatch_glx_entries[] = {
 #ifdef HAS_GL
     DISPATCH_ENTRY_GLX (ChooseVisual),
     DISPATCH_ENTRY_GLX (CreateContext),
@@ -95,7 +95,7 @@ gpuprocess_dispatch_entry_t dispatch_glx_entries[] = {
     DISPATCH_ENTRY_LAST
 };
 
-gpuprocess_dispatch_entry_t dispatch_egl_entries[] = {
+dispatch_entry_t dispatch_egl_entries[] = {
 #if HAS_GLES2
     DISPATCH_ENTRY_EGL (eglGetError),
     DISPATCH_ENTRY_EGL (eglGetDisplay),
@@ -183,7 +183,7 @@ gpuprocess_dispatch_entry_t dispatch_egl_entries[] = {
     DISPATCH_ENTRY_LAST
 };
 
-gpuprocess_dispatch_entry_t dispatch_opengl_entries[] = {
+dispatch_entry_t dispatch_opengl_entries[] = {
 #if defined (HAS_GL) || defined (HAS_GLES2)
     DISPATCH_ENTRY_GL (ActiveTexture),
     DISPATCH_ENTRY_GL (AttachShader),

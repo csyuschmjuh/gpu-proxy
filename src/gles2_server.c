@@ -23,12 +23,12 @@
 #include "types_private.h"
 #include "egl_states.h"
 
-/* server local variable, referenced from gpuprocess_egl_server.c */
+/* server local variable, referenced from egl_server.c */
 extern __thread v_link_list_t        *active_state;
 
 /* global variable for all server threads, referenced from 
- * gpuprocess_egl_server_helper.c */
-extern gpuprocess_dispatch_t         dispatch;
+ * egl_server_helper.c */
+extern dispatch_t         dispatch;
 
 static inline bool
 _gl_is_valid_func (void *func)

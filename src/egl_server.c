@@ -28,7 +28,7 @@
 /* server thread global variables, referenced from 
  * egl_server_helper.c
  */
-extern gpuprocess_dispatch_t      dispatch;
+extern dispatch_t      dispatch;
 extern gl_server_states_t         server_states;
 
 /* server thread local variable */
@@ -57,7 +57,7 @@ _egl_get_display (EGLNativeDisplayType display_id)
     EGLDisplay display = EGL_NO_DISPLAY;
    
     /* XXX: we should initialize once for both dispatch and srv structure */
-    _gpuprocess_server_init ();
+    _server_init ();
 
     display = dispatch.eglGetDisplay (display_id);
 
@@ -86,7 +86,7 @@ _egl_terminate (EGLDisplay dpy)
 
         if (result == EGL_TRUE) {
             /* XXX: remove srv structure */
-            _gpuprocess_server_terminate (dpy, active_state);
+            _server_terminate (dpy, active_state);
         }
     }
 
@@ -196,7 +196,7 @@ _egl_destroy_surface (EGLDisplay dpy, EGLSurface surface)
         
         if (result == EGL_TRUE) {
             /* update srv states */
-            _gpuprocess_server_destroy_surface (dpy, surface, active_state);
+            _server_destroy_surface (dpy, surface, active_state);
         }
     }
 
@@ -266,7 +266,7 @@ _egl_release_thread (void)
             
             egl_state = (egl_state_t *) active_state->data;
 
-            _gpuprocess_server_make_current (egl_state->display,
+            _server_make_current (egl_state->display,
                                              EGL_NO_SURFACE,
                                              EGL_NO_SURFACE,
                                              EGL_NO_CONTEXT,
@@ -365,7 +365,7 @@ _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
         result = dispatch.eglDestroyContext (dpy, ctx); 
 
         if (result == GL_TRUE) {
-            _gpuprocess_server_destroy_context (dpy, ctx, active_state);
+            _server_destroy_context (dpy, ctx, active_state);
         }
     }
 
@@ -503,7 +503,7 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
         return result;
 
     /* look for existing */
-    found = _gpuprocess_match (dpy, draw, read, ctx, &exist);
+    found = _match (dpy, draw, read, ctx, &exist);
     if (found == true) {
         /* set active to exist, tell client about it */
         active_state = exist;
@@ -517,7 +517,7 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
      */
     result = dispatch.eglMakeCurrent (dpy, draw, read, ctx);
     if (result == EGL_TRUE) {
-        _gpuprocess_server_make_current (dpy, draw, read, ctx,
+        _server_make_current (dpy, draw, read, ctx,
                                          active_state, 
                                          active_state_out);
         active_state = *active_state_out;
