@@ -21,3 +21,6 @@ Makefile.in
 *.lo
 *.o
 *.la
+
+src/generated/*.c
+src/generated/*.h
