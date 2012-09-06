@@ -229,7 +229,7 @@ static void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
     }
 }
 
-void _gl_bind_texture (GLenum target, GLuint texture)
+static void _gl_bind_texture (GLenum target, GLuint texture)
 {
     egl_state_t *egl_state;
     
@@ -2811,7 +2811,7 @@ static void _gl_read_pixels (GLint x, GLint y,
     }
 }
 
-void _gl_compile_shader (GLuint shader)
+static void _gl_compile_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -4278,7 +4278,7 @@ _gl_get_perf_monitor_groups_amd (GLint *numGroups, GLsizei groupSize,
     }
 }
 
-GL_APICALL void GL_APIENTRY
+static void
 _gl_get_perf_monitor_counters_amd (GLuint group, GLint *numCounters, 
                                    GLint *maxActiveCounters, 
                                    GLsizei counterSize,

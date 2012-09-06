@@ -1,3 +1,6 @@
+#ifndef GLES_API_PRIVATE_H
+#define GLES_API_PRIVATE_H
+
 #include "config.h"
 
 #ifndef HAS_GLES2
@@ -40,3 +43,4 @@ _is_error_state (void )
     return false;
 }
 
+#endif

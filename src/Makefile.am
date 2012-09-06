@@ -10,6 +10,7 @@ libGPUProcess_la_LDFLAGS = \
 	-ldl
 
 libGPUProcess_la_SOURCES = \
+	command.c \
 	command.h \
 	command_buffer.h \
 	command_buffer.c \
@@ -26,6 +27,12 @@ libGPUProcess_la_SOURCES = \
 	thread_private.h \
 	types_private.h
 
+nodist_libGPUProcess_la_SOURCES = \
+	generated/gles2_api_autogen.c \
+	generated/command_autogen.c \
+	generated/command_autogen.h \
+	generated/command_id_autogen.h
+
 if HAS_GL
 libGPUProcess_la_SOURCES += \
 	glx_states.h
@@ -41,12 +48,6 @@ libGPUProcess_la_SOURCES += \
 	gles2_api.c \
 	gles2_server.c \
 	gles2_states.h
-
-nodist_libGPUProcess_la_SOURCES = \
-	generated/gles2_api_autogen.c \
-	generated/command_autogen.c \
-	generated/command_autogen.h \
-	generated/command_id_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
