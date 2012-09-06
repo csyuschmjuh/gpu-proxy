@@ -276,6 +276,12 @@ eglWaitClient (void)
     return result;
 }
 
+static void
+command_buffer_set_active_context (command_buffer_t* command_buffer, v_link_list_t* new_context)
+{
+    active_context = new_context;
+}
+
 EGLAPI EGLBoolean EGLAPIENTRY
 eglReleaseThread (void)
 {
@@ -288,7 +294,7 @@ eglReleaseThread (void)
     /* current context to None */
     /* XXX: post eglReleaseThread and wait, then set active state to NULL */
     active_context = NULL;
-    command_buffer_set_active_context ( command_buffer, NULL);
+    command_buffer_set_active_context (command_buffer, NULL);
     return result;
 }
 

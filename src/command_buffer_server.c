@@ -2,6 +2,7 @@
 #include "command_buffer_server.h"
 #include "egl_server_private.h"
 #include "thread_private.h"
+#include <time.h>
 
 mutex_static_init (server_thread_started_mutex);
 
@@ -23,6 +24,15 @@ command_buffer_server_handle_command (command_buffer_server_t *command_buffer_se
                                                     (command_set_token_t *)command);
             break;
         }
+}
+
+static inline void
+sleep_nanoseconds (int num_nanoseconds)
+{
+    struct timespec spec;
+    spec.tv_sec = 0;
+    spec.tv_nsec = num_nanoseconds;
+    nanosleep (&spec, NULL);
 }
 
 static void *

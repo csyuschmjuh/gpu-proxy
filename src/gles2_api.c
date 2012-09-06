@@ -7,7 +7,7 @@ _is_error_state (void)
 {
     egl_state_t *state;
 
-    if (! active_state || ! srv_thread)
+    if (! active_state)
         return true;
 
     state = (egl_state_t *) active_state->data;

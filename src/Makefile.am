@@ -7,7 +7,10 @@ libGPUProcess_la_CFLAGS = \
 
 libGPUProcess_la_LDFLAGS = \
 	-version-info 0:0:0 \
-	-ldl
+	-shared \
+	-ldl \
+	-lpthread \
+	-no-undefined
 
 libGPUProcess_la_SOURCES = \
 	command.c \
