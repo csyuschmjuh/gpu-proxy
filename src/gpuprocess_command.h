@@ -24,7 +24,8 @@ typedef struct command_set_token {
 } command_set_token_t;
 
 void
-command_set_token_init(command_set_token_t *command, unsigned int token);
+command_set_token_init (command_set_token_t *command,
+                        unsigned int token);
 
 #ifdef __cplusplus
 }
