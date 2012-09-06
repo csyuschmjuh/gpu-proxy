@@ -1934,59 +1934,11 @@ class TypeHandler(object):
     if not comment == None:
       file.Write(comment)
     file.Write("struct %s {\n" % func.name)
-    file.Write("  typedef %s ValueType;\n" % func.name)
-    file.Write("  static const CommandId kCmdId = k%s;\n" % func.name)
-    func.WriteCmdArgFlag(file)
-    file.Write("\n")
-    result = func.GetInfo('result')
-    if not result == None:
-      if len(result) == 1:
-        file.Write("  typedef %s Result;\n\n" % result[0])
-      else:
-        file.Write("  struct Result {\n")
-        for line in result:
-          file.Write("    %s;\n" % line)
-        file.Write("  };\n\n")
-
-    func.WriteCmdComputeSize(file)
-    func.WriteCmdSetHeader(file)
-    func.WriteCmdInit(file)
-    func.WriteCmdSet(file)
-
-    file.Write("  gpu::CommandHeader header;\n")
+    file.Write("  command_header header;\n")
     args = func.GetCmdArgs()
     for arg in args:
       file.Write("  %s %s;\n" % (arg.cmd_type, arg.name))
     file.Write("};\n")
-    file.Write("\n")
-
-    size = len(args) * _SIZE_OF_UINT32 + _SIZE_OF_COMMAND_HEADER
-    file.Write("COMPILE_ASSERT(sizeof(%s) == %d,\n" % (func.name, size))
-    file.Write("               Sizeof_%s_is_not_%d);\n" % (func.name, size))
-    file.Write("COMPILE_ASSERT(offsetof(%s, header) == 0,\n" % func.name)
-    file.Write("               OffsetOf_%s_header_not_0);\n" % func.name)
-    offset = _SIZE_OF_COMMAND_HEADER
-    for arg in args:
-      file.Write("COMPILE_ASSERT(offsetof(%s, %s) == %d,\n" %
-                 (func.name, arg.name, offset))
-      file.Write("               OffsetOf_%s_%s_not_%d);\n" %
-                 (func.name, arg.name, offset))
-      offset += _SIZE_OF_UINT32
-    if not result == None and len(result) > 1:
-      offset = 0;
-      for line in result:
-        parts = line.split()
-        name = parts[-1]
-        check = """
-COMPILE_ASSERT(offsetof(%(cmd_name)s::Result, %(field_name)s) == %(offset)d,
-               OffsetOf_%(cmd_name)s_Result_%(field_name)s_not_%(offset)d);
-"""
-        file.Write((check.strip() + "\n") % {
-              'cmd_name': func.name,
-              'field_name': name,
-              'offset': offset,
-            })
-        offset += _SIZE_OF_UINT32
     file.Write("\n")
 
   def WriteHandlerImplementation(self, func, file):
@@ -5840,13 +5792,18 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
-  def GetSimpleFunctionSignature(self, func):
+  def IsSimpleFunction(self, func):
     if func.name.find("PixelStore") != -1:
         return None
     if func.name.endswith("EXT"):
         return None
     if func.return_type != "void":
         return None
+    return True
+
+  def GetSimpleFunctionSignature(self, func):
+    if not self.IsSimpleFunction(func):
+        return
 
     args = []
     for arg in func.GetInitArgs()[:-1]:
@@ -5877,14 +5834,13 @@ class GLGenerator(object):
         file.Write("}\n\n")
     file.Close()
 
-  def WriteFormat(self, filename):
-    """Writes the command buffer format"""
+  def WriteCommandFormat(self, filename):
+    """Writes the command format"""
     file = CWriter(filename)
     for func in self.functions:
-      if True:
-      #gen_cmd = func.GetInfo('gen_cmd')
-      #if gen_cmd == True or gen_cmd == None:
-        func.WriteStruct(file)
+      if not self.IsSimpleFunction(func):
+        continue
+      func.WriteStruct(file)
     file.Write("\n")
     file.Close()
 
@@ -6363,6 +6319,7 @@ def main(argv):
 
   else:
     gen.WriteSimpleFunctions("gpuprocess_gles2_api_autogen.c")
+    gen.WriteCommandFormat("gpuprocess_gles2_api_command_format.h")
     #gen.WriteFormat("gles2_cmd_format_autogen.h")
     #gen.WriteCommandIds("common/gles2_cmd_ids_autogen.h")
     #gen.WriteFormat("gles2_cmd_format_autogen.h")
