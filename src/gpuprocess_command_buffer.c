@@ -49,23 +49,24 @@ command_buffer_get_space_for_size (command_buffer_t *command_buffer,
 
     return write_location;
 }
-
 command_t *
 command_buffer_get_space_for_command (command_buffer_t *command_buffer,
-                                     command_id_t command_id)
+                                      command_id_t command_id)
 {
     command_t *command = NULL;
+    static bool initialized = false;
+    static size_t command_sizes[COMMAND_MAX_COMMAND];
 
-    switch (command_id) {
-    case COMMAND_NO_OP: break;
-    case COMMAND_SET_TOKEN: {
-        size_t size = sizeof (command_set_token_t);
-        command = command_buffer_get_space_for_size (command_buffer, size);
-        command->size = size;
-        break;
-    }
+    if (!initialized) {
+        int i;
+        for (i = 0; i < COMMAND_MAX_COMMAND; i++)
+            command_sizes[i] = command_get_size (i);
+        initialized = true;
     }
 
+    assert (command_id >= 0 && command_id < COMMAND_MAX_COMMAND);
+    command = command_buffer_get_space_for_size (command_buffer, command_sizes[command_id]);
+    command->size = command_sizes[command_id];
     return command;
 }
 

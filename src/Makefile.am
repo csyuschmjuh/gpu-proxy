@@ -43,7 +43,10 @@ libGPUProcess_la_SOURCES += \
 	gpuprocess_gles2_states.h
 
 nodist_libGPUProcess_la_SOURCES = \
-	generated/gpuprocess_gles2_api_autogen.c
+	generated/gpuprocess_gles2_api_autogen.c \
+	generated/gpuprocess_command_autogen.c \
+	generated/gpuprocess_command_autogen.h \
+	generated/gpuprocess_command_id_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
