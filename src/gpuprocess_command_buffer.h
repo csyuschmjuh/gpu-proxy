@@ -31,10 +31,10 @@ typedef struct command_buffer {
 } command_buffer_t;
 
 gpuprocess_private command_buffer_t *
-command_buffer_create ();
+command_buffer_get_thread_local ();
 
-gpuprocess_private bool
-command_buffer_destroy (command_buffer_t *command_buffer);
+gpuprocess_private void
+command_buffer_destroy_thread_local ();
 
 gpuprocess_private command_t *
 command_buffer_get_space_for_command (command_buffer_t *command_buffer,
