@@ -7,12 +7,12 @@
 extern "C" {
 #endif
 
-typedef struct v_link_list
+typedef struct link_list
 {
     void *data;
-    struct v_link_list *next;
-    struct v_link_list *prev;
-} v_link_list_t;
+    struct link_list *next;
+    struct link_list *prev;
+} link_list_t;
 
 #define v_ref_count_t unsigned int
 

@@ -15,7 +15,7 @@ typedef struct gl_server_states
 {
     bool             initialized;
     int                  num_contexts;
-    v_link_list_t        *states;
+    link_list_t        *states;
 } gl_server_states_t;
 
 /* global state variable */
@@ -26,7 +26,7 @@ private void
 _server_init ();
 
 private void
-_server_terminate (EGLDisplay display, v_link_list_t *active_state);
+_server_terminate (EGLDisplay display, link_list_t *active_state);
 
 /* called within eglMakeCurrent () */
 private void
@@ -34,16 +34,16 @@ _server_make_current (EGLDisplay display,
                                  EGLSurface drawable, 
                                  EGLSurface readable,
                                  EGLContext context,
-                                 v_link_list_t *active_state,
-                                 v_link_list_t **active_state_out);
+                                 link_list_t *active_state,
+                                 link_list_t **active_state_out);
 
 private void
 _server_destroy_context (EGLDisplay display, EGLContext context,
-                                    v_link_list_t *active_state);
+                                    link_list_t *active_state);
 
 private void
 _server_destroy_surface (EGLDisplay display, EGLSurface surface,
-                                    v_link_list_t *active_state);
+                                    link_list_t *active_state);
 
 private bool
 _server_is_equal (egl_state_t *state,
@@ -57,10 +57,10 @@ _match (EGLDisplay display,
                    EGLSurface drawable,
                    EGLSurface readable,
                    EGLContext context,
-                   v_link_list_t **state);
+                   link_list_t **state);
 
 private void 
-_server_remove_state (v_link_list_t *state);
+_server_remove_state (link_list_t *state);
 
 /*private void
 _server_remove_context (EGLDisplay display,

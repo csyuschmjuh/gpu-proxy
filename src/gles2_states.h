@@ -13,7 +13,7 @@ extern "C" {
 #define NUM_EMBEDDED 32
 
 /* these are client state */
-typedef struct v_vertex_attrib
+typedef struct vertex_attrib
 {
     GLuint        index;
     GLint         array_buffer_binding;   /* initial is 0 */
@@ -25,14 +25,14 @@ typedef struct v_vertex_attrib
     GLboolean     array_normalized;       /* initial is GL_FALSE */
     GLfloat       current_attrib[4];      /* initial is (0, 0, 0, 1) */
     char          *data;
-} v_vertex_attrib_t;
+} vertex_attrib_t;
 
-typedef struct v_vertex_attrib_list
+typedef struct vertex_attrib_list
 {
-    int                   count;          /* initial 0 */
-    v_vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
-    v_vertex_attrib_t     *attribs;
-} v_vertex_attrib_list_t;
+    int                 count;          /* initial 0 */
+    vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
+    vertex_attrib_t     *attribs;
+} vertex_attrib_list_t;
 
 typedef struct v_program_status {
     GLboolean    delete_status;
@@ -80,8 +80,8 @@ typedef struct v_program {
 typedef struct gl_state {
     GLenum                  error;             /* initial is GL_NO_ERROR */
     bool                    need_get_error;
-    v_link_list_t           *programs;         /* initial is NULL */
-    v_vertex_attrib_list_t  vertex_attribs;    /* client states */
+    link_list_t           *programs;         /* initial is NULL */
+    vertex_attrib_list_t  vertex_attribs;    /* client states */
 
 /* GL states from glGet () */
     /* used */
