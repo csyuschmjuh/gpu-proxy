@@ -342,7 +342,7 @@ _egl_swap_interval (EGLDisplay dpy, EGLint interval)
 }
 
 static EGLContext
-_egl_create_contextegl (EGLDisplay dpy, EGLConfig config,
+_egl_create_context (EGLDisplay dpy, EGLConfig config,
                         EGLContext share_context,
                         const EGLint *attrib_list)
 {
