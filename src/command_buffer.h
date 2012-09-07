@@ -31,10 +31,10 @@ typedef struct command_buffer {
 } command_buffer_t;
 
 private command_buffer_t *
-command_buffer_get_thread_local ();
+command_buffer_create ();
 
-private void
-command_buffer_destroy_thread_local ();
+private bool
+command_buffer_destroy (command_buffer_t *command_buffer);
 
 private command_t *
 command_buffer_get_space_for_command (command_buffer_t *command_buffer,
