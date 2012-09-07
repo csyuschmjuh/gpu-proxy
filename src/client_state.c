@@ -12,7 +12,6 @@ client_state_create ()
 
     client_state->command_buffer = command_buffer_create ();
     client_state->active_egl_state = NULL;
-    client_state->unpack_alignment = 4;
 
     return client_state;
 }
@@ -76,22 +75,6 @@ client_state_get_command_buffer ()
     return client_state->command_buffer;
 }
 
-int
-client_state_get_unpack_alignment ()
-{
-    client_state_t *client_state = client_state_get_thread_local ();
-
-    return client_state->unpack_alignment;
-}
-
-void
-client_state_set_unpack_alignment (int unpack_alignment)
-{
-    client_state_t *client_state = client_state_get_thread_local ();
-
-    client_state->unpack_alignment = unpack_alignment;
-}
-
 egl_state_t *
 client_state_get_active_egl_state ()
 {
@@ -106,4 +89,11 @@ client_state_set_active_egl_state (v_link_list_t* active_egl_state)
     client_state_t *client_state = client_state_get_thread_local ();
 
     client_state->active_egl_state = active_egl_state;
+}
+
+static int
+client_state_get_unpack_alignment ()
+{
+    client_state_t *client_state = client_state_get_thread_local ();
+    return ((egl_state_t *)client_state->active_egl_state->data)->state.unpack_alignment;
 }
