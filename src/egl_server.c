@@ -32,7 +32,7 @@ extern dispatch_t      dispatch;
 extern gl_server_states_t         server_states;
 
 /* server thread local variable */
-__thread v_link_list_t    *active_state
+__thread link_list_t    *active_state
   __attribute__(( tls_model ("initial-exec"))) = NULL;
 
 static EGLint
@@ -255,7 +255,7 @@ _egl_release_thread (void)
     EGLBoolean result = EGL_FALSE;
     bool success;
     egl_state_t *egl_state;
-    v_link_list_t *active_state_out = NULL;
+    link_list_t *active_state_out = NULL;
 
     if (dispatch.eglReleaseThread) {
         result = dispatch.eglReleaseThread ();
@@ -492,11 +492,11 @@ _egl_get_proc_address (const char *procname)
 
 static EGLBoolean 
 _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
-                   EGLContext ctx, v_link_list_t *active_state, 
-                   v_link_list_t **active_state_out)
+                   EGLContext ctx, link_list_t *active_state, 
+                   link_list_t **active_state_out)
 {
     EGLBoolean result = EGL_FALSE;
-    v_link_list_t *exist = NULL;
+    link_list_t *exist = NULL;
     bool found = false;
 
     if (! dispatch.eglMakeCurrent)

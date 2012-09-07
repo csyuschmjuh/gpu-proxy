@@ -172,7 +172,7 @@ _server_set_egl_states (egl_state_t *egl_state,
 }
 
 void 
-_server_remove_state (v_link_list_t *state)
+_server_remove_state (link_list_t *state)
 {
     egl_state_t *egl_state = (egl_state_t *) state->data;
 
@@ -192,7 +192,7 @@ _server_remove_state (v_link_list_t *state)
 }
 
 static void 
-_server_remove_surface (v_link_list_t *state, bool read)
+_server_remove_surface (link_list_t *state, bool read)
 {
     egl_state_t *egl_state = (egl_state_t *) state->data;
 
@@ -203,19 +203,19 @@ _server_remove_surface (v_link_list_t *state, bool read)
 
 }
 
-static v_link_list_t *
+static link_list_t *
 _server_get_state (EGLDisplay dpy,
                               EGLSurface draw,
                               EGLSurface read,
                               EGLContext ctx)
 {
-    v_link_list_t *new_list;
+    link_list_t *new_list;
     egl_state_t   *new_state;
-    v_link_list_t *list = server_states.states;
+    link_list_t *list = server_states.states;
 
     if (server_states.num_contexts == 0 || ! server_states.states) {
         server_states.num_contexts = 1;
-        server_states.states = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+        server_states.states = (link_list_t *)malloc (sizeof (link_list_t));
         server_states.states->prev = NULL;
         server_states.states->next = NULL;
 
@@ -252,7 +252,7 @@ _server_get_state (EGLDisplay dpy,
     while (list->next != NULL)
         list = list->next;
 
-    new_list = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+    new_list = (link_list_t *)malloc (sizeof (link_list_t));
     new_list->prev = list;
     new_list->next = NULL;
     new_list->data = new_state;
@@ -280,11 +280,11 @@ _server_init ()
  * then look over the cached states
  */
 void 
-_server_terminate (EGLDisplay display, v_link_list_t *active_state) 
+_server_terminate (EGLDisplay display, link_list_t *active_state) 
 {
-    v_link_list_t *head = server_states.states;
-    v_link_list_t *list = head;
-    v_link_list_t *current;
+    link_list_t *head = server_states.states;
+    link_list_t *list = head;
+    link_list_t *current;
 
     egl_state_t *egl_state;
 
@@ -341,13 +341,13 @@ _server_make_current (EGLDisplay display,
                                  EGLSurface drawable,
                                  EGLSurface readable,
                                  EGLContext context,
-                                 v_link_list_t *active_state,
-                                 v_link_list_t **active_state_out)
+                                 link_list_t *active_state,
+                                 link_list_t **active_state_out)
 {
     egl_state_t *new_state, *egl_state;
-    v_link_list_t *list = server_states.states;
-    v_link_list_t *new_list;
-    v_link_list_t *match_state = NULL;
+    link_list_t *list = server_states.states;
+    link_list_t *new_list;
+    link_list_t *match_state = NULL;
 
     mutex_lock (egl_mutex);
     /* we are switching to None context */
@@ -405,11 +405,11 @@ _server_make_current (EGLDisplay display,
 void
 _server_destroy_context (EGLDisplay display, 
                                     EGLContext context,
-                                    v_link_list_t *active_state)
+                                    link_list_t *active_state)
 {
     egl_state_t *state;
-    v_link_list_t *list = server_states.states;
-    v_link_list_t *current;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
 
     mutex_lock (egl_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {
@@ -434,11 +434,11 @@ _server_destroy_context (EGLDisplay display,
 void
 _server_destroy_surface (EGLDisplay display, 
                                     EGLSurface surface,
-                                    v_link_list_t *active_state)
+                                    link_list_t *active_state)
 {
     egl_state_t *state;
-    v_link_list_t *list = server_states.states;
-    v_link_list_t *current;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
 
     mutex_lock (egl_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {
@@ -476,11 +476,11 @@ _match (EGLDisplay display,
                    EGLSurface drawable,
                    EGLSurface readable,
                    EGLContext context, 
-                   v_link_list_t **state)
+                   link_list_t **state)
 {
     egl_state_t *egl_state;
-    v_link_list_t *list = server_states.states;
-    v_link_list_t *current;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
 
     mutex_lock (egl_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {

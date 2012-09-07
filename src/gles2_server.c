@@ -24,7 +24,7 @@
 #include "egl_states.h"
 
 /* server local variable, referenced from egl_server.c */
-extern __thread v_link_list_t        *active_state;
+extern __thread link_list_t        *active_state;
 
 /* global variable for all server threads, referenced from 
  * egl_server_helper.c */
@@ -135,8 +135,8 @@ static void _gl_bind_attrib_location (GLuint program, GLuint index, const GLchar
 static void _gl_bind_buffer (GLenum target, GLuint buffer)
 {
     egl_state_t *egl_state;
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int count;
     int i;
     
@@ -144,7 +144,7 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
-        v_vertex_attrib_t *attribs = attrib_list->attribs;
+        vertex_attrib_t *attribs = attrib_list->attribs;
         count = attrib_list->count;
 
         if (target == GL_ARRAY_BUFFER) {
@@ -838,8 +838,8 @@ static void _gl_cull_face (GLenum mode)
 static void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
 {
     egl_state_t *egl_state;
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int count;
     int i, j;
     
@@ -847,7 +847,7 @@ static void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
-        v_vertex_attrib_t *attribs = attrib_list->attribs;
+        vertex_attrib_t *attribs = attrib_list->attribs;
         count = attrib_list->count;
 
         if (n < 0) {
@@ -1179,8 +1179,8 @@ static void
 _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state, 
                              GLboolean enable)
 {
-    v_vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
-    v_vertex_attrib_t *attribs = attrib_list->attribs;
+    vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
+    vertex_attrib_t *attribs = attrib_list->attribs;
     int count = attrib_list->count;
     int i, found_index = -1;
 
@@ -1229,10 +1229,10 @@ _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state,
         attrib_list->count ++;
     }
     else {
-        v_vertex_attrib_t *new_attribs = 
-            (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
+        vertex_attrib_t *new_attribs = 
+            (vertex_attrib_t *)malloc (sizeof (vertex_attrib_t) * (count + 1));
 
-        memcpy (new_attribs, attribs, (count+1) * sizeof (v_vertex_attrib_t));
+        memcpy (new_attribs, attribs, (count+1) * sizeof (vertex_attrib_t));
         if (attribs != attrib_list->embedded_attribs)
             free (attribs);
 
@@ -1281,7 +1281,7 @@ static void _gl_enable_vertex_attrib_array (GLuint index)
 
 /* FIXME: we should use pre-allocated buffer if possible */
 static char *
-_gl_create_data_array (v_vertex_attrib_t *attrib, int count)
+_gl_create_data_array (vertex_attrib_t *attrib, int count)
 {
     int i;
     char *data = NULL;
@@ -1312,11 +1312,11 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
     gles2_state_t *state;
     egl_state_t *egl_state;
     char *data;
-    v_link_list_t *array_data = NULL;
-    v_link_list_t *array, *new_array_data;
+    link_list_t *array_data = NULL;
+    link_list_t *array, *new_array_data;
  
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int i, found_index = -1;
     int n = 0;
 
@@ -1367,7 +1367,7 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
                                               data);
                 /* create a data list to host our newly created data */
                 if (array_data == NULL) {
-                    array_data = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+                    array_data = (link_list_t *)malloc (sizeof (link_list_t));
                     array_data->prev = NULL;
                     array_data->next = NULL;
                     array_data->data = data;
@@ -1377,7 +1377,7 @@ static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
                     while (array->next)
                          array = array->next;
 
-                    new_array_data = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+                    new_array_data = (link_list_t *)malloc (sizeof (link_list_t));
                     new_array_data->prev = array;
                     new_array_data->next = NULL;
                     array_data->next = new_array_data;
@@ -1453,11 +1453,11 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
     egl_state_t *egl_state;
     gles2_state_t *state;
     char *data;
-    v_link_list_t *array_data = NULL;
-    v_link_list_t *array, *new_array_data;
+    link_list_t *array_data = NULL;
+    link_list_t *array, *new_array_data;
 
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int i, found_index = -1;
     int n = 0;
 
@@ -1512,7 +1512,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
                                               data);
                 /* save data */
                 if (array_data == NULL) {
-                    array_data = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+                    array_data = (link_list_t *)malloc (sizeof (link_list_t));
                     array_data->prev = NULL;
                     array_data->next = NULL;
                     array_data->data = data;
@@ -1522,7 +1522,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
                     while (array->next)
                         array = array->next;
 
-                    new_array_data = (v_link_list_t *)malloc (sizeof (v_link_list_t));
+                    new_array_data = (link_list_t *)malloc (sizeof (link_list_t));
                     new_array_data->prev = array;
                     new_array_data->next = NULL;
                     array_data->next = new_array_data;
@@ -1831,8 +1831,8 @@ static void _gl_get_floatv (GLenum pname, GLfloat *params)
 static void _gl_get_integerv (GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int count;
     int i;
     
@@ -2393,8 +2393,8 @@ static void _gl_get_vertex_attribfv (GLuint index, GLenum pname,
 {
     egl_state_t *egl_state;
 
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int count;
     int i, found_index = -1;
 
@@ -2505,8 +2505,8 @@ static void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname,
 {
     egl_state_t *egl_state;
 
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int count;
     int i, found_index = -1;
     
@@ -3729,11 +3729,11 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
     egl_state_t *egl_state;
     gles2_state_t *state;
     char *data;
-    v_link_list_t *array_data = NULL;
-    v_link_list_t *array, *new_array_data;
+    link_list_t *array_data = NULL;
+    link_list_t *array, *new_array_data;
 
-    v_vertex_attrib_list_t *attrib_list;
-    v_vertex_attrib_t *attribs;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
     int i, found_index = -1;
     int count;
     int n = 0;
@@ -3824,9 +3824,9 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
             attrib_list->count ++;
         }
         else {
-            v_vertex_attrib_t *new_attribs = (v_vertex_attrib_t *)malloc (sizeof (v_vertex_attrib_t) * (count + 1));
+            vertex_attrib_t *new_attribs = (vertex_attrib_t *)malloc (sizeof (vertex_attrib_t) * (count + 1));
 
-            memcpy (new_attribs, attribs, (count+1) * sizeof (v_vertex_attrib_t));
+            memcpy (new_attribs, attribs, (count+1) * sizeof (vertex_attrib_t));
             if (attribs != attrib_list->embedded_attribs)
                 free (attribs);
 

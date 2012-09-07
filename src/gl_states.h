@@ -115,7 +115,7 @@ typedef enum v_texture {
 } v_texture_t;
 
 /* these are client state */
-typedef struct v_vertex_attrib
+typedef struct vertex_attrib
 {
 #if defined GL_VERSION_1_5 || GL_ARB_vertex_program || GL_ARB_vertex_buffer
     GLuint        index;
@@ -134,14 +134,14 @@ typedef struct v_vertex_attrib
 #endif
 #endif
 #endif
-} v_vertex_attrib_t;
+} vertex_attrib_t;
 
-typedef struct v_vertex_attrib_list
+typedef struct vertex_attrib_list
 {
     int                 count;                        /* initial 0 */
-    v_vertex_attrib_t        embedded_attribs[32];
-    v_vertex_attrib_t        *attribs;
-} v_vertex_attrib_list_t;
+    vertex_attrib_t        embedded_attribs[32];
+    vertex_attrib_t        *attribs;
+} vertex_attrib_list_t;
 
 #ifdef GL_VERSION_2_0
 typedef struct v_program_status {
@@ -865,7 +865,7 @@ typedef struct gl_state {
     GLvoid        *pixel_unpack_array_buffer_pointer; /* initial 0 */
 
     /* glGetVertexAttrib ()  */
-    v_vertex_attrib_list_t vertex_attrib_list;           /* initial count 0 */
+    vertex_attrib_list_t vertex_attrib_list;           /* initial count 0 */
 #endif
 
 #if defined GL_VERSION_1_5 || GL_ARB_vertex_buffer_object

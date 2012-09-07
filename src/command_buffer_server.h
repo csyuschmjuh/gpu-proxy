@@ -29,7 +29,7 @@ typedef struct command_buffer_server {
      * egl_server.c - _egl_make_current () and
      * _egl_release_thread ()
      */
-    v_link_list_t *active_state;
+    link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     thread_t *thread;
 } command_buffer_server_t;
@@ -42,7 +42,7 @@ command_buffer_server_destroy (command_buffer_server_t *command_buffer_server);
 
 private void
 command_buffer_server_set_active_state (command_buffer_server_t *command_buffer_server,
-                                        v_link_list_t *active_state);
+                                        link_list_t *active_state);
 
 #ifdef __cplusplus
 }

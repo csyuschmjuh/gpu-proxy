@@ -10,7 +10,7 @@ extern "C" {
 
 typedef struct client_state {
     command_buffer_t *command_buffer;
-    v_link_list_t *active_egl_state;
+    link_list_t *active_egl_state;
 } client_state_t;
 
 private client_state_t *
@@ -35,7 +35,7 @@ private egl_state_t *
 client_state_get_active_egl_state ();
 
 private void
-client_state_set_active_egl_state (v_link_list_t* active_egl_state);
+client_state_set_active_egl_state (link_list_t* active_egl_state);
 
 private int
 client_state_get_unpack_alignment ();

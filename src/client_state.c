@@ -84,7 +84,7 @@ client_state_get_active_egl_state ()
 }
 
 void
-client_state_set_active_egl_state (v_link_list_t* active_egl_state)
+client_state_set_active_egl_state (link_list_t* active_egl_state)
 {
     client_state_t *client_state = client_state_get_thread_local ();
 

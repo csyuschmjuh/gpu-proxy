@@ -99,7 +99,7 @@ command_buffer_server_destroy (command_buffer_server_t *command_buffer_server)
 
 void
 command_buffer_server_set_active_state (command_buffer_server_t *command_buffer_server,
-                                        v_link_list_t *active_state)
+                                        link_list_t *active_state)
 {
     command_buffer_server->active_state = active_state;
 }

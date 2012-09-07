@@ -56,7 +56,7 @@ command_buffer_wait_for_token (command_buffer_t *command_buffer,
 
 private void
 command_buffer_set_active_state (command_buffer_t *command_buffer,
-                                 v_link_list_t     *active_state);
+                                 link_list_t     *active_state);
 
 #ifdef __cplusplus
 }

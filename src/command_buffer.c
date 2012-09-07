@@ -122,7 +122,7 @@ command_buffer_flush (command_buffer_t *command_buffer)
 
 void
 command_buffer_set_active_state (command_buffer_t *command_buffer,
-                                 v_link_list_t *active_state)
+                                 link_list_t *active_state)
 {
     command_buffer_server_set_active_state (command_buffer->server,
                                             active_state);
