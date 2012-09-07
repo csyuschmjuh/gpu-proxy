@@ -196,6 +196,7 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
                      const GLvoid *indices)
 {
     GLvoid *indices_copy = NULL;
+    egl_state_t *egl_state;
 
     if (_is_error_state ())
         return;
@@ -207,16 +208,19 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
      * will generate error even the underlying driver supports other
      * types.
      */
-    if (indices && count > 0 ) {
-        if (type == GL_UNSIGNED_BYTE) {
-            indices_copy = (GLvoid *) malloc (sizeof (char) * count);
-            memcpy ((void *)indices_copy, (const void *)indices, 
-                    sizeof (char) * count);
-        }
-        else if (type == GL_UNSIGNED_SHORT) {
-            indices_copy = (GLvoid *) malloc (sizeof (short) * count);
-            memcpy ((void *)indices_copy, (const void *)indices, 
-                    sizeof (short) * count);
+    egl_state = client_state_get_active_egl_state();
+    if (egl_state->state.element_array_buffer_binding == 0) {
+        if (indices && count > 0 ) {
+            if (type == GL_UNSIGNED_BYTE) {
+                indices_copy = (GLvoid *) malloc (sizeof (char) * count);
+                memcpy ((void *)indices_copy, (const void *)indices, 
+                        sizeof (char) * count);
+            }
+            else if (type == GL_UNSIGNED_SHORT) {
+                indices_copy = (GLvoid *) malloc (sizeof (short) * count);
+                memcpy ((void *)indices_copy, (const void *)indices, 
+                        sizeof (short) * count);
+            }
         }
     }
 }
