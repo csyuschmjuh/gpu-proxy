@@ -584,10 +584,6 @@ void glPixelStorei (GLenum pname, GLint param)
         return;
 
     /* XXX: post command and no wait */
-
-    if (pname == GL_UNPACK_ALIGNMENT &&
-        (param == 1 || param == 2 || param == 4 || param == 8))
-        client_state_set_unpack_alignment (param);
     return;
 }
 

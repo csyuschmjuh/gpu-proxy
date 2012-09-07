@@ -13,10 +13,6 @@
  * between client thread and server thread.  The client posts command to
  * command buffer, while the server thread reads from the command from
  * the command buffer
- * (3) unpack_alignment - this the client cache of server side state. It
- * is used by gles2_server.c to compute padding for image during
- * image uploading (glTexImage2D(), glTexSubImage2D(), glTexImage3DOES(),
- * and glTexSubImage3DOES()
  */
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -513,19 +509,19 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     if (! client_state_active_egl_state_available ()) {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             result = EGL_TRUE;
-            goto FINISH;
+            return result;
+            
         }
         else {
           /* XXX: post eglMakeCurrent and wait */
           /* update active_context */
-          goto FINISH;
+          return EGL_TRUE;
         }
     }
     else {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             /* XXX: post eglMakeCurrent and no wait */
-            result = EGL_TRUE;
-            goto FINISH;
+            return EGL_TRUE;
         }
         else {
             egl_state = client_state_get_active_egl_state ();
@@ -533,24 +529,16 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
                 egl_state->readable == read) {
-                result = GL_TRUE;
-               goto FINISH;
+                return EGL_TRUE;
             }
             else {
                 /* XXX: post eglMakeCurrent and wait */
                 /* update active_context */
-                goto FINISH;
+                return EGL_TRUE;
             }
         }
     }
-FINISH:
-
-    if (egl_state) {
-        egl_state = client_state_get_active_egl_state ();
-        if (egl_state->active) {
-            client_state_set_unpack_alignment (egl_state->state.unpack_alignment);
-        }
-    }
+    return result;
 }
 
 /* start of eglext.h */
