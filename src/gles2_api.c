@@ -5,17 +5,17 @@
 bool
 _is_error_state (void)
 {
-    egl_state_t *state;
+    egl_state_t *egl_state;
 
-    if (! active_state)
+    if (! client_state_is_available ())
         return true;
 
-    state = (egl_state_t *) active_state->data;
+    egl_state = client_state_get_active_egl_state ();
 
-    if (! state ||
-        ! (state->display == EGL_NO_DISPLAY ||
-           state->context == EGL_NO_CONTEXT) ||
-           state->active == false) {
+    if (! egl_state ||
+        ! (egl_state->display == EGL_NO_DISPLAY ||
+           egl_state->context == EGL_NO_CONTEXT) ||
+           egl_state->active == false) {
         return true;
     }
 
@@ -585,9 +585,9 @@ void glPixelStorei (GLenum pname, GLint param)
 
     /* XXX: post command and no wait */
 
-    if (pname == GL_UNPACK_ALIGNMENT && 
+    if (pname == GL_UNPACK_ALIGNMENT &&
         (param == 1 || param == 2 || param == 4 || param == 8))
-        unpack_alignment = param;
+        client_state_set_unpack_alignment (param);
     return;
 }
 
@@ -665,6 +665,7 @@ _gl_get_data_width (GLsizei width, GLenum format, GLenum type)
     int padding = 0;
     int mod = 0;
     int total_width = 0;
+    int unpack_alignment = client_state_get_unpack_alignment ();
     
     if (type == GL_UNSIGNED_BYTE) {
         if (format == GL_RGB) {

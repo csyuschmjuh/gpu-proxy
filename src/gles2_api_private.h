@@ -13,14 +13,12 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "client_state.h"
 #include "command.h"
 #include "command_buffer.h"
 #include "types_private.h"
 #include "thread_private.h"
 #include "egl_states.h"
-
-extern __thread v_link_list_t *active_state;
-extern __thread int unpack_alignment;
 
 private bool
 _is_error_state (void);

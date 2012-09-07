@@ -8,10 +8,7 @@
 // may be larger.
 #define BUFFER_SIZE 10
 
-__thread command_buffer_t* thread_local_command_buffer
-    __attribute__(( tls_model ("initial-exec"))) = NULL;
-
-static command_buffer_t *
+command_buffer_t *
 command_buffer_create ()
 {
     command_buffer_t *command_buffer;
@@ -25,31 +22,13 @@ command_buffer_create ()
     return command_buffer;
 }
 
-static bool
+bool
 command_buffer_destroy (command_buffer_t *command_buffer)
 {
     buffer_free (command_buffer->buffer);
     command_buffer->buffer = NULL;
     command_buffer_server_destroy (command_buffer->server);
     free (command_buffer);
-}
-
-command_buffer_t *
-command_buffer_get_thread_local ()
-{
-    if (unlikely (! thread_local_command_buffer))
-        thread_local_command_buffer = command_buffer_create();
-    return thread_local_command_buffer;
-}
-
-private void
-command_buffer_destroy_thread_local ()
-{
-    if (! thread_local_command_buffer)
-        return;
-
-     command_buffer_destroy (thread_local_command_buffer);
-     thread_local_command_buffer = NULL;
 }
 
 static inline void
