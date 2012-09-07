@@ -12,7 +12,7 @@ client_state_create ()
 
     client_state->command_buffer = command_buffer_create ();
     client_state->active_egl_state = NULL;
-    client_state->unpack_alignment = 0;
+    client_state->unpack_alignment = 4;
 
     return client_state;
 }
