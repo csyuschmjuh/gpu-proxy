@@ -271,6 +271,7 @@ _server_init ()
         server_states.states = NULL;
         
         dispatch_init (&dispatch);
+        server_states.initialized = true;
     }
     mutex_unlock (egl_mutex);
 }
