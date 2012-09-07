@@ -91,7 +91,7 @@ client_state_set_active_egl_state (link_list_t* active_egl_state)
     client_state->active_egl_state = active_egl_state;
 }
 
-static int
+int
 client_state_get_unpack_alignment ()
 {
     client_state_t *client_state = client_state_get_thread_local ();
