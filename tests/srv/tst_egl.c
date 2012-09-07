@@ -21,6 +21,11 @@ _egl_initialize (EGLDisplay dpy, EGLint *major, EGLint *minor);
 extern EGLBoolean
 _egl_terminate (EGLDisplay dpy);
 
+extern EGLContext
+_egl_create_contextegl (EGLDisplay dpy, EGLConfig config,
+                        EGLContext share_context,
+                        const EGLint *attrib_list);
+
 static void
 setup (void)
 {
@@ -121,6 +126,52 @@ GPUPROCESS_START_TEST
 }
 GPUPROCESS_END_TEST
 
+GPUPROCESS_START_TEST
+(test_egl_create_destroy_context)
+{
+    EGLBoolean result;
+    EGLint config_list_length;
+    EGLint old_config_list_length;
+    EGLConfig config;
+    EGLint get_error_result;
+    EGLContext context;
+    static const EGLint valid_ctx_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+    static const EGLint invalid_ctx_attribs[] = {
+        EGL_NONE
+    };
+    static const EGLint attribs[] = {
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_NONE
+    };
+
+    result = _egl_initialize (egl_dpy, NULL, NULL);
+    GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
+
+    result = _egl_choose_config (egl_dpy, attribs, &config, 1, &config_list_length);
+    GPUPROCESS_FAIL_IF (!result, "_egl_choose_config failed");
+
+    context = _egl_create_contextegl (egl_dpy, config, EGL_NO_CONTEXT, valid_ctx_attribs);
+    GPUPROCESS_FAIL_IF (!context, "_egl_create_context failed");
+
+    result = _egl_destroy_context (egl_dpy, context);
+    GPUPROCESS_FAIL_IF (!result, "_egl_destroy_context failed");
+
+    context = _egl_create_contextegl (egl_dpy, config, EGL_NO_CONTEXT, invalid_ctx_attribs);
+    GPUPROCESS_FAIL_IF ((int) context, "context should not be created");
+
+    get_error_result = _egl_get_error ();
+    GPUPROCESS_FAIL_IF (get_error_result == EGL_SUCCESS, "_egl_get_error should fail");
+
+    result = _egl_terminate (egl_dpy);
+    GPUPROCESS_FAIL_IF (!result, "_egl_terminate failed");
+}
+GPUPROCESS_END_TEST
+
 gpuprocess_suite_t *
 egl_testsuite_create (void)
 {
@@ -133,6 +184,7 @@ egl_testsuite_create (void)
     gpuprocess_testcase_add_test (tc, test_egl_srv_initialize);
     gpuprocess_testcase_add_test (tc, test_egl_srv_terminate);
     gpuprocess_testcase_add_test (tc, test_egl_get_configs);
+    gpuprocess_testcase_add_test (tc, test_egl_create_destroy_context);
 
     s = gpuprocess_suite_create ("egl");
     gpuprocess_suite_add_testcase (s, tc);
