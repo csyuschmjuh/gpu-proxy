@@ -1460,6 +1460,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
     vertex_attrib_t *attribs;
     int i, found_index = -1;
     int n = 0;
+    bool element_binding = false;
 
     if (_gl_is_valid_func (dispatch.DrawElements) &&
         _gl_is_valid_context ()) {
@@ -1467,6 +1468,7 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
         state = &egl_state->state;
         attrib_list = &state->vertex_attribs;
         attribs = attrib_list->attribs;
+        element_binding = state->element_array_buffer_binding == 0 ? false : true;
         
         if (! (mode == GL_POINTS         || 
                mode == GL_LINE_STRIP     ||
@@ -1547,8 +1549,10 @@ static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
         //egl_state->state.need_get_error = true;
     }
 FINISH:
-    if (indices)
-        free ((void *)indices);
+    if (element_binding == false) {
+        if (indices)
+            free ((void *)indices);
+    }
 }
 
 static void _gl_finish (void)
