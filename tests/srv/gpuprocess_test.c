@@ -156,12 +156,12 @@ gpuprocess_suite_run_all (gpuprocess_suite_t *suite)
 
     for (suite_node = suite->testcases->head; suite_node; suite_node = suite_node->next) {
         gpuprocess_testcase_t *testcase = suite_node->data;
+            testcase->setup();
         for (testcase_node = testcase->tests->head; testcase_node; testcase_node = testcase_node->next) {
             gpuprocess_func_t func = testcase_node->data;
-            testcase->setup();
             func ();
-            testcase->teardown();
         }
+            testcase->teardown();
     }
     printf ("All tests passed\n");
 }
