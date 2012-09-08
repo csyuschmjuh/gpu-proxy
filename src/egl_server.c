@@ -492,11 +492,11 @@ _egl_get_proc_address (const char *procname)
 
 static EGLBoolean 
 _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
-                   EGLContext ctx, link_list_t *active_state, 
-                   link_list_t **active_state_out)
+                   EGLContext ctx) 
 {
     EGLBoolean result = EGL_FALSE;
     link_list_t *exist = NULL;
+    link_list_t *active_state_out = NULL;
     bool found = false;
 
     if (! dispatch.eglMakeCurrent)
@@ -519,8 +519,8 @@ _egl_make_current (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     if (result == EGL_TRUE) {
         _server_make_current (dpy, draw, read, ctx,
                                          active_state, 
-                                         active_state_out);
-        active_state = *active_state_out;
+                                         &active_state_out);
+        active_state = active_state_out;
     }
     return result;
 }
