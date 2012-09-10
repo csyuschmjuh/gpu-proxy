@@ -498,11 +498,17 @@ _match (EGLDisplay display,
         list = list->next;
         egl_state = (egl_state_t *)current->data;
 
+        /* we check matching of display, context, readable and drawable,
+         * and also whether destroy_dpy is true or not
+         * if destroy_dpy has been set, we should not return as it
+         * as a valid state
+         */
         if (egl_state->display == display && 
             egl_state->context == context &&
             egl_state->drawable == drawable &&
             egl_state->readable == readable &&
-            egl_state->active == false) {
+            egl_state->active == false && 
+            ! egl_state->destroy_dpy ) {
             egl_state->active = true;
             *state = current;
             mutex_unlock (egl_mutex);

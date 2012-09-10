@@ -266,6 +266,7 @@ GPUPROCESS_START_TEST
     EGLint value;
     EGLSurface current_surface;
     EGLContext current_context;
+    EGLDisplay current_display;
 
     result = _egl_make_current (first_test_info.egl_dpy,
 				first_test_info.first_surface, first_test_info.first_surface,
@@ -305,15 +306,24 @@ GPUPROCESS_START_TEST
      */
     current_context = (EGLContext)_egl_get_current_context ();
     GPUPROCESS_FAIL_IF (current_context != first_test_info.context, "value should not be EGL_FALSE");
+    current_display = (EGLDisplay)_egl_get_current_display ();
+    GPUPROCESS_FAIL_IF (current_display != first_test_info.egl_dpy, "value should not be EGL_FALSE");
 
-    result = _egl_make_current (second_test_info.egl_dpy,
-                                second_test_info.first_surface, second_test_info.first_surface,
-                                second_test_info.context);
-    GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_make_current failed");
+    /* we have destroyed display, the display is still current, but
+     * further make current on the same display results in error
+     */
+    result = _egl_make_current (first_test_info.egl_dpy,
+                                first_test_info.second_surface, first_test_info.second_surface,
+                                first_test_info.context);
+    GPUPROCESS_FAIL_IF (result == EGL_TRUE, "_egl_make_current failed");
 
     /* we switched to the second display, the first display should be
      * terminated
      */
+    result = _egl_make_current (second_test_info.egl_dpy,
+                                second_test_info.second_surface, second_test_info.second_surface,
+                                second_test_info.context);
+    GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_make_current failed");
     result = _egl_query_context (first_test_info.egl_dpy, first_test_info.context, EGL_CONFIG_ID, &value);
     value = _egl_get_error ();
     GPUPROCESS_FAIL_IF (value != EGL_BAD_CONTEXT, "value should not be EGL_BAD_CONTEXT");
