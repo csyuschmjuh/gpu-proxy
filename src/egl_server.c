@@ -355,6 +355,7 @@ _egl_create_context (EGLDisplay dpy, EGLConfig config,
     return result;
 }
 
+/* XXX: for testing purpose only */
 static EGLBoolean
 _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
 {
@@ -372,10 +373,12 @@ _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
     return result;
 }
 
-/*
+
+/* XXX: for testing purpose only */
 static EGLContext
 _egl_get_current_context (void)
 {
+    return dispatch.eglGetCurrentContext ();
     egl_state_t *state;
     
     if (!active_state)
@@ -385,9 +388,11 @@ _egl_get_current_context (void)
     return state->context;
 }
 
-EGLAPI EGLDisplay EGLAPIENTRY 
-eglGetCurrentDisplay (void)
+/* XXX: for testing purpose only */
+static EGLDisplay
+_egl_get_current_display (void)
 {
+    return dispatch.eglGetCurrentDisplay ();
     egl_state_t *state;
     
     if (!active_state)
@@ -397,9 +402,10 @@ eglGetCurrentDisplay (void)
     return state->display;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY 
-eglGetCurrentSurface (EGLint readdraw)
+static EGLSurface
+_egl_get_current_surface (EGLint readdraw)
 {
+    return dispatch.eglGetCurrentSurface (readdraw);
     egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
     
@@ -418,7 +424,7 @@ eglGetCurrentSurface (EGLint readdraw)
  FINISH:
     return surface;
 }
-*/
+
 
 static EGLBoolean
 _egl_query_context (EGLDisplay dpy, EGLContext ctx,

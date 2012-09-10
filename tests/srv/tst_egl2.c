@@ -56,8 +56,8 @@ egl_test first_test_info;
 /*
  * second_test_info:
  * context: window
- * first_surface: pixmap surface
- * second_surface: window surface
+ * first_surface: window surface
+ * second_surface: pbuffer surface
  */
 
 egl_test second_test_info;
@@ -155,14 +155,6 @@ setup (void)
         EGL_BLUE_SIZE, 1,
         EGL_NONE
     };
-    static const EGLint pbuffer_attribs[] = {
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
-        EGL_NONE
-    };
     static const EGLint window_attribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
@@ -171,6 +163,17 @@ setup (void)
         EGL_BLUE_SIZE, 1,
         EGL_NONE
     };
+    static const EGLint pbuffer_attribs[] = {
+        EGL_WIDTH, 1,
+        EGL_HEIGHT, 1,
+        EGL_NONE
+    };
+
+    static config_attribs[] = {
+        EGL_CONFIG_ID, 0,
+        EGL_NONE
+    };
+
     Window win;
     EGLBoolean result;
     XVisualInfo *vinfo;
@@ -183,6 +186,9 @@ setup (void)
 
     result = _egl_initialize (first_test_info.egl_dpy, NULL, NULL);
     GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
+
+    result = _egl_bind_api (EGL_OPENGL_ES_API);
+    GPUPROCESS_FAIL_IF (!result, "_egl_bind_api failed");
 
     result = _egl_choose_config (first_test_info.egl_dpy,
                                  pixmap_buffer_attribs,
@@ -205,9 +211,9 @@ setup (void)
 
     first_test_info.second_surface = _egl_create_pbuffer_surface (first_test_info.egl_dpy,
                                                                   config,
-                                                                  NULL);
+                                                                  pbuffer_attribs);
 
-    // Second EGL context
+    /* Second EGL context */
 
     second_test_info.dpy = XOpenDisplay (NULL);
     GPUPROCESS_FAIL_IF (second_test_info.dpy == NULL, "XOpenDisplay should work");
@@ -230,20 +236,20 @@ setup (void)
                                                     EGL_NO_CONTEXT,
                                                     ctx_attribs);
     GPUPROCESS_FAIL_IF (! second_test_info.context, "context should be created");
-
-    second_test_info.first_surface = egl_create_pixmap (second_test_info.dpy,
-                                                            second_test_info.egl_dpy,
-                                                            config,
-                                                            400, 400);
-
-
     vinfo = ChooseWindowVisual(second_test_info.dpy, second_test_info.egl_dpy, config);
     win = CreateWindow(second_test_info.dpy, vinfo, 400, 400, "gpu_proxy test");
-    second_test_info.second_surface = _egl_create_window_surface (second_test_info.egl_dpy,
+
+    second_test_info.first_surface = _egl_create_window_surface (second_test_info.egl_dpy,
+                                                                 config,
+                                                                 win,
+                                                                 NULL);
+    GPUPROCESS_FAIL_IF (second_test_info.first_surface == EGL_NO_SURFACE, "_egl_create_window_surface failed");
+
+    second_test_info.second_surface = _egl_create_pbuffer_surface (second_test_info.egl_dpy,
                                                                   config,
-                                                                  win,
-                                                                  NULL);
-    GPUPROCESS_FAIL_IF (second_test_info.second_surface == EGL_NO_SURFACE, "_egl_create_window_surface failed");
+                                                                  pbuffer_attribs);
+
+    GPUPROCESS_FAIL_IF (second_test_info.second_surface == EGL_NO_SURFACE, "_egl_create_pbuffer_surface failed");
 }
 
 static void
@@ -258,23 +264,32 @@ GPUPROCESS_START_TEST
 {
     EGLBoolean result;
     EGLint value;
+    EGLSurface current_surface;
+    EGLContext current_context;
+
     result = _egl_make_current (first_test_info.egl_dpy,
 				first_test_info.first_surface, first_test_info.first_surface,
 				first_test_info.context);
     GPUPROCESS_FAIL_IF (result == EGL_FALSE, "_egl_make_current failed");
 
-    // Pixmap surface should not be immediately destroyed because it belongs to the current thread
-    result = _egl_destroy_surface (first_test_info.egl_dpy, first_test_info.first_surface);
-    GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_destroy_surface failed");
+    /* we destroy first surface, since it is in the current context,
+     * it should not be destroyed, we query current surface to check
+     * it validity
+     */
 
-    result = _egl_query_surface(first_test_info.egl_dpy, first_test_info.first_surface, EGL_CONFIG_ID, &value);
-    GPUPROCESS_FAIL_IF (result == EGL_TRUE, "_egl_query_surface should not fail because the surface is valid");
+    result = _egl_destroy_surface (first_test_info.egl_dpy, first_test_info.first_surface);
+
+    current_surface = (EGLSurface)_egl_get_current_surface (EGL_DRAW);
+    GPUPROCESS_FAIL_IF (current_surface != first_test_info.first_surface, "_egl_query_surface should not fail because the surface is valid");
 
     result = _egl_make_current (first_test_info.egl_dpy,
                                 first_test_info.second_surface, first_test_info.second_surface,
                                 first_test_info.context);
     GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_make_current failed");
 
+    /* we have switched surface, we check the previously destroyed surface
+     * was indeeded destroyed
+     */
     result = _egl_query_surface(first_test_info.egl_dpy, first_test_info.first_surface, EGL_CONFIG_ID, &value);
     GPUPROCESS_FAIL_IF (result == EGL_TRUE, "Surface should not exist");
 
@@ -284,14 +299,30 @@ GPUPROCESS_START_TEST
     result = _egl_terminate (first_test_info.egl_dpy);
     GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_terminate failed");
 
-    result = _egl_query_context (first_test_info.egl_dpy, first_test_info.context, EGL_CONFIG_ID, &value);
-    value = _egl_get_error ();
-    GPUPROCESS_FAIL_IF (value == EGL_BAD_CONTEXT, "value should not be EGL_BAD_CONTEXT");
+    /* we destroyed the current display, we check whether current context
+     * is valid or not, - it should be valid since the display we destroyed
+     * in current
+     */
+    current_context = (EGLContext)_egl_get_current_context ();
+    GPUPROCESS_FAIL_IF (current_context != first_test_info.context, "value should not be EGL_FALSE");
 
     result = _egl_make_current (second_test_info.egl_dpy,
                                 second_test_info.first_surface, second_test_info.first_surface,
                                 second_test_info.context);
     GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_make_current failed");
+
+    /* we switched to the second display, the first display should be
+     * terminated
+     */
+    result = _egl_query_context (first_test_info.egl_dpy, first_test_info.context, EGL_CONFIG_ID, &value);
+    value = _egl_get_error ();
+    GPUPROCESS_FAIL_IF (value != EGL_BAD_CONTEXT, "value should not be EGL_BAD_CONTEXT");
+
+    /* query for the second context, it should be valid
+     */
+    result = _egl_query_context (second_test_info.egl_dpy, second_test_info.context, EGL_CONFIG_ID, &value);
+    value = _egl_get_error ();
+    GPUPROCESS_FAIL_IF (value != EGL_SUCCESS, "value should not be EGL_BAD_CONTEXT");
 }
 GPUPROCESS_END_TEST
 

@@ -60,7 +60,7 @@ _match (EGLDisplay display,
                    link_list_t **state);
 
 private void 
-_server_remove_state (link_list_t *state);
+_server_remove_state (link_list_t **state);
 
 /*private void
 _server_remove_context (EGLDisplay display,

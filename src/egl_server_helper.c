@@ -172,21 +172,22 @@ _server_set_egl_states (egl_state_t *egl_state,
 }
 
 void 
-_server_remove_state (link_list_t *state)
+_server_remove_state (link_list_t **state)
 {
-    egl_state_t *egl_state = (egl_state_t *) state->data;
+    egl_state_t *egl_state = (egl_state_t *) (*state)->data;
 
     if (egl_state->state.vertex_attribs.attribs != 
         egl_state->state.vertex_attribs.embedded_attribs)
         free (egl_state->state.vertex_attribs.attribs);
 
-    if (state->prev)
-        state->prev->next = state->next;
-    if (state->next)
-        state->next->prev = state->prev;
+    if ((*state)->prev)
+        (*state)->prev->next = (*state)->next;
+    if ((*state)->next)
+        (*state)->next->prev = (*state)->prev;
 
     free (egl_state);
-    free (state);
+    free (*state);
+    *state = NULL;
 
     server_states.num_contexts --;
 }
@@ -221,8 +222,8 @@ _server_get_state (EGLDisplay dpy,
 
         new_state = (egl_state_t *)malloc (sizeof (egl_state_t));
 
-        _server_set_egl_states (new_state, dpy, draw, read, ctx); 
         _server_init_gles2_states (new_state);
+        _server_set_egl_states (new_state, dpy, draw, read, ctx); 
         server_states.states->data = new_state;
         new_state->active = true;
 	return server_states.states;
@@ -303,7 +304,7 @@ _server_terminate (EGLDisplay display, link_list_t *active_state)
 
         if (egl_state->display == display) {
             if (! egl_state->active)
-                _server_remove_state (current);
+                _server_remove_state (&current);
                 /* XXX: Do we need to stop the thread? */
         }
     }
@@ -361,13 +362,15 @@ _server_make_current (EGLDisplay display,
         
         egl_state = (egl_state_t *) active_state->data;
         if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _server_remove_state (active_state);
+            _server_remove_state (&active_state);
         
-        if (egl_state->destroy_read)
-            _server_remove_surface (active_state, true);
+        if (active_state) {
+            if (egl_state->destroy_read)
+                _server_remove_surface (active_state, true);
 
-        if (egl_state->destroy_draw)
-            _server_remove_surface (active_state, false);
+            if (egl_state->destroy_draw)
+                _server_remove_surface (active_state, false);
+        }
 
         *active_state_out = NULL;
         mutex_unlock (egl_mutex);
@@ -383,13 +386,15 @@ _server_make_current (EGLDisplay display,
          * called affect us?
          */
         if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _server_remove_state (active_state);
+            _server_remove_state (&active_state);
         
-        if (egl_state->destroy_read)
-            _server_remove_surface (active_state, true);
+        if (active_state) {
+            if (egl_state->destroy_read)
+                _server_remove_surface (active_state, true);
 
-        if (egl_state->destroy_draw)
-            _server_remove_surface (active_state, false);
+            if (egl_state->destroy_draw)
+                _server_remove_surface (active_state, false);
+        }
     }
 
     /* get existing state or create a new one */
@@ -425,7 +430,7 @@ _server_destroy_context (EGLDisplay display,
         if (_server_has_context (state, display, context)) {
             state->destroy_ctx = true;
             if (state->active == false) 
-                _server_remove_state (current);
+                _server_remove_state (&current);
         }
     }
     mutex_unlock (egl_mutex);
@@ -454,7 +459,7 @@ _server_destroy_surface (EGLDisplay display,
         if (state->display == display) {
             if (state->readable == surface)
                 state->destroy_read = true;
-            else if (state->drawable == surface)
+            if (state->drawable == surface)
                 state->destroy_draw = true;
 
             if (state->active == false) {
