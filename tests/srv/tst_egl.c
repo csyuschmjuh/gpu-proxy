@@ -166,13 +166,12 @@ GPUPROCESS_START_TEST
 
     window_context = _egl_create_context (egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
     GPUPROCESS_FAIL_IF (! window_context, "context should be created");
-    
+
     result = _egl_destroy_context (egl_dpy, window_context);
     GPUPROCESS_FAIL_IF (!result, "_egl_destroy_context failed");
-    
+
     result = _egl_destroy_context (egl_dpy, pbuffer_context);
     GPUPROCESS_FAIL_IF (!result, "_egl_destroy_context failed");
-
 
     get_error_result = _egl_get_error ();
     GPUPROCESS_FAIL_IF (get_error_result != EGL_SUCCESS, "_egl_get_error should fail");

@@ -169,7 +169,7 @@ _egl_create_pbuffer_surface (EGLDisplay dpy, EGLConfig config,
 }
 
 static EGLSurface 
-_egl_create_pixman_surface (EGLDisplay dpy, EGLConfig config,
+_egl_create_pixmap_surface (EGLDisplay dpy, EGLConfig config,
                             EGLNativePixmapType pixmap, 
                             const EGLint *attrib_list)
 {
