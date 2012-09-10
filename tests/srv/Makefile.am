@@ -15,10 +15,12 @@ gpuproxy_test_SOURCES = \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	tst_egl.c \
+	tst_egl2.h \
+	tst_egl2.c \
 	main.c
 
 gpuproxy_test_LDFLAGS = \
-	-lX11 -ldl
+	-lX11 -ldl -lpthread
 
 gpuproxy_test_CFLAGS = \
 	-Werror
