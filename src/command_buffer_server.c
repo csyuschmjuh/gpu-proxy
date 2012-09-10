@@ -90,7 +90,7 @@ command_buffer_server_destroy (command_buffer_server_t *command_buffer_server)
     pthread_join (*command_buffer_server->thread, NULL);
     /* FIXME: GL termination. */
     if (command_buffer_server->active_state) {
-        _server_remove_state (command_buffer_server->active_state);
+        _server_remove_state (&command_buffer_server->active_state);
         command_buffer_server->active_state = NULL;
     }
 
