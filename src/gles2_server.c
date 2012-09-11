@@ -158,7 +158,7 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
                egl_state->state.array_buffer_binding = buffer;
             }
         }
-        else if (target = GL_ELEMENT_ARRAY_BUFFER) {
+        else if (target == GL_ELEMENT_ARRAY_BUFFER) {
             if (egl_state->state.element_array_buffer_binding == buffer)
                 return;
             else {
@@ -2013,10 +2013,10 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
                 attribs[i].array_buffer_binding = *params;
             }
         }
-        else if (pname = GL_ELEMENT_ARRAY_BUFFER_BINDING)
+        else if (pname == GL_ELEMENT_ARRAY_BUFFER_BINDING)
             egl_state->state.array_buffer_binding = *params;
 #ifdef GL_OES_vertex_array_object
-        else if (pname = GL_VERTEX_ARRAY_BINDING_OES)
+        else if (pname == GL_VERTEX_ARRAY_BINDING_OES)
             egl_state->state.vertex_array_binding = *params;
 #endif
     }
@@ -2073,15 +2073,17 @@ static void _gl_get_attached_shaders (GLuint program, GLsizei maxCount,
 static GLint _gl_get_attrib_location (GLuint program, const GLchar *name)
 {
     egl_state_t *egl_state;
+    GLint result = -1;
     
     if (_gl_is_valid_func (dispatch.GetAttribLocation) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetAttribLocation (program, name);
+        result = dispatch.GetAttribLocation (program, name);
 
         egl_state->state.need_get_error = true;
     }
+    return result;
 }
 
 static void _gl_get_buffer_parameteriv (GLenum target, GLenum value, GLint *data)
@@ -2270,7 +2272,7 @@ static const GLubyte *_gl_get_string (GLenum name)
                name == GL_SHADING_LANGUAGE_VERSION ||
                name == GL_EXTENSIONS)) {
             _gl_set_error (GL_INVALID_ENUM);
-            return;
+            return NULL;
         }
 
         result = (GLubyte *)dispatch.GetString (name);
@@ -3005,7 +3007,7 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
                 egl_state->state.stencil_back_func = func;
                 egl_state->state.stencil_func = func;
                 egl_state->state.stencil_back_ref = ref;
-                egl_state->state.stencil_ref;
+                egl_state->state.stencil_ref = ref;
                 egl_state->state.stencil_back_value_mask = mask;
                 egl_state->state.stencil_value_mask = mask;
                 needs_call = true;
@@ -3252,7 +3254,7 @@ static void _gl_tex_parameteri (GLenum target, GLenum pname, GLint param)
 #ifdef GL_OES_texture_3D
         else if (pname == GL_TEXTURE_WRAP_R_OES) {
             if (state->texture_3d_wrap_r[active_texture_index] != param) {
-                state->texture_3d_wrap_r[active_texture_index] == param;
+                state->texture_3d_wrap_r[active_texture_index] = param;
             }
             else
                 return;
@@ -3786,7 +3788,7 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
                     attribs[i].stride == stride) {
                     attribs[i].array_normalized = normalized;
                     attribs[i].pointer = (GLvoid *)pointer;
-                    attribs[i].array_buffer_binding == bound_buffer;
+                    attribs[i].array_buffer_binding = bound_buffer;
                     return;
                 }
                 else {

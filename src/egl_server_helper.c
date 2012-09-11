@@ -291,8 +291,8 @@ _server_terminate (EGLDisplay display, link_list_t *active_state)
 
     mutex_lock (egl_mutex);
 
-    if (server_states.initialized = false ||
-        server_states.num_contexts == 0 || ! server_states.states) {
+    if (server_states.initialized == false ||
+        server_states.num_contexts == 0 || (! server_states.states)) {
         mutex_unlock (egl_mutex);
         return;
     }
@@ -330,7 +330,7 @@ _server_is_equal (egl_state_t *state,
                              EGLSurface  readable,
                              EGLContext  context)
 {
-   if (state->display == display && state->drawable == drawable &&
+   return (state->display == display && state->drawable == drawable &&
        state->readable == readable && state->context == context);
 }
 

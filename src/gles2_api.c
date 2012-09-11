@@ -313,10 +313,12 @@ void glGetAttachedShaders (GLuint program, GLsizei maxCount,
 
 GLint glGetAttribLocation (GLuint program, const GLchar *name)
 {
+    GLint result = -1;
     if (_is_error_state ())
-        return;
+        return result;
 
     /* XXX: post command and wait */
+    return result;
 }
 
 void glGetBufferParameteriv (GLenum target, GLenum value, GLint *data)
@@ -677,7 +679,7 @@ _gl_get_data_width (GLsizei width, GLenum format, GLenum type)
             padding = mod == 0 ? 0 : unpack_alignment - mod;
             total_width = width * 4 + padding;
         }
-        else if (format = GL_ALPHA || format == GL_LUMINANCE) {
+        else if (format == GL_ALPHA || format == GL_LUMINANCE) {
             mod = width  % unpack_alignment;
             padding = mod == 0 ? 0 : unpack_alignment - mod;
             total_width = width + padding;
