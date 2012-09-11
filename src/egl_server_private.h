@@ -1,5 +1,5 @@
-#ifndef GPUPROCESS_EGL_SRV_PRIVATE_H
-#define GPUPROCESS_EGL_SRV_PRIVATE_H
+#ifndef GPUPROCESS_EGL_SERVER_PRIVATE_H
+#define GPUPROCESS_EGL_SERVER_PRIVATE_H
 
 #include "compiler_private.h"
 #include "egl_states.h"
@@ -20,7 +20,7 @@ typedef struct gl_server_states
 } gl_server_states_t;
 
 /* global state variable */
-extern gl_server_states_t        srv_states;
+extern gl_server_states_t        server_states;
 
 /* called within eglGetDisplay () */
 private void
@@ -71,4 +71,4 @@ _server_remove_state (link_list_t **state);
 #endif
 
 
-#endif /* GPUPROCESS_EGL_SRV_PRIVATE_H */
+#endif /* GPUPROCESS_EGL_SERVER_PRIVATE_H */
