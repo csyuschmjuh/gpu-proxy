@@ -391,13 +391,12 @@ _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
     return result;
 }
 
-/* XXX: for testing purpose only */
 EGLContext
-_egl_get_current_context (void)
+_egl_get_current_context_for_testing (void)
 {
     return dispatch.eglGetCurrentContext ();
     egl_state_t *state;
-    
+
     if (!active_state)
         return EGL_NO_CONTEXT;
 
@@ -405,13 +404,12 @@ _egl_get_current_context (void)
     return state->context;
 }
 
-/* XXX: for testing purpose only */
 EGLDisplay
-_egl_get_current_display (void)
+_egl_get_current_display_for_testing (void)
 {
     return dispatch.eglGetCurrentDisplay ();
     egl_state_t *state;
-    
+
     if (!active_state)
         return EGL_NO_DISPLAY;
 
@@ -420,12 +418,12 @@ _egl_get_current_display (void)
 }
 
 EGLSurface
-_egl_get_current_surface (EGLint readdraw)
+_egl_get_current_surface_for_testing (EGLint readdraw)
 {
     return dispatch.eglGetCurrentSurface (readdraw);
     egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
-    
+
     if (!active_state)
         return EGL_NO_SURFACE;
 
@@ -453,7 +451,7 @@ _egl_query_context (EGLDisplay display,
 
     if (! dispatch.eglQueryContext)
         return result;
-    
+
     result = dispatch.eglQueryContext (display, ctx, attribute, value);
 
     return result;
