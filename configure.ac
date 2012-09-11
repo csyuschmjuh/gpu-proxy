@@ -43,15 +43,8 @@ AS_IF([test "$opengles_arg" = "yes"], [
 		      [use_gles="no (GLES2 headers not found)"])
 ])
 
-AC_ARG_ENABLE([tests],
-	      [AS_HELP_STRING([--enable-tests]
-			      [enable tests])],
-			      [tests="$enableval"])
-
-
 AM_CONDITIONAL(HAS_GL, test "$use_glx" = yes)
 AM_CONDITIONAL(HAS_GLES2, test "$use_gles" = yes)
-AM_CONDITIONAL(HAS_UNIT_TESTS, test "$tests" = yes)
 
 if test "$use_glx" = "yes"; then
     AC_DEFINE(HAS_GL, 1, [Define to 1 if you have GLX available])
@@ -66,12 +59,6 @@ fi
 if test "$use_gles" != "yes" && test "$use_glx" != "yes"; then
     AC_MSG_ERROR([Must select either GLX/Desktop GL or EGL/GLES2.])
 fi
-
-if test "$tests" = "yes"; then
-    AC_DEFINE([static],,[HACK: make the tests work without modify the code])
-fi
-
-AC_SUBST([GPUPROCESS_CFLAGS])
 
 AC_CONFIG_FILES([
 Makefile
