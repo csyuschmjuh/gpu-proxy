@@ -3,6 +3,7 @@ BUILT_SOURCES =
 lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
 	-Igenerated \
+	-Iclient \
 	-Werror
 
 libGPUProcess_la_LDFLAGS = \
@@ -13,8 +14,8 @@ libGPUProcess_la_LDFLAGS = \
 	-no-undefined
 
 libGPUProcess_la_SOURCES = \
-	client_state.c \
-	client_state.h \
+	client/client_state.c \
+	client/client_state.h \
 	command.c \
 	command.h \
 	command_buffer.h \
@@ -45,12 +46,13 @@ endif
 
 if HAS_GLES2
 libGPUProcess_la_SOURCES += \
-	egl_api.c \
+	client/egl_api.c \
+	client/gles2_api.c \
+	client/gles2_api_private.h \
 	egl_server.c \
 	egl_server_private.h \
 	egl_server_helper.c \
 	egl_states.h \
-	gles2_api.c \
 	gles2_server.c \
 	gles2_states.h \
 	gles2_utils.c \
