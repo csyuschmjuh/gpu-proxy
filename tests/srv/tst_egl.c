@@ -1,30 +1,12 @@
 #include "tst_egl.h"
-
+#include "egl_server_private.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
-
 #include <stdlib.h>
 
 Display *dpy = NULL;
 EGLDisplay egl_dpy;
-
-extern EGLint
-_egl_get_error (void);
-
-EGLDisplay
-_egl_get_display (EGLNativeDisplayType display_id);
-
-extern EGLBoolean
-_egl_initialize (EGLDisplay dpy, EGLint *major, EGLint *minor);
-
-extern EGLBoolean
-_egl_terminate (EGLDisplay dpy);
-
-extern EGLContext
-_egl_create_context (EGLDisplay dpy, EGLConfig config,
-                        EGLContext share_context,
-                        const EGLint *attrib_list);
 
 static void
 setup (void)

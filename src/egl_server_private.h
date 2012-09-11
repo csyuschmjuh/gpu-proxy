@@ -4,6 +4,7 @@
 #include "compiler_private.h"
 #include "egl_states.h"
 #include "types_private.h"
+#include <EGL/egl.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,8 +15,8 @@ extern "C" {
 typedef struct gl_server_states
 {
     bool             initialized;
-    int                  num_contexts;
-    link_list_t        *states;
+    int              num_contexts;
+    link_list_t      *states;
 } gl_server_states_t;
 
 /* global state variable */
@@ -61,6 +62,61 @@ _match (EGLDisplay display,
 
 private void 
 _server_remove_state (link_list_t **state);
+
+private EGLSurface
+_egl_create_window_surface (EGLDisplay display,
+                            EGLConfig config,
+                            EGLNativeWindowType window,
+                            const EGLint *attrib_list);
+
+private EGLSurface
+_egl_create_pbuffer_surface (EGLDisplay display,
+                             EGLConfig config,
+                             const EGLint *attrib_list);;
+
+private EGLSurface
+_egl_create_pbuffer_surface (EGLDisplay display,
+                             EGLConfig config,
+                             const EGLint *attrib_list);
+
+private EGLSurface
+_egl_create_pixmap_surface (EGLDisplay display,
+                            EGLConfig config,
+                            EGLNativePixmapType pixmap,
+                            const EGLint *attrib_list);
+
+private EGLContext
+_egl_get_current_context (void);
+
+private EGLDisplay
+_egl_get_current_display (void);
+
+private EGLSurface
+_egl_get_current_surface (EGLint readdraw);
+
+EGLBoolean
+_egl_destroy_context (EGLDisplay dpy,
+                      EGLContext ctx);
+
+private EGLBoolean
+_egl_initialize (EGLDisplay display,
+                 EGLint *major,
+                 EGLint *minor);
+
+private EGLBoolean
+_egl_terminate (EGLDisplay display);
+
+private EGLContext
+_egl_create_context (EGLDisplay display,
+                     EGLConfig config,
+                     EGLContext share_context,
+                     const EGLint *attrib_list);
+
+private EGLDisplay
+_egl_get_display (EGLNativeDisplayType display_id);
+
+EGLint
+_egl_get_error (void);
 
 /*private void
 _server_remove_context (EGLDisplay display,

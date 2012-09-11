@@ -20,8 +20,11 @@ gpuproxy_test_SOURCES = \
 	main.c
 
 gpuproxy_test_LDFLAGS = \
-	-lX11 -ldl -lpthread
+	-lX11 \
+	-ldl \
+	-lpthread
 
 gpuproxy_test_CFLAGS = \
+	-I$(rootsrcdir)/src
 	-Werror
 endif
