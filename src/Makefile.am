@@ -52,7 +52,9 @@ libGPUProcess_la_SOURCES += \
 	egl_states.h \
 	gles2_api.c \
 	gles2_server.c \
-	gles2_states.h
+	gles2_states.h \
+	gles2_utils.c \
+	gles2_utils.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)

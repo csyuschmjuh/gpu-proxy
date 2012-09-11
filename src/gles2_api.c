@@ -22,7 +22,6 @@ _is_error_state (void)
     return false;
 }
 
-
 void glBufferData (GLenum target, GLsizeiptr size,
                    const GLvoid *data, GLenum usage)
 {
