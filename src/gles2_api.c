@@ -7,7 +7,7 @@ _is_error_state (void)
 {
     egl_state_t *egl_state;
 
-    if (! client_state_is_available ())
+    if (! client_state_active_egl_state_available ())
         return true;
 
     egl_state = client_state_get_active_egl_state ();
