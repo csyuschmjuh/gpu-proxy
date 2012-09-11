@@ -13,9 +13,10 @@ src/.libs
 src/Makefile
 src/Makefile.in
 stamp-h1
-tests/srv/.deps
-tests/srv/Makefile
-tests/srv/Makefile.in
+tests/server/.deps
+tests/server/Makefile
+tests/server/Makefile.in
+tests/server/gpuproxy_test
 Makefile
 Makefile.in
 *.lo
