@@ -1,41 +1,9 @@
 #include "tst_egl.h"
-
+#include "egl_server_private.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-#include <EGL/egl.h>
-
 #include <stdlib.h>
-
 #include <stdio.h>
-
-extern EGLint
-_egl_get_error (void);
-
-EGLDisplay
-_egl_get_display (EGLNativeDisplayType display_id);
-
-extern EGLBoolean
-_egl_initialize (EGLDisplay dpy, EGLint *major, EGLint *minor);
-
-extern EGLBoolean
-_egl_terminate (EGLDisplay dpy);
-
-extern EGLContext
-_egl_create_context (EGLDisplay dpy, EGLConfig config,
-                     EGLContext share_context,
-                     const EGLint *attrib_list);
-
-extern EGLSurface
-_egl_create_pixmap_surface (EGLDisplay dpy, EGLConfig config,
-                            EGLNativePixmapType pixmap,
-                            const EGLint *attrib_list);
-extern EGLSurface
-_egl_create_pbuffer_surface (EGLDisplay dpy, EGLConfig config,
-                             const EGLint *attrib_list);
-extern EGLSurface
-_egl_create_window_surface (EGLDisplay dpy, EGLConfig config,
-                            EGLNativeWindowType win,
-                            const EGLint *attrib_list);
 
 typedef struct _egl_test {
     Display *dpy;
@@ -280,7 +248,7 @@ GPUPROCESS_START_TEST
 
     result = _egl_destroy_surface (first_test_info.egl_dpy, first_test_info.first_surface);
 
-    current_surface = (EGLSurface)_egl_get_current_surface (EGL_DRAW);
+    current_surface = _egl_get_current_surface (EGL_DRAW);
     GPUPROCESS_FAIL_IF (current_surface != first_test_info.first_surface, "_egl_query_surface should not fail because the surface is valid");
 
     result = _egl_make_current (first_test_info.egl_dpy,
@@ -304,9 +272,9 @@ GPUPROCESS_START_TEST
      * is valid or not, - it should be valid since the display we destroyed
      * in current
      */
-    current_context = (EGLContext)_egl_get_current_context ();
+    current_context = _egl_get_current_context ();
     GPUPROCESS_FAIL_IF (current_context != first_test_info.context, "value should not be EGL_FALSE");
-    current_display = (EGLDisplay)_egl_get_current_display ();
+    current_display = _egl_get_current_display ();
     GPUPROCESS_FAIL_IF (current_display != first_test_info.egl_dpy, "value should not be EGL_FALSE");
 
     /* we have destroyed display, the display is still current, but
