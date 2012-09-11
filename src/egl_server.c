@@ -260,7 +260,7 @@ _egl_release_thread (void)
     if (dispatch.eglReleaseThread) {
         result = dispatch.eglReleaseThread ();
 
-        if (result = EGL_TRUE) {
+        if (result == EGL_TRUE) {
             if (! active_state)
                 return result;
             

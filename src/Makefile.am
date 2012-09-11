@@ -2,8 +2,8 @@ BUILT_SOURCES =
 
 lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
-	-Igenerated \
-	-Werror
+	-Igenerated
+#	-Werror
 
 libGPUProcess_la_LDFLAGS = \
 	-version-info 0:0:0 \
