@@ -1,4 +1,3 @@
-if HAS_UNIT_TESTS
 noinst_PROGRAMS = \
 	gpuproxy_test
 
@@ -25,6 +24,6 @@ gpuproxy_test_LDFLAGS = \
 	-lpthread
 
 gpuproxy_test_CFLAGS = \
-	-I$(rootsrcdir)/src
+	-DENABLE_TESTING=1 \
+	-I$(rootsrcdir)/src \
 	-Werror
-endif

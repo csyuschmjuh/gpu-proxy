@@ -1,5 +1,5 @@
 #include "tst_egl.h"
-#include "egl_server_private.h"
+#include "egl_server_tests.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdlib.h>
@@ -248,7 +248,7 @@ GPUPROCESS_START_TEST
 
     result = _egl_destroy_surface (first_test_info.egl_dpy, first_test_info.first_surface);
 
-    current_surface = _egl_get_current_surface_for_testing (EGL_DRAW);
+    current_surface = _egl_get_current_surface (EGL_DRAW);
     GPUPROCESS_FAIL_IF (current_surface != first_test_info.first_surface, "_egl_query_surface should not fail because the surface is valid");
 
     result = _egl_make_current (first_test_info.egl_dpy,
@@ -272,9 +272,9 @@ GPUPROCESS_START_TEST
      * is valid or not, - it should be valid since the display we destroyed
      * in current
      */
-    current_context = _egl_get_current_context_for_testing ();
+    current_context = _egl_get_current_context ();
     GPUPROCESS_FAIL_IF (current_context != first_test_info.context, "value should not be EGL_FALSE");
-    current_display = _egl_get_current_display_for_testing ();
+    current_display = _egl_get_current_display ();
     GPUPROCESS_FAIL_IF (current_display != first_test_info.egl_dpy, "value should not be EGL_FALSE");
 
     /* we have destroyed display, the display is still current, but

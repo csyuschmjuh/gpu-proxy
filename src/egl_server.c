@@ -35,7 +35,7 @@ extern gl_server_states_t server_states;
 __thread link_list_t    *active_state
   __attribute__(( tls_model ("initial-exec"))) = NULL;
 
-EGLint
+exposed_to_tests EGLint
 _egl_get_error (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
@@ -51,7 +51,7 @@ _egl_get_error (void)
 /* This is the first call to egl system, we initialize dispatch here,
  * we also initialize gl client states
  */
-EGLDisplay
+exposed_to_tests EGLDisplay
 _egl_get_display (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
@@ -64,7 +64,7 @@ _egl_get_display (EGLNativeDisplayType display_id)
     return display;
 }
 
-EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_initialize (EGLDisplay display,
                  EGLint *major,
                  EGLint *minor)
@@ -77,7 +77,7 @@ _egl_initialize (EGLDisplay display,
     return result;
 }
 
-EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_terminate (EGLDisplay display)
 {
     EGLBoolean result = EGL_FALSE;
@@ -106,7 +106,7 @@ _egl_query_string (EGLDisplay display,
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_get_configs (EGLDisplay display,
                   EGLConfig *configs, 
                   EGLint config_size,
@@ -120,23 +120,23 @@ _egl_get_configs (EGLDisplay display,
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_choose_config (EGLDisplay display,
                     const EGLint *attrib_list,
                     EGLConfig *configs,
-                    EGLint config_size, 
+                    EGLint config_size,
                     EGLint *num_config)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglChooseConfig) 
+    if (dispatch.eglChooseConfig)
         result = dispatch.eglChooseConfig (display, attrib_list, configs,
                                            config_size, num_config);
 
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_get_config_attrib (EGLDisplay display,
                         EGLConfig config,
                         EGLint attribute,
@@ -150,7 +150,7 @@ _egl_get_config_attrib (EGLDisplay display,
     return result;
 }
 
-static EGLSurface
+exposed_to_tests EGLSurface
 _egl_create_window_surface (EGLDisplay display,
                             EGLConfig config,
                             EGLNativeWindowType win,
@@ -165,20 +165,20 @@ _egl_create_window_surface (EGLDisplay display,
     return surface;
 }
 
-EGLSurface
+exposed_to_tests EGLSurface
 _egl_create_pbuffer_surface (EGLDisplay display,
                              EGLConfig config,
                              const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
-    
+
     if (dispatch.eglCreatePbufferSurface)
         surface = dispatch.eglCreatePbufferSurface (display, config, attrib_list);
 
     return surface;
 }
 
-EGLSurface 
+exposed_to_tests EGLSurface
 _egl_create_pixmap_surface (EGLDisplay display,
                             EGLConfig config,
                             EGLNativePixmapType pixmap, 
@@ -193,7 +193,7 @@ _egl_create_pixmap_surface (EGLDisplay display,
     return surface;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_destroy_surface (EGLDisplay display,
                       EGLSurface surface)
 {
@@ -204,7 +204,7 @@ _egl_destroy_surface (EGLDisplay display,
 
     if (dispatch.eglDestroySurface) { 
         result = dispatch.eglDestroySurface (display, surface);
-        
+
         if (result == EGL_TRUE) {
             /* update srv states */
             _server_destroy_surface (display, surface, active_state);
@@ -214,7 +214,7 @@ _egl_destroy_surface (EGLDisplay display,
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_query_surface (EGLDisplay display,
                     EGLSurface surface,
                     EGLint attribute,
@@ -228,7 +228,7 @@ _egl_query_surface (EGLDisplay display,
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_bind_api (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
@@ -360,7 +360,7 @@ _egl_swap_interval (EGLDisplay display,
     return result;
 }
 
-EGLContext
+exposed_to_tests EGLContext
 _egl_create_context (EGLDisplay display,
                      EGLConfig config,
                      EGLContext share_context,
@@ -375,8 +375,9 @@ _egl_create_context (EGLDisplay display,
     return result;
 }
 
-EGLBoolean
-_egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
+exposed_to_tests EGLBoolean
+_egl_destroy_context (EGLDisplay dpy,
+                      EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
 
@@ -391,8 +392,8 @@ _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
     return result;
 }
 
-EGLContext
-_egl_get_current_context_for_testing (void)
+exposed_to_tests EGLContext
+_egl_get_current_context (void)
 {
     return dispatch.eglGetCurrentContext ();
     egl_state_t *state;
@@ -404,8 +405,8 @@ _egl_get_current_context_for_testing (void)
     return state->context;
 }
 
-EGLDisplay
-_egl_get_current_display_for_testing (void)
+exposed_to_tests EGLDisplay
+_egl_get_current_display (void)
 {
     return dispatch.eglGetCurrentDisplay ();
     egl_state_t *state;
@@ -417,8 +418,8 @@ _egl_get_current_display_for_testing (void)
     return state->display;
 }
 
-EGLSurface
-_egl_get_current_surface_for_testing (EGLint readdraw)
+exposed_to_tests EGLSurface
+_egl_get_current_surface (EGLint readdraw)
 {
     return dispatch.eglGetCurrentSurface (readdraw);
     egl_state_t *state;
@@ -441,7 +442,7 @@ _egl_get_current_surface_for_testing (EGLint readdraw)
 }
 
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_query_context (EGLDisplay display,
                     EGLContext ctx,
                     EGLint attribute,
@@ -515,7 +516,7 @@ _egl_get_proc_address (const char *procname)
     return dispatch.GetProcAddress (procname);
 }
 
-static EGLBoolean 
+exposed_to_tests EGLBoolean 
 _egl_make_current (EGLDisplay display,
                    EGLSurface draw,
                    EGLSurface read,

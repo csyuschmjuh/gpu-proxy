@@ -1,5 +1,5 @@
 #include "tst_egl.h"
-#include "egl_server_private.h"
+#include "egl_server_tests.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
