@@ -79,7 +79,6 @@ static EGLBoolean
 _egl_terminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
-    egl_state_t *state;
 
     if (dispatch.eglTerminate) {
         result = dispatch.eglTerminate (dpy);
@@ -186,7 +185,6 @@ static EGLBoolean
 _egl_destroy_surface (EGLDisplay dpy, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
-    egl_state_t *state;
 
     if (!active_state)
         return result;
@@ -241,7 +239,6 @@ static EGLBoolean
 _egl_wait_client (void)
 {
     EGLBoolean result = EGL_FALSE;
-    egl_state_t *state;
 
     if (dispatch.eglWaitClient)
         result = dispatch.eglWaitClient ();
@@ -253,7 +250,6 @@ static EGLBoolean
 _egl_release_thread (void)
 {
     EGLBoolean result = EGL_FALSE;
-    bool success;
     egl_state_t *egl_state;
     link_list_t *active_state_out = NULL;
 
@@ -360,7 +356,6 @@ static EGLBoolean
 _egl_destroy_context (EGLDisplay dpy, EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
-    egl_state_t *state;
 
     if (dispatch.eglDestroyContext) {
         result = dispatch.eglDestroyContext (dpy, ctx); 

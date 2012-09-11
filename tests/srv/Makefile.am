@@ -22,6 +22,6 @@ gpuproxy_test_SOURCES = \
 gpuproxy_test_LDFLAGS = \
 	-lX11 -ldl -lpthread
 
-gpuproxy_test_CFLAGS = 
-#	-Werror
+gpuproxy_test_CFLAGS = \
+	-Werror
 endif
