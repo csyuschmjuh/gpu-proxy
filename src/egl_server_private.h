@@ -86,13 +86,13 @@ _egl_create_pixmap_surface (EGLDisplay display,
                             const EGLint *attrib_list);
 
 private EGLContext
-_egl_get_current_context (void);
+_egl_get_current_context_for_testing (void);
 
 private EGLDisplay
-_egl_get_current_display (void);
+_egl_get_current_display_for_testing (void);
 
 private EGLSurface
-_egl_get_current_surface (EGLint readdraw);
+_egl_get_current_surface_for_testing (EGLint readdraw);
 
 EGLBoolean
 _egl_destroy_context (EGLDisplay dpy,
