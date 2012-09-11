@@ -1,5 +1,5 @@
-#ifndef GPUPROCESS_GL_SRV_PRIVATE_H
-#define GPUPROCESS_GL_SRV_PRIVATE_H
+#ifndef GPUPROCESS_GL_SERVER_PRIVATE_H
+#define GPUPROCESS_GL_SERVER_PRIVATE_H
 
 #include "compiler_private.h"
 #include "glx_states.h"
@@ -30,7 +30,7 @@ typedef struct gl_server_states
 } gl_server_states_t;
 
 /* global state variable */
-gl_server_states_t        srv_states;
+gl_server_states_t        server_states;
 
 /* called within eglInitialize () */
 private void 
@@ -51,4 +51,4 @@ _server_make_current (EGLDisplay display,
 #endif
 
 
-#endif /* GPUPROCESS_SRV_PRIVATE_H */
+#endif /* GPUPROCESS_SERVER_PRIVATE_H */
