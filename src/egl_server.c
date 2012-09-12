@@ -74,6 +74,9 @@ _egl_initialize (EGLDisplay display,
     if (dispatch.eglInitialize) 
         result = dispatch.eglInitialize (display, major, minor);
 
+    if (result == EGL_TRUE)
+        _server_initialize (display);
+
     return result;
 }
 
