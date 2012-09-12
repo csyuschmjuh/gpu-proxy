@@ -517,8 +517,7 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
           /* update active_context */
           return EGL_TRUE;
         }
-    }
-    else {
+    } else {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             /* XXX: post eglMakeCurrent and no wait */
             return EGL_TRUE;
