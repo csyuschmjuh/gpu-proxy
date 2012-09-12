@@ -301,6 +301,9 @@ GPUPROCESS_START_TEST
     result = _egl_query_context (second_test_info.egl_dpy, second_test_info.context, EGL_CONFIG_ID, &value);
     value = _egl_get_error ();
     GPUPROCESS_FAIL_IF (value != EGL_SUCCESS, "value should not be EGL_BAD_CONTEXT");
+
+    result = _egl_release_thread ();
+    GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_release_thread failed");
 }
 GPUPROCESS_END_TEST
 
