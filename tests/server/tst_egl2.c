@@ -307,6 +307,36 @@ GPUPROCESS_START_TEST
 }
 GPUPROCESS_END_TEST
 
+GPUPROCESS_START_TEST
+(test_egl_initialize)
+{
+    EGLBoolean result;
+    EGLint value;
+    EGLSurface current_surface;
+    EGLContext current_context;
+    EGLDisplay current_display;
+
+    result = _egl_make_current (first_test_info.egl_dpy,
+                                first_test_info.first_surface, first_test_info.first_surface,
+                                first_test_info.context);
+    GPUPROCESS_FAIL_IF (result == EGL_FALSE, "_egl_make_current failed");
+
+    result = _egl_terminate (first_test_info.egl_dpy);
+    GPUPROCESS_FAIL_IF (result != EGL_TRUE, "_egl_terminate failed");
+
+    result = _egl_initialize (first_test_info.egl_dpy, NULL, NULL);
+    GPUPROCESS_FAIL_IF (! result, "_egl_initialize failed");
+
+    current_surface = _egl_get_current_surface (EGL_DRAW);
+    GPUPROCESS_FAIL_IF (current_surface != first_test_info.first_surface, "_egl_query_surface should not fail because the surface is valid");
+
+    result = _egl_make_current (first_test_info.egl_dpy,
+                                first_test_info.second_surface, first_test_info.second_surface,
+                                first_test_info.context);
+
+}
+GPUPROCESS_END_TEST
+
 gpuprocess_suite_t *
 egl_testsuite_make_current_create (void)
 {
@@ -317,6 +347,7 @@ egl_testsuite_make_current_create (void)
     gpuprocess_testcase_add_fixture (tc, setup, teardown);
 
     gpuprocess_testcase_add_test (tc, test_egl_make_current1);
+    gpuprocess_testcase_add_test (tc, test_egl_initialize);
 
     s = gpuprocess_suite_create ("egl_make_current");
     gpuprocess_suite_add_testcase (s, tc);
