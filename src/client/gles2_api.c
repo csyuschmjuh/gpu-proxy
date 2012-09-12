@@ -1,5 +1,34 @@
-/* This file implements gles2 functions.
+/* Parts of this file:
+ * Copyright (c) 2012 The Chromium Authors. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *    * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *    * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *    * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/* This file implements gles2 functions. */
 #include "gles2_api_private.h"
 
 bool
@@ -727,30 +756,76 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 }
 
 /* total parameters 9 * sizeof (GLint) */
-void glTexSubImage2D (GLenum target, GLint level,
-                      GLint xoffset, GLint yoffset,
-                      GLsizei width, GLsizei height,
-                      GLenum format, GLenum type, const GLvoid *data)
+void glTexSubImage2D (GLenum target,
+                      GLint level,
+                      GLint xoffset,
+                      GLint yoffset,
+                      GLsizei width,
+                      GLsizei height,
+                      GLenum format,
+                      GLenum type,
+                      const GLvoid *data)
 {
     GLvoid *data_copy = NULL;
     int data_width = 0;
     int image_size;
-    
+
+    // TODO: These should be read from the current GL client-side state.
+    int unpack_alignment_ = 4;
+    int unpack_skip_pixels_ = 0;
+    int unpack_skip_rows_ = 0;
+    int unpack_row_length_ = 0;
+
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
-    /* XXX: Is it worth make copy data and make it async call? */
-    if (data && width > 0 && height > 0) {
-        data_width = _gl_get_data_width (width, format, type);
-        image_size = data_width * height;
+    if (level < 0 || height < 0 || width < 0) {
+        // XXX: Set a GL error on the client side here.
+        // SetGLError(GL_INVALID_VALUE, "glTexSubImage2D", "dimension < 0");
+        return;
+    }
 
-        if (image_size > 0) {
-            data_copy = (GLvoid *)malloc (sizeof (char) * image_size);
-            memcpy ((void *)data_copy, (const void *)data, sizeof (char) * image_size);
-        }
-    } 
-    return;
+    if (height == 0 || width == 0)
+        return;
+
+    uint32_t temp_size;
+    uint32_t unpadded_row_size;
+    uint32_t padded_row_size;
+    if (! compute_image_data_size (width, height, format,
+                                   type, unpack_alignment_,
+                                   &temp_size, &unpadded_row_size,
+                                   &padded_row_size)) {
+        // XXX: Set a GL error on the client side here.
+        // SetGLError(GL_INVALID_VALUE, "glTexSubImage2D", "size to large");
+        return;
+    }
+  
+    // Compute the advance bytes per row for the src pixels
+    uint32_t src_padded_row_size;
+    if (unpack_row_length_ > 0) {
+      if (! compute_image_padded_row_size (unpack_row_length_, format, type,
+                                           unpack_alignment_, &src_padded_row_size)) {
+        // XXX: Set a GL error on the client side here.
+        //SetGLError(GL_INVALID_VALUE, "glTexImage2D", "unpack row length too large");
+        return;
+      }
+    } else {
+      src_padded_row_size = padded_row_size;
+    }
+
+    // advance pixels pointer past the skip rows and skip pixels
+    data = ((char*) data) + unpack_skip_rows_ * src_padded_row_size;
+    if (unpack_skip_pixels_) {
+      uint32_t group_size = compute_image_data_size (format, type);
+      data = ((char *) (data)) + unpack_skip_pixels_ * group_size;
+    }
+
+    //ScopedTransferBufferPtr buffer(temp_size, helper_, transfer_buffer_);
+    //TexSubImage2DImpl(
+    //    target, level, xoffset, yoffset, width, height, format, type,
+    //    unpadded_row_size, pixels, src_padded_row_size, GL_FALSE, &buffer,
+    //    padded_row_size);
+
 }
 
 void glUniform1fv (GLint location, GLsizei count, const GLfloat *value)

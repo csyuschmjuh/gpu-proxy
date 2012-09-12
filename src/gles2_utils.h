@@ -27,3 +27,6 @@ compute_image_data_size (int width,
                          uint32_t *size,
                          uint32_t *ret_unpadded_row_size,
                          uint32_t *ret_padded_row_size);
+
+uint32_t compute_image_group_size (int format,
+                                   int type);
