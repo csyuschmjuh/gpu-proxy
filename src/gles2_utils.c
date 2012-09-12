@@ -104,7 +104,7 @@ compute_image_padded_row_size (int width,
                                int unpack_alignment,
                                uint32_t *padded_row_size)
 {
-    uint32_t bytes_per_group = ComputeImageGroupSize(format, type);
+    uint32_t bytes_per_group = compute_image_group_size(format, type);
     uint32_t unpadded_row_size;
     if (! safe_multiply (width, bytes_per_group, &unpadded_row_size))
         return false;
@@ -128,7 +128,7 @@ compute_image_data_size (int width,
                          uint32_t *ret_unpadded_row_size,
                          uint32_t *ret_padded_row_size)
 {
-    uint32_t bytes_per_group = ComputeImageGroupSize(format, type);
+    uint32_t bytes_per_group = compute_image_group_size(format, type);
     uint32_t row_size;
     if (! safe_multiply (width, bytes_per_group, &row_size))
         return false;
@@ -224,6 +224,6 @@ bytes_per_element (int type)
 uint32_t compute_image_group_size (int format,
                                    int type)
 {
-  return bytes_per_group (type) * elements_per_group (format, type);
+  return bytes_per_element (type) * elements_per_group (format, type);
 }
 
