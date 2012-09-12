@@ -168,7 +168,6 @@ egl_testsuite_create (void)
     gpuprocess_testcase_t *tc = NULL;
 
     tc = gpuprocess_testcase_create("egl");
-    gpuprocess_testcase_add_fixture (tc, setup, teardown);
 
     gpuprocess_testcase_add_test (tc, test_egl_srv_initialize);
     gpuprocess_testcase_add_test (tc, test_egl_bind_api);
@@ -177,6 +176,7 @@ egl_testsuite_create (void)
     gpuprocess_testcase_add_test (tc, test_egl_srv_terminate);
 
     s = gpuprocess_suite_create ("egl");
+    gpuprocess_suite_add_fixture (s, setup, teardown);
     gpuprocess_suite_add_testcase (s, tc);
 
     return s;

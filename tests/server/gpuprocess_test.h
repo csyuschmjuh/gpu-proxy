@@ -46,6 +46,11 @@ gpuprocess_testcase_add_fixture (gpuprocess_testcase_t *test_case,
                                  gpuprocess_func_t teardown);
 
 void
+gpuprocess_suite_add_fixture (gpuprocess_suite_t *suite,
+                              gpuprocess_func_t setup,
+                              gpuprocess_func_t teardown);
+
+void
 _gpuprocess_fail_if (int result,
                      const char *file, int line,
                      const char *format, ...);

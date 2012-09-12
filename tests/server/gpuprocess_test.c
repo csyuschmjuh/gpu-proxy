@@ -25,7 +25,14 @@ struct _gpuprocess_testcase {
 struct _gpuprocess_suite {
     gpuprocess_list_t *testcases;
     const char *name;
+    gpuprocess_func_t setup;
+    gpuprocess_func_t teardown;
 };
+
+static void
+_dummy_setup_teardown (void)
+{
+}
 
 static gpuprocess_node_t *
 gpuprocess_node_create (void *data)
@@ -92,8 +99,8 @@ gpuprocess_testcase_create (const char *name)
 
     testcase->tests = gpuprocess_list_create ();
 
-    testcase->setup = NULL;
-    testcase->teardown = NULL;
+    testcase->setup = _dummy_setup_teardown;
+    testcase->teardown = _dummy_setup_teardown;
 
     return testcase;
 }
@@ -122,6 +129,9 @@ gpuprocess_suite_create (const char *name)
     suite->name = name;
 
     suite->testcases = gpuprocess_list_create ();
+
+    suite->setup = _dummy_setup_teardown;
+    suite->teardown = _dummy_setup_teardown;
 
     return suite;
 }
@@ -156,14 +166,25 @@ gpuprocess_suite_run_all (gpuprocess_suite_t *suite)
 
     for (suite_node = suite->testcases->head; suite_node; suite_node = suite_node->next) {
         gpuprocess_testcase_t *testcase = suite_node->data;
-            testcase->setup();
+        suite->setup ();
         for (testcase_node = testcase->tests->head; testcase_node; testcase_node = testcase_node->next) {
             gpuprocess_func_t func = testcase_node->data;
+            testcase->setup ();
             func ();
+            testcase->teardown ();
         }
-            testcase->teardown();
+        suite->teardown ();
     }
-    printf ("All tests passed\n");
+    printf ("All tests from suite %s passed\n", suite->name);
+}
+
+void
+gpuprocess_suite_add_fixture (gpuprocess_suite_t *suite,
+                              gpuprocess_func_t setup,
+                              gpuprocess_func_t teardown)
+{
+    suite->setup = setup;
+    suite->teardown = teardown;
 }
 
 void
