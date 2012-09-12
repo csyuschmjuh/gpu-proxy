@@ -30,6 +30,9 @@ private void
 _server_terminate (EGLDisplay display,
                    link_list_t *active_state);
 
+private void
+_server_initialize (EGLDisplay display);
+
 /* called within eglMakeCurrent () */
 private void
 _server_make_current (EGLDisplay display, 

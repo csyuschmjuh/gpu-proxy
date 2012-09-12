@@ -520,3 +520,35 @@ _match (EGLDisplay display,
     mutex_unlock (egl_mutex);
     return false;
 }
+/* the server first calls eglInitialize (),
+ * then look over the cached states
+ */
+void 
+_server_initialize (EGLDisplay display) 
+{
+    link_list_t *head = server_states.states;
+    link_list_t *list = head;
+    link_list_t *current;
+
+    egl_state_t *egl_state;
+
+    mutex_lock (egl_mutex);
+
+    if (server_states.initialized == false ||
+        server_states.num_contexts == 0 || (! server_states.states)) {
+        mutex_unlock (egl_mutex);
+        return;
+    }
+    
+    while (list != NULL) {
+        egl_state = (egl_state_t *) list->data;
+        current = list;
+        list = list->next;
+
+        if (egl_state->display == display) {
+            if (egl_state->destroy_dpy)
+                egl_state->destroy_dpy = false;
+        }
+    }
+    mutex_unlock (egl_mutex);
+}
