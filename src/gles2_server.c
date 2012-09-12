@@ -2497,7 +2497,7 @@ static void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint *params)
     GLfloat paramsf[4];
     int i;
 
-    glGetVertexAttribfv (index, pname, paramsf);
+    dispatch.GetVertexAttribfv (index, pname, paramsf);
 
     if (pname == GL_CURRENT_VERTEX_ATTRIB) {
         for (i = 0; i < 4; i++)
@@ -3447,27 +3447,27 @@ _gl_uniform_fv (int i, GLint location,
 {
     egl_state_t *egl_state;
 
-    if (! _is_valid_context ())
+    if (! _gl_is_valid_context ())
         goto FINISH;
 
     switch (i) {
     case 1:
-        if(! _is_valid_func (dispatch.Uniform1fv))
+        if(! _gl_is_valid_func (dispatch.Uniform1fv))
             goto FINISH;
         dispatch.Uniform1fv (location, count, value);
         break;
     case 2:
-        if(! _is_valid_func (dispatch.Uniform2fv))
+        if(! _gl_is_valid_func (dispatch.Uniform2fv))
             goto FINISH;
         dispatch.Uniform2fv (location, count, value);
         break;
     case 3:
-        if(! _is_valid_func (dispatch.Uniform3fv))
+        if(! _gl_is_valid_func (dispatch.Uniform3fv))
             goto FINISH;
         dispatch.Uniform3fv (location, count, value);
         break;
     default:
-        if(! _is_valid_func (dispatch.Uniform4fv))
+        if(! _gl_is_valid_func (dispatch.Uniform4fv))
             goto FINISH;
         dispatch.Uniform4fv (location, count, value);
         break;
@@ -3511,27 +3511,27 @@ _gl_uniform_iv (int i, GLint location,
 {
     egl_state_t *egl_state;
 
-    if (! _is_valid_context ())
+    if (! _gl_is_valid_context ())
         goto FINISH;
 
     switch (i) {
     case 1:
-        if(! _is_valid_func (dispatch.Uniform1iv))
+        if(! _gl_is_valid_func (dispatch.Uniform1iv))
             goto FINISH;
         dispatch.Uniform1iv (location, count, value);
         break;
     case 2:
-        if(! _is_valid_func (dispatch.Uniform2iv))
+        if(! _gl_is_valid_func (dispatch.Uniform2iv))
             goto FINISH;
         dispatch.Uniform2iv (location, count, value);
         break;
     case 3:
-        if(! _is_valid_func (dispatch.Uniform3iv))
+        if(! _gl_is_valid_func (dispatch.Uniform3iv))
             goto FINISH;
         dispatch.Uniform3iv (location, count, value);
         break;
     default:
-        if(! _is_valid_func (dispatch.Uniform4iv))
+        if(! _gl_is_valid_func (dispatch.Uniform4iv))
             goto FINISH;
         dispatch.Uniform4iv (location, count, value);
         break;
@@ -3672,7 +3672,7 @@ _gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
 {
     egl_state_t *egl_state;
     
-    if (! _is_valid_context ())
+    if (! _gl_is_valid_context ())
         goto FINISH;
     
     egl_state = (egl_state_t *) active_state->data;
@@ -3682,22 +3682,22 @@ _gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
 
     switch (i) {
         case 1:
-            if(! _is_valid_func (dispatch.VertexAttrib1fv))
+            if(! _gl_is_valid_func (dispatch.VertexAttrib1fv))
                 goto FINISH;
             dispatch.VertexAttrib1fv (index, v);
             break;
         case 2:
-            if(! _is_valid_func (dispatch.VertexAttrib2fv))
+            if(! _gl_is_valid_func (dispatch.VertexAttrib2fv))
                 goto FINISH;
             dispatch.VertexAttrib2fv (index, v);
             break;
         case 3:
-            if(! _is_valid_func (dispatch.VertexAttrib3fv))
+            if(! _gl_is_valid_func (dispatch.VertexAttrib3fv))
                 goto FINISH;
             dispatch.VertexAttrib3fv (index, v);
             break;
         default:
-            if(! _is_valid_func (dispatch.VertexAttrib4fv))
+            if(! _gl_is_valid_func (dispatch.VertexAttrib4fv))
                 goto FINISH;
             dispatch.VertexAttrib4fv (index, v);
             break;
