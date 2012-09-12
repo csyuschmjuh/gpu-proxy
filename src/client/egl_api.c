@@ -528,7 +528,10 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
                 egl_state->readable == read) {
-                return EGL_TRUE;
+                if (egl_state->destroy_dpy)
+                    return EGL_FALSE;
+                else
+                    return EGL_TRUE;
             }
             else {
                 /* XXX: post eglMakeCurrent and wait */
