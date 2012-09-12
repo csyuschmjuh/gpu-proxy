@@ -2497,7 +2497,7 @@ static void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint *params)
     GLfloat paramsf[4];
     int i;
 
-    dispatch.GetVertexAttribfv (index, pname, paramsf);
+    _gl_get_vertex_attribfv (index, pname, paramsf);
 
     if (pname == GL_CURRENT_VERTEX_ATTRIB) {
         for (i = 0; i < 4; i++)
