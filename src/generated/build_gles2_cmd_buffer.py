@@ -1437,12 +1437,7 @@ _FUNCTION_INFO = {
   'TexSubImage2D': {
     'type': 'Manual',
     'immediate': True,
-    'client_test': False,
-    'cmd_args': 'GLenumTextureTarget target, GLint level, '
-                'GLint xoffset, GLint yoffset, '
-                'GLsizei width, GLsizei height, '
-                'GLenumTextureFormat format, GLenumPixelType type, '
-                'const void* pixels, GLboolean internal'
+    'client_test': False
   },
   'Uniform1f': {'type': 'PUTXn', 'data_type': 'GLfloat', 'count': 1},
   'Uniform1fv': {

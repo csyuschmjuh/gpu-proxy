@@ -97,36 +97,16 @@ copy_rect_to_buffer (const void *pixels,
   }
 }
 
-bool
-compute_image_padded_row_size (int width,
-                               int format,
-                               int type,
-                               int unpack_alignment,
-                               uint32_t *padded_row_size)
-{
-    uint32_t bytes_per_group = compute_image_group_size(format, type);
-    uint32_t unpadded_row_size;
-    if (! safe_multiply (width, bytes_per_group, &unpadded_row_size))
-        return false;
-
-    uint32_t temp;
-    if (! safe_add (unpadded_row_size, unpack_alignment - 1, &temp))
-          return false;
-
-    *padded_row_size = (temp / unpack_alignment) * unpack_alignment;
-    return true;
-}
-
 // Returns the amount of data glTexImage2D or glTexSubImage2D will access.
 bool
-compute_image_data_size (int width, 
-                         int height,
-                         int format,
-                         int type,
-                         int unpack_alignment,
-                         uint32_t *size,
-                         uint32_t *ret_unpadded_row_size,
-                         uint32_t *ret_padded_row_size)
+compute_image_data_sizes (int width, 
+                          int height,
+                          int format,
+                          int type,
+                          int unpack_alignment,
+                          uint32_t *size,
+                          uint32_t *ret_unpadded_row_size,
+                          uint32_t *ret_padded_row_size)
 {
     uint32_t bytes_per_group = compute_image_group_size(format, type);
     uint32_t row_size;
