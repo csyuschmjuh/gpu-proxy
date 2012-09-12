@@ -261,7 +261,7 @@ _egl_wait_client (void)
     return result;
 }
 
-static EGLBoolean
+exposed_to_tests EGLBoolean
 _egl_release_thread (void)
 {
     EGLBoolean result = EGL_FALSE;
