@@ -8,7 +8,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([1.11 -Wall no-define  no-dist-gzip dist-xz])
+AM_INIT_AUTOMAKE([1.11 -Wall no-define no-dist-gzip dist-xz])
 LT_INIT
 
 AC_PROG_CC
@@ -17,46 +17,30 @@ AC_PROG_LIBTOOL
 AC_DISABLE_STATIC
 AC_PROG_MKDIR_P
 
-AC_ARG_ENABLE(opengl,
-	      AS_HELP_STRING([--enable-opengl],
-			    [build with OpenGL support]),
-			    [opengl_arg="$enableval"])
-
-AS_IF([test "$opengl_arg" = "yes"], [
-    PKG_CHECK_MODULES(GL, gl,
-		      [use_glx="yes"],
-		      [use_glx="no (GLX headers not found)"])
-])
-
 AC_ARG_ENABLE([opengles],
-	      [AS_HELP_STRING([--enable-opengles]
-                              [build with OpenGLESv2 support])],
-			      [opengles_arg="$enableval"])
+              [AS_HELP_STRING([--enable-opengles=@<:@yes/no@:>@],
+                              [Enable GLES2 @<:@default=yes@:>@])],
+              [], [enable_opengles=yes])
+AC_ARG_ENABLE([opengl],
+              [AS_HELP_STRING([--enable-opengl=@<:@yes/no@:>@],
+                              [Enable Desktop GL @<:@default=no@:>@])],
+              [], [enable_opengl=no])
 
-AS_IF([test "$opengles_arg" = "yes"], [
-    PKG_CHECK_MODULES(EGL, egl,
-		      [use_gles="yes"],
-		      [use_gles="no (EGL headers not found)"])
+AS_IF([test "x$enable_opengl" = "xyes"],
+      [enable_opengles=no;
+      PKG_CHECK_MODULES(GL, gl)
+      AC_DEFINE(HAS_GL, 1, [Define to 1 if you have GLX available])
+      GPUPROCESS_CFLAGS="$GL_CFLAGS"])
 
-    PKG_CHECK_MODULES(GLES, glesv2,
-		      [use_gles="yes"],
-		      [use_gles="no (GLES2 headers not found)"])
-])
+AS_IF([test "x$enable_opengles" = "xyes"],
+    [PKG_CHECK_MODULES(EGL, [egl])
+     PKG_CHECK_MODULES(GLES, [glesv2])
+     GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"])
 
-AM_CONDITIONAL(HAS_GL, test "$use_glx" = yes)
-AM_CONDITIONAL(HAS_GLES2, test "$use_gles" = yes)
+AM_CONDITIONAL(HAS_GL, test "x$enable_opengl" = "xyes")
+AM_CONDITIONAL(HAS_GLES2, test "x$enable_opengles" = "xyes")
 
-if test "$use_glx" = "yes"; then
-    AC_DEFINE(HAS_GL, 1, [Define to 1 if you have GLX available])
-    GPUPROCESS_CFLAGS="$GL_CFLAGS"
-fi
-
-if test "$use_gles" = "yes"; then
-    AC_DEFINE(HAS_GLES2, 1, [Define to 1 if you have GLES2 available])
-    GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"
-fi
-
-if test "$use_gles" != "yes" && test "$use_glx" != "yes"; then
+if test "$enable_opengles" != "yes" && test "$enable_opengl" != "yes"; then
     AC_MSG_ERROR([Must select either GLX/Desktop GL or EGL/GLES2.])
 fi
 
