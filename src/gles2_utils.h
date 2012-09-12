@@ -12,21 +12,14 @@ copy_rect_to_buffer (const void *pixels,
                      uint32_t buffer_padded_row_size);
 
 bool
-compute_image_padded_row_size (int width,
-                               int format,
-                               int type,
-                               int unpack_alignment,
-                               uint32_t *padded_row_size);
-
-bool
-compute_image_data_size (int width,
-                         int height,
-                         int format,
-                         int type,
-                         int unpack_alignment,
-                         uint32_t *size,
-                         uint32_t *ret_unpadded_row_size,
-                         uint32_t *ret_padded_row_size);
+compute_image_data_sizes (int width,
+                          int height,
+                          int format,
+                          int type,
+                          int unpack_alignment,
+                          uint32_t *size,
+                          uint32_t *ret_unpadded_row_size,
+                          uint32_t *ret_padded_row_size);
 
 uint32_t compute_image_group_size (int format,
                                    int type);

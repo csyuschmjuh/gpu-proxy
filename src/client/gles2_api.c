@@ -729,33 +729,59 @@ _gl_get_data_width (GLsizei width, GLenum format, GLenum type)
 }
 
 /* total parameters 9 * sizeof (GLint) */
-void glTexImage2D (GLenum target, GLint level, GLint internalformat,
-                   GLsizei width, GLsizei height, GLint border,
-                   GLenum format, GLenum type, const GLvoid *data)
+void glTexImage2D (GLenum target,
+                   GLint level,
+                   GLint internalformat,
+                   GLsizei width,
+                   GLsizei height,
+                   GLint border,
+                   GLenum format,
+                   GLenum type,
+                   const GLvoid *source_data)
 {
-    GLvoid *data_copy = NULL;
-    int data_width = 0;
-    int image_size;
-
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
-    /* XXX: Is it worth make copy data and make it async call? */
-    if (data && width > 0 && height > 0) {
-        data_width = _gl_get_data_width (width, format, type);
-        image_size = data_width * height;
+    if (level < 0 || height < 0 || width < 0) {
+        /* TODO: Set an error on the client-side. 
+           SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
+        return;
+    }
 
-        if (image_size > 0) {
-            data_copy = (GLvoid *)malloc (sizeof (char) * image_size);
-            memcpy ((void *)data_copy, (const void *)data, sizeof (char) * image_size);
-        }
-    } 
-            
-    return;
+    command_buffer_t *command_buffer = client_state_get_command_buffer ();
+    command_t *command = command_buffer_get_space_for_command (command_buffer,
+                                                               COMMAND_TEXIMAGE2D);
+    if (!source_data) {
+        command_teximage2d_init (command, target, level, internalformat, width,
+                                 height, border, format, type, NULL);
+        command_buffer_write_command (command_buffer, command);
+        return;
+    }
+
+
+    // TODO: This should be read from the current GL client-side state.
+    static const int unpack_alignment = 4;
+
+    uint32_t dest_size;
+    uint32_t unpadded_row_size;
+    uint32_t padded_row_size;
+    if (!compute_image_data_sizes (width, height, format, type,
+                                   unpack_alignment, &dest_size,
+                                   &unpadded_row_size, &padded_row_size)) {
+        /* TODO: Set an error on the client-side.
+         SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
+        return;
+    }
+
+    char* dest_data = malloc (dest_size);
+    copy_rect_to_buffer (source_data, dest_data, height, unpadded_row_size,
+                         padded_row_size, false /* flip y */, padded_row_size);
+
+    command_teximage2d_init (command, target, level, internalformat, width,
+                             height, border, format, type, dest_data);
+    command_buffer_write_command (command_buffer, command);
 }
 
-/* total parameters 9 * sizeof (GLint) */
 void glTexSubImage2D (GLenum target,
                       GLint level,
                       GLint xoffset,
@@ -764,18 +790,8 @@ void glTexSubImage2D (GLenum target,
                       GLsizei height,
                       GLenum format,
                       GLenum type,
-                      const GLvoid *data)
+                      const GLvoid *source_data)
 {
-    GLvoid *data_copy = NULL;
-    int data_width = 0;
-    int image_size;
-
-    // TODO: These should be read from the current GL client-side state.
-    int unpack_alignment_ = 4;
-    int unpack_skip_pixels_ = 0;
-    int unpack_skip_rows_ = 0;
-    int unpack_row_length_ = 0;
-
     if (_is_error_state ())
         return;
 
@@ -788,43 +804,33 @@ void glTexSubImage2D (GLenum target,
     if (height == 0 || width == 0)
         return;
 
-    uint32_t temp_size;
+    // TODO: This should be read from the current GL client-side state.
+    static const int unpack_alignment = 4;
+
+    uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
-    if (! compute_image_data_size (width, height, format,
-                                   type, unpack_alignment_,
-                                   &temp_size, &unpadded_row_size,
-                                   &padded_row_size)) {
+    if (! compute_image_data_sizes (width, height, format,
+                                    type, unpack_alignment,
+                                    &dest_size, &unpadded_row_size,
+                                    &padded_row_size)) {
         // XXX: Set a GL error on the client side here.
         // SetGLError(GL_INVALID_VALUE, "glTexSubImage2D", "size to large");
         return;
     }
-  
-    // Compute the advance bytes per row for the src pixels
-    uint32_t src_padded_row_size;
-    if (unpack_row_length_ > 0) {
-      if (! compute_image_padded_row_size (unpack_row_length_, format, type,
-                                           unpack_alignment_, &src_padded_row_size)) {
-        // XXX: Set a GL error on the client side here.
-        //SetGLError(GL_INVALID_VALUE, "glTexImage2D", "unpack row length too large");
-        return;
-      }
-    } else {
-      src_padded_row_size = padded_row_size;
-    }
 
-    // advance pixels pointer past the skip rows and skip pixels
-    data = ((char*) data) + unpack_skip_rows_ * src_padded_row_size;
-    if (unpack_skip_pixels_) {
-      uint32_t group_size = compute_image_data_size (format, type);
-      data = ((char *) (data)) + unpack_skip_pixels_ * group_size;
-    }
+    char* dest_data = malloc (dest_size);
+    copy_rect_to_buffer (source_data, dest_data, height, unpadded_row_size,
+                         padded_row_size, false /* flip y */, padded_row_size);
 
-    //ScopedTransferBufferPtr buffer(temp_size, helper_, transfer_buffer_);
-    //TexSubImage2DImpl(
-    //    target, level, xoffset, yoffset, width, height, format, type,
-    //    unpadded_row_size, pixels, src_padded_row_size, GL_FALSE, &buffer,
-    //    padded_row_size);
+
+    command_buffer_t *command_buffer = client_state_get_command_buffer ();
+    command_t *command = command_buffer_get_space_for_command (command_buffer,
+                                                               COMMAND_TEXSUBIMAGE2D);
+    command_texsubimage2d_init (command, target, level, xoffset, yoffset,
+                                width, height, format, type, dest_data);
+
+    command_buffer_write_command (command_buffer, command);
 
 }
 
