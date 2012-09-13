@@ -35,14 +35,11 @@ AS_IF([test "x$enable_opengl" = "xyes"],
 AS_IF([test "x$enable_opengles" = "xyes"],
     [PKG_CHECK_MODULES(EGL, [egl])
      PKG_CHECK_MODULES(GLES, [glesv2])
+     AC_DEFINE(HAS_GLES2, 1, [Define to 1 if you have GLES2 available])
      GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"])
 
 AM_CONDITIONAL(HAS_GL, test "x$enable_opengl" = "xyes")
 AM_CONDITIONAL(HAS_GLES2, test "x$enable_opengles" = "xyes")
-
-if test "$enable_opengles" != "yes" && test "$enable_opengl" != "yes"; then
-    AC_MSG_ERROR([Must select either GLX/Desktop GL or EGL/GLES2.])
-fi
 
 AC_CONFIG_FILES([
 Makefile
