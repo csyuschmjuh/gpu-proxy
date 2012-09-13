@@ -11,6 +11,7 @@ client_state_create ()
     client_state = (client_state_t *)malloc (sizeof (client_state_t));
 
     client_state->command_buffer = command_buffer_create ();
+    client_state->name_handler = name_handler_create ();
     client_state->active_egl_state = NULL;
 
     return client_state;
@@ -20,6 +21,7 @@ static bool
 client_state_destroy (client_state_t *client_state)
 {
     command_buffer_destroy (client_state->command_buffer);
+    name_handler_destroy (client_state->name_handler);
     g_free (client_state);
 }
 
@@ -95,4 +97,12 @@ client_state_get_unpack_alignment ()
 {
     client_state_t *client_state = client_state_get_thread_local ();
     return ((egl_state_t *)client_state->active_egl_state->data)->state.unpack_alignment;
+}
+
+name_handler_t *
+client_state_get_name_handler ()
+{
+    client_state_t *client_state = client_state_get_thread_local ();
+
+    return client_state->name_handler;
 }

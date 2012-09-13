@@ -255,10 +255,15 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
 
 void glGenBuffers (GLsizei n, GLuint *buffers)
 {
+    name_handler_t * name_handler;
+
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and wait */
+    name_handler = client_state_get_name_handler();
+    buffers = name_handler_alloc_names (name_handler, RESOURCE_GEN_BUFFERS, n);
+
+    /* FIXME: post command with generated client buffers. */
 }
 
 void glGenFramebuffers (GLsizei n, GLuint *framebuffers)
