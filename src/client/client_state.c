@@ -17,11 +17,10 @@ client_state_create ()
 }
 
 static bool
-client_state_destroy ()
+client_state_destroy (client_state_t *client_state)
 {
-    client_state_t *client_state = client_state_get_thread_local ();
-
     command_buffer_destroy (client_state->command_buffer);
+    g_free (client_state);
 }
 
 client_state_t *
