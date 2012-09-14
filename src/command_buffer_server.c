@@ -70,12 +70,12 @@ command_buffer_server_initialize (buffer_t *buffer)
 {
     command_buffer_server_t *command_buffer_server;
 
-    command_buffer_server = (command_buffer_server_t *) malloc (sizeof (command_buffer_server_t));
+    command_buffer_server = (command_buffer_server_t *)calloc (1, sizeof (command_buffer_server_t));
     command_buffer_server->buffer = buffer;
 
     /* We use a mutex here to wait until the thread has started. */
     mutex_lock (server_thread_started_mutex);
-    pthread_create (command_buffer_server->thread, NULL, server_thread_func, command_buffer_server);
+    pthread_create (&command_buffer_server->thread, NULL, server_thread_func, command_buffer_server);
     mutex_lock (server_thread_started_mutex);
 
     return command_buffer_server;
@@ -87,7 +87,7 @@ command_buffer_server_destroy (command_buffer_server_t *command_buffer_server)
     command_buffer_server->buffer = NULL;
     free (command_buffer_server);
 
-    pthread_join (*command_buffer_server->thread, NULL);
+    pthread_join (command_buffer_server->thread, NULL);
     /* FIXME: GL termination. */
     if (command_buffer_server->active_state) {
         _server_remove_state (&command_buffer_server->active_state);
