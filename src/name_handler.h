@@ -4,7 +4,11 @@
 #include "compiler_private.h"
 #include "types_private.h"
 
+#if HAS_GLES2
+#include <GLES2/gl2.h>
+#else
 #include <GL/gl.h>
+#endif
 #include <stdlib.h>
 
 typedef enum resource_namespace {
