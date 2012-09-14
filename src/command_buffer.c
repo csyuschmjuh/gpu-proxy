@@ -13,6 +13,7 @@ command_buffer_create ()
 {
     command_buffer_t *command_buffer;
     command_buffer = (command_buffer_t *)malloc (sizeof (command_buffer_t));
+    command_buffer->buffer = (buffer_t *)malloc (sizeof (buffer_t));
 
     buffer_create (command_buffer->buffer, BUFFER_SIZE);
 
@@ -26,6 +27,7 @@ bool
 command_buffer_destroy (command_buffer_t *command_buffer)
 {
     buffer_free (command_buffer->buffer);
+    free (command_buffer->buffer);
     command_buffer->buffer = NULL;
     command_buffer_server_destroy (command_buffer->server);
     free (command_buffer);
