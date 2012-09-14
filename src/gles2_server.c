@@ -30,7 +30,7 @@ extern __thread link_list_t        *active_state;
  * egl_server_helper.c */
 extern dispatch_t         dispatch;
 
-static inline bool
+exposed_to_tests inline bool
 _gl_is_valid_func (void *func)
 {
     egl_state_t *egl_state;
@@ -50,7 +50,7 @@ _gl_is_valid_func (void *func)
     return false;
 }
 
-static inline bool
+exposed_to_tests inline bool
 _gl_is_valid_context (void)
 {
     egl_state_t *egl_state;
@@ -65,7 +65,7 @@ _gl_is_valid_context (void)
     return is_valid;
 }
 
-static inline void
+exposed_to_tests inline void
 _gl_set_error (GLenum error)
 {
     egl_state_t *egl_state;
@@ -79,7 +79,7 @@ _gl_set_error (GLenum error)
 }
 
 /* GLES2 core profile API */
-static void _gl_active_texture (GLenum texture)
+exposed_to_tests void _gl_active_texture (GLenum texture)
 {
     egl_state_t *egl_state;
 
@@ -103,7 +103,7 @@ static void _gl_active_texture (GLenum texture)
     }
 }
 
-static void _gl_attach_shader (GLuint program, GLuint shader)
+exposed_to_tests void _gl_attach_shader (GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -117,7 +117,7 @@ static void _gl_attach_shader (GLuint program, GLuint shader)
     }
 }
 
-static void _gl_bind_attrib_location (GLuint program, GLuint index, const GLchar *name)
+exposed_to_tests void _gl_bind_attrib_location (GLuint program, GLuint index, const GLchar *name)
 {
     egl_state_t *egl_state;
     
@@ -132,7 +132,7 @@ static void _gl_bind_attrib_location (GLuint program, GLuint index, const GLchar
         free ((char *)name);
 }
 
-static void _gl_bind_buffer (GLenum target, GLuint buffer)
+exposed_to_tests void _gl_bind_buffer (GLenum target, GLuint buffer)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -175,7 +175,7 @@ static void _gl_bind_buffer (GLenum target, GLuint buffer)
     }
 }
 
-static void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
+exposed_to_tests void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
 {
     egl_state_t *egl_state;
     
@@ -212,7 +212,7 @@ static void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
     }
 }
 
-static void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
+exposed_to_tests void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     
@@ -229,7 +229,7 @@ static void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
     }
 }
 
-static void _gl_bind_texture (GLenum target, GLuint texture)
+exposed_to_tests void _gl_bind_texture (GLenum target, GLuint texture)
 {
     egl_state_t *egl_state;
     
@@ -275,7 +275,7 @@ static void _gl_bind_texture (GLenum target, GLuint texture)
     }
 }
 
-static void _gl_blend_color (GLclampf red, GLclampf green,
+exposed_to_tests void _gl_blend_color (GLclampf red, GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -301,7 +301,7 @@ static void _gl_blend_color (GLclampf red, GLclampf green,
     }
 }
 
-static void _gl_blend_equation (GLenum mode)
+exposed_to_tests void _gl_blend_equation (GLenum mode)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -329,7 +329,7 @@ static void _gl_blend_equation (GLenum mode)
     }
 }
 
-static void _gl_blend_equation_separate (GLenum modeRGB, GLenum modeAlpha)
+exposed_to_tests void _gl_blend_equation_separate (GLenum modeRGB, GLenum modeAlpha)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -360,7 +360,7 @@ static void _gl_blend_equation_separate (GLenum modeRGB, GLenum modeAlpha)
     }
 }
 
-static void _gl_blend_func (GLenum sfactor, GLenum dfactor)
+exposed_to_tests void _gl_blend_func (GLenum sfactor, GLenum dfactor)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -417,7 +417,7 @@ static void _gl_blend_func (GLenum sfactor, GLenum dfactor)
     }
 }
 
-static void _gl_blend_func_separate (GLenum srcRGB, GLenum dstRGB,
+exposed_to_tests void _gl_blend_func_separate (GLenum srcRGB, GLenum dstRGB,
                                      GLenum srcAlpha, GLenum dstAlpha)
 {
     egl_state_t *egl_state;
@@ -507,7 +507,7 @@ static void _gl_blend_func_separate (GLenum srcRGB, GLenum dstRGB,
     }
 }
 
-static void _gl_buffer_data (GLenum target, GLsizeiptr size,
+exposed_to_tests void _gl_buffer_data (GLenum target, GLsizeiptr size,
                              const GLvoid *data, GLenum usage)
 {
     egl_state_t *egl_state;
@@ -528,7 +528,7 @@ static void _gl_buffer_data (GLenum target, GLsizeiptr size,
         free ((void *)data);
 }
 
-static void _gl_buffer_sub_data (GLenum target, GLintptr offset,
+exposed_to_tests void _gl_buffer_sub_data (GLenum target, GLintptr offset,
                                  GLsizeiptr size, const GLvoid *data)
 {
     egl_state_t *egl_state;
@@ -549,7 +549,7 @@ static void _gl_buffer_sub_data (GLenum target, GLintptr offset,
         free ((void *)data);
 }
 
-static GLenum _gl_check_framebuffer_status (GLenum target)
+exposed_to_tests GLenum _gl_check_framebuffer_status (GLenum target)
 {
     GLenum result = GL_INVALID_ENUM;
     egl_state_t *egl_state;
@@ -580,7 +580,7 @@ static GLenum _gl_check_framebuffer_status (GLenum target)
     return result;
 }
 
-static void _gl_clear (GLbitfield mask)
+exposed_to_tests void _gl_clear (GLbitfield mask)
 {
     egl_state_t *egl_state;
     
@@ -599,7 +599,7 @@ static void _gl_clear (GLbitfield mask)
     }
 }
 
-static void _gl_clear_color (GLclampf red, GLclampf green,
+exposed_to_tests void _gl_clear_color (GLclampf red, GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -625,7 +625,7 @@ static void _gl_clear_color (GLclampf red, GLclampf green,
     }
 }
 
-static void _gl_clear_depthf (GLclampf depth)
+exposed_to_tests void _gl_clear_depthf (GLclampf depth)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -644,7 +644,7 @@ static void _gl_clear_depthf (GLclampf depth)
     }
 }
 
-static void _gl_clear_stencil (GLint s)
+exposed_to_tests void _gl_clear_stencil (GLint s)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -663,7 +663,7 @@ static void _gl_clear_stencil (GLint s)
     }
 }
 
-static void _gl_color_mask (GLboolean red, GLboolean green,
+exposed_to_tests void _gl_color_mask (GLboolean red, GLboolean green,
                             GLboolean blue, GLboolean alpha)
 {
     egl_state_t *egl_state;
@@ -689,7 +689,7 @@ static void _gl_color_mask (GLboolean red, GLboolean green,
     }
 }
 
-static void _gl_compressed_tex_image_2d (GLenum target, GLint level,
+exposed_to_tests void _gl_compressed_tex_image_2d (GLenum target, GLint level,
                                          GLenum internalformat,
                                          GLsizei width, GLsizei height,
                                          GLint border, GLsizei imageSize,
@@ -712,7 +712,7 @@ static void _gl_compressed_tex_image_2d (GLenum target, GLint level,
         free ((void *)data);
 }
 
-static void _gl_compressed_tex_sub_image_2d (GLenum target, GLint level,
+exposed_to_tests void _gl_compressed_tex_sub_image_2d (GLenum target, GLint level,
                                              GLint xoffset, GLint yoffset,
                                              GLsizei width, GLsizei height,
                                              GLenum format, 
@@ -736,7 +736,7 @@ static void _gl_compressed_tex_sub_image_2d (GLenum target, GLint level,
         free ((void *)data);
 }
 
-static void _gl_copy_tex_image_2d (GLenum target, GLint level,
+exposed_to_tests void _gl_copy_tex_image_2d (GLenum target, GLint level,
                                    GLenum internalformat,
                                    GLint x, GLint y,
                                    GLsizei width, GLsizei height,
@@ -755,7 +755,7 @@ static void _gl_copy_tex_image_2d (GLenum target, GLint level,
     }
 }
 
-static void _gl_copy_tex_sub_image_2d (GLenum target, GLint level,
+exposed_to_tests void _gl_copy_tex_sub_image_2d (GLenum target, GLint level,
                                        GLint xoffset, GLint yoffset,
                                        GLint x, GLint y,
                                        GLsizei width, GLsizei height)
@@ -774,7 +774,7 @@ static void _gl_copy_tex_sub_image_2d (GLenum target, GLint level,
 }
 
 /* This is a sync call */
-static GLuint _gl_create_program  (void)
+exposed_to_tests GLuint _gl_create_program  (void)
 {
     GLuint result = 0;
     egl_state_t *egl_state;
@@ -790,7 +790,7 @@ static GLuint _gl_create_program  (void)
 }
 
 /* sync call */
-static GLuint _gl_create_shader (GLenum shaderType)
+exposed_to_tests GLuint _gl_create_shader (GLenum shaderType)
 {
     GLuint result = 0;
     egl_state_t *egl_state;
@@ -811,7 +811,7 @@ static GLuint _gl_create_shader (GLenum shaderType)
     return result;
 }
 
-static void _gl_cull_face (GLenum mode)
+exposed_to_tests void _gl_cull_face (GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -835,7 +835,7 @@ static void _gl_cull_face (GLenum mode)
     }
 }
 
-static void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
+exposed_to_tests void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -884,7 +884,7 @@ FINISH:
         free ((void *)buffers);
 }
 
-static void _gl_delete_framebuffers (GLsizei n, const GLuint *framebuffers)
+exposed_to_tests void _gl_delete_framebuffers (GLsizei n, const GLuint *framebuffers)
 {
     egl_state_t *egl_state;
     int i;
@@ -913,7 +913,7 @@ FINISH:
         free ((void *)framebuffers);
 }
 
-static void _gl_delete_program (GLuint program)
+exposed_to_tests void _gl_delete_program (GLuint program)
 {
     egl_state_t *egl_state;
     
@@ -927,7 +927,7 @@ static void _gl_delete_program (GLuint program)
     }
 }
 
-static void _gl_delete_renderbuffers (GLsizei n, const GLuint *renderbuffers)
+exposed_to_tests void _gl_delete_renderbuffers (GLsizei n, const GLuint *renderbuffers)
 {
     egl_state_t *egl_state;
     
@@ -948,7 +948,7 @@ FINISH:
         free ((void *)renderbuffers);
 }
 
-static void _gl_delete_shader (GLuint shader)
+exposed_to_tests void _gl_delete_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -962,7 +962,7 @@ static void _gl_delete_shader (GLuint shader)
     }
 }
 
-static void _gl_delete_textures (GLsizei n, const GLuint *textures)
+exposed_to_tests void _gl_delete_textures (GLsizei n, const GLuint *textures)
 {
     egl_state_t *egl_state;
     
@@ -983,7 +983,7 @@ FINISH:
         free ((void *)textures);
 }
 
-static void _gl_depth_func (GLenum func)
+exposed_to_tests void _gl_depth_func (GLenum func)
 {
     egl_state_t *egl_state;
     
@@ -1012,7 +1012,7 @@ static void _gl_depth_func (GLenum func)
     }
 }
 
-static void _gl_depth_mask (GLboolean flag)
+exposed_to_tests void _gl_depth_mask (GLboolean flag)
 {
     egl_state_t *egl_state;
     
@@ -1029,7 +1029,7 @@ static void _gl_depth_mask (GLboolean flag)
     }
 }
 
-static void _gl_depth_rangef (GLclampf nearVal, GLclampf farVal)
+exposed_to_tests void _gl_depth_rangef (GLclampf nearVal, GLclampf farVal)
 {
     egl_state_t *egl_state;
     
@@ -1048,7 +1048,7 @@ static void _gl_depth_rangef (GLclampf nearVal, GLclampf farVal)
     }
 }
 
-static void _gl_detach_shader (GLuint program, GLuint shader)
+exposed_to_tests void _gl_detach_shader (GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -1062,7 +1062,7 @@ static void _gl_detach_shader (GLuint program, GLuint shader)
     }
 }
 
-static void
+exposed_to_tests void
 _gl_set_cap (GLenum cap, GLboolean enable)
 {
     egl_state_t *egl_state;
@@ -1146,17 +1146,17 @@ _gl_set_cap (GLenum cap, GLboolean enable)
     }
 }
 
-static void _gl_disable (GLenum cap)
+exposed_to_tests void _gl_disable (GLenum cap)
 {
     _gl_set_cap (cap, GL_FALSE);
 }
 
-static void _gl_enable (GLenum cap)
+exposed_to_tests void _gl_enable (GLenum cap)
 {
     _gl_set_cap (cap, GL_TRUE);
 }
 
-static bool
+exposed_to_tests bool
 _gl_index_is_too_large (gles2_state_t *state, GLuint index)
 {
     if (index >= state->max_vertex_attribs) {
@@ -1175,7 +1175,7 @@ _gl_index_is_too_large (gles2_state_t *state, GLuint index)
     return false;
 }
 
-static void 
+exposed_to_tests void 
 _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state, 
                              GLboolean enable)
 {
@@ -1251,7 +1251,7 @@ _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state,
     }
 }   
 
-static void _gl_disable_vertex_attrib_array (GLuint index)
+exposed_to_tests void _gl_disable_vertex_attrib_array (GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1265,7 +1265,7 @@ static void _gl_disable_vertex_attrib_array (GLuint index)
     }
 }
 
-static void _gl_enable_vertex_attrib_array (GLuint index)
+exposed_to_tests void _gl_enable_vertex_attrib_array (GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1280,7 +1280,7 @@ static void _gl_enable_vertex_attrib_array (GLuint index)
 }
 
 /* FIXME: we should use pre-allocated buffer if possible */
-static char *
+exposed_to_tests char *
 _gl_create_data_array (vertex_attrib_t *attrib, int count)
 {
     int i;
@@ -1307,7 +1307,7 @@ _gl_create_data_array (vertex_attrib_t *attrib, int count)
     return data;
 }
 
-static void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
+exposed_to_tests void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
 {
     gles2_state_t *state;
     egl_state_t *egl_state;
@@ -1447,7 +1447,7 @@ _gl_create_indices_array (GLenum mode, GLenum type, int count,
     return data;
 }*/
 
-static void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
+exposed_to_tests void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type,
                                const GLvoid *indices)
 {
     egl_state_t *egl_state;
@@ -1555,7 +1555,7 @@ FINISH:
     }
 }
 
-static void _gl_finish (void)
+exposed_to_tests void _gl_finish (void)
 {
     egl_state_t *egl_state;
     
@@ -1567,7 +1567,7 @@ static void _gl_finish (void)
     }
 }
 
-static void _gl_flush (void)
+exposed_to_tests void _gl_flush (void)
 {
     egl_state_t *egl_state;
     
@@ -1579,7 +1579,7 @@ static void _gl_flush (void)
     }
 }
 
-static void _gl_framebuffer_renderbuffer (GLenum target, GLenum attachment,
+exposed_to_tests void _gl_framebuffer_renderbuffer (GLenum target, GLenum attachment,
                                           GLenum renderbuffertarget,
                                           GLenum renderbuffer)
 {
@@ -1606,7 +1606,7 @@ static void _gl_framebuffer_renderbuffer (GLenum target, GLenum attachment,
     }
 }
 
-static void _gl_framebuffer_texture_2d (GLenum target, GLenum attachment,
+exposed_to_tests void _gl_framebuffer_texture_2d (GLenum target, GLenum attachment,
                                         GLenum textarget, GLuint texture, 
                                         GLint level)
 {
@@ -1627,7 +1627,7 @@ static void _gl_framebuffer_texture_2d (GLenum target, GLenum attachment,
     }
 }
 
-static void _gl_front_face (GLenum mode)
+exposed_to_tests void _gl_front_face (GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -1648,7 +1648,7 @@ static void _gl_front_face (GLenum mode)
     }
 }
 
-static void _gl_gen_buffers (GLsizei n, GLuint *buffers)
+exposed_to_tests void _gl_gen_buffers (GLsizei n, GLuint *buffers)
 {
     if (_gl_is_valid_func (dispatch.GenBuffers) &&
         _gl_is_valid_context ()) {
@@ -1662,7 +1662,7 @@ static void _gl_gen_buffers (GLsizei n, GLuint *buffers)
     }
 }
 
-static void _gl_gen_framebuffers (GLsizei n, GLuint *framebuffers)
+exposed_to_tests void _gl_gen_framebuffers (GLsizei n, GLuint *framebuffers)
 {
     if (_gl_is_valid_func (dispatch.GenFramebuffers) &&
         _gl_is_valid_context ()) {
@@ -1676,7 +1676,7 @@ static void _gl_gen_framebuffers (GLsizei n, GLuint *framebuffers)
     }
 }
 
-static void _gl_gen_renderbuffers (GLsizei n, GLuint *renderbuffers)
+exposed_to_tests void _gl_gen_renderbuffers (GLsizei n, GLuint *renderbuffers)
 {
     if (_gl_is_valid_func (dispatch.GenRenderbuffers) &&
         _gl_is_valid_context ()) {
@@ -1690,7 +1690,7 @@ static void _gl_gen_renderbuffers (GLsizei n, GLuint *renderbuffers)
     }
 }
 
-static void _gl_gen_textures (GLsizei n, GLuint *textures)
+exposed_to_tests void _gl_gen_textures (GLsizei n, GLuint *textures)
 {
     if (_gl_is_valid_func (dispatch.GenTextures) &&
         _gl_is_valid_context ()) {
@@ -1704,7 +1704,7 @@ static void _gl_gen_textures (GLsizei n, GLuint *textures)
     }
 }
 
-static void _gl_generate_mipmap (GLenum target)
+exposed_to_tests void _gl_generate_mipmap (GLenum target)
 {
     egl_state_t *egl_state;
     
@@ -1728,7 +1728,7 @@ static void _gl_generate_mipmap (GLenum target)
     }
 }
 
-static void _gl_get_booleanv (GLenum pname, GLboolean *params)
+exposed_to_tests void _gl_get_booleanv (GLenum pname, GLboolean *params)
 {
     egl_state_t *egl_state;
     
@@ -1780,7 +1780,7 @@ static void _gl_get_booleanv (GLenum pname, GLboolean *params)
     }
 }
 
-static void _gl_get_floatv (GLenum pname, GLfloat *params)
+exposed_to_tests void _gl_get_floatv (GLenum pname, GLfloat *params)
 {
     egl_state_t *egl_state;
     
@@ -1832,7 +1832,7 @@ static void _gl_get_floatv (GLenum pname, GLfloat *params)
     }
 }
 
-static void _gl_get_integerv (GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -2022,7 +2022,7 @@ static void _gl_get_integerv (GLenum pname, GLint *params)
     }
 }
 
-static void _gl_get_active_attrib (GLuint program, GLuint index,
+exposed_to_tests void _gl_get_active_attrib (GLuint program, GLuint index,
                                    GLsizei bufsize, GLsizei *length,
                                    GLint *size, GLenum *type, GLchar *name)
 {
@@ -2038,7 +2038,7 @@ static void _gl_get_active_attrib (GLuint program, GLuint index,
     }
 }
 
-static void _gl_get_active_uniform (GLuint program, GLuint index, 
+exposed_to_tests void _gl_get_active_uniform (GLuint program, GLuint index, 
                                     GLsizei bufsize, GLsizei *length, 
                                     GLint *size, GLenum *type, 
                                     GLchar *name)
@@ -2055,7 +2055,7 @@ static void _gl_get_active_uniform (GLuint program, GLuint index,
     }
 }
 
-static void _gl_get_attached_shaders (GLuint program, GLsizei maxCount,
+exposed_to_tests void _gl_get_attached_shaders (GLuint program, GLsizei maxCount,
                                       GLsizei *count, GLuint *shaders)
 {
     egl_state_t *egl_state;
@@ -2070,7 +2070,7 @@ static void _gl_get_attached_shaders (GLuint program, GLsizei maxCount,
     }
 }
 
-static GLint _gl_get_attrib_location (GLuint program, const GLchar *name)
+exposed_to_tests GLint _gl_get_attrib_location (GLuint program, const GLchar *name)
 {
     egl_state_t *egl_state;
     GLint result = -1;
@@ -2086,7 +2086,7 @@ static GLint _gl_get_attrib_location (GLuint program, const GLchar *name)
     return result;
 }
 
-static void _gl_get_buffer_parameteriv (GLenum target, GLenum value, GLint *data)
+exposed_to_tests void _gl_get_buffer_parameteriv (GLenum target, GLenum value, GLint *data)
 {
     egl_state_t *egl_state;
     
@@ -2100,7 +2100,7 @@ static void _gl_get_buffer_parameteriv (GLenum target, GLenum value, GLint *data
     }
 }
 
-static GLenum _gl_get_error (void)
+exposed_to_tests GLenum _gl_get_error (void)
 {
     GLenum error = GL_INVALID_OPERATION;
     egl_state_t *egl_state;
@@ -2124,7 +2124,7 @@ static GLenum _gl_get_error (void)
     return error;
 }
 
-static void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
+exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
                                                         GLenum attachment,
                                                         GLenum pname,
                                                         GLint *params)
@@ -2146,7 +2146,7 @@ static void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
     }
 }
 
-static void _gl_get_program_info_log (GLuint program, GLsizei maxLength,
+exposed_to_tests void _gl_get_program_info_log (GLuint program, GLsizei maxLength,
                                       GLsizei *length, GLchar *infoLog)
 {
     egl_state_t *egl_state;
@@ -2161,7 +2161,7 @@ static void _gl_get_program_info_log (GLuint program, GLsizei maxLength,
     }
 }
 
-static void _gl_get_programiv (GLuint program, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_programiv (GLuint program, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     
@@ -2175,7 +2175,7 @@ static void _gl_get_programiv (GLuint program, GLenum pname, GLint *params)
     }
 }
 
-static void _gl_get_renderbuffer_parameteriv (GLenum target,
+exposed_to_tests void _gl_get_renderbuffer_parameteriv (GLenum target,
                                               GLenum pname,
                                               GLint *params)
 {
@@ -2196,7 +2196,7 @@ static void _gl_get_renderbuffer_parameteriv (GLenum target,
     }
 }
 
-static void _gl_get_shader_info_log (GLuint program, GLsizei maxLength,
+exposed_to_tests void _gl_get_shader_info_log (GLuint program, GLsizei maxLength,
                                      GLsizei *length, GLchar *infoLog)
 {
     egl_state_t *egl_state;
@@ -2211,7 +2211,7 @@ static void _gl_get_shader_info_log (GLuint program, GLsizei maxLength,
     }
 }
 
-static void _gl_get_shader_precision_format (GLenum shaderType, 
+exposed_to_tests void _gl_get_shader_precision_format (GLenum shaderType, 
                                              GLenum precisionType,
                                              GLint *range, 
                                              GLint *precision)
@@ -2229,7 +2229,7 @@ static void _gl_get_shader_precision_format (GLenum shaderType,
     }
 }
 
-static void _gl_get_shader_source  (GLuint shader, GLsizei bufSize, 
+exposed_to_tests void _gl_get_shader_source  (GLuint shader, GLsizei bufSize, 
                                     GLsizei *length, GLchar *source)
 {
     egl_state_t *egl_state;
@@ -2244,7 +2244,7 @@ static void _gl_get_shader_source  (GLuint shader, GLsizei bufSize,
     }
 }
 
-static void _gl_get_shaderiv (GLuint shader, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_shaderiv (GLuint shader, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     
@@ -2258,7 +2258,7 @@ static void _gl_get_shaderiv (GLuint shader, GLenum pname, GLint *params)
     }
 }
 
-static const GLubyte *_gl_get_string (GLenum name)
+exposed_to_tests const GLubyte *_gl_get_string (GLenum name)
 {
     GLubyte *result = NULL;
     egl_state_t *egl_state;
@@ -2282,7 +2282,7 @@ static const GLubyte *_gl_get_string (GLenum name)
     return (const GLubyte *)result;
 }
 
-static void _gl_get_tex_parameteriv (GLenum target, GLenum pname, 
+exposed_to_tests void _gl_get_tex_parameteriv (GLenum target, GLenum pname, 
                                      GLint *params)
 {
     egl_state_t *egl_state;
@@ -2340,7 +2340,7 @@ static void _gl_get_tex_parameteriv (GLenum target, GLenum pname,
     }
 }
 
-static void _gl_get_tex_parameterfv (GLenum target, GLenum pname, GLfloat *params)
+exposed_to_tests void _gl_get_tex_parameterfv (GLenum target, GLenum pname, GLfloat *params)
 {
     GLint paramsi;
 
@@ -2348,7 +2348,7 @@ static void _gl_get_tex_parameterfv (GLenum target, GLenum pname, GLfloat *param
     *params = paramsi;
 }
 
-static void _gl_get_uniformiv (GLuint program, GLint location, 
+exposed_to_tests void _gl_get_uniformiv (GLuint program, GLint location, 
                                GLint *params)
 {
     egl_state_t *egl_state;
@@ -2363,7 +2363,7 @@ static void _gl_get_uniformiv (GLuint program, GLint location,
     }
 }
 
-static void _gl_get_uniformfv (GLuint program, GLint location, 
+exposed_to_tests void _gl_get_uniformfv (GLuint program, GLint location, 
                                GLfloat *params)
 {
     egl_state_t *egl_state;
@@ -2378,7 +2378,7 @@ static void _gl_get_uniformfv (GLuint program, GLint location,
     }
 }
 
-static GLint _gl_get_uniform_location (GLuint program, const GLchar *name)
+exposed_to_tests GLint _gl_get_uniform_location (GLuint program, const GLchar *name)
 {
     GLint result = -1;
     egl_state_t *egl_state;
@@ -2394,7 +2394,7 @@ static GLint _gl_get_uniform_location (GLuint program, const GLchar *name)
     return result;
 }
 
-static void _gl_get_vertex_attribfv (GLuint index, GLenum pname, 
+exposed_to_tests void _gl_get_vertex_attribfv (GLuint index, GLenum pname, 
                                      GLfloat *params)
 {
     egl_state_t *egl_state;
@@ -2492,12 +2492,12 @@ static void _gl_get_vertex_attribfv (GLuint index, GLenum pname,
     }
 }
 
-static void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint *params)
 {
     GLfloat paramsf[4];
     int i;
 
-    _gl_get_vertex_attribfv (index, pname, paramsf);
+    dispatch.GetVertexAttribfv (index, pname, paramsf);
 
     if (pname == GL_CURRENT_VERTEX_ATTRIB) {
         for (i = 0; i < 4; i++)
@@ -2506,7 +2506,7 @@ static void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint *params)
         *params = paramsf[0];
 }
 
-static void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname, 
+exposed_to_tests void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname, 
                                             GLvoid **pointer)
 {
     egl_state_t *egl_state;
@@ -2554,7 +2554,7 @@ static void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname,
     }
 }
 
-static void _gl_hint (GLenum target, GLenum mode)
+exposed_to_tests void _gl_hint (GLenum target, GLenum mode)
 {
     egl_state_t *egl_state;
 
@@ -2583,7 +2583,7 @@ static void _gl_hint (GLenum target, GLenum mode)
     }
 }
 
-static GLboolean _gl_is_buffer (GLuint buffer)
+exposed_to_tests GLboolean _gl_is_buffer (GLuint buffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2597,7 +2597,7 @@ static GLboolean _gl_is_buffer (GLuint buffer)
     return result;
 }
 
-static GLboolean _gl_is_enabled (GLenum cap)
+exposed_to_tests GLboolean _gl_is_enabled (GLenum cap)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2642,7 +2642,7 @@ static GLboolean _gl_is_enabled (GLenum cap)
     return result;
 }
 
-static GLboolean _gl_is_framebuffer (GLuint framebuffer)
+exposed_to_tests GLboolean _gl_is_framebuffer (GLuint framebuffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2656,7 +2656,7 @@ static GLboolean _gl_is_framebuffer (GLuint framebuffer)
     return result;
 }
 
-static GLboolean _gl_is_program (GLuint program)
+exposed_to_tests GLboolean _gl_is_program (GLuint program)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2670,7 +2670,7 @@ static GLboolean _gl_is_program (GLuint program)
     return result;
 }
 
-static GLboolean _gl_is_renderbuffer (GLuint renderbuffer)
+exposed_to_tests GLboolean _gl_is_renderbuffer (GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2684,7 +2684,7 @@ static GLboolean _gl_is_renderbuffer (GLuint renderbuffer)
     return result;
 }
 
-static GLboolean _gl_is_shader (GLuint shader)
+exposed_to_tests GLboolean _gl_is_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2698,7 +2698,7 @@ static GLboolean _gl_is_shader (GLuint shader)
     return result;
 }
 
-static GLboolean _gl_is_texture (GLuint texture)
+exposed_to_tests GLboolean _gl_is_texture (GLuint texture)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2712,7 +2712,7 @@ static GLboolean _gl_is_texture (GLuint texture)
     return result;
 }
 
-static void _gl_line_width (GLfloat width)
+exposed_to_tests void _gl_line_width (GLfloat width)
 {
     egl_state_t *egl_state;
 
@@ -2733,7 +2733,7 @@ static void _gl_line_width (GLfloat width)
     }
 }
 
-static void _gl_link_program (GLuint program)
+exposed_to_tests void _gl_link_program (GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -2746,7 +2746,7 @@ static void _gl_link_program (GLuint program)
     }
 }
 
-static void _gl_pixel_storei (GLenum pname, GLint param)
+exposed_to_tests void _gl_pixel_storei (GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
 
@@ -2782,7 +2782,7 @@ static void _gl_pixel_storei (GLenum pname, GLint param)
     }
 }
 
-static void _gl_polygon_offset (GLfloat factor, GLfloat units)
+exposed_to_tests void _gl_polygon_offset (GLfloat factor, GLfloat units)
 {
     egl_state_t *egl_state;
     
@@ -2802,7 +2802,7 @@ static void _gl_polygon_offset (GLfloat factor, GLfloat units)
 }
 
 /* sync call */
-static void _gl_read_pixels (GLint x, GLint y,
+exposed_to_tests void _gl_read_pixels (GLint x, GLint y,
                              GLsizei width, GLsizei height,
                              GLenum format, GLenum type, GLvoid *data)
 {
@@ -2817,7 +2817,7 @@ static void _gl_read_pixels (GLint x, GLint y,
     }
 }
 
-static void _gl_compile_shader (GLuint shader)
+exposed_to_tests void _gl_compile_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -2830,7 +2830,7 @@ static void _gl_compile_shader (GLuint shader)
     }
 }
 
-static void _gl_release_shader_compiler (void)
+exposed_to_tests void _gl_release_shader_compiler (void)
 {
     egl_state_t *egl_state;
     
@@ -2843,7 +2843,7 @@ static void _gl_release_shader_compiler (void)
     }
 }
 
-static void _gl_renderbuffer_storage (GLenum target, GLenum internalformat,
+exposed_to_tests void _gl_renderbuffer_storage (GLenum target, GLenum internalformat,
                                       GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
@@ -2857,7 +2857,7 @@ static void _gl_renderbuffer_storage (GLenum target, GLenum internalformat,
     }
 }
 
-static void _gl_sample_coverage (GLclampf value, GLboolean invert)
+exposed_to_tests void _gl_sample_coverage (GLclampf value, GLboolean invert)
 {
     egl_state_t *egl_state;
     
@@ -2876,7 +2876,7 @@ static void _gl_sample_coverage (GLclampf value, GLboolean invert)
     }
 }
 
-static void _gl_scissor (GLint x, GLint y, GLsizei width, GLsizei height)
+exposed_to_tests void _gl_scissor (GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
@@ -2904,7 +2904,7 @@ static void _gl_scissor (GLint x, GLint y, GLsizei width, GLsizei height)
     }
 }
 
-static void _gl_shader_binary (GLsizei n, const GLuint *shaders,
+exposed_to_tests void _gl_shader_binary (GLsizei n, const GLuint *shaders,
                                GLenum binaryformat, const void *binary,
                                GLsizei length)
 {
@@ -2921,7 +2921,7 @@ static void _gl_shader_binary (GLsizei n, const GLuint *shaders,
         free ((void *)binary);
 }
 
-static void _gl_shader_source (GLuint shader, GLsizei count,
+exposed_to_tests void _gl_shader_source (GLuint shader, GLsizei count,
                                const GLchar **string, const GLint *length)
 {
     egl_state_t *egl_state;
@@ -2948,7 +2948,7 @@ static void _gl_shader_source (GLuint shader, GLsizei count,
     }
 }
 
-static void _gl_stencil_func_separate (GLenum face, GLenum func,
+exposed_to_tests void _gl_stencil_func_separate (GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
     egl_state_t *egl_state;
@@ -3020,12 +3020,12 @@ static void _gl_stencil_func_separate (GLenum face, GLenum func,
         dispatch.StencilFuncSeparate (face, func, ref, mask);
 }
 
-static void _gl_stencil_func (GLenum func, GLint ref, GLuint mask)
+exposed_to_tests void _gl_stencil_func (GLenum func, GLint ref, GLuint mask)
 {
     _gl_stencil_func_separate (GL_FRONT_AND_BACK, func, ref, mask);
 }
 
-static void _gl_stencil_mask_separate (GLenum face, GLuint mask)
+exposed_to_tests void _gl_stencil_mask_separate (GLenum face, GLuint mask)
 {
     egl_state_t *egl_state;
     bool needs_call = false;
@@ -3068,12 +3068,12 @@ static void _gl_stencil_mask_separate (GLenum face, GLuint mask)
         dispatch.StencilMaskSeparate (face, mask);
 }
 
-static void _gl_stencil_mask (GLuint mask)
+exposed_to_tests void _gl_stencil_mask (GLuint mask)
 {
     _gl_stencil_mask_separate (GL_FRONT_AND_BACK, mask);
 }
 
-static void _gl_stencil_op_separate (GLenum face, GLenum sfail, 
+exposed_to_tests void _gl_stencil_op_separate (GLenum face, GLenum sfail, 
                                      GLenum dpfail, GLenum dppass)
 {
     egl_state_t *egl_state;
@@ -3167,12 +3167,12 @@ static void _gl_stencil_op_separate (GLenum face, GLenum sfail,
         dispatch.StencilOpSeparate (face, sfail, dpfail, dppass);
 }
 
-static void _gl_stencil_op (GLenum sfail, GLenum dpfail, GLenum dppass)
+exposed_to_tests void _gl_stencil_op (GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     _gl_stencil_op_separate (GL_FRONT_AND_BACK, sfail, dpfail, dppass);
 }
 
-static void _gl_tex_image_2d (GLenum target, GLint level, 
+exposed_to_tests void _gl_tex_image_2d (GLenum target, GLint level, 
                               GLint internalformat,
                               GLsizei width, GLsizei height, GLint border,
                               GLenum format, GLenum type, 
@@ -3192,7 +3192,7 @@ static void _gl_tex_image_2d (GLenum target, GLint level,
       free ((void *)data);
 }
 
-static void _gl_tex_parameteri (GLenum target, GLenum pname, GLint param)
+exposed_to_tests void _gl_tex_parameteri (GLenum target, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -3308,13 +3308,13 @@ static void _gl_tex_parameteri (GLenum target, GLenum pname, GLint param)
     }
 }
 
-static void _gl_tex_parameterf (GLenum target, GLenum pname, GLfloat param)
+exposed_to_tests void _gl_tex_parameterf (GLenum target, GLenum pname, GLfloat param)
 {
     GLint parami = param;
     _gl_tex_parameteri (target, pname, parami);
 }
 
-static void _gl_tex_sub_image_2d (GLenum target, GLint level,
+exposed_to_tests void _gl_tex_sub_image_2d (GLenum target, GLint level,
                                   GLint xoffset, GLint yoffset,
                                   GLsizei width, GLsizei height,
                                   GLenum format, GLenum type, 
@@ -3334,7 +3334,7 @@ static void _gl_tex_sub_image_2d (GLenum target, GLint level,
         free ((void *)data);
 }
 
-static void _gl_uniform1f (GLint location, GLfloat v0)
+exposed_to_tests void _gl_uniform1f (GLint location, GLfloat v0)
 {
     egl_state_t *egl_state;
     
@@ -3347,7 +3347,7 @@ static void _gl_uniform1f (GLint location, GLfloat v0)
     }
 }
 
-static void _gl_uniform2f (GLint location, GLfloat v0, GLfloat v1)
+exposed_to_tests void _gl_uniform2f (GLint location, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
@@ -3360,7 +3360,7 @@ static void _gl_uniform2f (GLint location, GLfloat v0, GLfloat v1)
     }
 }
 
-static void _gl_uniform3f (GLint location, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_uniform3f (GLint location, GLfloat v0, GLfloat v1, 
                            GLfloat v2)
 {
     egl_state_t *egl_state;
@@ -3374,7 +3374,7 @@ static void _gl_uniform3f (GLint location, GLfloat v0, GLfloat v1,
     }
 }
 
-static void _gl_uniform4f (GLint location, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_uniform4f (GLint location, GLfloat v0, GLfloat v1, 
                            GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
@@ -3388,7 +3388,7 @@ static void _gl_uniform4f (GLint location, GLfloat v0, GLfloat v1,
     }
 }
 
-static void _gl_uniform1i (GLint location, GLint v0)
+exposed_to_tests void _gl_uniform1i (GLint location, GLint v0)
 {
     egl_state_t *egl_state;
 
@@ -3401,7 +3401,7 @@ static void _gl_uniform1i (GLint location, GLint v0)
     }
 }
 
-static void _gl_uniform_2i (GLint location, GLint v0, GLint v1)
+exposed_to_tests void _gl_uniform_2i (GLint location, GLint v0, GLint v1)
 {
     egl_state_t *egl_state;
 
@@ -3414,7 +3414,7 @@ static void _gl_uniform_2i (GLint location, GLint v0, GLint v1)
     }
 }
 
-static void _gl_uniform3i (GLint location, GLint v0, GLint v1, GLint v2)
+exposed_to_tests void _gl_uniform3i (GLint location, GLint v0, GLint v1, GLint v2)
 {
     egl_state_t *egl_state;
 
@@ -3427,7 +3427,7 @@ static void _gl_uniform3i (GLint location, GLint v0, GLint v1, GLint v2)
     }
 }
 
-static void _gl_uniform4i (GLint location, GLint v0, GLint v1, 
+exposed_to_tests void _gl_uniform4i (GLint location, GLint v0, GLint v1, 
                            GLint v2, GLint v3)
 {
     egl_state_t *egl_state;
@@ -3441,7 +3441,7 @@ static void _gl_uniform4i (GLint location, GLint v0, GLint v1,
     }
 }
 
-static void
+exposed_to_tests void
 _gl_uniform_fv (int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
@@ -3481,31 +3481,31 @@ FINISH:
         free ((GLfloat *)value);
 }
 
-static void _gl_uniform1fv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform1fv (GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (1, location, count, value);
 }
 
-static void _gl_uniform2fv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform2fv (GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (2, location, count, value);
 }
 
-static void _gl_uniform3fv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform3fv (GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (3, location, count, value);
 }
 
-static void _gl_uniform4fv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform4fv (GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (4, location, count, value);
 }
 
-static void
+exposed_to_tests void
 _gl_uniform_iv (int i, GLint location,
                 GLsizei count, const GLint *value)
 {
@@ -3545,31 +3545,31 @@ FINISH:
         free ((GLint *)value);
 }
 
-static void _gl_uniform1iv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform1iv (GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (1, location, count, value);
 }
 
-static void _gl_uniform2iv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform2iv (GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (2, location, count, value);
 }
 
-static void _gl_uniform3iv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform3iv (GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (3, location, count, value);
 }
 
-static void _gl_uniform4iv (GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform4iv (GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (4, location, count, value);
 }
 
-static void _gl_use_program (GLuint program)
+exposed_to_tests void _gl_use_program (GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -3589,7 +3589,7 @@ static void _gl_use_program (GLuint program)
     }
 }
 
-static void _gl_validate_program (GLuint program)
+exposed_to_tests void _gl_validate_program (GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -3602,7 +3602,7 @@ static void _gl_validate_program (GLuint program)
     }
 }
 
-static void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
+exposed_to_tests void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
 {
     egl_state_t *egl_state;
 
@@ -3618,7 +3618,7 @@ static void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
     }
 }
 
-static void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
+exposed_to_tests void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
@@ -3634,7 +3634,7 @@ static void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
     }
 }
 
-static void _gl_vertex_attrib3f (GLuint index, GLfloat v0, 
+exposed_to_tests void _gl_vertex_attrib3f (GLuint index, GLfloat v0, 
                                  GLfloat v1, GLfloat v2)
 {
     egl_state_t *egl_state;
@@ -3651,7 +3651,7 @@ static void _gl_vertex_attrib3f (GLuint index, GLfloat v0,
     }
 }
 
-static void _gl_vertex_attrib4f (GLuint index, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_vertex_attrib4f (GLuint index, GLfloat v0, GLfloat v1, 
                                  GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
@@ -3667,7 +3667,7 @@ static void _gl_vertex_attrib4f (GLuint index, GLfloat v0, GLfloat v1,
     }
 }
 
-static void
+exposed_to_tests void
 _gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
 {
     egl_state_t *egl_state;
@@ -3708,27 +3708,27 @@ FINISH:
         free ((GLfloat *)v);
 }
 
-static void _gl_vertex_attrib1fv (GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib1fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (1, index, v);
 }
 
-static void _gl_vertex_attrib2fv (GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib2fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (2, index, v);
 }
 
-static void _gl_vertex_attrib3fv (GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib3fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (3, index, v);
 }
 
-static void _gl_vertex_attrib4fv (GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib4fv (GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (4, index, v);
 }
 
-static void _gl_vertex_attrib_pointer (GLuint index, GLint size, 
+exposed_to_tests void _gl_vertex_attrib_pointer (GLuint index, GLint size, 
                                        GLenum type, GLboolean normalized, 
                                        GLsizei stride, const GLvoid *pointer)
 {
@@ -3853,7 +3853,7 @@ static void _gl_vertex_attrib_pointer (GLuint index, GLint size,
     }
 }
 
-static void _gl_viewport (GLint x, GLint y, GLsizei width, GLsizei height)
+exposed_to_tests void _gl_viewport (GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
