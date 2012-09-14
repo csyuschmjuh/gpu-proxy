@@ -763,9 +763,7 @@ void glTexImage2D (GLenum target,
         return;
     }
 
-
-    // TODO: This should be read from the current GL client-side state.
-    static const int unpack_alignment = 4;
+    int unpack_alignment = client_state_get_unpack_alignment ();
 
     uint32_t dest_size;
     uint32_t unpadded_row_size;
