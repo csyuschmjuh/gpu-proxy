@@ -5,6 +5,9 @@
 #include <X11/Xutil.h>
 #include <stdlib.h>
 #include <EGL/egl.h>
+
+#include <stdio.h>
+
 Display *dpy1 = NULL;
 EGLDisplay egl_dpy;
 EGLContext window_context;
@@ -175,7 +178,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    GLint get_error_result;
    // Create the shader object
 
-    shader = _gl_create_shader( NULL );
+    shader = _gl_create_shader( GL_VERTEX_SHADER );
     GPUPROCESS_FAIL_IF (shader, "_gl_create_shader can not be created by an invalid type");
 
     get_error_result = _gl_get_error();
@@ -209,7 +212,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    {
       GLint infoLen = 0;
 
-      _gl_get_shaderiv( NULL, GL_INFO_LOG_LENGTH, &infoLen );
+      _gl_get_shaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
      
       GPUPROCESS_FAIL_UNLESS ( infoLen == 0 ,"_gl_get_shaderiv should return zero szie for information log since shader is invalid");
       
@@ -229,7 +232,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
          free ( infoLog );
       }
 
-      _gl_delete_shader( NULL );
+      _gl_delete_shader( shader );
 
        get_error_result = _gl_get_error();
        GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for an invalid shader");
@@ -273,7 +276,7 @@ GPUPROCESS_START_TEST
    programObject = _gl_create_program ( );
 
    if ( programObject == 0 )
-      return 0;
+      return;
 
    GPUPROCESS_FAIL_IF(!programObject,"error creating program object");
   
@@ -339,7 +342,7 @@ GPUPROCESS_START_TEST
       }
 
       _gl_delete_program( programObject );
-      return GL_FALSE;
+      return;
    }
 
    // Store the program object
