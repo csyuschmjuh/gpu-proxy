@@ -7,6 +7,7 @@
 #include <EGL/egl.h>
 
 #include <stdio.h>
+#include <string.h>
 
 Display *dpy1 = NULL;
 EGLDisplay egl_dpy;
@@ -157,11 +158,11 @@ setup (void)
                                                                  win,NULL);
     GPUPROCESS_FAIL_IF (! window_surface, "surface creation failed");
 
-/*    result = _egl_make_current (egl_dpy,
+    result = _egl_make_current (egl_dpy,
                                 window_surface,window_surface,
                                 window_context);
  GPUPROCESS_FAIL_IF (result == EGL_FALSE, "_egl_make_current failed");
-*/
+
 }
 static void
 teardown (void)
@@ -176,6 +177,8 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    GLuint shader;
    GLint compiled;
    GLint get_error_result;
+   char **copySrc = NULL;
+   int length = 0;
    // Create the shader object
 
     shader = _gl_create_shader( GL_VERTEX_SHADER );
@@ -189,24 +192,27 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
     GPUPROCESS_FAIL_IF(!shader, "_gl_create_shader FAILED ");
 
     // Load the shader source
-    _gl_shader_source( shader, -1, &shaderSrc, NULL );
+    // we must create a copy of source and pass the copy of source
+    length = strlen (shaderSrc);
+    if (length > 0) {
+	copySrc = (char **)malloc (sizeof (char));
+        copySrc[0] = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (copySrc[0], shaderSrc, sizeof (char) * (length+1));
+    }
+    _gl_shader_source( shader, 1, (const char **)copySrc, NULL );
 
      get_error_result = _gl_get_error();
      GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_VALUE,"_gl_get_error should return GL_INVALID_VALUE");
   
-    _gl_shader_source( shader, 1, &shaderSrc, NULL );
-
    // Compile the shader
-    _gl_compile_shader( -1 );
+    _gl_compile_shader( shader );
     
     get_error_result = _gl_get_error();
     GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_OPERATION,"_gl_get_error should return GL_INVALID_OPERATION");
 
-   _gl_compile_shader( shader );
-
    // Check the compile status
    _gl_get_shaderiv( shader, GL_COMPILE_STATUS, &compiled );
-    GPUPROCESS_FAIL_UNLESS (!compiled,"_gl_get_shaderiv should return a non zero compiled object");
+    GPUPROCESS_FAIL_UNLESS (compiled,"_gl_get_shaderiv should return a non zero compiled object");
 
    if ( !compiled )
    {
@@ -214,7 +220,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
 
       _gl_get_shaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
      
-      GPUPROCESS_FAIL_UNLESS ( infoLen == 0 ,"_gl_get_shaderiv should return zero szie for information log since shader is invalid");
+      GPUPROCESS_FAIL_UNLESS ( infoLen != 0 ,"_gl_get_shaderiv should return zero szie for information log since shader is invalid");
       
       _gl_get_shaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
 
@@ -267,6 +273,8 @@ GPUPROCESS_START_TEST
    GLuint fragmentShader;
    GLuint programObject;
    GLint linked;
+   char *name;
+   int len = strlen ("vPosition");
 
    // Load the vertex/fragment shaders
    vertexShader = LoadShader ( GL_VERTEX_SHADER, vShaderStr );
@@ -295,17 +303,23 @@ GPUPROCESS_START_TEST
    _gl_attach_shader( programObject, fragmentShader );
    
 // Bind vPosition to attribute 0
-   _gl_bind_attrib_location( programObject, GL_MAX_VERTEX_ATTRIBS+1, "vPosition" );
+    name = (char *)malloc (sizeof(char) * (len+1));
+    memcpy (name, "vPosition", len);
+    name[len] = 0;
+   _gl_bind_attrib_location( programObject, GL_MAX_VERTEX_ATTRIBS+1, name );
 
     get_error_result = _gl_get_error();
-    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+    GPUPROCESS_FAIL_IF(get_error_result != GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
   
-   _gl_bind_attrib_location( programObject, 0, "vPosition" );
+    name = (char *)malloc (sizeof(char) * (len+1));
+    memcpy (name, "vPosition", len);
+    name[len] = 0;
+    _gl_bind_attrib_location( programObject, 0, name );
 
    // Link the program
    _gl_link_program( -1 );
     get_error_result = _gl_get_error();
-    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+    GPUPROCESS_FAIL_IF(get_error_result != GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
    
    _gl_link_program( vertexShader );
     get_error_result = _gl_get_error();
@@ -316,7 +330,7 @@ GPUPROCESS_START_TEST
    _gl_get_programiv( -1, GL_LINK_STATUS, &linked );
 
     get_error_result = _gl_get_error();
-    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+    GPUPROCESS_FAIL_IF(get_error_result != GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
  
    _gl_get_programiv( programObject, GL_LINK_STATUS, &linked );
 
