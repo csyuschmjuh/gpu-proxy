@@ -181,6 +181,12 @@ _server_remove_state (link_list_t **state)
         egl_state->state.vertex_attribs.embedded_attribs)
         free (egl_state->state.vertex_attribs.attribs);
 
+    if (*state == server_states.states) {
+        server_states.states = server_states.states->next;
+        if (server_states.states != NULL)
+            server_states.states->prev = NULL;
+    }
+
     if ((*state)->prev)
         (*state)->prev->next = (*state)->next;
     if ((*state)->next)
@@ -246,8 +252,8 @@ _server_get_state (EGLDisplay dpy,
     /* we have not found a context match */
     new_state = (egl_state_t *) malloc (sizeof (egl_state_t));
 
-    _server_set_egl_states (new_state, dpy, draw, read, ctx); 
     _server_init_gles2_states (new_state);
+    _server_set_egl_states (new_state, dpy, draw, read, ctx); 
     server_states.num_contexts ++;
 
     list = server_states.states;
@@ -362,6 +368,8 @@ _server_make_current (EGLDisplay display,
         }
         
         egl_state = (egl_state_t *) active_state->data;
+        egl_state->active = false;
+        
         if (egl_state->destroy_dpy || egl_state->destroy_ctx)
             _server_remove_state (&active_state);
         

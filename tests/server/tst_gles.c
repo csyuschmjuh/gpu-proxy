@@ -88,6 +88,7 @@ setup (void)
 
  //EGL Display 
     egl_dpy = _egl_get_display (dpy1);
+    printf ("egl display = %x\n", egl_dpy);
     GPUPROCESS_FAIL_IF (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
 
 //EGL Initialization
@@ -102,7 +103,7 @@ setup (void)
     GPUPROCESS_FAIL_IF (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
 
 //EGL Bind API
- _egl_bind_api (EGL_OPENGL_ES_API);
+    _egl_bind_api (EGL_OPENGL_ES_API);
 
 //EGL Get Config     
     EGLint config_list_length;
@@ -157,10 +158,13 @@ setup (void)
                                                                  config,
                                                                  win,NULL);
     GPUPROCESS_FAIL_IF (! window_surface, "surface creation failed");
+ 
+    printf ("window surface = %x\n", window_surface);
 
     result = _egl_make_current (egl_dpy,
                                 window_surface,window_surface,
                                 window_context);
+
  GPUPROCESS_FAIL_IF (result == EGL_FALSE, "_egl_make_current failed");
 
 }
@@ -181,12 +185,12 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    int length = 0;
    // Create the shader object
 
-    shader = _gl_create_shader( GL_VERTEX_SHADER );
-    GPUPROCESS_FAIL_IF (shader, "_gl_create_shader can not be created by an invalid type");
+    /*shader = _gl_create_shader( GL_VERTEX_SHADER );
+    GPUPROCESS_FAIL_IF (!shader, "_gl_create_shader can not be created by an invalid type");
 
     get_error_result = _gl_get_error();
     GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_ENUM, "_gl_get_error should return GL_INVALID_ENUM");
- 
+    */
     shader = _gl_create_shader( type );
  
     GPUPROCESS_FAIL_IF(!shader, "_gl_create_shader FAILED ");
