@@ -1,7 +1,5 @@
 #ifndef GPUPROCESS_GLES_SEVER_TESTS_H
 #define GPUPROCESS_GLES_SEVER_TESTS_H
-#include <GL/glx.h>
-#include <GL/glxext.h>
 #include "gles2_states.h"
 #include "compiler_private.h"
 
