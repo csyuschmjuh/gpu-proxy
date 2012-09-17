@@ -4,6 +4,8 @@
 #include "compiler_private.h"
 #include "types_private.h"
 
+#include "config.h"
+
 #if HAS_GLES2
 #include <GLES2/gl2.h>
 #else
