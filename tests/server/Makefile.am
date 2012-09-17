@@ -16,6 +16,8 @@ gpuproxy_test_SOURCES = \
 	tst_egl.c \
 	tst_egl2.h \
 	tst_egl2.c \
+	tst_gles.h \
+	tst_gles.c \
 	main.c
 
 gpuproxy_test_LDFLAGS = \
