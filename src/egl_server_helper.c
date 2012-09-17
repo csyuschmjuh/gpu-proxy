@@ -46,6 +46,7 @@ _server_init_gles2_states (egl_state_t *egl_state)
     egl_state->destroy_read = false;
 
     state->vertex_attribs.count = 0;
+    state->vertex_attribs.attribs = state->vertex_attribs.embedded_attribs;
 
     state->max_combined_texture_image_units = 8;
     state->max_vertex_attribs_queried = false;
