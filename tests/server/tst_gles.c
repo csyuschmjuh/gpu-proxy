@@ -1,9 +1,13 @@
 #include "tst_gles.h"
 #include "gles2_server_tests.h"
+#include "egl_server_tests.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdlib.h>
+#include <EGL/egl.h>
 Display *dpy1 = NULL;
+EGLDisplay egl_dpy;
+EGLContext window_context;
 typedef struct
 {
    // Handle to a program object
@@ -11,18 +15,157 @@ typedef struct
 
 } UserData;
 
-static void
-setup (void)
+static XVisualInfo *
+ChooseWindowVisual(Display *dpy, EGLDisplay egl_dpy, EGLConfig cfg)
 {
-    dpy1 = XOpenDisplay (NULL);
-    GPUPROCESS_FAIL_IF (dpy1 == NULL, "XOpenDisplay should work");
+    XVisualInfo template, *vinfo;
+    EGLint id;
+    unsigned long mask;
+    int screen = DefaultScreen(dpy);
+    Window root_win = RootWindow(dpy, screen);
+    int count;
 
+    if (! _egl_get_config_attrib (egl_dpy,
+                                  cfg, EGL_NATIVE_VISUAL_ID, &id)) {
+        printf ("eglGetConfigAttrib() failed\n");
+    }
+
+    template.visualid = id;
+    vinfo = XGetVisualInfo (dpy, VisualIDMask, &template, &count);
+    if (count != 1) {
+        printf ("XGetVisualInfo() failed\n");
+    }
+
+    return vinfo;
+}
+
+static Window
+CreateWindow(Display *dpy, XVisualInfo *visinfo,
+             int width, int height, const char *name)
+{
+    int screen = DefaultScreen(dpy);
+    Window win;
+    XSetWindowAttributes attr;
+    unsigned long mask;
+    Window root;
+
+    root = RootWindow(dpy, screen);
+
+    /* window attributes */
+    attr.background_pixel = 0;
+    attr.border_pixel = 0;
+    attr.colormap = XCreateColormap(dpy, root, visinfo->visual, AllocNone);
+    attr.event_mask = StructureNotifyMask | ExposureMask | KeyPressMask;
+    mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
+
+    win = XCreateWindow(dpy, root, 0, 0, width, height,
+                        0, visinfo->depth, InputOutput,
+                        visinfo->visual, mask, &attr);
+    if (win) {
+        XSizeHints sizehints;
+        sizehints.width  = width;
+        sizehints.height = height;
+        sizehints.flags = USSize;
+        XSetNormalHints(dpy, win, &sizehints);
+        XSetStandardProperties(dpy, win, name, name,
+                               None, (char **)NULL, 0, &sizehints);
+
+        XMapWindow(dpy, win);
+    }
+    return win;
 }
 
 static void
+setup (void)
+{
+
+    dpy1 = XOpenDisplay (NULL);
+    GPUPROCESS_FAIL_IF (dpy1 == NULL, "XOpenDisplay should work");
+
+ //EGL Display 
+    egl_dpy = _egl_get_display (dpy1);
+    GPUPROCESS_FAIL_IF (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
+
+//EGL Initialization
+    EGLint major;
+    EGLint minor;
+    EGLBoolean result;
+
+    major = -1;
+    minor = -1;
+    result = _egl_initialize (egl_dpy, &major, &minor);
+    GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
+    GPUPROCESS_FAIL_IF (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
+
+//EGL Bind API
+ _egl_bind_api (EGL_OPENGL_ES_API);
+
+//EGL Get Config     
+    EGLint config_list_length;
+    EGLConfig config;
+    EGLint old_config_list_length;
+    EGLConfig *config_list = NULL;
+    EGLint get_error_result;
+    result = _egl_get_configs (egl_dpy, NULL, 0, &config_list_length);
+    config_list = (EGLConfig *) malloc (config_list_length * sizeof (EGLConfig));
+    old_config_list_length = config_list_length;
+    result = _egl_get_configs (egl_dpy, config_list, config_list_length, &config_list_length);
+    GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
+    GPUPROCESS_FAIL_UNLESS (config_list_length == old_config_list_length, "They should have the same length");
+    free (config_list);
+
+//EGL Surface and Context creation
+
+    static const EGLint ctx_attribs[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+    static const EGLint pbuffer_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_NONE
+    };
+    static const EGLint window_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_NONE
+    };
+
+    result = _egl_choose_config (egl_dpy, window_attribs, &config, 1, &config_list_length);
+    GPUPROCESS_FAIL_IF (!result, "_egl_choose_config failed");
+    
+    window_context = _egl_create_context (egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
+    GPUPROCESS_FAIL_IF (! window_context, "context should be created");
+    
+    Window win;
+    XVisualInfo *vinfo; 
+   
+    vinfo = ChooseWindowVisual(dpy1, egl_dpy, config);
+    win = CreateWindow(dpy1, vinfo, 400, 400, "gpu_proxy test");
+
+    EGLSurface window_surface = _egl_create_window_surface (egl_dpy,
+                                                                 config,
+                                                                 win,NULL);
+    GPUPROCESS_FAIL_IF (! window_surface, "surface creation failed");
+
+/*    result = _egl_make_current (egl_dpy,
+                                window_surface,window_surface,
+                                window_context);
+ GPUPROCESS_FAIL_IF (result == EGL_FALSE, "_egl_make_current failed");
+*/
+}
+static void
 teardown (void)
 {
-   XCloseDisplay(dpy1);
+ _egl_destroy_context (egl_dpy, window_context);
+ _egl_terminate (egl_dpy);
+  XCloseDisplay(dpy1);
 }
 
 GLuint LoadShader ( GLenum type, const char *shaderSrc )
@@ -31,6 +174,7 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    GLint compiled;
    GLint get_error_result;
    // Create the shader object
+
     shader = _gl_create_shader( NULL );
     GPUPROCESS_FAIL_IF (shader, "_gl_create_shader can not be created by an invalid type");
 
@@ -38,9 +182,10 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
     GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_ENUM, "_gl_get_error should return GL_INVALID_ENUM");
  
     shader = _gl_create_shader( type );
+ 
     GPUPROCESS_FAIL_IF(!shader, "_gl_create_shader FAILED ");
 
-// Load the shader source
+    // Load the shader source
     _gl_shader_source( shader, -1, &shaderSrc, NULL );
 
      get_error_result = _gl_get_error();
@@ -130,15 +275,46 @@ GPUPROCESS_START_TEST
    if ( programObject == 0 )
       return 0;
 
+   GPUPROCESS_FAIL_IF(!programObject,"error creating program object");
+  
+   _gl_attach_shader( programObject, -1 );
+   
+    GLint get_error_result = _gl_get_error();
+
+   GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_OPERATION, "_gl_get_error should return GL_INVALID_OPERATION");
+  
+   _gl_attach_shader( vertexShader,programObject);
+
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+
    _gl_attach_shader( programObject, vertexShader );
    _gl_attach_shader( programObject, fragmentShader );
+   
+// Bind vPosition to attribute 0
+   _gl_bind_attrib_location( programObject, GL_MAX_VERTEX_ATTRIBS+1, "vPosition" );
 
-   // Bind vPosition to attribute 0
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+  
    _gl_bind_attrib_location( programObject, 0, "vPosition" );
 
    // Link the program
+   _gl_link_program( -1 );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+   
+   _gl_link_program( vertexShader );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+
    _gl_link_program( programObject );
   // Check the link status
+   _gl_get_programiv( -1, GL_LINK_STATUS, &linked );
+
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
+ 
    _gl_get_programiv( programObject, GL_LINK_STATUS, &linked );
 
    if ( !linked )
@@ -150,7 +326,15 @@ GPUPROCESS_START_TEST
       if ( infoLen > 1 )
       {
          char* infoLog = malloc (sizeof(char) * infoLen );
-         _gl_get_program_info_log ( programObject, infoLen, NULL, infoLog );
+ 
+        _gl_get_program_info_log( programObject, 0, NULL, infoLog );
+
+        get_error_result = _gl_get_error();
+
+        GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for invalid max length to _gl_get_program_info_log");
+
+        _gl_get_program_info_log ( programObject, infoLen, NULL, infoLog );
+
          free ( infoLog );
       }
 
@@ -168,6 +352,11 @@ GPUPROCESS_START_TEST
                             0.5f, -0.5f, 0.0f };
 
    // Set the viewport
+   _gl_viewport( 0, 0, -200,200);
+   get_error_result = _gl_get_error();
+
+  GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for negative width or height");
+ 
    _gl_viewport( 0, 0, 200,200);
 
    // Clear the color buffer
