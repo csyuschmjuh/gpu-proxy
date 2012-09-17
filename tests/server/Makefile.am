@@ -11,6 +11,7 @@ gpuproxy_test_SOURCES = \
 	$(rootsrcdir)/src/egl_server_private.h \
 	$(rootsrcdir)/src/egl_server.c \
 	$(rootsrcdir)/src/egl_server_helper.c \
+	$(rootsrcdir)/src/gles2_server.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	tst_egl.c \

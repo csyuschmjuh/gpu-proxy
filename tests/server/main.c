@@ -22,7 +22,7 @@ int main(void)
     suite_egl_make_current = egl_testsuite_make_current_create ();
     run_and_clean (suite_egl_make_current); 
 
-    suite_gles = gles_testsuite_create();
+    suite_gles = (gpuprocess_suite_t *)gles_testsuite_create();
     run_and_clean (suite_gles);
     
 return EXIT_SUCCESS;
