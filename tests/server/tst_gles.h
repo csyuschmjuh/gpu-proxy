@@ -1,5 +1,5 @@
-#ifndef GPUPROCESS_TST_EGL
-#define GPUPROCESS_TST_EGL
+#ifndef GPUPROCESS_TST_GLES
+#define GPUPROCESS_TST_GLES
 
 #include "gpuprocess_test.h"
 
