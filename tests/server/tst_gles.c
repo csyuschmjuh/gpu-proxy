@@ -117,7 +117,7 @@ setup (void)
     result = _egl_get_configs (egl_dpy, config_list, config_list_length, &config_list_length);
     GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
     GPUPROCESS_FAIL_UNLESS (config_list_length == old_config_list_length, "They should have the same length");
-    free (config_list);
+//    free (config_list);
 
 //EGL Surface and Context creation
 
@@ -159,8 +159,6 @@ setup (void)
                                                                  win,NULL);
     GPUPROCESS_FAIL_IF (! window_surface, "surface creation failed");
  
-    printf ("window surface = %x\n", window_surface);
-
     result = _egl_make_current (egl_dpy,
                                 window_surface,window_surface,
                                 window_context);
@@ -185,19 +183,20 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
    int length = 0;
    // Create the shader object
 
-    /*shader = _gl_create_shader( GL_VERTEX_SHADER );
+/*    shader = _gl_create_shader( GL_POINTS );
     GPUPROCESS_FAIL_IF (!shader, "_gl_create_shader can not be created by an invalid type");
 
     get_error_result = _gl_get_error();
     GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_ENUM, "_gl_get_error should return GL_INVALID_ENUM");
-    */
+ */   
     shader = _gl_create_shader( type );
  
     GPUPROCESS_FAIL_IF(!shader, "_gl_create_shader FAILED ");
 
     // Load the shader source
     // we must create a copy of source and pass the copy of source
-    length = strlen (shaderSrc);
+ 
+   length = strlen (shaderSrc);
     if (length > 0) {
 	copySrc = (char **)malloc (sizeof (char));
         copySrc[0] = (char *)malloc (sizeof (char) * (length+1));
@@ -239,10 +238,10 @@ GLuint LoadShader ( GLenum type, const char *shaderSrc )
      
         _gl_get_shader_info_log( shader, infoLen, NULL, infoLog );
 
-         free ( infoLog );
+//         free ( infoLog );
       }
 
-      _gl_delete_shader( shader );
+      _gl_delete_shader(-1);
 
        get_error_result = _gl_get_error();
        GPUPROCESS_FAIL_UNLESS (get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for an invalid shader");
@@ -356,8 +355,12 @@ GPUPROCESS_START_TEST
 
         _gl_get_program_info_log ( programObject, infoLen, NULL, infoLog );
 
-         free ( infoLog );
+//         free ( infoLog );
       }
+
+      _gl_delete_program( -1 );
+      get_error_result = _gl_get_error();
+      GPUPROCESS_FAIL_IF(get_error_result != GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE");
 
       _gl_delete_program( programObject );
       return;
@@ -381,14 +384,46 @@ GPUPROCESS_START_TEST
    _gl_viewport( 0, 0, 200,200);
 
    // Clear the color buffer
+   _gl_clear( GL_POINTS );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for GL_POINTS");
+
    _gl_clear( GL_COLOR_BUFFER_BIT );
 
    // Use the program object
+   _gl_use_program(vertexShader );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_OPERATION, "_gl_get_error should return GL_INVALID_VALUE for GL_INVALID_OPERATION");
+ 
    _gl_use_program( userData->programObject );
 
    // Load the vertex data
+   _gl_vertex_attrib_pointer( 0, 5, GL_FLOAT, GL_FALSE, 0, vVertices );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for size > 4");
+  
+   _gl_vertex_attrib_pointer( 0, 3, GL_POINTS, GL_FALSE, 0, vVertices );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_ENUM, "_gl_get_error should return GL_INVALID_ENUM for invalid ENUM type GL_POINTS");
+   
+   _gl_vertex_attrib_pointer( 0, 5, GL_FLOAT, GL_FALSE,-10, vVertices );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for negative stride");
+   
    _gl_vertex_attrib_pointer( 0, 3, GL_FLOAT, GL_FALSE, 0, vVertices );
+   
+   _gl_enable_vertex_attrib_array ( GL_MAX_VERTEX_ATTRIBS);
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for index  >= GL_MAX_VERTEX_ATTRIBS");
+   
    _gl_enable_vertex_attrib_array ( 0 );
+   _gl_draw_arrays( GL_ARRAY_BUFFER, 0, 3 );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_ENUM, "_gl_get_error should return GL_INVALID_ENUM for invalid ENUM type GL_ARRAY_BUFFER");
+
+   _gl_draw_arrays( GL_TRIANGLES, 0, -3 );
+    get_error_result = _gl_get_error();
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_VALUE, "_gl_get_error should return GL_INVALID_VALUE for negative count");
 
    _gl_draw_arrays( GL_TRIANGLES, 0, 3 );
 
