@@ -88,7 +88,7 @@ setup (void)
 
  //EGL Display 
     egl_dpy = _egl_get_display (dpy1);
-    printf ("egl display = %x\n", egl_dpy);
+    printf ("egl display = %p\n", egl_dpy);
     GPUPROCESS_FAIL_IF (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
 
 //EGL Initialization
