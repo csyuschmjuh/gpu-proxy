@@ -1761,12 +1761,12 @@ class CWriter(object):
     """Used to help write number files and tests."""
     self.file_num = num
 
-  def Write(self, string):
+  def Write(self, string, split=True):
     """Writes a string to a file spliting if it's > 80 characters."""
     lines = string.splitlines()
     num_lines = len(lines)
     for ii in range(0, num_lines):
-      self.__WriteLine(lines[ii], ii < (num_lines - 1) or string[-1] == '\n')
+      self.__WriteLine(lines[ii], ii < (num_lines - 1) or string[-1] == '\n', split)
 
   def __FindSplit(self, string):
     """Finds a place to split a string."""
@@ -1799,10 +1799,13 @@ class CWriter(object):
       else:
         return splitter
 
-  def __WriteLine(self, line, ends_with_eol):
+  def __WriteLine(self, line, ends_with_eol, split):
     """Given a signle line, writes it to a file, splitting if it's > 80 chars"""
     if len(line) >= 80:
-      i = self.__FindSplit(line)
+      if split:
+          i = self.__FindSplit(line)
+      else:
+          i = 0
       if i > 0:
         line1 = line[0:i + 1]
         if line1[-1] == ' ':
@@ -1811,8 +1814,6 @@ class CWriter(object):
         if line1[0] == '#':
           lineend = ' \\'
         nolint = ''
-        if len(line1) > 80:
-          nolint = '  // NOLINT'
         self.__AddLine(line1 + nolint + lineend + '\n')
         match = re.match("( +)", line1)
         indent = ""
@@ -1821,11 +1822,9 @@ class CWriter(object):
         splitter = line[i]
         if not splitter == ',':
           indent = "    " + indent
-        self.__WriteLine(indent + line[i + 1:].lstrip(), True)
+        self.__WriteLine(indent + line[i + 1:].lstrip(), True, split)
         return
     nolint = ''
-    if len(line) > 80:
-      nolint = '  // NOLINT'
     self.__AddLine(line + nolint)
     if ends_with_eol:
       self.__AddLine('\n')
@@ -1907,6 +1906,12 @@ class TypeHandler(object):
       file.Write("  %s %s;\n" % (arg.cmd_type, arg.name))
     file.Write("} command_%s_t;\n" % (func.name.lower()))
     file.Write("\n")
+
+  def WriteStructFunctionPointer(self, func, file):
+    file.Write(func.return_type)
+    file.Write(" (*%s) (" % func.name)
+    file.Write(func.MakeTypedOriginalArgString(""), split=False)
+    file.Write(");")
 
   def WriteCommandInit(self, func, file):
     self.WriteInitSignature(func, file)
@@ -2515,6 +2520,9 @@ class Function(object):
   def WriteStruct(self, file):
     self.type_handler.WriteStruct(self, file)
 
+  def WriteStructFunctionPointer(self, file):
+    self.type_handler.WriteStructFunctionPointer(self, file)
+
   def WriteCommandInit(self, file):
     self.type_handler.WriteCommandInit(self, file)
 
@@ -2834,6 +2842,18 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
+  def WriteServerDispatchTable(self, filename):
+    """Writes the dispatch table implementation for the server-side"""
+    file = CWriter(filename)
+    file.Write("typedef struct _gpuproxy_server_t {\n")
+    for func in self.functions:
+      file.Write("    ")
+      func.WriteStructFunctionPointer(file)
+      file.Write("\n")
+    file.Write("} gpuproxy_server_t;")
+    file.Write("\n")
+    file.Close()
+
   def WriteGetSizeFunction(self, file, functions):
     header = """
 size_t
@@ -2896,6 +2916,7 @@ def main(argv):
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
+  gen.WriteServerDispatchTable("server_dispatch_table.h")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors
