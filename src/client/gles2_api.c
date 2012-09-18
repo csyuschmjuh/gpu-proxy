@@ -669,24 +669,38 @@ void glShaderSource (GLuint shader, GLsizei count,
     GLchar **string_copy = NULL;
     GLint *length_copy = NULL;
     int i;
+    int str_len;
 
     if (_is_error_state ())
         return;
 
     /* XXX: post command and no wait */
     /* XXX: copy data in string and length */
-    if (count > 0 && string && length) {
+    if (count > 0 && string) {
         string_copy = (GLchar **) malloc (sizeof (GLchar *) * count );
-        length_copy = (GLint *)malloc (sizeof (GLint) * count);
+        if (length != NULL) {
+            length_copy = (GLint *)malloc (sizeof (GLint) * count);
         
-        memcpy ((void *)length_copy, (const void *)length,
-                sizeof (GLint) * count);
+            memcpy ((void *)length_copy, (const void *)length,
+                    sizeof (GLint) * count);
+        }
 
         for (i = 0; i < count; i++) {
-            if (length[i] > 0) {
-                string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * length[i]);
-                memcpy ((void *)string_copy[i], (const void *)string[i],
-                        sizeof (GLchar) * length[i]);
+            if (length) {
+                if (length[i] > 0) {
+                    string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * length[i]);
+                    memcpy ((void *)string_copy[i], 
+                            (const void *)string[i],
+                            sizeof (GLchar) * length[i]);
+                }
+            }
+            else {
+                str_len = strlen (string[i]);
+                string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * (str_len + 1));
+                memcpy ((void *)string_copy[i],
+                        (const void *)string[i],
+                        sizeof (GLchar) * str_len);
+                string_copy[i][str_len] = 0;
             }
         }
     }
