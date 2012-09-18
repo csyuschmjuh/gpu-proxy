@@ -1193,7 +1193,7 @@ _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state,
                 return;
             else {
                 found_index = i;
-                attribs[i].array_enabled = GL_FALSE;
+                attribs[i].array_enabled = enable;
                 break;
             }
         }
