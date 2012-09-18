@@ -1,67 +1,70 @@
+EGLAPI EGLint          EGLAPIENTRY eglGetError (void);
+EGLAPI EGLDisplay      EGLAPIENTRY eglGetDisplay (EGLNativeDisplayType display_id);
+EGLAPI EGLBoolean      EGLAPIENTRY eglInitialize (EGLDisplay dpy, EGLint* major, EGLint* minor);
+EGLAPI EGLBoolean      EGLAPIENTRY eglTerminate (EGLDisplay dpy);
+EGLAPI const char *    EGLAPIENTRY eglQueryString (EGLDisplay dpy, EGLint name);
+EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigs (EGLDisplay dpy, EGLConfig* configs, EGLint config_size, EGLint* num_config);
+EGLAPI EGLBoolean      EGLAPIENTRY eglChooseConfig (EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config);
+EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint* value);
+EGLAPI EGLSurface      EGLAPIENTRY eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint* attrib_list);
+EGLAPI EGLSurface      EGLAPIENTRY eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config, const EGLint* attrib_list);
+EGLAPI EGLSurface      EGLAPIENTRY eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint* attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglDestroySurface (EGLDisplay dpy, EGLSurface surface);
+EGLAPI EGLBoolean      EGLAPIENTRY eglQuerySurface (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint* value);
+EGLAPI EGLBoolean      EGLAPIENTRY eglBindAPI (EGLenum api);
+EGLAPI EGLenum         EGLAPIENTRY eglQueryAPI (void);
+EGLAPI EGLBoolean      EGLAPIENTRY eglWaitClient (void);
+EGLAPI EGLBoolean      EGLAPIENTRY eglReleaseThread (void);
+EGLAPI EGLSurface      EGLAPIENTRY eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint* attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
+EGLAPI EGLBoolean      EGLAPIENTRY eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer);
+EGLAPI EGLBoolean      EGLAPIENTRY eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer);
+EGLAPI EGLBoolean      EGLAPIENTRY eglSwapInterval (EGLDisplay dpy, EGLint interval);
+EGLAPI EGLContext      EGLAPIENTRY eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint* attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglDestroyContext (EGLDisplay dpy, EGLContext ctx);
+EGLAPI EGLBoolean      EGLAPIENTRY eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
+EGLAPI EGLContext      EGLAPIENTRY eglGetCurrentContext (void);
+EGLAPI EGLSurface      EGLAPIENTRY eglGetCurrentSurface (EGLint readdraw);
+EGLAPI EGLDisplay      EGLAPIENTRY eglGetCurrentDisplay (void);
+EGLAPI EGLBoolean      EGLAPIENTRY eglQueryContext (EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint* value);
+EGLAPI EGLBoolean      EGLAPIENTRY eglWaitGL (void);
+EGLAPI EGLBoolean      EGLAPIENTRY eglWaitNative (EGLint engine);
+EGLAPI EGLBoolean      EGLAPIENTRY eglSwapBuffers (EGLDisplay dpy, EGLSurface surface);
+EGLAPI EGLBoolean      EGLAPIENTRY eglCopyBuffers (EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target);
 
-EGLAPI EGLint          EGLAPIENTRY eglGetError(void);
-EGLAPI EGLDisplay      EGLAPIENTRY eglGetDisplay(EGLNativeDisplayType display_id);
-EGLAPI EGLBoolean      EGLAPIENTRY eglInitialize(EGLDisplay dpy, EGLint *major, EGLint *minor);
-EGLAPI EGLBoolean      EGLAPIENTRY eglTerminate(EGLDisplay dpy);
-EGLAPI const char *    EGLAPIENTRY eglQueryString(EGLDisplay dpy, EGLint name);
-EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigs(EGLDisplay dpy, EGLConfig *configs, EGLint config_size, EGLint *num_config);
-EGLAPI EGLBoolean      EGLAPIENTRY eglChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, EGLConfig *configs, EGLint config_size, EGLint *num_config);
-EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigAttrib(EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint *value);
-EGLAPI EGLSurface      EGLAPIENTRY eglCreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGLNativeWindowType win, const EGLint *attrib_list);
-EGLAPI EGLSurface      EGLAPIENTRY eglCreatePbufferSurface(EGLDisplay dpy, EGLConfig config, const EGLint *attrib_list);
-EGLAPI EGLSurface      EGLAPIENTRY eglCreatePixmapSurface(EGLDisplay dpy, EGLConfig config, EGLNativePixmapType pixmap, const EGLint *attrib_list);
-EGLAPI EGLBoolean      EGLAPIENTRY eglDestroySurface(EGLDisplay dpy, EGLSurface surface);
-EGLAPI EGLBoolean      EGLAPIENTRY eglQuerySurface(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint *value);
-EGLAPI EGLBoolean      EGLAPIENTRY eglBindAPI(EGLenum api);
-EGLAPI EGLenum         EGLAPIENTRY eglQueryAPI(void);
-EGLAPI EGLBoolean      EGLAPIENTRY eglWaitClient(void);
-EGLAPI EGLBoolean      EGLAPIENTRY eglReleaseThread(void);
-EGLAPI EGLSurface      EGLAPIENTRY eglCreatePbufferFromClientBuffer( EGLDisplay dpy, EGLenum buftype, EGLClientBuffer buffer, EGLConfig config, const EGLint *attrib_list);
-EGLAPI EGLBoolean      EGLAPIENTRY eglSurfaceAttrib(EGLDisplay dpy, EGLSurface surface, EGLint attribute, EGLint value);
-EGLAPI EGLBoolean      EGLAPIENTRY eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
-EGLAPI EGLBoolean      EGLAPIENTRY eglReleaseTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer);
-EGLAPI EGLBoolean      EGLAPIENTRY eglSwapInterval(EGLDisplay dpy, EGLint interval);
-EGLAPI EGLContext      EGLAPIENTRY eglCreateContext(EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list);
-EGLAPI EGLBoolean      EGLAPIENTRY eglDestroyContext(EGLDisplay dpy, EGLContext ctx);
-EGLAPI EGLBoolean      EGLAPIENTRY eglMakeCurrent(EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx);
-EGLAPI EGLContext      EGLAPIENTRY eglGetCurrentContext(void);
-EGLAPI EGLSurface      EGLAPIENTRY eglGetCurrentSurface(EGLint readdraw);
-EGLAPI EGLDisplay      EGLAPIENTRY eglGetCurrentDisplay(void);
-EGLAPI EGLBoolean      EGLAPIENTRY eglQueryContext(EGLDisplay dpy, EGLContext ctx, EGLint attribute, EGLint *value);
-EGLAPI EGLBoolean      EGLAPIENTRY eglWaitGL(void);
-EGLAPI EGLBoolean      EGLAPIENTRY eglWaitNative(EGLint engine);
-EGLAPI EGLBoolean      EGLAPIENTRY eglSwapBuffers(EGLDisplay dpy, EGLSurface surface);
-EGLAPI EGLBoolean      EGLAPIENTRY eglCopyBuffers(EGLDisplay dpy, EGLSurface surface, EGLNativePixmapType target);
-
-EGLAPI EGLBoolean      EGLAPIENTRY eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface, const EGLint *attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface, const EGLint* attrib_list);
 EGLAPI EGLBoolean      EGLAPIENTRY eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface);
 
 
-EGLAPI EGLImageKHR     EGLAPIENTRY eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
+EGLAPI EGLImageKHR     EGLAPIENTRY eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint* attrib_list);
 EGLAPI EGLBoolean      EGLAPIENTRY eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image);
 
-EGLAPI EGLSyncKHR      EGLAPIENTRY eglCreateSyncKHR(EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
-EGLAPI EGLBoolean      EGLAPIENTRY eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
-EGLAPI EGLint          EGLAPIENTRY eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
-EGLAPI EGLBoolean      EGLAPIENTRY eglSignalSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode);
-EGLAPI EGLBoolean      EGLAPIENTRY eglGetSyncAttribKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint attribute, EGLint *value);
+EGLAPI EGLSyncKHR      EGLAPIENTRY eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync);
+EGLAPI EGLint          EGLAPIENTRY eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
+EGLAPI EGLBoolean      EGLAPIENTRY eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode);
+EGLAPI EGLBoolean      EGLAPIENTRY eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint attribute, EGLint* value);
 
 
-EGLAPI EGLSyncNV       EGLAPIENTRY eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition, const EGLint *attrib_list);
+EGLAPI EGLSyncNV       EGLAPIENTRY eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition, const EGLint* attrib_list);
 EGLAPI EGLBoolean      EGLAPIENTRY eglDestroySyncNV (EGLSyncNV sync);
 EGLAPI EGLBoolean      EGLAPIENTRY eglFenceNV (EGLSyncNV sync);
 EGLAPI EGLint          EGLAPIENTRY eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout);
 EGLAPI EGLBoolean      EGLAPIENTRY eglSignalSyncNV (EGLSyncNV sync, EGLenum mode);
-EGLBoolean             EGLAPIENTRY eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value);
+EGLAPI EGLBoolean      EGLAPIENTRY eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint* value);
 
-EGLAPI EGLSurface      EGLAPIENTRY eglCreatePixmapSurfaceHI(EGLDisplay dpy, EGLConfig config, struct EGLClientPixmapHI* pixmap);
+EGLAPI EGLSurface      EGLAPIENTRY eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config, struct EGLClientPixmapHI* pixmap);
 
-EGLAPI EGLImageKHR     EGLAPIENTRY eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list);
-EGLAPI EGLBoolean      EGLAPIENTRY eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image, EGLint *name, EGLint *handle, EGLint *stride);
+EGLAPI EGLImageKHR     EGLAPIENTRY eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint* attrib_list);
+EGLAPI EGLBoolean      EGLAPIENTRY eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image, EGLint* name, EGLint* handle, EGLint* stride);
 
 EGLAPI EGLBoolean      EGLAPIENTRY eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface, EGLint x, EGLint y, EGLint width, EGLint height);
 
-EGLAPI EGLBoolean      EGLAPIENTRY eglQuerySurfacePointerANGLE(EGLDisplay dpy, EGLSurface surface, EGLint attribute, void **value);
+EGLAPI EGLBoolean      EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSurface surface, EGLint attribute, void** value);
 
-EGLAPI EGLuint64NV     EGLAPIENTRY eglGetSystemTimeFrequencyNV(void);
-EGLAPI EGLuint64NV     EGLAPIENTRY eglGetSystemTimeNV(void);
+EGLAPI EGLuint64NV     EGLAPIENTRY eglGetSystemTimeFrequencyNV (void);
+EGLAPI EGLuint64NV     EGLAPIENTRY eglGetSystemTimeNV (void);
+
+EGLAPI void *          EGLAPIENTRY eglMapImageSEC (EGLDisplay display, EGLImageKHR image);
+EGLAPI EGLBoolean      EGLAPIENTRY eglUnmapImageSEC (EGLDisplay display, EGLImageKHR image);
+EGLAPI EGLBoolean      EGLAPIENTRY eglGetImageAttribSEC (EGLDisplay display, EGLImageKHR image, EGLint attribute, EGLint* value);
