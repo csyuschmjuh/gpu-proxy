@@ -5692,7 +5692,8 @@ def CreateArg(arg_string):
 class GLGenerator(object):
   """A class to generate GL command buffers."""
 
-  _function_re = re.compile(r'GL_APICALL(.*?)GL_APIENTRY (.*?) \((.*?)\);')
+  _gles2_function_re = re.compile(r'GL_APICALL(.*?)GL_APIENTRY (.*?) \((.*?)\);')
+  _egl_function_re = re.compile(r'EGLAPI(.*?)EGLAPIENTRY (.*?) \((.*?)\);')
 
   def __init__(self, verbose):
     self.original_functions = []
@@ -5796,15 +5797,17 @@ class GLGenerator(object):
           num_pointer_args += 1
     return (args, num_pointer_args, is_gl_enum)
 
-  def ParseGLH(self, filename):
+  def ParseAPIFile(self, filename, regular_expression):
     """Parses the cmd_buffer_functions.txt file and extracts the functions"""
-    f = open("gles2_functions.txt", "r")
+
+    f = open(filename, "r")
     functions = f.read()
     f.close()
+
     for line in functions.splitlines():
-      match = self._function_re.match(line)
+      match = regular_expression.match(line)
       if match:
-        func_name = match.group(2)[2:]
+        func_name = match.group(2)
         func_info = self.GetFunctionInfo(func_name)
         if func_info.type != 'Noop':
           return_type = match.group(1).strip()
@@ -5826,14 +5829,13 @@ class GLGenerator(object):
           return_arg = CreateArg(return_type + " result")
           if return_arg:
             init_args.append(return_arg)
+          print func_name
           f = Function(func_name, func_name, func_info, return_type, args,
                        args_for_cmds, cmd_args, init_args, num_pointer_args)
           self.original_functions.append(f)
           gen_cmd = f.GetInfo('gen_cmd')
           if gen_cmd == True or gen_cmd == None:
             self.AddFunction(f)
-            #f.type_handler.AddImmediateFunction(self, f)
-            #f.type_handler.AddBucketFunction(self, f)
 
     self.Log("Auto Generated Functions    : %d" %
              len([f for f in self.functions if f.can_auto_generate or
@@ -5846,6 +5848,10 @@ class GLGenerator(object):
 
     for f in funcs:
       self.Log("  %-10s %-20s gl%s" % (f.info.type, f.return_type, f.name))
+
+  def ParseAPIFiles(self):
+    self.ParseAPIFile("gles2_functions.txt", self._gles2_function_re)
+    self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
   def WriteCommandIds(self, filename):
     """Writes the command buffer format"""
@@ -6452,7 +6458,7 @@ def main(argv):
       os.chdir(script_dir)
 
   gen = GLGenerator(options.verbose)
-  gen.ParseGLH("common/GLES2/gl2.h")
+  gen.ParseAPIFiles()
 
   # Support generating files under gen/
   if options.output_dir != None:

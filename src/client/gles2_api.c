@@ -769,7 +769,7 @@ void glTexImage2D (GLenum target,
 
     command_buffer_t *command_buffer = client_state_get_command_buffer ();
     command_t *command = command_buffer_get_space_for_command (command_buffer,
-                                                               COMMAND_TEXIMAGE2D);
+                                                               COMMAND_GLTEXIMAGE2D);
     if (!source_data) {
         command_teximage2d_init (command, target, level, internalformat, width,
                                  height, border, format, type, NULL);
@@ -843,7 +843,7 @@ void glTexSubImage2D (GLenum target,
 
     command_buffer_t *command_buffer = client_state_get_command_buffer ();
     command_t *command = command_buffer_get_space_for_command (command_buffer,
-                                                               COMMAND_TEXSUBIMAGE2D);
+                                                               COMMAND_GLTEXSUBIMAGE2D);
     command_texsubimage2d_init (command, target, level, xoffset, yoffset,
                                 width, height, format, type, dest_data);
 
