@@ -83,7 +83,7 @@ exposed_to_tests void _gl_active_texture (GLenum texture)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ActiveTexture) &&
+    if (_gl_is_valid_func (dispatch.glActiveTexture) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -94,7 +94,7 @@ exposed_to_tests void _gl_active_texture (GLenum texture)
             return;
         }
         else {
-            dispatch.ActiveTexture (texture);
+            dispatch.glActiveTexture (texture);
             /* FIXME: this maybe not right because this texture may be 
              * invalid object, we save here to save time in glGetError() 
              */
@@ -107,11 +107,11 @@ exposed_to_tests void _gl_attach_shader (GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.AttachShader) &&
+    if (_gl_is_valid_func (dispatch.glAttachShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.AttachShader (program, shader);
+        dispatch.glAttachShader (program, shader);
 
         egl_state->state.need_get_error = true;
     }
@@ -121,11 +121,11 @@ exposed_to_tests void _gl_bind_attrib_location (GLuint program, GLuint index, co
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BindAttribLocation) &&
+    if (_gl_is_valid_func (dispatch.glBindAttribLocation) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.BindAttribLocation (program, index, name);
+        dispatch.glBindAttribLocation (program, index, name);
         egl_state->state.need_get_error = true;
     }
     if (name)
@@ -140,7 +140,7 @@ exposed_to_tests void _gl_bind_buffer (GLenum target, GLuint buffer)
     int count;
     int i;
     
-    if (_gl_is_valid_func (dispatch.BindBuffer) &&
+    if (_gl_is_valid_func (dispatch.glBindBuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -151,7 +151,7 @@ exposed_to_tests void _gl_bind_buffer (GLenum target, GLuint buffer)
             if (egl_state->state.array_buffer_binding == buffer)
                 return;
             else {
-                dispatch.BindBuffer (target, buffer);
+                dispatch.glBindBuffer (target, buffer);
                 egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -162,7 +162,7 @@ exposed_to_tests void _gl_bind_buffer (GLenum target, GLuint buffer)
             if (egl_state->state.element_array_buffer_binding == buffer)
                 return;
             else {
-                dispatch.BindBuffer (target, buffer);
+                dispatch.glBindBuffer (target, buffer);
                 egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -179,7 +179,7 @@ exposed_to_tests void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BindFramebuffer) &&
+    if (_gl_is_valid_func (dispatch.glBindFramebuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -202,7 +202,7 @@ exposed_to_tests void _gl_bind_framebuffer (GLenum target, GLuint framebuffer)
             _gl_set_error (GL_INVALID_ENUM);
         }
 
-        dispatch.BindFramebuffer (target, framebuffer);
+        dispatch.glBindFramebuffer (target, framebuffer);
         /* FIXME: should we save it, it will be invalid if the
          * framebuffer is invalid 
          */
@@ -216,7 +216,7 @@ exposed_to_tests void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BindRenderbuffer) &&
+    if (_gl_is_valid_func (dispatch.glBindRenderbuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -224,7 +224,7 @@ exposed_to_tests void _gl_bind_renderbuffer (GLenum target, GLuint renderbuffer)
             _gl_set_error (GL_INVALID_ENUM);
         }
 
-        dispatch.BindRenderbuffer (target, renderbuffer);
+        dispatch.glBindRenderbuffer (target, renderbuffer);
         /* egl_state->state.need_get_error = true; */
     }
 }
@@ -233,7 +233,7 @@ exposed_to_tests void _gl_bind_texture (GLenum target, GLuint texture)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BindTexture) &&
+    if (_gl_is_valid_func (dispatch.glBindTexture) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -258,7 +258,7 @@ exposed_to_tests void _gl_bind_texture (GLenum target, GLuint texture)
             return;
         }
 
-        dispatch.BindTexture (target, texture);
+        dispatch.glBindTexture (target, texture);
         egl_state->state.need_get_error = true;
 
         /* FIXME: do we need to save them ? */
@@ -281,7 +281,7 @@ exposed_to_tests void _gl_blend_color (GLclampf red, GLclampf green,
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.BlendColor) &&
+    if (_gl_is_valid_func (dispatch.glBlendColor) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -297,7 +297,7 @@ exposed_to_tests void _gl_blend_color (GLclampf red, GLclampf green,
         state->blend_color[2] = blue;
         state->blend_color[3] = alpha;
 
-        dispatch.BlendColor (red, green, blue, alpha);
+        dispatch.glBlendColor (red, green, blue, alpha);
     }
 }
 
@@ -306,7 +306,7 @@ exposed_to_tests void _gl_blend_equation (GLenum mode)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.BlendEquation) &&
+    if (_gl_is_valid_func (dispatch.glBlendEquation) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -325,7 +325,7 @@ exposed_to_tests void _gl_blend_equation (GLenum mode)
         state->blend_equation[0] = mode;
         state->blend_equation[1] = mode;
 
-        dispatch.BlendEquation (mode);
+        dispatch.glBlendEquation (mode);
     }
 }
 
@@ -334,7 +334,7 @@ exposed_to_tests void _gl_blend_equation_separate (GLenum modeRGB, GLenum modeAl
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.BlendEquationSeparate) &&
+    if (_gl_is_valid_func (dispatch.glBlendEquationSeparate) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -356,7 +356,7 @@ exposed_to_tests void _gl_blend_equation_separate (GLenum modeRGB, GLenum modeAl
         state->blend_equation[0] = modeRGB;
         state->blend_equation[1] = modeAlpha;
 
-        dispatch.BlendEquationSeparate (modeRGB, modeAlpha);
+        dispatch.glBlendEquationSeparate (modeRGB, modeAlpha);
     }
 }
 
@@ -365,7 +365,7 @@ exposed_to_tests void _gl_blend_func (GLenum sfactor, GLenum dfactor)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.BlendFunc) &&
+    if (_gl_is_valid_func (dispatch.glBlendFunc) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -413,7 +413,7 @@ exposed_to_tests void _gl_blend_func (GLenum sfactor, GLenum dfactor)
         state->blend_src[0] = state->blend_src[1] = sfactor;
         state->blend_dst[0] = state->blend_dst[1] = dfactor;
 
-        dispatch.BlendFunc (sfactor, dfactor);
+        dispatch.glBlendFunc (sfactor, dfactor);
     }
 }
 
@@ -423,7 +423,7 @@ exposed_to_tests void _gl_blend_func_separate (GLenum srcRGB, GLenum dstRGB,
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.BlendFuncSeparate) &&
+    if (_gl_is_valid_func (dispatch.glBlendFuncSeparate) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -503,7 +503,7 @@ exposed_to_tests void _gl_blend_func_separate (GLenum srcRGB, GLenum dstRGB,
         state->blend_dst[0] = dstRGB;
         state->blend_dst[0] = dstAlpha;
 
-        dispatch.BlendFuncSeparate (srcRGB, dstRGB, srcAlpha, dstAlpha);
+        dispatch.glBlendFuncSeparate (srcRGB, dstRGB, srcAlpha, dstAlpha);
     }
 }
 
@@ -512,14 +512,14 @@ exposed_to_tests void _gl_buffer_data (GLenum target, GLsizeiptr size,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BufferData) &&
+    if (_gl_is_valid_func (dispatch.glBufferData) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
         /* XXX: we skip rest of check, because driver
          * can generate GL_OUT_OF_MEMORY, which cannot check
          */
-        dispatch.BufferData (target, size, data, usage);
+        dispatch.glBufferData (target, size, data, usage);
         egl_state = (egl_state_t *) active_state->data;
         egl_state->state.need_get_error = true;
     }
@@ -533,7 +533,7 @@ exposed_to_tests void _gl_buffer_sub_data (GLenum target, GLintptr offset,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.BufferSubData) &&
+    if (_gl_is_valid_func (dispatch.glBufferSubData) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -541,7 +541,7 @@ exposed_to_tests void _gl_buffer_sub_data (GLenum target, GLintptr offset,
          * can generate GL_INVALID_VALUE, when offset + data can be out of
          * bound
          */
-        dispatch.BufferSubData (target, offset, size, data);
+        dispatch.glBufferSubData (target, offset, size, data);
         egl_state->state.need_get_error = true;
     }
 
@@ -554,7 +554,7 @@ exposed_to_tests GLenum _gl_check_framebuffer_status (GLenum target)
     GLenum result = GL_INVALID_ENUM;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CheckFramebufferStatus) &&
+    if (_gl_is_valid_func (dispatch.glCheckFramebufferStatus) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -574,7 +574,7 @@ exposed_to_tests GLenum _gl_check_framebuffer_status (GLenum target)
             return result;
         }
 
-        return dispatch.CheckFramebufferStatus (target);
+        return dispatch.glCheckFramebufferStatus (target);
     }
 
     return result;
@@ -584,7 +584,7 @@ exposed_to_tests void _gl_clear (GLbitfield mask)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Clear) &&
+    if (_gl_is_valid_func (dispatch.glClear) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -595,7 +595,7 @@ exposed_to_tests void _gl_clear (GLbitfield mask)
             return;
         }
 
-        dispatch.Clear (mask);
+        dispatch.glClear (mask);
     }
 }
 
@@ -605,7 +605,7 @@ exposed_to_tests void _gl_clear_color (GLclampf red, GLclampf green,
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.ClearColor) &&
+    if (_gl_is_valid_func (dispatch.glClearColor) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -621,7 +621,7 @@ exposed_to_tests void _gl_clear_color (GLclampf red, GLclampf green,
         state->color_clear_value[2] = blue;
         state->color_clear_value[3] = alpha;
 
-        dispatch.ClearColor (red, green, blue, alpha);
+        dispatch.glClearColor (red, green, blue, alpha);
     }
 }
 
@@ -630,7 +630,7 @@ exposed_to_tests void _gl_clear_depthf (GLclampf depth)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.ClearDepthf) &&
+    if (_gl_is_valid_func (dispatch.glClearDepthf) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -640,7 +640,7 @@ exposed_to_tests void _gl_clear_depthf (GLclampf depth)
 
         state->depth_clear_value = depth;
 
-        dispatch.ClearDepthf (depth);
+        dispatch.glClearDepthf (depth);
     }
 }
 
@@ -649,7 +649,7 @@ exposed_to_tests void _gl_clear_stencil (GLint s)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.ClearStencil) &&
+    if (_gl_is_valid_func (dispatch.glClearStencil) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -659,7 +659,7 @@ exposed_to_tests void _gl_clear_stencil (GLint s)
 
         state->stencil_clear_value = s;
 
-        dispatch.ClearStencil (s);
+        dispatch.glClearStencil (s);
     }
 }
 
@@ -669,7 +669,7 @@ exposed_to_tests void _gl_color_mask (GLboolean red, GLboolean green,
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.ColorMask) &&
+    if (_gl_is_valid_func (dispatch.glColorMask) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -685,7 +685,7 @@ exposed_to_tests void _gl_color_mask (GLboolean red, GLboolean green,
         state->color_writemask[2] = blue;
         state->color_writemask[3] = alpha;
 
-        dispatch.ColorMask (red, green, blue, alpha);
+        dispatch.glColorMask (red, green, blue, alpha);
     }
 }
 
@@ -697,11 +697,11 @@ exposed_to_tests void _gl_compressed_tex_image_2d (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CompressedTexImage2D) &&
+    if (_gl_is_valid_func (dispatch.glCompressedTexImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CompressedTexImage2D (target, level, internalformat,
+        dispatch.glCompressedTexImage2D (target, level, internalformat,
                                        width, height, border, imageSize,
                                        data);
 
@@ -721,11 +721,11 @@ exposed_to_tests void _gl_compressed_tex_sub_image_2d (GLenum target, GLint leve
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CompressedTexSubImage2D) &&
+    if (_gl_is_valid_func (dispatch.glCompressedTexSubImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CompressedTexSubImage2D (target, level, xoffset, yoffset,
+        dispatch.glCompressedTexSubImage2D (target, level, xoffset, yoffset,
                                           width, height, format, imageSize,
                                           data);
 
@@ -744,11 +744,11 @@ exposed_to_tests void _gl_copy_tex_image_2d (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CopyTexImage2D) &&
+    if (_gl_is_valid_func (dispatch.glCopyTexImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CopyTexImage2D (target, level, internalformat,
+        dispatch.glCopyTexImage2D (target, level, internalformat,
                                  x, y, width, height, border);
 
         egl_state->state.need_get_error = true;
@@ -762,11 +762,11 @@ exposed_to_tests void _gl_copy_tex_sub_image_2d (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CopyTexSubImage2D) &&
+    if (_gl_is_valid_func (dispatch.glCopyTexSubImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CopyTexSubImage2D (target, level, xoffset, yoffset,
+        dispatch.glCopyTexSubImage2D (target, level, xoffset, yoffset,
                                     x, y, width, height);
 
         egl_state->state.need_get_error = true;
@@ -779,11 +779,11 @@ exposed_to_tests GLuint _gl_create_program  (void)
     GLuint result = 0;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CreateProgram) &&
+    if (_gl_is_valid_func (dispatch.glCreateProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.CreateProgram ();
+        result = dispatch.glCreateProgram ();
     }
 
     return result;
@@ -795,7 +795,7 @@ exposed_to_tests GLuint _gl_create_shader (GLenum shaderType)
     GLuint result = 0;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CreateShader) &&
+    if (_gl_is_valid_func (dispatch.glCreateShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -805,7 +805,7 @@ exposed_to_tests GLuint _gl_create_shader (GLenum shaderType)
             return result;
         }
 
-        result = dispatch.CreateShader (shaderType);
+        result = dispatch.glCreateShader (shaderType);
     }
 
     return result;
@@ -815,7 +815,7 @@ exposed_to_tests void _gl_cull_face (GLenum mode)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CullFace) &&
+    if (_gl_is_valid_func (dispatch.glCullFace) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -831,7 +831,7 @@ exposed_to_tests void _gl_cull_face (GLenum mode)
 
         egl_state->state.cull_face_mode = mode;
 
-        dispatch.CullFace (mode);
+        dispatch.glCullFace (mode);
     }
 }
 
@@ -843,7 +843,7 @@ exposed_to_tests void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
     int count;
     int i, j;
     
-    if (_gl_is_valid_func (dispatch.DeleteBuffers) &&
+    if (_gl_is_valid_func (dispatch.glDeleteBuffers) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -855,7 +855,7 @@ exposed_to_tests void _gl_delete_buffers (GLsizei n, const GLuint *buffers)
             goto FINISH;
         }
 
-        dispatch.DeleteBuffers (n, buffers);
+        dispatch.glDeleteBuffers (n, buffers);
 
         /* check array_buffer_binding and element_array_buffer_binding */
         for (i = 0; i < n; i++) {
@@ -889,7 +889,7 @@ exposed_to_tests void _gl_delete_framebuffers (GLsizei n, const GLuint *framebuf
     egl_state_t *egl_state;
     int i;
     
-    if (_gl_is_valid_func (dispatch.DeleteFramebuffers) &&
+    if (_gl_is_valid_func (dispatch.glDeleteFramebuffers) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -898,7 +898,7 @@ exposed_to_tests void _gl_delete_framebuffers (GLsizei n, const GLuint *framebuf
             goto FINISH;
         }
 
-        dispatch.DeleteFramebuffers (n, framebuffers);
+        dispatch.glDeleteFramebuffers (n, framebuffers);
 
         for (i = 0; i < n; i++) {
             if (egl_state->state.framebuffer_binding == framebuffers[i]) {
@@ -917,11 +917,11 @@ exposed_to_tests void _gl_delete_program (GLuint program)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DeleteProgram) &&
+    if (_gl_is_valid_func (dispatch.glDeleteProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.DeleteProgram (program);
+        dispatch.glDeleteProgram (program);
 
         egl_state->state.need_get_error = true;
     }
@@ -931,7 +931,7 @@ exposed_to_tests void _gl_delete_renderbuffers (GLsizei n, const GLuint *renderb
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DeleteRenderbuffers) &&
+    if (_gl_is_valid_func (dispatch.glDeleteRenderbuffers) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -940,7 +940,7 @@ exposed_to_tests void _gl_delete_renderbuffers (GLsizei n, const GLuint *renderb
             goto FINISH;
         }
 
-        dispatch.DeleteRenderbuffers (n, renderbuffers);
+        dispatch.glDeleteRenderbuffers (n, renderbuffers);
     }
 
 FINISH:
@@ -952,11 +952,11 @@ exposed_to_tests void _gl_delete_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DeleteShader) &&
+    if (_gl_is_valid_func (dispatch.glDeleteShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.DeleteShader (shader);
+        dispatch.glDeleteShader (shader);
 
         egl_state->state.need_get_error = true;
     }
@@ -966,7 +966,7 @@ exposed_to_tests void _gl_delete_textures (GLsizei n, const GLuint *textures)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DeleteTextures) &&
+    if (_gl_is_valid_func (dispatch.glDeleteTextures) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -975,7 +975,7 @@ exposed_to_tests void _gl_delete_textures (GLsizei n, const GLuint *textures)
             goto FINISH;
         }
 
-        dispatch.DeleteTextures (n, textures);
+        dispatch.glDeleteTextures (n, textures);
     }
 
 FINISH:
@@ -987,7 +987,7 @@ exposed_to_tests void _gl_depth_func (GLenum func)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DepthFunc) &&
+    if (_gl_is_valid_func (dispatch.glDepthFunc) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1008,7 +1008,7 @@ exposed_to_tests void _gl_depth_func (GLenum func)
 
         egl_state->state.depth_func = func;
 
-        dispatch.DepthFunc (func);
+        dispatch.glDepthFunc (func);
     }
 }
 
@@ -1016,7 +1016,7 @@ exposed_to_tests void _gl_depth_mask (GLboolean flag)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DepthMask) &&
+    if (_gl_is_valid_func (dispatch.glDepthMask) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1025,7 +1025,7 @@ exposed_to_tests void _gl_depth_mask (GLboolean flag)
 
         egl_state->state.depth_writemask = flag;
 
-        dispatch.DepthMask (flag);
+        dispatch.glDepthMask (flag);
     }
 }
 
@@ -1033,7 +1033,7 @@ exposed_to_tests void _gl_depth_rangef (GLclampf nearVal, GLclampf farVal)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DepthRangef) &&
+    if (_gl_is_valid_func (dispatch.glDepthRangef) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1044,7 +1044,7 @@ exposed_to_tests void _gl_depth_rangef (GLclampf nearVal, GLclampf farVal)
         egl_state->state.depth_range[0] = nearVal;
         egl_state->state.depth_range[1] = farVal;
 
-        dispatch.DepthRangef (nearVal, farVal);
+        dispatch.glDepthRangef (nearVal, farVal);
     }
 }
 
@@ -1052,12 +1052,12 @@ exposed_to_tests void _gl_detach_shader (GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.DetachShader) &&
+    if (_gl_is_valid_func (dispatch.glDetachShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
         /* XXX: command buffer, error code generated */
-        dispatch.DetachShader (program, shader);
+        dispatch.glDetachShader (program, shader);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1069,8 +1069,8 @@ _gl_set_cap (GLenum cap, GLboolean enable)
     gles2_state_t *state;
     bool needs_call = false;
 
-    if (_gl_is_valid_func (dispatch.Disable) &&
-        _gl_is_valid_func (dispatch.Enable) &&
+    if (_gl_is_valid_func (dispatch.glDisable) &&
+        _gl_is_valid_func (dispatch.glEnable) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1139,9 +1139,9 @@ _gl_set_cap (GLenum cap, GLboolean enable)
 
         if (needs_call) {
             if (enable)
-                dispatch.Enable (cap);
+                dispatch.glEnable (cap);
             else
-                dispatch.Disable (cap);
+                dispatch.glDisable (cap);
         }
     }
 }
@@ -1162,7 +1162,7 @@ _gl_index_is_too_large (gles2_state_t *state, GLuint index)
     if (index >= state->max_vertex_attribs) {
         if (! state->max_vertex_attribs_queried) {
             /* XXX: command buffer */
-            dispatch.GetIntegerv (GL_MAX_VERTEX_ATTRIBS,
+            dispatch.glGetIntegerv (GL_MAX_VERTEX_ATTRIBS,
                                   &(state->max_vertex_attribs));
         }
         if (index >= state->max_vertex_attribs) {
@@ -1205,9 +1205,9 @@ _gl_set_vertex_attrib_array (GLuint index, gles2_state_t *state,
     }
 
     if (enable == GL_FALSE)
-        dispatch.DisableVertexAttribArray (index);
+        dispatch.glDisableVertexAttribArray (index);
     else
-        dispatch.EnableVertexAttribArray (index);
+        dispatch.glEnableVertexAttribArray (index);
 
     bound_buffer = state->array_buffer_binding;
 
@@ -1256,7 +1256,7 @@ exposed_to_tests void _gl_disable_vertex_attrib_array (GLuint index)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.DisableVertexAttribArray) &&
+    if (_gl_is_valid_func (dispatch.glDisableVertexAttribArray) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1270,7 +1270,7 @@ exposed_to_tests void _gl_enable_vertex_attrib_array (GLuint index)
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (dispatch.EnableVertexAttribArray) &&
+    if (_gl_is_valid_func (dispatch.glEnableVertexAttribArray) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1320,7 +1320,7 @@ exposed_to_tests void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
     int i, found_index = -1;
     int n = 0;
 
-    if (_gl_is_valid_func (dispatch.DrawArrays) &&
+    if (_gl_is_valid_func (dispatch.glDrawArrays) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1345,7 +1345,7 @@ exposed_to_tests void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
 #ifdef GL_OES_vertex_array_object
         /* if vertex array binding is not 0 */
         if (state->vertex_array_binding) {
-            dispatch.DrawArrays (mode, first, count);
+            dispatch.glDrawArrays (mode, first, count);
             state->need_get_error = true;
             return;
         } else
@@ -1359,7 +1359,7 @@ exposed_to_tests void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
                 data = _gl_create_data_array (&attribs[i], count);
                 if (! data)
                     continue;
-                dispatch.VertexAttribPointer (attribs[i].index,
+                dispatch.glVertexAttribPointer (attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
@@ -1387,7 +1387,7 @@ exposed_to_tests void _gl_draw_arrays (GLenum mode, GLint first, GLsizei count)
         }
 
         /* we need call DrawArrays */
-        dispatch.DrawArrays (mode, first, count);
+        dispatch.glDrawArrays (mode, first, count);
 
         /* remove data */
         array = array_data;
@@ -1462,7 +1462,7 @@ exposed_to_tests void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type
     int n = 0;
     bool element_binding = false;
 
-    if (_gl_is_valid_func (dispatch.DrawElements) &&
+    if (_gl_is_valid_func (dispatch.glDrawElements) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1492,7 +1492,7 @@ exposed_to_tests void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type
 
 #ifdef GL_OES_vertex_array_object
         if (state->vertex_array_binding) {
-            dispatch.DrawElements (mode, count, type, indices);
+            dispatch.glDrawElements (mode, count, type, indices);
             state->need_get_error = true;
             goto FINISH;
         } else
@@ -1506,7 +1506,7 @@ exposed_to_tests void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type
                 data = _gl_create_data_array (&attribs[i], count);
                 if (! data)
                     continue;
-                dispatch.VertexAttribPointer (attribs[i].index,
+                dispatch.glVertexAttribPointer (attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
@@ -1533,7 +1533,7 @@ exposed_to_tests void _gl_draw_elements (GLenum mode, GLsizei count, GLenum type
             }
         }
 
-        dispatch.DrawElements (mode, type, count, indices);
+        dispatch.glDrawElements (mode, type, count, indices);
 
         array = array_data;
         while (array != NULL) {
@@ -1559,11 +1559,11 @@ exposed_to_tests void _gl_finish (void)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Finish) &&
+    if (_gl_is_valid_func (dispatch.glFinish) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.Finish ();
+        dispatch.glFinish ();
     }
 }
 
@@ -1571,11 +1571,11 @@ exposed_to_tests void _gl_flush (void)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Flush) &&
+    if (_gl_is_valid_func (dispatch.glFlush) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.Flush ();
+        dispatch.glFlush ();
     }
 }
 
@@ -1585,7 +1585,7 @@ exposed_to_tests void _gl_framebuffer_renderbuffer (GLenum target, GLenum attach
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.FramebufferRenderbuffer) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferRenderbuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1599,7 +1599,7 @@ exposed_to_tests void _gl_framebuffer_renderbuffer (GLenum target, GLenum attach
             return;
         }
 
-        dispatch.FramebufferRenderbuffer (target, attachment,
+        dispatch.glFramebufferRenderbuffer (target, attachment,
                                           renderbuffertarget, 
                                           renderbuffer);
         egl_state->state.need_get_error = true;
@@ -1612,7 +1612,7 @@ exposed_to_tests void _gl_framebuffer_texture_2d (GLenum target, GLenum attachme
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.FramebufferTexture2D) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferTexture2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1621,7 +1621,7 @@ exposed_to_tests void _gl_framebuffer_texture_2d (GLenum target, GLenum attachme
             return;
         }
 
-        dispatch.FramebufferTexture2D (target, attachment, textarget,
+        dispatch.glFramebufferTexture2D (target, attachment, textarget,
                                        texture, level);
         egl_state->state.need_get_error = true;
     }
@@ -1631,7 +1631,7 @@ exposed_to_tests void _gl_front_face (GLenum mode)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.FramebufferTexture2D) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferTexture2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1644,13 +1644,13 @@ exposed_to_tests void _gl_front_face (GLenum mode)
         }
 
         egl_state->state.front_face = mode;
-        dispatch.FrontFace (mode);
+        dispatch.glFrontFace (mode);
     }
 }
 
 exposed_to_tests void _gl_gen_buffers (GLsizei n, GLuint *buffers)
 {
-    if (_gl_is_valid_func (dispatch.GenBuffers) &&
+    if (_gl_is_valid_func (dispatch.glGenBuffers) &&
         _gl_is_valid_context ()) {
 
         if (n < 0) {
@@ -1658,13 +1658,13 @@ exposed_to_tests void _gl_gen_buffers (GLsizei n, GLuint *buffers)
             return;
         }
     
-        dispatch.GenBuffers (n, buffers);
+        dispatch.glGenBuffers (n, buffers);
     }
 }
 
 exposed_to_tests void _gl_gen_framebuffers (GLsizei n, GLuint *framebuffers)
 {
-    if (_gl_is_valid_func (dispatch.GenFramebuffers) &&
+    if (_gl_is_valid_func (dispatch.glGenFramebuffers) &&
         _gl_is_valid_context ()) {
 
         if (n < 0) {
@@ -1672,13 +1672,13 @@ exposed_to_tests void _gl_gen_framebuffers (GLsizei n, GLuint *framebuffers)
             return;
         }
         
-        dispatch.GenFramebuffers (n, framebuffers);
+        dispatch.glGenFramebuffers (n, framebuffers);
     }
 }
 
 exposed_to_tests void _gl_gen_renderbuffers (GLsizei n, GLuint *renderbuffers)
 {
-    if (_gl_is_valid_func (dispatch.GenRenderbuffers) &&
+    if (_gl_is_valid_func (dispatch.glGenRenderbuffers) &&
         _gl_is_valid_context ()) {
 
         if (n < 0) {
@@ -1686,13 +1686,13 @@ exposed_to_tests void _gl_gen_renderbuffers (GLsizei n, GLuint *renderbuffers)
             return;
         }
         
-        dispatch.GenRenderbuffers (n, renderbuffers);
+        dispatch.glGenRenderbuffers (n, renderbuffers);
     }
 }
 
 exposed_to_tests void _gl_gen_textures (GLsizei n, GLuint *textures)
 {
-    if (_gl_is_valid_func (dispatch.GenTextures) &&
+    if (_gl_is_valid_func (dispatch.glGenTextures) &&
         _gl_is_valid_context ()) {
 
         if (n < 0) {
@@ -1700,7 +1700,7 @@ exposed_to_tests void _gl_gen_textures (GLsizei n, GLuint *textures)
             return;
         }
         
-        dispatch.GenTextures (n, textures);
+        dispatch.glGenTextures (n, textures);
     }
 }
 
@@ -1708,7 +1708,7 @@ exposed_to_tests void _gl_generate_mipmap (GLenum target)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GenerateMipmap) &&
+    if (_gl_is_valid_func (dispatch.glGenerateMipmap) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1723,7 +1723,7 @@ exposed_to_tests void _gl_generate_mipmap (GLenum target)
             return;
         }
 
-        dispatch.GenerateMipmap (target);
+        dispatch.glGenerateMipmap (target);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1732,7 +1732,7 @@ exposed_to_tests void _gl_get_booleanv (GLenum pname, GLboolean *params)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetBooleanv) &&
+    if (_gl_is_valid_func (dispatch.glGetBooleanv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1774,7 +1774,7 @@ exposed_to_tests void _gl_get_booleanv (GLenum pname, GLboolean *params)
             *params = egl_state->state.stencil_test;
             break;
         default:
-            dispatch.GetBooleanv (pname, params);
+            dispatch.glGetBooleanv (pname, params);
             break;
         }
     }
@@ -1784,7 +1784,7 @@ exposed_to_tests void _gl_get_floatv (GLenum pname, GLfloat *params)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetFloatv) &&
+    if (_gl_is_valid_func (dispatch.glGetFloatv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1826,7 +1826,7 @@ exposed_to_tests void _gl_get_floatv (GLenum pname, GLfloat *params)
             *params = egl_state->state.polygon_offset_factor;
             break; 
         default:
-            dispatch.GetFloatv (pname, params);
+            dispatch.glGetFloatv (pname, params);
             break;
         }
     }
@@ -1840,7 +1840,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
     int count;
     int i;
     
-    if (_gl_is_valid_func (dispatch.GetIntegerv) &&
+    if (_gl_is_valid_func (dispatch.glGetIntegerv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -1869,7 +1869,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_combined_texture_image_units_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_combined_texture_image_units_queried = true;
                 egl_state->state.max_combined_texture_image_units = *params;
             } else
@@ -1877,7 +1877,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
             if (! egl_state->state.max_cube_map_texture_size_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_cube_map_texture_size = *params;
                 egl_state->state.max_cube_map_texture_size_queried = true;
             } else
@@ -1885,7 +1885,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
         break;
         case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
             if (! egl_state->state.max_fragment_uniform_vectors_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_fragment_uniform_vectors = *params;
                 egl_state->state.max_fragment_uniform_vectors_queried = true;
             } else
@@ -1893,7 +1893,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_RENDERBUFFER_SIZE:
             if (! egl_state->state.max_renderbuffer_size_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_renderbuffer_size = *params;
                 egl_state->state.max_renderbuffer_size_queried = true;
             } else
@@ -1901,7 +1901,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_texture_image_units_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_texture_image_units = *params;
                 egl_state->state.max_texture_image_units_queried = true;
             } else
@@ -1909,7 +1909,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_VARYING_VECTORS:
             if (! egl_state->state.max_varying_vectors_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_varying_vectors = *params;
                 egl_state->state.max_varying_vectors_queried = true;
             } else
@@ -1917,7 +1917,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_TEXTURE_SIZE:
             if (! egl_state->state.max_texture_size_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_texture_size = *params;
                 egl_state->state.max_texture_size_queried = true;
             } else
@@ -1925,7 +1925,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_VERTEX_ATTRIBS:
             if (! egl_state->state.max_vertex_attribs_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_vertex_attribs = *params;
                 egl_state->state.max_vertex_attribs_queried = true;
             } else
@@ -1933,7 +1933,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_vertex_texture_image_units_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_vertex_texture_image_units = *params;
                 egl_state->state.max_vertex_texture_image_units_queried = true;
             } else
@@ -1941,7 +1941,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             break;
         case GL_MAX_VERTEX_UNIFORM_VECTORS:
             if (! egl_state->state.max_vertex_uniform_vectors_queried) {
-                dispatch.GetIntegerv (pname, params);
+                dispatch.glGetIntegerv (pname, params);
                 egl_state->state.max_vertex_uniform_vectors = *params;
                 egl_state->state.max_vertex_uniform_vectors_queried = true;
             } else
@@ -2002,7 +2002,7 @@ exposed_to_tests void _gl_get_integerv (GLenum pname, GLint *params)
             memcpy (params, egl_state->state.viewport, sizeof (GLint) * 4);
             break;
         default:
-            dispatch.GetIntegerv (pname, params);
+            dispatch.glGetIntegerv (pname, params);
             break;
         }
 
@@ -2028,11 +2028,11 @@ exposed_to_tests void _gl_get_active_attrib (GLuint program, GLuint index,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetActiveAttrib) &&
+    if (_gl_is_valid_func (dispatch.glGetActiveAttrib) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetActiveAttrib (program, index, bufsize, length,
+        dispatch.glGetActiveAttrib (program, index, bufsize, length,
                                   size, type, name);
         egl_state->state.need_get_error = true;
     }
@@ -2045,11 +2045,11 @@ exposed_to_tests void _gl_get_active_uniform (GLuint program, GLuint index,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetActiveUniform) &&
+    if (_gl_is_valid_func (dispatch.glGetActiveUniform) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetActiveUniform (program, index, bufsize, length,
+        dispatch.glGetActiveUniform (program, index, bufsize, length,
                                    size, type, name);
         egl_state->state.need_get_error = true;
     }
@@ -2060,11 +2060,11 @@ exposed_to_tests void _gl_get_attached_shaders (GLuint program, GLsizei maxCount
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetAttachedShaders) &&
+    if (_gl_is_valid_func (dispatch.glGetAttachedShaders) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetAttachedShaders (program, maxCount, count, shaders);
+        dispatch.glGetAttachedShaders (program, maxCount, count, shaders);
 
         egl_state->state.need_get_error = true;
     }
@@ -2075,11 +2075,11 @@ exposed_to_tests GLint _gl_get_attrib_location (GLuint program, const GLchar *na
     egl_state_t *egl_state;
     GLint result = -1;
     
-    if (_gl_is_valid_func (dispatch.GetAttribLocation) &&
+    if (_gl_is_valid_func (dispatch.glGetAttribLocation) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = dispatch.GetAttribLocation (program, name);
+        result = dispatch.glGetAttribLocation (program, name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2090,11 +2090,11 @@ exposed_to_tests void _gl_get_buffer_parameteriv (GLenum target, GLenum value, G
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetBufferParameteriv) &&
+    if (_gl_is_valid_func (dispatch.glGetBufferParameteriv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetBufferParameteriv (target, value, data);
+        dispatch.glGetBufferParameteriv (target, value, data);
 
         egl_state->state.need_get_error = true;
     }
@@ -2105,7 +2105,7 @@ exposed_to_tests GLenum _gl_get_error (void)
     GLenum error = GL_INVALID_OPERATION;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetError) &&
+    if (_gl_is_valid_func (dispatch.glGetError) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -2115,7 +2115,7 @@ exposed_to_tests GLenum _gl_get_error (void)
             return error;
         }
 
-        error = dispatch.GetError ();
+        error = dispatch.glGetError ();
 
         egl_state->state.need_get_error = false;
         egl_state->state.error = GL_NO_ERROR;
@@ -2131,7 +2131,7 @@ exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetFramebufferAttachmentParameteriv) &&
+    if (_gl_is_valid_func (dispatch.glGetFramebufferAttachmentParameteriv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -2140,7 +2140,7 @@ exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (GLenum target,
             return;
         }
 
-        dispatch.GetFramebufferAttachmentParameteriv (target, attachment,
+        dispatch.glGetFramebufferAttachmentParameteriv (target, attachment,
                                                       pname, params);
         egl_state->state.need_get_error = true;
     }
@@ -2151,11 +2151,11 @@ exposed_to_tests void _gl_get_program_info_log (GLuint program, GLsizei maxLengt
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetProgramInfoLog) &&
+    if (_gl_is_valid_func (dispatch.glGetProgramInfoLog) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetProgramInfoLog (program, maxLength, length, infoLog);
+        dispatch.glGetProgramInfoLog (program, maxLength, length, infoLog);
 
         egl_state->state.need_get_error = true;
     }
@@ -2165,11 +2165,11 @@ exposed_to_tests void _gl_get_programiv (GLuint program, GLenum pname, GLint *pa
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetProgramiv) &&
+    if (_gl_is_valid_func (dispatch.glGetProgramiv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetProgramiv (program, pname, params);
+        dispatch.glGetProgramiv (program, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2181,7 +2181,7 @@ exposed_to_tests void _gl_get_renderbuffer_parameteriv (GLenum target,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetRenderbufferParameteriv) &&
+    if (_gl_is_valid_func (dispatch.glGetRenderbufferParameteriv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2190,7 +2190,7 @@ exposed_to_tests void _gl_get_renderbuffer_parameteriv (GLenum target,
             return;
         }
 
-        dispatch.GetRenderbufferParameteriv (target, pname, params);
+        dispatch.glGetRenderbufferParameteriv (target, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2201,11 +2201,11 @@ exposed_to_tests void _gl_get_shader_info_log (GLuint program, GLsizei maxLength
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetShaderInfoLog) &&
+    if (_gl_is_valid_func (dispatch.glGetShaderInfoLog) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetShaderInfoLog (program, maxLength, length, infoLog);
+        dispatch.glGetShaderInfoLog (program, maxLength, length, infoLog);
 
         egl_state->state.need_get_error = true;
     }
@@ -2218,11 +2218,11 @@ exposed_to_tests void _gl_get_shader_precision_format (GLenum shaderType,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetShaderPrecisionFormat) &&
+    if (_gl_is_valid_func (dispatch.glGetShaderPrecisionFormat) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetShaderPrecisionFormat (shaderType, precisionType,
+        dispatch.glGetShaderPrecisionFormat (shaderType, precisionType,
                                            range, precision);
 
         egl_state->state.need_get_error = true;
@@ -2234,11 +2234,11 @@ exposed_to_tests void _gl_get_shader_source  (GLuint shader, GLsizei bufSize,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetShaderSource) &&
+    if (_gl_is_valid_func (dispatch.glGetShaderSource) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetShaderSource (shader, bufSize, length, source);
+        dispatch.glGetShaderSource (shader, bufSize, length, source);
 
         egl_state->state.need_get_error = true;
     }
@@ -2248,11 +2248,11 @@ exposed_to_tests void _gl_get_shaderiv (GLuint shader, GLenum pname, GLint *para
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetShaderiv) &&
+    if (_gl_is_valid_func (dispatch.glGetShaderiv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetShaderiv (shader, pname, params);
+        dispatch.glGetShaderiv (shader, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2263,7 +2263,7 @@ exposed_to_tests const GLubyte *_gl_get_string (GLenum name)
     GLubyte *result = NULL;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetString) &&
+    if (_gl_is_valid_func (dispatch.glGetString) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2275,7 +2275,7 @@ exposed_to_tests const GLubyte *_gl_get_string (GLenum name)
             return NULL;
         }
 
-        result = (GLubyte *)dispatch.GetString (name);
+        result = (GLubyte *)dispatch.glGetString (name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2289,7 +2289,7 @@ exposed_to_tests void _gl_get_tex_parameteriv (GLenum target, GLenum pname,
     int active_texture_index;
     int target_index;
     
-    if (_gl_is_valid_func (dispatch.GetTexParameteriv) &&
+    if (_gl_is_valid_func (dispatch.glGetTexParameteriv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2353,11 +2353,11 @@ exposed_to_tests void _gl_get_uniformiv (GLuint program, GLint location,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetUniformiv) &&
+    if (_gl_is_valid_func (dispatch.glGetUniformiv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetUniformiv (program, location, params);
+        dispatch.glGetUniformiv (program, location, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2368,11 +2368,11 @@ exposed_to_tests void _gl_get_uniformfv (GLuint program, GLint location,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetUniformfv) &&
+    if (_gl_is_valid_func (dispatch.glGetUniformfv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.GetUniformfv (program, location, params);
+        dispatch.glGetUniformfv (program, location, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2383,11 +2383,11 @@ exposed_to_tests GLint _gl_get_uniform_location (GLuint program, const GLchar *n
     GLint result = -1;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetUniformLocation) &&
+    if (_gl_is_valid_func (dispatch.glGetUniformLocation) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.GetUniformLocation (program, name);
+        result = dispatch.glGetUniformLocation (program, name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2404,7 +2404,7 @@ exposed_to_tests void _gl_get_vertex_attribfv (GLuint index, GLenum pname,
     int count;
     int i, found_index = -1;
 
-    if (_gl_is_valid_func (dispatch.GetVertexAttribfv) &&
+    if (_gl_is_valid_func (dispatch.glGetVertexAttribfv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -2430,7 +2430,7 @@ exposed_to_tests void _gl_get_vertex_attribfv (GLuint index, GLenum pname,
 #ifdef GL_OES_vertex_array_object
         /* we cannot use client state */
         if (egl_state->state.vertex_array_binding) {
-            dispatch.GetVertexAttribfv (index, pname, params);
+            dispatch.glGetVertexAttribfv (index, pname, params);
             return;
         }
 #endif
@@ -2497,7 +2497,7 @@ exposed_to_tests void _gl_get_vertex_attribiv (GLuint index, GLenum pname, GLint
     GLfloat paramsf[4];
     int i;
 
-    dispatch.GetVertexAttribfv (index, pname, paramsf);
+    dispatch.glGetVertexAttribfv (index, pname, paramsf);
 
     if (pname == GL_CURRENT_VERTEX_ATTRIB) {
         for (i = 0; i < 4; i++)
@@ -2518,7 +2518,7 @@ exposed_to_tests void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname
     
     *pointer = 0;
 
-    if (_gl_is_valid_func (dispatch.GetVertexAttribPointerv) &&
+    if (_gl_is_valid_func (dispatch.glGetVertexAttribPointerv) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -2538,7 +2538,7 @@ exposed_to_tests void _gl_get_vertex_attrib_pointerv (GLuint index, GLenum pname
 #ifdef GL_OES_vertex_array_object
         /* we cannot use client state */
         if (egl_state->state.vertex_array_binding) {
-            dispatch.GetVertexAttribPointerv (index, pname, pointer);
+            dispatch.glGetVertexAttribPointerv (index, pname, pointer);
             egl_state->state.need_get_error = true;
             return;
         }
@@ -2558,7 +2558,7 @@ exposed_to_tests void _gl_hint (GLenum target, GLenum mode)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.Hint) &&
+    if (_gl_is_valid_func (dispatch.glHint) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2576,7 +2576,7 @@ exposed_to_tests void _gl_hint (GLenum target, GLenum mode)
         if (target == GL_GENERATE_MIPMAP_HINT)
             egl_state->state.generate_mipmap_hint = mode;
 
-        dispatch.Hint (target, mode);
+        dispatch.glHint (target, mode);
 
         if (target != GL_GENERATE_MIPMAP_HINT)
         egl_state->state.need_get_error = true;
@@ -2588,11 +2588,11 @@ exposed_to_tests GLboolean _gl_is_buffer (GLuint buffer)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsBuffer) &&
+    if (_gl_is_valid_func (dispatch.glIsBuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsBuffer (buffer);
+        result = dispatch.glIsBuffer (buffer);
     }
     return result;
 }
@@ -2602,7 +2602,7 @@ exposed_to_tests GLboolean _gl_is_enabled (GLenum cap)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsEnabled) &&
+    if (_gl_is_valid_func (dispatch.glIsEnabled) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2647,11 +2647,11 @@ exposed_to_tests GLboolean _gl_is_framebuffer (GLuint framebuffer)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsFramebuffer) &&
+    if (_gl_is_valid_func (dispatch.glIsFramebuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsFramebuffer (framebuffer);
+        result = dispatch.glIsFramebuffer (framebuffer);
     }
     return result;
 }
@@ -2661,11 +2661,11 @@ exposed_to_tests GLboolean _gl_is_program (GLuint program)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsProgram) &&
+    if (_gl_is_valid_func (dispatch.glIsProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsProgram (program);
+        result = dispatch.glIsProgram (program);
     }
     return result;
 }
@@ -2675,11 +2675,11 @@ exposed_to_tests GLboolean _gl_is_renderbuffer (GLuint renderbuffer)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsRenderbuffer) &&
+    if (_gl_is_valid_func (dispatch.glIsRenderbuffer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsRenderbuffer (renderbuffer);
+        result = dispatch.glIsRenderbuffer (renderbuffer);
     }
     return result;
 }
@@ -2689,11 +2689,11 @@ exposed_to_tests GLboolean _gl_is_shader (GLuint shader)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsShader) &&
+    if (_gl_is_valid_func (dispatch.glIsShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsShader (shader);
+        result = dispatch.glIsShader (shader);
     }
     return result;
 }
@@ -2703,11 +2703,11 @@ exposed_to_tests GLboolean _gl_is_texture (GLuint texture)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsTexture) &&
+    if (_gl_is_valid_func (dispatch.glIsTexture) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = dispatch.IsTexture (texture);
+        result = dispatch.glIsTexture (texture);
     }
     return result;
 }
@@ -2716,7 +2716,7 @@ exposed_to_tests void _gl_line_width (GLfloat width)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.LineWidth) &&
+    if (_gl_is_valid_func (dispatch.glLineWidth) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2729,7 +2729,7 @@ exposed_to_tests void _gl_line_width (GLfloat width)
         }
 
         egl_state->state.line_width = width;
-        dispatch.LineWidth (width);
+        dispatch.glLineWidth (width);
     }
 }
 
@@ -2737,11 +2737,11 @@ exposed_to_tests void _gl_link_program (GLuint program)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.LinkProgram) &&
+    if (_gl_is_valid_func (dispatch.glLinkProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.LinkProgram (program);
+        dispatch.glLinkProgram (program);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2750,7 +2750,7 @@ exposed_to_tests void _gl_pixel_storei (GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.PixelStorei) &&
+    if (_gl_is_valid_func (dispatch.glPixelStorei) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2778,7 +2778,7 @@ exposed_to_tests void _gl_pixel_storei (GLenum pname, GLint param)
         else
            egl_state->state.unpack_alignment = param;
 
-        dispatch.PixelStorei (pname, param);
+        dispatch.glPixelStorei (pname, param);
     }
 }
 
@@ -2786,7 +2786,7 @@ exposed_to_tests void _gl_polygon_offset (GLfloat factor, GLfloat units)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.PolygonOffset) &&
+    if (_gl_is_valid_func (dispatch.glPolygonOffset) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2797,7 +2797,7 @@ exposed_to_tests void _gl_polygon_offset (GLfloat factor, GLfloat units)
         egl_state->state.polygon_offset_factor = factor;
         egl_state->state.polygon_offset_units = units;
 
-        dispatch.PolygonOffset (factor, units);
+        dispatch.glPolygonOffset (factor, units);
     }
 }
 
@@ -2808,11 +2808,11 @@ exposed_to_tests void _gl_read_pixels (GLint x, GLint y,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.ReadPixels) &&
+    if (_gl_is_valid_func (dispatch.glReadPixels) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.ReadPixels (x, y, width, height, format, type, data);
+        dispatch.glReadPixels (x, y, width, height, format, type, data);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2821,11 +2821,11 @@ exposed_to_tests void _gl_compile_shader (GLuint shader)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.CompileShader) &&
+    if (_gl_is_valid_func (dispatch.glCompileShader) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CompileShader (shader);
+        dispatch.glCompileShader (shader);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2834,11 +2834,11 @@ exposed_to_tests void _gl_release_shader_compiler (void)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.ReleaseShaderCompiler) &&
+    if (_gl_is_valid_func (dispatch.glReleaseShaderCompiler) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.ReleaseShaderCompiler ();
+        dispatch.glReleaseShaderCompiler ();
         egl_state->state.need_get_error = true;
     }
 }
@@ -2848,11 +2848,11 @@ exposed_to_tests void _gl_renderbuffer_storage (GLenum target, GLenum internalfo
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.RenderbufferStorage) &&
+    if (_gl_is_valid_func (dispatch.glRenderbufferStorage) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.RenderbufferStorage (target, internalformat, width, height);
+        dispatch.glRenderbufferStorage (target, internalformat, width, height);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2861,7 +2861,7 @@ exposed_to_tests void _gl_sample_coverage (GLclampf value, GLboolean invert)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.SampleCoverage) &&
+    if (_gl_is_valid_func (dispatch.glSampleCoverage) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2872,7 +2872,7 @@ exposed_to_tests void _gl_sample_coverage (GLclampf value, GLboolean invert)
         egl_state->state.sample_coverage_invert = invert;
         egl_state->state.sample_coverage_value = value;
 
-        dispatch.SampleCoverage (value, invert);
+        dispatch.glSampleCoverage (value, invert);
     }
 }
 
@@ -2880,7 +2880,7 @@ exposed_to_tests void _gl_scissor (GLint x, GLint y, GLsizei width, GLsizei heig
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Scissor) &&
+    if (_gl_is_valid_func (dispatch.glScissor) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2900,7 +2900,7 @@ exposed_to_tests void _gl_scissor (GLint x, GLint y, GLsizei width, GLsizei heig
         egl_state->state.scissor_box[2] = width;
         egl_state->state.scissor_box[3] = height;
 
-        dispatch.Scissor (x, y, width, height);
+        dispatch.glScissor (x, y, width, height);
     }
 }
 
@@ -2910,11 +2910,11 @@ exposed_to_tests void _gl_shader_binary (GLsizei n, const GLuint *shaders,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.ShaderBinary) &&
+    if (_gl_is_valid_func (dispatch.glShaderBinary) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.ShaderBinary (n, shaders, binaryformat, binary, length);
+        dispatch.glShaderBinary (n, shaders, binaryformat, binary, length);
         egl_state->state.need_get_error = true;
     }
     if (binary)
@@ -2927,11 +2927,11 @@ exposed_to_tests void _gl_shader_source (GLuint shader, GLsizei count,
     egl_state_t *egl_state;
     int i;
     
-    if (_gl_is_valid_func (dispatch.ShaderSource) &&
+    if (_gl_is_valid_func (dispatch.glShaderSource) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.ShaderSource (shader, count, string, length);
+        dispatch.glShaderSource (shader, count, string, length);
         egl_state->state.need_get_error = true;
     }
 
@@ -2954,7 +2954,7 @@ exposed_to_tests void _gl_stencil_func_separate (GLenum face, GLenum func,
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (dispatch.StencilFuncSeparate) &&
+    if (_gl_is_valid_func (dispatch.glStencilFuncSeparate) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3017,7 +3017,7 @@ exposed_to_tests void _gl_stencil_func_separate (GLenum face, GLenum func,
     }
 
     if (needs_call)
-        dispatch.StencilFuncSeparate (face, func, ref, mask);
+        dispatch.glStencilFuncSeparate (face, func, ref, mask);
 }
 
 exposed_to_tests void _gl_stencil_func (GLenum func, GLint ref, GLuint mask)
@@ -3030,7 +3030,7 @@ exposed_to_tests void _gl_stencil_mask_separate (GLenum face, GLuint mask)
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (dispatch.StencilMaskSeparate) &&
+    if (_gl_is_valid_func (dispatch.glStencilMaskSeparate) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3065,7 +3065,7 @@ exposed_to_tests void _gl_stencil_mask_separate (GLenum face, GLuint mask)
         }
     }
     if (needs_call)
-        dispatch.StencilMaskSeparate (face, mask);
+        dispatch.glStencilMaskSeparate (face, mask);
 }
 
 exposed_to_tests void _gl_stencil_mask (GLuint mask)
@@ -3079,7 +3079,7 @@ exposed_to_tests void _gl_stencil_op_separate (GLenum face, GLenum sfail,
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (dispatch.StencilOpSeparate) &&
+    if (_gl_is_valid_func (dispatch.glStencilOpSeparate) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3164,7 +3164,7 @@ exposed_to_tests void _gl_stencil_op_separate (GLenum face, GLenum sfail,
     }
 
     if (needs_call)
-        dispatch.StencilOpSeparate (face, sfail, dpfail, dppass);
+        dispatch.glStencilOpSeparate (face, sfail, dpfail, dppass);
 }
 
 exposed_to_tests void _gl_stencil_op (GLenum sfail, GLenum dpfail, GLenum dppass)
@@ -3180,11 +3180,11 @@ exposed_to_tests void _gl_tex_image_2d (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.TexImage2D) &&
+    if (_gl_is_valid_func (dispatch.glTexImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.TexImage2D (target, level, internalformat, width, height,
+        dispatch.glTexImage2D (target, level, internalformat, width, height,
                              border, format, type, data);
         egl_state->state.need_get_error = true;
     }
@@ -3199,7 +3199,7 @@ exposed_to_tests void _gl_tex_parameteri (GLenum target, GLenum pname, GLint par
     int active_texture_index;
     int target_index;
 
-    if (_gl_is_valid_func (dispatch.TexParameteri) &&
+    if (_gl_is_valid_func (dispatch.glTexParameteri) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -3304,7 +3304,7 @@ exposed_to_tests void _gl_tex_parameteri (GLenum target, GLenum pname, GLint par
             return;
         }
 
-        dispatch.TexParameteri (target, pname, param);
+        dispatch.glTexParameteri (target, pname, param);
     }
 }
 
@@ -3322,11 +3322,11 @@ exposed_to_tests void _gl_tex_sub_image_2d (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.TexSubImage2D) &&
+    if (_gl_is_valid_func (dispatch.glTexSubImage2D) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.TexSubImage2D (target, level, xoffset, yoffset,
+        dispatch.glTexSubImage2D (target, level, xoffset, yoffset,
                                 width, height, format, type, data);
         egl_state->state.need_get_error = true;
     }
@@ -3338,11 +3338,11 @@ exposed_to_tests void _gl_uniform1f (GLint location, GLfloat v0)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Uniform1f) &&
+    if (_gl_is_valid_func (dispatch.glUniform1f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform1f (location, v0);
+        dispatch.glUniform1f (location, v0);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3351,11 +3351,11 @@ exposed_to_tests void _gl_uniform2f (GLint location, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Uniform2f) &&
+    if (_gl_is_valid_func (dispatch.glUniform2f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform2f (location, v0, v1);
+        dispatch.glUniform2f (location, v0, v1);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3365,11 +3365,11 @@ exposed_to_tests void _gl_uniform3f (GLint location, GLfloat v0, GLfloat v1,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Uniform3f) &&
+    if (_gl_is_valid_func (dispatch.glUniform3f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform3f (location, v0, v1, v2);
+        dispatch.glUniform3f (location, v0, v1, v2);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3379,11 +3379,11 @@ exposed_to_tests void _gl_uniform4f (GLint location, GLfloat v0, GLfloat v1,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Uniform4f) &&
+    if (_gl_is_valid_func (dispatch.glUniform4f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform4f (location, v0, v1, v2, v3);
+        dispatch.glUniform4f (location, v0, v1, v2, v3);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3392,11 +3392,11 @@ exposed_to_tests void _gl_uniform1i (GLint location, GLint v0)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.Uniform1i) &&
+    if (_gl_is_valid_func (dispatch.glUniform1i) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform1i (location, v0);
+        dispatch.glUniform1i (location, v0);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3405,11 +3405,11 @@ exposed_to_tests void _gl_uniform_2i (GLint location, GLint v0, GLint v1)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.Uniform2i) &&
+    if (_gl_is_valid_func (dispatch.glUniform2i) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform2i (location, v0, v1);
+        dispatch.glUniform2i (location, v0, v1);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3418,11 +3418,11 @@ exposed_to_tests void _gl_uniform3i (GLint location, GLint v0, GLint v1, GLint v
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.Uniform3i) &&
+    if (_gl_is_valid_func (dispatch.glUniform3i) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform3i (location, v0, v1, v2);
+        dispatch.glUniform3i (location, v0, v1, v2);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3432,11 +3432,11 @@ exposed_to_tests void _gl_uniform4i (GLint location, GLint v0, GLint v1,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.Uniform4i) &&
+    if (_gl_is_valid_func (dispatch.glUniform4i) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.Uniform4i (location, v0, v1, v2, v3);
+        dispatch.glUniform4i (location, v0, v1, v2, v3);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3452,24 +3452,24 @@ _gl_uniform_fv (int i, GLint location,
 
     switch (i) {
     case 1:
-        if(! _gl_is_valid_func (dispatch.Uniform1fv))
+        if(! _gl_is_valid_func (dispatch.glUniform1fv))
             goto FINISH;
-        dispatch.Uniform1fv (location, count, value);
+        dispatch.glUniform1fv (location, count, value);
         break;
     case 2:
-        if(! _gl_is_valid_func (dispatch.Uniform2fv))
+        if(! _gl_is_valid_func (dispatch.glUniform2fv))
             goto FINISH;
-        dispatch.Uniform2fv (location, count, value);
+        dispatch.glUniform2fv (location, count, value);
         break;
     case 3:
-        if(! _gl_is_valid_func (dispatch.Uniform3fv))
+        if(! _gl_is_valid_func (dispatch.glUniform3fv))
             goto FINISH;
-        dispatch.Uniform3fv (location, count, value);
+        dispatch.glUniform3fv (location, count, value);
         break;
     default:
-        if(! _gl_is_valid_func (dispatch.Uniform4fv))
+        if(! _gl_is_valid_func (dispatch.glUniform4fv))
             goto FINISH;
-        dispatch.Uniform4fv (location, count, value);
+        dispatch.glUniform4fv (location, count, value);
         break;
     }
 
@@ -3516,24 +3516,24 @@ _gl_uniform_iv (int i, GLint location,
 
     switch (i) {
     case 1:
-        if(! _gl_is_valid_func (dispatch.Uniform1iv))
+        if(! _gl_is_valid_func (dispatch.glUniform1iv))
             goto FINISH;
-        dispatch.Uniform1iv (location, count, value);
+        dispatch.glUniform1iv (location, count, value);
         break;
     case 2:
-        if(! _gl_is_valid_func (dispatch.Uniform2iv))
+        if(! _gl_is_valid_func (dispatch.glUniform2iv))
             goto FINISH;
-        dispatch.Uniform2iv (location, count, value);
+        dispatch.glUniform2iv (location, count, value);
         break;
     case 3:
-        if(! _gl_is_valid_func (dispatch.Uniform3iv))
+        if(! _gl_is_valid_func (dispatch.glUniform3iv))
             goto FINISH;
-        dispatch.Uniform3iv (location, count, value);
+        dispatch.glUniform3iv (location, count, value);
         break;
     default:
-        if(! _gl_is_valid_func (dispatch.Uniform4iv))
+        if(! _gl_is_valid_func (dispatch.glUniform4iv))
             goto FINISH;
-        dispatch.Uniform4iv (location, count, value);
+        dispatch.glUniform4iv (location, count, value);
         break;
     }
 
@@ -3573,14 +3573,14 @@ exposed_to_tests void _gl_use_program (GLuint program)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.UseProgram) &&
+    if (_gl_is_valid_func (dispatch.glUseProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
         if (egl_state->state.current_program == program)
             return;
 
-        dispatch.UseProgram (program);
+        dispatch.glUseProgram (program);
         /* FIXME: this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
         egl_state->state.current_program = program;
@@ -3593,11 +3593,11 @@ exposed_to_tests void _gl_validate_program (GLuint program)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ValidateProgram) &&
+    if (_gl_is_valid_func (dispatch.glValidateProgram) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ValidateProgram (program);
+        dispatch.glValidateProgram (program);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3606,7 +3606,7 @@ exposed_to_tests void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.VertexAttrib1f) &&
+    if (_gl_is_valid_func (dispatch.glVertexAttrib1f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3614,7 +3614,7 @@ exposed_to_tests void _gl_vertex_attrib1f (GLuint index, GLfloat v0)
             return;
         }
 
-        dispatch.VertexAttrib1f (index, v0);
+        dispatch.glVertexAttrib1f (index, v0);
     }
 }
 
@@ -3622,7 +3622,7 @@ exposed_to_tests void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.VertexAttrib2f) &&
+    if (_gl_is_valid_func (dispatch.glVertexAttrib2f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3630,7 +3630,7 @@ exposed_to_tests void _gl_vertex_attrib2f (GLuint index, GLfloat v0, GLfloat v1)
             return;
         }
 
-        dispatch.VertexAttrib2f (index, v0, v1);
+        dispatch.glVertexAttrib2f (index, v0, v1);
     }
 }
 
@@ -3639,7 +3639,7 @@ exposed_to_tests void _gl_vertex_attrib3f (GLuint index, GLfloat v0,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.VertexAttrib3f) &&
+    if (_gl_is_valid_func (dispatch.glVertexAttrib3f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3647,7 +3647,7 @@ exposed_to_tests void _gl_vertex_attrib3f (GLuint index, GLfloat v0,
             return;
         }
 
-        dispatch.VertexAttrib3f (index, v0, v1, v2);
+        dispatch.glVertexAttrib3f (index, v0, v1, v2);
     }
 }
 
@@ -3656,14 +3656,14 @@ exposed_to_tests void _gl_vertex_attrib4f (GLuint index, GLfloat v0, GLfloat v1,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.VertexAttrib3f) &&
+    if (_gl_is_valid_func (dispatch.glVertexAttrib3f) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
         if (_gl_index_is_too_large (&egl_state->state, index))
             return;
 
-        dispatch.VertexAttrib4f (index, v0, v1, v2, v3);
+        dispatch.glVertexAttrib4f (index, v0, v1, v2, v3);
     }
 }
 
@@ -3682,24 +3682,24 @@ _gl_vertex_attrib_fv (int i, GLuint index, const GLfloat *v)
 
     switch (i) {
         case 1:
-            if(! _gl_is_valid_func (dispatch.VertexAttrib1fv))
+            if(! _gl_is_valid_func (dispatch.glVertexAttrib1fv))
                 goto FINISH;
-            dispatch.VertexAttrib1fv (index, v);
+            dispatch.glVertexAttrib1fv (index, v);
             break;
         case 2:
-            if(! _gl_is_valid_func (dispatch.VertexAttrib2fv))
+            if(! _gl_is_valid_func (dispatch.glVertexAttrib2fv))
                 goto FINISH;
-            dispatch.VertexAttrib2fv (index, v);
+            dispatch.glVertexAttrib2fv (index, v);
             break;
         case 3:
-            if(! _gl_is_valid_func (dispatch.VertexAttrib3fv))
+            if(! _gl_is_valid_func (dispatch.glVertexAttrib3fv))
                 goto FINISH;
-            dispatch.VertexAttrib3fv (index, v);
+            dispatch.glVertexAttrib3fv (index, v);
             break;
         default:
-            if(! _gl_is_valid_func (dispatch.VertexAttrib4fv))
+            if(! _gl_is_valid_func (dispatch.glVertexAttrib4fv))
                 goto FINISH;
-            dispatch.VertexAttrib4fv (index, v);
+            dispatch.glVertexAttrib4fv (index, v);
             break;
     }
 
@@ -3745,7 +3745,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (GLuint index, GLint size,
     int n = 0;
     GLint bound_buffer = 0;
 
-    if (_gl_is_valid_func (dispatch.VertexAttribPointer) &&
+    if (_gl_is_valid_func (dispatch.glVertexAttribPointer) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -3773,7 +3773,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (GLuint index, GLint size,
         
 #ifdef GL_OES_vertex_array_object
         if (egl_state->state.vertex_array_binding) {
-            dispatch.VertexAttribPointer (index, size, type, normalized,
+            dispatch.glVertexAttribPointer (index, size, type, normalized,
                                           stride, pointer);
             //egl_state->state.need_get_error = true;
             return;
@@ -3800,7 +3800,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (GLuint index, GLint size,
 
         /* use array_buffer? */
         if (bound_buffer) {
-            dispatch.VertexAttribPointer (index, size, type, normalized,
+            dispatch.glVertexAttribPointer (index, size, type, normalized,
                                           stride, pointer);
             //egl_state->state.need_get_error = true;
         }
@@ -3857,7 +3857,7 @@ exposed_to_tests void _gl_viewport (GLint x, GLint y, GLsizei width, GLsizei hei
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.Viewport) &&
+    if (_gl_is_valid_func (dispatch.glViewport) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3877,7 +3877,7 @@ exposed_to_tests void _gl_viewport (GLint x, GLint y, GLsizei width, GLsizei hei
         egl_state->state.viewport[2] = width;
         egl_state->state.viewport[3] = height;
 
-        dispatch.Viewport (x, y, width, height);
+        dispatch.glViewport (x, y, width, height);
     }
 }
 /* end of GLES2 core profile */
@@ -3888,7 +3888,7 @@ _gl_egl_image_target_texture_2d_oes (GLenum target, GLeglImageOES image)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.EGLImageTargetTexture2DOES) &&
+    if (_gl_is_valid_func (dispatch.glEGLImageTargetTexture2DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3897,7 +3897,7 @@ _gl_egl_image_target_texture_2d_oes (GLenum target, GLeglImageOES image)
             return;
         }
 
-        dispatch.EGLImageTargetTexture2DOES (target, image);
+        dispatch.glEGLImageTargetTexture2DOES (target, image);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3908,7 +3908,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (GLenum target,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.EGLImageTargetRenderbufferStorageOES) &&
+    if (_gl_is_valid_func (dispatch.glEGLImageTargetRenderbufferStorageOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 #ifndef HAS_GLES2
@@ -3918,7 +3918,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (GLenum target,
         }
 #endif
 
-        dispatch.EGLImageTargetRenderbufferStorageOES (target, image);
+        dispatch.glEGLImageTargetRenderbufferStorageOES (target, image);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3932,11 +3932,11 @@ _gl_get_program_binary_oes (GLuint program, GLsizei bufSize,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.GetProgramBinaryOES) &&
+    if (_gl_is_valid_func (dispatch.glGetProgramBinaryOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetProgramBinaryOES (program, bufSize, length, 
+        dispatch.glGetProgramBinaryOES (program, bufSize, length, 
                                       binaryFormat, binary);
         egl_state->state.need_get_error = true;
     }
@@ -3948,11 +3948,11 @@ _gl_program_binary_oes (GLuint program, GLenum binaryFormat,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (dispatch.ProgramBinaryOES) &&
+    if (_gl_is_valid_func (dispatch.glProgramBinaryOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ProgramBinaryOES (program, binaryFormat, binary, length);
+        dispatch.glProgramBinaryOES (program, binaryFormat, binary, length);
         egl_state->state.need_get_error = true;
     }
 
@@ -3968,7 +3968,7 @@ _gl_map_buffer_oes (GLenum target, GLenum access)
     egl_state_t *egl_state;
     void *result = NULL;
     
-    if (_gl_is_valid_func (dispatch.MapBufferOES) &&
+    if (_gl_is_valid_func (dispatch.glMapBufferOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -3982,7 +3982,7 @@ _gl_map_buffer_oes (GLenum target, GLenum access)
             return result;
         }
 
-        result = dispatch.MapBufferOES (target, access);
+        result = dispatch.glMapBufferOES (target, access);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -3994,7 +3994,7 @@ _gl_unmap_buffer_oes (GLenum target)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.UnmapBufferOES) &&
+    if (_gl_is_valid_func (dispatch.glUnmapBufferOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4004,7 +4004,7 @@ _gl_unmap_buffer_oes (GLenum target)
             return result;
         }
 
-        result = dispatch.UnmapBufferOES (target);
+        result = dispatch.glUnmapBufferOES (target);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4015,7 +4015,7 @@ _gl_get_buffer_pointerv_oes (GLenum target, GLenum pname, GLvoid **params)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetBufferPointervOES) &&
+    if (_gl_is_valid_func (dispatch.glGetBufferPointervOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4025,7 +4025,7 @@ _gl_get_buffer_pointerv_oes (GLenum target, GLenum pname, GLvoid **params)
             return;
         }
 
-        dispatch.GetBufferPointervOES (target, pname, params);
+        dispatch.glGetBufferPointervOES (target, pname, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4040,11 +4040,11 @@ _gl_tex_image_3d_oes (GLenum target, GLint level, GLenum internalformat,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.TexImage3DOES) &&
+    if (_gl_is_valid_func (dispatch.glTexImage3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.TexImage3DOES (target, level, internalformat, 
+        dispatch.glTexImage3DOES (target, level, internalformat, 
                                 width, height, depth, 
                                 border, format, type, pixels);
         egl_state->state.need_get_error = true;
@@ -4061,11 +4061,11 @@ _gl_tex_sub_image_3d_oes (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.TexSubImage3DOES) &&
+    if (_gl_is_valid_func (dispatch.glTexSubImage3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.TexSubImage3DOES (target, level, 
+        dispatch.glTexSubImage3DOES (target, level, 
                                    xoffset, yoffset, zoffset,
                                    width, height, depth, 
                                    format, type, data);
@@ -4083,11 +4083,11 @@ _gl_copy_tex_sub_image_3d_oes (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.CopyTexSubImage3DOES) &&
+    if (_gl_is_valid_func (dispatch.glCopyTexSubImage3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CopyTexSubImage3DOES (target, level,
+        dispatch.glCopyTexSubImage3DOES (target, level,
                                        xoffset, yoffset, zoffset,
                                        x, y, width, height);
 
@@ -4105,11 +4105,11 @@ _gl_compressed_tex_image_3d_oes (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.CompressedTexImage3DOES) &&
+    if (_gl_is_valid_func (dispatch.glCompressedTexImage3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CompressedTexImage3DOES (target, level, internalformat,
+        dispatch.glCompressedTexImage3DOES (target, level, internalformat,
                                           width, height, depth,
                                           border, imageSize, data);
 
@@ -4130,11 +4130,11 @@ _gl_compressed_tex_sub_image_3d_oes (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.CompressedTexSubImage3DOES) &&
+    if (_gl_is_valid_func (dispatch.glCompressedTexSubImage3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
-        dispatch.CompressedTexSubImage3DOES (target, level,
+        dispatch.glCompressedTexSubImage3DOES (target, level,
                                              xoffset, yoffset, zoffset,
                                              width, height, depth,
                                              format, imageSize, data);
@@ -4153,7 +4153,7 @@ _gl_framebuffer_texture_3d_oes (GLenum target, GLenum attachment,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.FramebufferTexture3DOES) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferTexture3DOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4162,7 +4162,7 @@ _gl_framebuffer_texture_3d_oes (GLenum target, GLenum attachment,
             return;
         }
 
-        dispatch.FramebufferTexture3DOES (target, attachment, textarget,
+        dispatch.glFramebufferTexture3DOES (target, attachment, textarget,
                                           texture, level, zoffset);
         egl_state->state.need_get_error = true;
     }
@@ -4185,14 +4185,14 @@ _gl_bind_vertex_array_oes (GLuint array)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.BindVertexArrayOES) &&
+    if (_gl_is_valid_func (dispatch.glBindVertexArrayOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
 
         if (egl_state->state.vertex_array_binding == array)
             return;
 
-        dispatch.BindVertexArrayOES (array);
+        dispatch.glBindVertexArrayOES (array);
         egl_state->state.need_get_error = true;
         /* FIXME: should we save this ? */
         egl_state->state.vertex_array_binding = array;
@@ -4205,7 +4205,7 @@ _gl_delete_vertex_arrays_oes (GLsizei n, const GLuint *arrays)
     egl_state_t *egl_state;
     int i;
 
-    if (_gl_is_valid_func (dispatch.DeleteVertexArraysOES) &&
+    if (_gl_is_valid_func (dispatch.glDeleteVertexArraysOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4214,7 +4214,7 @@ _gl_delete_vertex_arrays_oes (GLsizei n, const GLuint *arrays)
             goto FINISH;
         }
 
-        dispatch.DeleteVertexArraysOES (n, arrays);
+        dispatch.glDeleteVertexArraysOES (n, arrays);
 
         /* matching vertex_array_binding ? */
         for (i = 0; i < n; i++) {
@@ -4235,7 +4235,7 @@ _gl_gen_vertex_arrays_oes (GLsizei n, GLuint *arrays)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GenVertexArraysOES) &&
+    if (_gl_is_valid_func (dispatch.glGenVertexArraysOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4244,7 +4244,7 @@ _gl_gen_vertex_arrays_oes (GLsizei n, GLuint *arrays)
             return;
         }
 
-        dispatch.GenVertexArraysOES (n, arrays);
+        dispatch.glGenVertexArraysOES (n, arrays);
     }
 }
 
@@ -4254,11 +4254,11 @@ _gl_is_vertex_array_oes (GLuint array)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsVertexArrayOES) &&
+    if (_gl_is_valid_func (dispatch.glIsVertexArrayOES) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        result = dispatch.IsVertexArrayOES (array);
+        result = dispatch.glIsVertexArrayOES (array);
 
         if (result == GL_FALSE && 
             egl_state->state.vertex_array_binding == array)
@@ -4275,11 +4275,11 @@ _gl_get_perf_monitor_groups_amd (GLint *numGroups, GLsizei groupSize,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorGroupsAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorGroupsAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
+        dispatch.glGetPerfMonitorGroupsAMD (numGroups, groupSize, groups);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4292,11 +4292,11 @@ _gl_get_perf_monitor_counters_amd (GLuint group, GLint *numCounters,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorCountersAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorCountersAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorCountersAMD (group, numCounters,
+        dispatch.glGetPerfMonitorCountersAMD (group, numCounters,
                                             maxActiveCounters,
                                             counterSize, counters);
         egl_state->state.need_get_error = true;
@@ -4310,11 +4310,11 @@ _gl_get_perf_monitor_group_string_amd (GLuint group, GLsizei bufSize,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorGroupStringAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorGroupStringAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorGroupStringAMD (group, bufSize, length,
+        dispatch.glGetPerfMonitorGroupStringAMD (group, bufSize, length,
                                                groupString);
         egl_state->state.need_get_error = true;
     }
@@ -4328,11 +4328,11 @@ _gl_get_perf_monitor_counter_string_amd (GLuint group, GLuint counter,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterStringAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorCounterStringAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorCounterStringAMD (group, counter, bufSize, 
+        dispatch.glGetPerfMonitorCounterStringAMD (group, counter, bufSize, 
                                                  length, counterString);
         egl_state->state.need_get_error = true;
     }
@@ -4344,11 +4344,11 @@ _gl_get_perf_monitor_counter_info_amd (GLuint group, GLuint counter,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterInfoAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorCounterInfoAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorCounterInfoAMD (group, counter, 
+        dispatch.glGetPerfMonitorCounterInfoAMD (group, counter, 
                                                pname, data); 
         egl_state->state.need_get_error = true;
     }
@@ -4359,11 +4359,11 @@ _gl_gen_perf_monitors_amd (GLsizei n, GLuint *monitors)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GenPerfMonitorsAMD) &&
+    if (_gl_is_valid_func (dispatch.glGenPerfMonitorsAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GenPerfMonitorsAMD (n, monitors); 
+        dispatch.glGenPerfMonitorsAMD (n, monitors); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4373,11 +4373,11 @@ _gl_delete_perf_monitors_amd (GLsizei n, GLuint *monitors)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.DeletePerfMonitorsAMD) &&
+    if (_gl_is_valid_func (dispatch.glDeletePerfMonitorsAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.DeletePerfMonitorsAMD (n, monitors); 
+        dispatch.glDeletePerfMonitorsAMD (n, monitors); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4389,11 +4389,11 @@ _gl_select_perf_monitor_counters_amd (GLuint monitor, GLboolean enable,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.SelectPerfMonitorCountersAMD) &&
+    if (_gl_is_valid_func (dispatch.glSelectPerfMonitorCountersAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.SelectPerfMonitorCountersAMD (monitor, enable, group,
+        dispatch.glSelectPerfMonitorCountersAMD (monitor, enable, group,
                                                numCounters, countersList); 
         egl_state->state.need_get_error = true;
     }
@@ -4404,11 +4404,11 @@ _gl_begin_perf_monitor_amd (GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.BeginPerfMonitorAMD) &&
+    if (_gl_is_valid_func (dispatch.glBeginPerfMonitorAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.BeginPerfMonitorAMD (monitor); 
+        dispatch.glBeginPerfMonitorAMD (monitor); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4418,11 +4418,11 @@ _gl_end_perf_monitor_amd (GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.EndPerfMonitorAMD) &&
+    if (_gl_is_valid_func (dispatch.glEndPerfMonitorAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.EndPerfMonitorAMD (monitor); 
+        dispatch.glEndPerfMonitorAMD (monitor); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4434,11 +4434,11 @@ _gl_get_perf_monitor_counter_data_amd (GLuint monitor, GLenum pname,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetPerfMonitorCounterDataAMD) &&
+    if (_gl_is_valid_func (dispatch.glGetPerfMonitorCounterDataAMD) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.GetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
+        dispatch.glGetPerfMonitorCounterDataAMD (monitor, pname, dataSize,
                                                data, bytesWritten); 
         egl_state->state.need_get_error = true;
     }
@@ -4455,11 +4455,11 @@ _gl_blit_framebuffer_angle (GLint srcX0, GLint srcY0,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.BlitFramebufferANGLE) &&
+    if (_gl_is_valid_func (dispatch.glBlitFramebufferANGLE) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.BlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
+        dispatch.glBlitFramebufferANGLE (srcX0, srcY0, srcX1, srcY1,
                                        dstX0, dstY0, dstX1, dstY1,
                                        mask, filter);
         egl_state->state.need_get_error = true;
@@ -4475,11 +4475,11 @@ _gl_renderbuffer_storage_multisample_angle (GLenum target, GLsizei samples,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleANGLE) &&
+    if (_gl_is_valid_func (dispatch.glRenderbufferStorageMultisampleANGLE) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.RenderbufferStorageMultisampleANGLE (target, samples,
+        dispatch.glRenderbufferStorageMultisampleANGLE (target, samples,
                                                       internalformat,
                                                       width, height);
         egl_state->state.need_get_error = true;
@@ -4495,11 +4495,11 @@ _gl_renderbuffer_storage_multisample_apple (GLenum target, GLsizei samples,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleAPPLE) &&
+    if (_gl_is_valid_func (dispatch.glRenderbufferStorageMultisampleAPPLE) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.RenderbufferStorageMultisampleAPPLE (target, samples,
+        dispatch.glRenderbufferStorageMultisampleAPPLE (target, samples,
                                                       internalformat,
                                                       width, height);
         egl_state->state.need_get_error = true;
@@ -4511,11 +4511,11 @@ gl_resolve_multisample_framebuffer_apple (void)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ResolveMultisampleFramebufferAPPLE) &&
+    if (_gl_is_valid_func (dispatch.glResolveMultisampleFramebufferAPPLE) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.ResolveMultisampleFramebufferAPPLE ();
+        dispatch.glResolveMultisampleFramebufferAPPLE ();
         egl_state->state.need_get_error = true;
     }
 }
@@ -4529,7 +4529,7 @@ gl_discard_framebuffer_ext (GLenum target, GLsizei numAttachments,
     egl_state_t *egl_state;
     int i;
 
-    if (_gl_is_valid_func (dispatch.DiscardFramebufferEXT) &&
+    if (_gl_is_valid_func (dispatch.glDiscardFramebufferEXT) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4549,7 +4549,7 @@ gl_discard_framebuffer_ext (GLenum target, GLsizei numAttachments,
                 goto FINISH;
             }
         }
-        dispatch.DiscardFramebufferEXT (target, numAttachments, 
+        dispatch.glDiscardFramebufferEXT (target, numAttachments, 
                                         attachments);
     }
 FINISH:
@@ -4582,11 +4582,11 @@ _gl_renderbuffer_storage_multisample_ext (GLenum target, GLsizei samples,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleEXT) &&
+    if (_gl_is_valid_func (dispatch.glRenderbufferStorageMultisampleEXT) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.RenderbufferStorageMultisampleEXT (target, samples, 
+        dispatch.glRenderbufferStorageMultisampleEXT (target, samples, 
                                                     internalformat, 
                                                     width, height);
         egl_state->state.need_get_error = true;
@@ -4602,7 +4602,7 @@ _gl_framebuffer_texture_2d_multisample_ext (GLenum target,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.FramebufferTexture2DMultisampleEXT) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferTexture2DMultisampleEXT) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4611,7 +4611,7 @@ _gl_framebuffer_texture_2d_multisample_ext (GLenum target,
            return;
         }
 
-        dispatch.FramebufferTexture2DMultisampleEXT (target, attachment, 
+        dispatch.glFramebufferTexture2DMultisampleEXT (target, attachment, 
                                                      textarget, texture, 
                                                      level, samples);
         egl_state->state.need_get_error = true;
@@ -4627,11 +4627,11 @@ _gl_renderbuffer_storage_multisample_img (GLenum target, GLsizei samples,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.RenderbufferStorageMultisampleIMG) &&
+    if (_gl_is_valid_func (dispatch.glRenderbufferStorageMultisampleIMG) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
-        dispatch.RenderbufferStorageMultisampleIMG (target, samples, 
+        dispatch.glRenderbufferStorageMultisampleIMG (target, samples, 
                                                     internalformat, 
                                                     width, height);
         egl_state->state.need_get_error = true;
@@ -4647,7 +4647,7 @@ _gl_framebuffer_texture_2d_multisample_img (GLenum target,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.FramebufferTexture2DMultisampleIMG) &&
+    if (_gl_is_valid_func (dispatch.glFramebufferTexture2DMultisampleIMG) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4656,7 +4656,7 @@ _gl_framebuffer_texture_2d_multisample_img (GLenum target,
            return;
         }
 
-        dispatch.FramebufferTexture2DMultisampleIMG (target, attachment,
+        dispatch.glFramebufferTexture2DMultisampleIMG (target, attachment,
                                                      textarget, texture,
                                                      level, samples);
         egl_state->state.need_get_error = true;
@@ -4670,7 +4670,7 @@ _gl_delete_fences_nv (GLsizei n, const GLuint *fences)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.DeleteFencesNV) &&
+    if (_gl_is_valid_func (dispatch.glDeleteFencesNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4679,7 +4679,7 @@ _gl_delete_fences_nv (GLsizei n, const GLuint *fences)
             goto FINISH;
         }
     
-        dispatch.DeleteFencesNV (n, fences); 
+        dispatch.glDeleteFencesNV (n, fences); 
         egl_state->state.need_get_error = true;
     }
 FINISH:
@@ -4692,7 +4692,7 @@ _gl_gen_fences_nv (GLsizei n, GLuint *fences)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GenFencesNV) &&
+    if (_gl_is_valid_func (dispatch.glGenFencesNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4701,7 +4701,7 @@ _gl_gen_fences_nv (GLsizei n, GLuint *fences)
             return;
         }
     
-        dispatch.GenFencesNV (n, fences); 
+        dispatch.glGenFencesNV (n, fences); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4712,11 +4712,11 @@ _gl_is_fence_nv (GLuint fence)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.IsFenceNV) &&
+    if (_gl_is_valid_func (dispatch.glIsFenceNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = dispatch.IsFenceNV (fence);
+        result = dispatch.glIsFenceNV (fence);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4728,11 +4728,11 @@ _gl_test_fence_nv (GLuint fence)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (dispatch.TestFenceNV) &&
+    if (_gl_is_valid_func (dispatch.glTestFenceNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = dispatch.TestFenceNV (fence);
+        result = dispatch.glTestFenceNV (fence);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4743,11 +4743,11 @@ _gl_get_fenceiv_nv (GLuint fence, GLenum pname, int *params)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetFenceivNV) &&
+    if (_gl_is_valid_func (dispatch.glGetFenceivNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetFenceivNV (fence, pname, params);
+        dispatch.glGetFenceivNV (fence, pname, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4757,11 +4757,11 @@ _gl_finish_fence_nv (GLuint fence)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.FinishFenceNV) &&
+    if (_gl_is_valid_func (dispatch.glFinishFenceNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.FinishFenceNV (fence);
+        dispatch.glFinishFenceNV (fence);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4771,11 +4771,11 @@ _gl_set_fence_nv (GLuint fence, GLenum condition)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.SetFenceNV) &&
+    if (_gl_is_valid_func (dispatch.glSetFenceNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.SetFenceNV (fence, condition);
+        dispatch.glSetFenceNV (fence, condition);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4787,11 +4787,11 @@ _gl_coverage_mask_nv (GLboolean mask)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.CoverageMaskNV) &&
+    if (_gl_is_valid_func (dispatch.glCoverageMaskNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.CoverageMaskNV (mask);
+        dispatch.glCoverageMaskNV (mask);
     }
 }
 
@@ -4800,7 +4800,7 @@ _gl_coverage_operation_nv (GLenum operation)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.CoverageOperationNV) &&
+    if (_gl_is_valid_func (dispatch.glCoverageOperationNV) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4811,7 +4811,7 @@ _gl_coverage_operation_nv (GLenum operation)
             return;
         }
 
-        dispatch.CoverageOperationNV (operation);
+        dispatch.glCoverageOperationNV (operation);
     }
 }
 #endif
@@ -4823,11 +4823,11 @@ _gl_get_driver_controls_qcom (GLint *num, GLsizei size,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetDriverControlsQCOM) &&
+    if (_gl_is_valid_func (dispatch.glGetDriverControlsQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetDriverControlsQCOM (num, size, driverControls);
+        dispatch.glGetDriverControlsQCOM (num, size, driverControls);
     }
 }
 
@@ -4838,11 +4838,11 @@ _gl_get_driver_control_string_qcom (GLuint driverControl, GLsizei bufSize,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.GetDriverControlStringQCOM) &&
+    if (_gl_is_valid_func (dispatch.glGetDriverControlStringQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.GetDriverControlStringQCOM (driverControl, bufSize,
+        dispatch.glGetDriverControlStringQCOM (driverControl, bufSize,
                                              length, driverControlString);
         egl_state->state.need_get_error = true;
     }
@@ -4853,11 +4853,11 @@ _gl_enable_driver_control_qcom (GLuint driverControl)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.EnableDriverControlQCOM) &&
+    if (_gl_is_valid_func (dispatch.glEnableDriverControlQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.EnableDriverControlQCOM (driverControl);
+        dispatch.glEnableDriverControlQCOM (driverControl);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4867,11 +4867,11 @@ _gl_disable_driver_control_qcom (GLuint driverControl)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.DisableDriverControlQCOM) &&
+    if (_gl_is_valid_func (dispatch.glDisableDriverControlQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.DisableDriverControlQCOM (driverControl);
+        dispatch.glDisableDriverControlQCOM (driverControl);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4884,11 +4884,11 @@ _gl_ext_get_textures_qcom (GLuint *textures, GLint maxTextures,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetTexturesQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetTexturesQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetTexturesQCOM (textures, maxTextures, numTextures);
+        dispatch.glExtGetTexturesQCOM (textures, maxTextures, numTextures);
     }
 }
 
@@ -4898,11 +4898,11 @@ _gl_ext_get_buffers_qcom (GLuint *buffers, GLint maxBuffers,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetBuffersQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetBuffersQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetBuffersQCOM (buffers, maxBuffers, numBuffers);
+        dispatch.glExtGetBuffersQCOM (buffers, maxBuffers, numBuffers);
     }
 }
 
@@ -4913,11 +4913,11 @@ _gl_ext_get_renderbuffers_qcom (GLuint *renderbuffers,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetRenderbuffersQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetRenderbuffersQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetRenderbuffersQCOM (renderbuffers, maxRenderbuffers,
+        dispatch.glExtGetRenderbuffersQCOM (renderbuffers, maxRenderbuffers,
                                           numRenderbuffers);
     }
 }
@@ -4928,11 +4928,11 @@ _gl_ext_get_framebuffers_qcom (GLuint *framebuffers, GLint maxFramebuffers,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetFramebuffersQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetFramebuffersQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetFramebuffersQCOM (framebuffers, maxFramebuffers,
+        dispatch.glExtGetFramebuffersQCOM (framebuffers, maxFramebuffers,
                                          numFramebuffers);
     }
 }
@@ -4944,11 +4944,11 @@ _gl_ext_get_tex_level_parameteriv_qcom (GLuint texture, GLenum face,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetTexLevelParameterivQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetTexLevelParameterivQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetTexLevelParameterivQCOM (texture, face, level,
+        dispatch.glExtGetTexLevelParameterivQCOM (texture, face, level,
                                                 pname, params);
         egl_state->state.need_get_error = true;
     }
@@ -4960,11 +4960,11 @@ _gl_ext_tex_object_state_overridei_qcom (GLenum target, GLenum pname,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtTexObjectStateOverrideiQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtTexObjectStateOverrideiQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtTexObjectStateOverrideiQCOM (target, pname, param);
+        dispatch.glExtTexObjectStateOverrideiQCOM (target, pname, param);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4979,11 +4979,11 @@ _gl_ext_get_tex_sub_image_qcom (GLenum target, GLint level,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetTexSubImageQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetTexSubImageQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetTexSubImageQCOM (target, level,
+        dispatch.glExtGetTexSubImageQCOM (target, level,
                                         xoffset, yoffset, zoffset,
                                         width, height, depth,
                                         format, type, texels);
@@ -4996,11 +4996,11 @@ _gl_ext_get_buffer_pointerv_qcom (GLenum target, GLvoid **params)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetBufferPointervQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetBufferPointervQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetBufferPointervQCOM (target, params);
+        dispatch.glExtGetBufferPointervQCOM (target, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5013,11 +5013,11 @@ _gl_ext_get_shaders_qcom (GLuint *shaders, GLint maxShaders,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetShadersQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetShadersQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetShadersQCOM (shaders, maxShaders, numShaders);
+        dispatch.glExtGetShadersQCOM (shaders, maxShaders, numShaders);
     }
 }
 
@@ -5027,11 +5027,11 @@ _gl_ext_get_programs_qcom (GLuint *programs, GLint maxPrograms,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetProgramsQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetProgramsQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetProgramsQCOM (programs, maxPrograms, numPrograms);
+        dispatch.glExtGetProgramsQCOM (programs, maxPrograms, numPrograms);
     }
 }
 
@@ -5041,11 +5041,11 @@ _gl_ext_is_program_binary_qcom (GLuint program)
     egl_state_t *egl_state;
     bool result = false;
 
-    if (_gl_is_valid_func (dispatch.ExtIsProgramBinaryQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtIsProgramBinaryQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = dispatch.ExtIsProgramBinaryQCOM (program);
+        result = dispatch.glExtIsProgramBinaryQCOM (program);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -5057,11 +5057,11 @@ _gl_ext_get_program_binary_source_qcom (GLuint program, GLenum shadertype,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.ExtGetProgramBinarySourceQCOM) &&
+    if (_gl_is_valid_func (dispatch.glExtGetProgramBinarySourceQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.ExtGetProgramBinarySourceQCOM (program, shadertype,
+        dispatch.glExtGetProgramBinarySourceQCOM (program, shadertype,
                                                 source, length);
         egl_state->state.need_get_error = true;
     }
@@ -5075,11 +5075,11 @@ _gl_start_tiling_qcom (GLuint x, GLuint y, GLuint width, GLuint height,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.StartTilingQCOM) &&
+    if (_gl_is_valid_func (dispatch.glStartTilingQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.StartTilingQCOM (x, y, width, height, preserveMask);
+        dispatch.glStartTilingQCOM (x, y, width, height, preserveMask);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5089,11 +5089,11 @@ _gl_end_tiling_qcom (GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (dispatch.EndTilingQCOM) &&
+    if (_gl_is_valid_func (dispatch.glEndTilingQCOM) &&
         _gl_is_valid_context ()) {
         egl_state = (egl_state_t *) active_state->data;
     
-        dispatch.EndTilingQCOM (preserveMask);
+        dispatch.glEndTilingQCOM (preserveMask);
         egl_state->state.need_get_error = true;
     }
 }

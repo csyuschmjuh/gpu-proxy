@@ -516,7 +516,7 @@ _egl_copy_buffers (EGLDisplay display,
 static __eglMustCastToProperFunctionPointerType
 _egl_get_proc_address (const char *procname)
 {
-    return dispatch.GetProcAddress (procname);
+    return dispatch.eglGetProcAddress (procname);
 }
 
 exposed_to_tests EGLBoolean 
