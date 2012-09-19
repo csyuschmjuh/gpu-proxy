@@ -24,9 +24,6 @@ libGPUProcess_la_SOURCES = \
 	command_buffer_server.c \
 	compiler_private.h \
 	dispatch_private.h \
-	dispatch_private_desktop.h \
-	dispatch_private_gles2.h \
-	dispatch.c \
 	gl_server_private.h \
 	gl_states.h \
 	name_handler.h \
@@ -44,6 +41,8 @@ nodist_libGPUProcess_la_SOURCES = \
 
 if HAS_GL
 libGPUProcess_la_SOURCES += \
+	dispatch_desktop.c \
+	dispatch_private_desktop.h \
 	glx_states.h
 endif
 
@@ -52,6 +51,8 @@ libGPUProcess_la_SOURCES += \
 	client/egl_api.c \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
+	dispatch_gles2.c \
+	dispatch_private_gles2.h \
 	egl_server.c \
 	egl_server_private.h \
 	egl_server_helper.c \

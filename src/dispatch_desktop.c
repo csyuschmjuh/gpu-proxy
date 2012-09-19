@@ -1,18 +1,8 @@
 #include "dispatch_private.h"
-#include <assert.h>
 #include <dlfcn.h>
 #include <stdlib.h>
 
-//These lib names should be defined by autotools
-#ifdef HAS_GL
-#define LIBNAME_GL "libGL.so"
-#else
-#define LIBNAME_GL "libGLESv2.so"
-#define LIBNAME_EGL "libEGL.so"
-#endif
-
 #define DISPATCH_ENTRY_GLX(entryName) dispatch->entryName = dlsym(gl_handle, #entryName)
-#define DISPATCH_ENTRY_EGL(entryName) dispatch->entryName = dlsym(egl_handle, #entryName)
 #define DISPATCH_ENTRY_GL(entryName) find_gl_symbol(gl_handle, dispatch, (FunctionPointerType*) &dispatch->entryName, #entryName, #entryName"ARG", #entryName"EXT")
 
 static void
@@ -48,27 +38,14 @@ find_gl_symbol(void *handle,
 static const char *
 dispatch_libgl ()
 {
-#if HAS_GL
+    static const char *default_libgl_name = "libGL.so";
     const char *libgl = getenv ("GPUPROCESS_LIBGL_PATH");
-#else
-    const char *libgl = getenv ("GPUPROCESS_LIBGLES_PATH");
-#endif
-    return ! libgl ? LIBNAME_GL : libgl;
+    return ! libgl ? default_libgl_name : libgl;
 }
-
-#if HAS_GLES2
-static const char *
-dispatch_libegl ()
-{
-    const char *libegl = getenv ("GPUPROCESS_LIBEGL_PATH");
-    return ! libegl ? LIBNAME_EGL : libegl;
-}
-#endif
 
 void
 dispatch_init(dispatch_t *dispatch)
 {
-#ifdef HAS_GL
     void *gl_handle = dlopen (dispatch_libgl (), RTLD_LAZY | RTLD_DEEPBIND);
     DISPATCH_ENTRY_GLX (glXChooseVisual);
     DISPATCH_ENTRY_GLX (glXCreateContext);
@@ -125,92 +102,6 @@ dispatch_init(dispatch_t *dispatch)
 #ifdef GLX_EXT_texture_from_pixmap
     DISPATCH_ENTRY_GLX (glXBindTexImageEXT);
     DISPATCH_ENTRY_GLX (glXReleaseTexImageEXT);
-#endif
-
-#else
-    void *egl_handle = dlopen (dispatch_libegl (), RTLD_LAZY | RTLD_DEEPBIND);
-    void *gl_handle = dlopen (dispatch_libgl (), RTLD_LAZY | RTLD_DEEPBIND);
-    DISPATCH_ENTRY_EGL (eglGetError);
-    DISPATCH_ENTRY_EGL (eglGetDisplay);
-    DISPATCH_ENTRY_EGL (eglInitialize);
-    DISPATCH_ENTRY_EGL (eglTerminate);
-    DISPATCH_ENTRY_EGL (eglQueryString);
-    DISPATCH_ENTRY_EGL (eglGetConfigs);
-    DISPATCH_ENTRY_EGL (eglChooseConfig);
-    DISPATCH_ENTRY_EGL (eglGetConfigAttrib);
-    DISPATCH_ENTRY_EGL (eglCreateWindowSurface);
-    DISPATCH_ENTRY_EGL (eglCreatePbufferSurface);
-    DISPATCH_ENTRY_EGL (eglCreatePixmapSurface);
-    DISPATCH_ENTRY_EGL (eglDestroySurface);
-    DISPATCH_ENTRY_EGL (eglQuerySurface);
-    DISPATCH_ENTRY_EGL (eglBindAPI);
-    DISPATCH_ENTRY_EGL (eglQueryAPI);
-    DISPATCH_ENTRY_EGL (eglWaitClient);
-    DISPATCH_ENTRY_EGL (eglReleaseThread);
-    DISPATCH_ENTRY_EGL (eglCreatePbufferFromClientBuffer);
-    DISPATCH_ENTRY_EGL (eglSurfaceAttrib);
-    DISPATCH_ENTRY_EGL (eglBindTexImage);
-    DISPATCH_ENTRY_EGL (eglReleaseTexImage);
-    DISPATCH_ENTRY_EGL (eglSwapInterval);
-    DISPATCH_ENTRY_EGL (eglCreateContext);
-    DISPATCH_ENTRY_EGL (eglDestroyContext);
-    DISPATCH_ENTRY_EGL (eglMakeCurrent);
-    DISPATCH_ENTRY_EGL (eglGetCurrentContext);
-    DISPATCH_ENTRY_EGL (eglGetCurrentSurface);
-    DISPATCH_ENTRY_EGL (eglGetCurrentDisplay);
-    DISPATCH_ENTRY_EGL (eglQueryContext);
-    DISPATCH_ENTRY_EGL (eglWaitGL);
-    DISPATCH_ENTRY_EGL (eglWaitNative);
-    DISPATCH_ENTRY_EGL (eglSwapBuffers);
-    DISPATCH_ENTRY_EGL (eglCopyBuffers);
-
-#ifdef EGL_KHR_lock_surface
-    DISPATCH_ENTRY_EGL (eglLockSurfaceKHR);
-    DISPATCH_ENTRY_EGL (eglUnlockSurfaceKHR);
-#endif
-
-#ifdef EGL_KHR_image
-    DISPATCH_ENTRY_EGL (eglCreateImageKHR);
-    DISPATCH_ENTRY_EGL (eglDestroyImageKHR);
-#endif
-
-#ifdef EGL_KHR_reusable_sync
-    DISPATCH_ENTRY_EGL (eglCreateSyncKHR);
-    DISPATCH_ENTRY_EGL (eglDestroySyncKHR);
-    DISPATCH_ENTRY_EGL (eglClientWaitSyncKHR);
-    DISPATCH_ENTRY_EGL (eglSignalSyncKHR);
-    DISPATCH_ENTRY_EGL (eglGetSyncAttribKHR);
-#endif
-
-#ifdef EGL_NV_sync
-    DISPATCH_ENTRY_EGL (eglCreateFenceSyncNV);
-    DISPATCH_ENTRY_EGL (eglDestroySyncNV);
-    DISPATCH_ENTRY_EGL (eglFenceNV);
-    DISPATCH_ENTRY_EGL (eglClientWaitSyncNV);
-    DISPATCH_ENTRY_EGL (eglSignalSyncNV);
-    DISPATCH_ENTRY_EGL (eglGetSyncAttribNV);
-#endif
-
-#ifdef EGL_HI_clientpixmap
-    DISPATCH_ENTRY_EGL (eglCreatePixmapSurfaceHI);
-#endif
-
-#ifdef EGL_MESA_drm_image
-    DISPATCH_ENTRY_EGL (eglCreateDRMImageMESA);
-    DISPATCH_ENTRY_EGL (eglExportDRMImageMESA);
-#endif
-
-#ifdef EGL_POST_SUB_BUFFER_SUPPORTED_NV
-    DISPATCH_ENTRY_EGL (eglPostSubBufferNV);
-#endif
-
-#ifdef EGL_SEC_image_map
-    DISPATCH_ENTRY_EGL (eglMapImageSEC);
-    DISPATCH_ENTRY_EGL (eglUnmapImageSEC);
-    DISPATCH_ENTRY_EGL (eglGetImageAttribSEC);
-#endif
-
-    DISPATCH_ENTRY_EGL (eglGetProcAddress);
 #endif
 
     DISPATCH_ENTRY_GL (glActiveTexture);
@@ -356,134 +247,6 @@ dispatch_init(dispatch_t *dispatch)
     DISPATCH_ENTRY_GL (glVertexAttribPointer);
     DISPATCH_ENTRY_GL (glViewport);
 
-#ifdef HAS_GLES2
-#ifdef GL_OES_EGL_image
-    DISPATCH_ENTRY_GL (glEGLImageTargetTexture2DOES);
-    DISPATCH_ENTRY_GL (glEGLImageTargetRenderbufferStorageOES);
-#endif
-
-#ifdef GL_OES_get_program_binary
-    DISPATCH_ENTRY_GL (glGetProgramBinaryOES);
-    DISPATCH_ENTRY_GL (glProgramBinaryOES);
-#endif
-
-#ifdef GL_OES_mapbuffer
-    DISPATCH_ENTRY_GL (glMapBufferOES);
-    DISPATCH_ENTRY_GL (glUnmapBufferOES);
-    DISPATCH_ENTRY_GL (glGetBufferPointervOES);
-#endif
-
-#ifdef GL_OES_texture_3D
-    DISPATCH_ENTRY_GL (glTexImage3DOES);
-    DISPATCH_ENTRY_GL (glTexSubImage3DOES);
-    DISPATCH_ENTRY_GL (glCopyTexSubImage3DOES);
-    DISPATCH_ENTRY_GL (glCompressedTexImage3DOES);
-    DISPATCH_ENTRY_GL (glCompressedTexSubImage3DOES);
-    DISPATCH_ENTRY_GL (glFramebufferTexture3DOES);
-#endif
-
-#ifdef GL_OES_vertex_array_object
-    DISPATCH_ENTRY_GL (glBindVertexArrayOES);
-    DISPATCH_ENTRY_GL (glDeleteVertexArraysOES);
-    DISPATCH_ENTRY_GL (glGenVertexArraysOES);
-    DISPATCH_ENTRY_GL (glIsVertexArrayOES);
-#endif
-
-#ifdef GL_AMD_performance_monitor
-    DISPATCH_ENTRY_GL (glGetPerfMonitorGroupsAMD);
-    DISPATCH_ENTRY_GL (glGetPerfMonitorCountersAMD);
-    DISPATCH_ENTRY_GL (glGetPerfMonitorGroupStringAMD);
-    DISPATCH_ENTRY_GL (glGetPerfMonitorCounterStringAMD);
-    DISPATCH_ENTRY_GL (glGetPerfMonitorCounterInfoAMD);
-    DISPATCH_ENTRY_GL (glGenPerfMonitorsAMD);
-    DISPATCH_ENTRY_GL (glDeletePerfMonitorsAMD);
-    DISPATCH_ENTRY_GL (glSelectPerfMonitorCountersAMD);
-    DISPATCH_ENTRY_GL (glBeginPerfMonitorAMD);
-    DISPATCH_ENTRY_GL (glEndPerfMonitorAMD);
-    DISPATCH_ENTRY_GL (glGetPerfMonitorCounterDataAMD);
-#endif
-
-#ifdef GL_ANGLE_framebuffer_blit
-    DISPATCH_ENTRY_GL (glBlitFramebufferANGLE);
-#endif
-
-#ifdef GL_ANGLE_framebuffer_multisample
-    DISPATCH_ENTRY_GL (glRenderbufferStorageMultisampleANGLE);
-#endif
-
-#ifdef GL_APPLE_framebuffer_multisample
-    DISPATCH_ENTRY_GL (glRenderbufferStorageMultisampleAPPLE);
-    DISPATCH_ENTRY_GL (glResolveMultisampleFramebufferAPPLE);
-#endif
-
-#ifdef GL_IMG_multisampled_render_to_texture
-    DISPATCH_ENTRY_GL (glRenderbufferStorageMultisampleIMG);
-    DISPATCH_ENTRY_GL (glFramebufferTexture2DMultisampleIMG);
-#endif
-
-#ifdef GL_EXT_discard_framebuffer
-    DISPATCH_ENTRY_GL (glDiscardFramebufferEXT);
-#endif
-
-#ifdef GL_EXT_multi_draw_arrays
-    DISPATCH_ENTRY_GL (glMultiDrawArraysEXT);
-    DISPATCH_ENTRY_GL (glMultiDrawElementsEXT);
-#endif
-
-#ifdef GL_EXT_multisampled_render_to_texture
-    DISPATCH_ENTRY_GL (glRenderbufferStorageMultisampleEXT);
-    DISPATCH_ENTRY_GL (glFramebufferTexture2DMultisampleEXT);
-#endif
-
-
-#ifdef GL_NV_fence
-    DISPATCH_ENTRY_GL (glDeleteFencesNV);
-    DISPATCH_ENTRY_GL (glGenFencesNV);
-    DISPATCH_ENTRY_GL (glIsFenceNV);
-    DISPATCH_ENTRY_GL (glTestFenceNV);
-    DISPATCH_ENTRY_GL (glGetFenceivNV);
-    DISPATCH_ENTRY_GL (glFinishFenceNV);
-    DISPATCH_ENTRY_GL (glSetFenceNV);
-#endif
-
-#ifdef GL_NV_coverage_sample
-    DISPATCH_ENTRY_GL (glCoverageMaskNV);
-    DISPATCH_ENTRY_GL (glCoverageOperationNV);
-#endif
-
-#ifdef GL_QCOM_driver_control
-    DISPATCH_ENTRY_GL (glGetDriverControlsQCOM);
-    DISPATCH_ENTRY_GL (glGetDriverControlStringQCOM);
-    DISPATCH_ENTRY_GL (glEnableDriverControlQCOM);
-    DISPATCH_ENTRY_GL (glDisableDriverControlQCOM);
-#endif
-
-#ifdef GL_QCOM_extended_get
-    DISPATCH_ENTRY_GL (glExtGetTexturesQCOM);
-    DISPATCH_ENTRY_GL (glExtGetBuffersQCOM);
-    DISPATCH_ENTRY_GL (glExtGetRenderbuffersQCOM);
-    DISPATCH_ENTRY_GL (glExtGetFramebuffersQCOM);
-    DISPATCH_ENTRY_GL (glExtGetTexLevelParameterivQCOM);
-    DISPATCH_ENTRY_GL (glExtTexObjectStateOverrideiQCOM);
-    DISPATCH_ENTRY_GL (glExtGetTexSubImageQCOM);
-    DISPATCH_ENTRY_GL (glExtGetBufferPointervQCOM);
-#endif
-
-#ifdef GL_QCOM_extended_get2
-    DISPATCH_ENTRY_GL (glExtGetShadersQCOM);
-    DISPATCH_ENTRY_GL (glExtGetProgramsQCOM);
-    DISPATCH_ENTRY_GL (glExtIsProgramBinaryQCOM);
-    DISPATCH_ENTRY_GL (glExtGetProgramBinarySourceQCOM);
-#endif
-
-#ifdef GL_QCOM_tiled_rendering
-    DISPATCH_ENTRY_GL (glStartTilingQCOM);
-    DISPATCH_ENTRY_GL (glEndTilingQCOM);
-#endif
-
-#endif /* HAS_GLES2 */
-
-#ifdef HAS_GL
     DISPATCH_ENTRY_GL (glNewList);
     DISPATCH_ENTRY_GL (glEndList);
     DISPATCH_ENTRY_GL (glCallList);
@@ -1420,5 +1183,4 @@ dispatch_init(dispatch_t *dispatch)
     DISPATCH_ENTRY_GL (glGetQueryObjecti64vEXT);
     DISPATCH_ENTRY_GL (glGetQueryObjectui64vEXT);
     DISPATCH_ENTRY_GL (glEGLImageTargetRenderbufferStorageOES);
-#endif
 }
