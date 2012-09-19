@@ -1,8 +1,8 @@
 #include <stdlib.h>
 
-#include "tst_egl.h"
-#include "tst_egl2.h"
-#include "tst_gles.h"
+#include "test_egl.h"
+#include "test_egl2.h"
+#include "test_gles.h"
 
 static void run_and_clean(gpuprocess_suite_t *suite)
 {

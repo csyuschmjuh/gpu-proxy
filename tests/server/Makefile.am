@@ -14,11 +14,11 @@ gpuproxy_test_SOURCES = \
 	$(rootsrcdir)/src/gles2_server.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
-	tst_egl.c \
-	tst_egl2.h \
-	tst_egl2.c \
-	tst_gles.h \
-	tst_gles.c \
+	test_egl.c \
+	test_egl2.h \
+	test_egl2.c \
+	test_gles.h \
+	test_gles.c \
 	main.c
 
 gpuproxy_test_LDFLAGS = \
