@@ -4,6 +4,7 @@ lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
 	-Igenerated \
 	-Iclient \
+	-Iserver \
 	-Werror
 
 libGPUProcess_la_LDFLAGS = \
@@ -20,23 +21,23 @@ libGPUProcess_la_SOURCES = \
 	command.h \
 	command_buffer.h \
 	command_buffer.c \
-	command_buffer_server.h \
-	command_buffer_server.c \
 	compiler_private.h \
-	dispatch_private.h \
-	gl_server_private.h \
-	gl_states.h \
 	name_handler.h \
 	name_handler.c \
 	ring_buffer.h \
 	ring_buffer.c \
+	server/command_buffer_server.c \
+	server/command_buffer_server.h \
+	server/dispatch_private.h \
+	server/gl_server_private.h \
+	server/gl_states.h \
 	thread_private.h \
 	types_private.h
 
 if HAS_GL
 libGPUProcess_la_SOURCES += \
-	dispatch_desktop.c \
-	dispatch_private_desktop.h \
+	server/dispatch_desktop.c \
+	server/dispatch_private_desktop.h \
 	glx_states.h
 endif
 
@@ -45,15 +46,15 @@ libGPUProcess_la_SOURCES += \
 	client/egl_api.c \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
-	dispatch_gles2.c \
-	egl_server.c \
-	egl_server_private.h \
-	egl_server_helper.c \
 	egl_states.h \
-	gles2_server.c \
 	gles2_states.h \
 	gles2_utils.c \
-	gles2_utils.h
+	gles2_utils.h \
+	server/dispatch_gles2.c \
+	server/egl_server.c \
+	server/egl_server_private.h \
+	server/egl_server_helper.c \
+	server/gles2_server.c
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/dispatch_gles2_private.h \
@@ -65,7 +66,7 @@ nodist_libGPUProcess_la_SOURCES = \
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-$(BUILT_SOURCES): generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
+generated/dispatch_gles2_private.h generated/gles2_api_autogen.c generated/command_autogen.c generated/command_autogen.h generated/command_id_autogen.h: generated/build_gles2_cmd_buffer.py generated/egl_functions.txt generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 
