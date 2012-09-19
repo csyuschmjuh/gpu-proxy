@@ -24,7 +24,6 @@ libGPUProcess_la_SOURCES = \
 	command_buffer_server.c \
 	compiler_private.h \
 	dispatch_private.h \
-	dispatch.h \
 	dispatch.c \
 	gl_server_private.h \
 	gl_states.h \

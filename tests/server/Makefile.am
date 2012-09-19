@@ -5,7 +5,7 @@ noinst_PROGRAMS = \
 rootsrcdir=../..
 
 gpuproxy_test_SOURCES = \
-	$(rootsrcdir)/src/dispatch.h \
+	$(rootsrcdir)/src/dispatch_private.h \
 	$(rootsrcdir)/src/dispatch.c \
 	$(rootsrcdir)/src/egl_states.h \
 	$(rootsrcdir)/src/egl_server_private.h \
