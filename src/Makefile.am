@@ -2,6 +2,9 @@ BUILT_SOURCES =
 
 lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
+	$(GLES_CFLAGS) \
+	$(EGL_CFLAGS) \
+	$(GL_CFLAGS) \
 	-Igenerated \
 	-Iclient \
 	-Iserver \
