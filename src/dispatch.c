@@ -13,7 +13,7 @@
 
 #define DISPATCH_ENTRY_GLX(entryName) dispatch->entryName = dlsym(gl_handle, "glX" #entryName)
 #define DISPATCH_ENTRY_EGL(entryName) dispatch->entryName = dlsym(egl_handle, #entryName)
-#define DISPATCH_ENTRY_GL(entryName) find_gl_symbol(gl_handle, dispatch, (FunctionPointerType*) &dispatch->entryName, #entryName, #entryName"ARG", #entryName"EXT")
+#define DISPATCH_ENTRY_GL(entryName) find_gl_symbol(gl_handle, dispatch, (FunctionPointerType*) &dispatch->entryName, "gl"#entryName, "gl"#entryName"ARG", "gl"#entryName"EXT")
 
 static void
 find_gl_symbol(void *handle,
