@@ -158,4 +158,79 @@ GL_APICALL void         GL_APIENTRY glGetQueryivEXT (GLenumQueryTarget target, G
 GL_APICALL void         GL_APIENTRY glGetQueryObjectuivEXT (GLidQuery id, GLenumQueryObjectParameter pname, GLuint* params);
 GL_APICALL void         GL_APIENTRY glInsertEventMarkerEXT (GLsizei length, const GLchar* marker);
 GL_APICALL void         GL_APIENTRY glPushGroupMarkerEXT (GLsizei length, const GLchar* marker);
-GL_APICALL void         GL_APIENTRY glPopGroupMarkerEXT (void);
+
+GL_APICALL void         GL_APIENTRY glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image);
+GL_APICALL void         GL_APIENTRY glEGLImageTargetRenderbufferStorageOES (GLenum target, GLeglImageOES image);
+
+GL_APICALL void         GL_APIENTRY glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei* length, GLenum* binaryFormat, GLvoid* binary);
+GL_APICALL void         GL_APIENTRY glProgramBinaryOES (GLuint program, GLenum binaryFormat, const GLvoid* binary, GLint length);
+
+GL_APICALL void*        GL_APIENTRY glMapBufferOES (GLenum target, GLenum access);
+GL_APICALL GLboolean    GL_APIENTRY glUnmapBufferOES (GLenum target);
+GL_APICALL void         GL_APIENTRY glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid** params);
+
+
+GL_APICALL void         GL_APIENTRY glTexImage3DOES (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid* pixels);
+GL_APICALL void         GL_APIENTRY glTexSubImage3DOES (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid* pixels);
+GL_APICALL void         GL_APIENTRY glCopyTexSubImage3DOES (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+GL_APICALL void         GL_APIENTRY glCompressedTexImage3DOES (GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLsizei imageSize, const GLvoid* data);
+GL_APICALL void         GL_APIENTRY glCompressedTexSubImage3DOES (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLsizei imageSize, const GLvoid* data);
+GL_APICALL void         GL_APIENTRY glFramebufferTexture3DOES (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLint zoffset);
+
+GL_APICALL void         GL_APIENTRY glBindVertexArrayOES (GLuint array);
+GL_APICALL void         GL_APIENTRY glDeleteVertexArraysOES (GLsizei n, const GLuint* arrays);
+GL_APICALL void         GL_APIENTRY glGenVertexArraysOES (GLsizei n, GLuint* arrays);
+GL_APICALL GLboolean    GL_APIENTRY glIsVertexArrayOES (GLuint array);
+
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorGroupsAMD (GLint* numGroups, GLsizei groupsSize, GLuint* groups);
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorCountersAMD (GLuint group, GLint* numCounters, GLint* maxActiveCounters, GLsizei counterSize, GLuint* counters);
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorGroupStringAMD (GLuint group, GLsizei bufSize, GLsizei* length, GLchar* groupString);
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorCounterStringAMD (GLuint group, GLuint counter, GLsizei bufSize, GLsizei* length, GLchar* counterString);
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorCounterInfoAMD (GLuint group, GLuint counter, GLenum pname, GLvoid* data);
+GL_APICALL void         GL_APIENTRY glGenPerfMonitorsAMD (GLsizei n, GLuint* monitors);
+GL_APICALL void         GL_APIENTRY glDeletePerfMonitorsAMD (GLsizei n, GLuint* monitors);
+GL_APICALL void         GL_APIENTRY glSelectPerfMonitorCountersAMD (GLuint monitor, GLboolean enable, GLuint group, GLint numCounters, GLuint* countersList);
+GL_APICALL void         GL_APIENTRY glBeginPerfMonitorAMD (GLuint monitor);
+GL_APICALL void         GL_APIENTRY glEndPerfMonitorAMD (GLuint monitor);
+GL_APICALL void         GL_APIENTRY glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname, GLsizei dataSize, GLuint* data, GLint* bytesWritten);
+
+GL_APICALL void         GL_APIENTRY glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments, const GLenum* attachments);
+
+GL_APICALL void         GL_APIENTRY glMultiDrawArraysEXT (GLenum mode, GLint* first, GLsizei* count, GLsizei primcount);
+GL_APICALL void         GL_APIENTRY glMultiDrawElementsEXT (GLenum mode, const GLsizei* count, GLenum type, const GLvoid** indices, GLsizei primcount);
+
+GL_APICALL void         GL_APIENTRY glRenderbufferStorageMultisampleIMG (GLenum target, GLsizei samples, GLenum internalformat, GLsizei width, GLsizei height);
+GL_APICALL void         GL_APIENTRY glFramebufferTexture2DMultisampleIMG (GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level, GLsizei samples);
+
+GL_APICALL void         GL_APIENTRY glDeleteFencesNV (GLsizei count, const GLuint* fences);
+GL_APICALL void         GL_APIENTRY glGenFencesNV (GLsizei count, GLuint* fences);
+GL_APICALL GLboolean    GL_APIENTRY glIsFenceNV (GLuint fence);
+GL_APICALL GLboolean    GL_APIENTRY glTestFenceNV (GLuint fence);
+GL_APICALL void         GL_APIENTRY glGetFenceivNV (GLuint fence, GLenum pname, GLint* params);
+GL_APICALL void         GL_APIENTRY glFinishFenceNV (GLuint fence);
+GL_APICALL void         GL_APIENTRY glSetFenceNV (GLuint fence, GLenum condition);
+
+GL_APICALL void         GL_APIENTRY glCoverageMaskNV (GLboolean mask);
+GL_APICALL void         GL_APIENTRY glCoverageOperationNV (GLenum operation);
+
+GL_APICALL void         GL_APIENTRY glGetDriverControlsQCOM (GLint* num, GLsizei size, GLuint* driverControls);
+GL_APICALL void         GL_APIENTRY glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize, GLsizei* length, GLchar* driverControlString);
+GL_APICALL void         GL_APIENTRY glEnableDriverControlQCOM (GLuint driverControl);
+GL_APICALL void         GL_APIENTRY glDisableDriverControlQCOM (GLuint driverControl);
+
+GL_APICALL void         GL_APIENTRY glExtGetTexturesQCOM (GLuint* textures, GLint maxTextures, GLint* numTextures);
+GL_APICALL void         GL_APIENTRY glExtGetBuffersQCOM (GLuint* buffers, GLint maxBuffers, GLint* numBuffers);
+GL_APICALL void         GL_APIENTRY glExtGetRenderbuffersQCOM (GLuint* renderbuffers, GLint maxRenderbuffers, GLint* numRenderbuffers);
+GL_APICALL void         GL_APIENTRY glExtGetFramebuffersQCOM (GLuint* framebuffers, GLint maxFramebuffers, GLint* numFramebuffers);
+GL_APICALL void         GL_APIENTRY glExtGetTexLevelParameterivQCOM (GLuint texture, GLenum face, GLint level, GLenum pname, GLint* params);
+GL_APICALL void         GL_APIENTRY glExtTexObjectStateOverrideiQCOM (GLenum target, GLenum pname, GLint param);
+GL_APICALL void         GL_APIENTRY glExtGetTexSubImageQCOM (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, GLvoid* texels);
+GL_APICALL void         GL_APIENTRY glExtGetBufferPointervQCOM (GLenum target, GLvoid** params);
+
+GL_APICALL void         GL_APIENTRY glExtGetShadersQCOM (GLuint* shaders, GLint maxShaders, GLint* numShaders);
+GL_APICALL void         GL_APIENTRY glExtGetProgramsQCOM (GLuint* programs, GLint maxPrograms, GLint* numPrograms);
+GL_APICALL GLboolean    GL_APIENTRY glExtIsProgramBinaryQCOM (GLuint program);
+GL_APICALL void         GL_APIENTRY glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype, GLchar* source, GLint* length);
+
+GL_APICALL void         GL_APIENTRY glStartTilingQCOM (GLuint x, GLuint y, GLuint width, GLuint height, GLbitfield preserveMask);
+GL_APICALL void         GL_APIENTRY glEndTilingQCOM (GLbitfield preserveMask);

@@ -6,7 +6,7 @@
 
 typedef void (*FunctionPointerType)(void);
 
-#include "dispatch_private_gles2.h"
+#include "dispatch_gles2_private.h"
 #include "dispatch_private_desktop.h"
 
 private void

@@ -33,12 +33,6 @@ libGPUProcess_la_SOURCES = \
 	thread_private.h \
 	types_private.h
 
-nodist_libGPUProcess_la_SOURCES = \
-	generated/gles2_api_autogen.c \
-	generated/command_autogen.c \
-	generated/command_autogen.h \
-	generated/command_id_autogen.h
-
 if HAS_GL
 libGPUProcess_la_SOURCES += \
 	dispatch_desktop.c \
@@ -52,7 +46,6 @@ libGPUProcess_la_SOURCES += \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
 	dispatch_gles2.c \
-	dispatch_private_gles2.h \
 	egl_server.c \
 	egl_server_private.h \
 	egl_server_helper.c \
@@ -62,10 +55,17 @@ libGPUProcess_la_SOURCES += \
 	gles2_utils.c \
 	gles2_utils.h
 
+nodist_libGPUProcess_la_SOURCES = \
+	generated/dispatch_gles2_private.h \
+	generated/gles2_api_autogen.c \
+	generated/command_autogen.c \
+	generated/command_autogen.h \
+	generated/command_id_autogen.h
+
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-generated/gles2_api_autogen.c generated/command_autogen.c: generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
+$(BUILT_SOURCES): generated/build_gles2_cmd_buffer.py generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 
