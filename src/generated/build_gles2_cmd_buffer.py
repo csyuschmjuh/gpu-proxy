@@ -47,6 +47,8 @@ _GL_TYPES = {
   'GLclampx': 'int',
   'GLintptr': 'long int',
   'GLsizeiptr': 'long int',
+  'GLvoid': 'void',
+  'GLeglImageOES' : 'void*'
 }
 
 # This is a list of enum names and their valid values. It is used to map
@@ -2015,6 +2017,8 @@ class Argument(object):
     'GLsizeiptr': 'int32_t',
     'GLfloat': 'float',
     'GLclampf': 'float',
+    'GLvoid': 'void',
+    'GLeglImageOES' : 'void*'
   }
   need_validation_ = ['GLsizei*', 'GLboolean*', 'GLenum*', 'GLint*']
 
@@ -2745,7 +2749,12 @@ class GLGenerator(object):
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
   def FunctionDoesNotReturnAnything(self, func):
-    if func.name.endswith("EXT"):
+    if func.name.endswith("EXT") or \
+       func.name.endswith("AMD") or \
+       func.name.endswith("QCOM") or \
+       func.name.endswith("OES") or \
+       func.name.endswith("NV") or \
+       func.name.endswith("IMG"):
         return False
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("**") != -1:
@@ -2844,14 +2853,20 @@ class GLGenerator(object):
 
   def WriteServerDispatchTable(self, filename):
     """Writes the dispatch table implementation for the server-side"""
-    file = CWriter(filename)
-    file.Write("typedef struct _gpuproxy_server_t {\n")
+    file = CHeaderWriter(filename)
+    file.Write("#ifdef HAS_GLES2\n")
+    file.Write("#include <EGL/egl.h>\n")
+    file.Write("#include <EGL/eglext.h>\n")
+    file.Write("#include <GLES2/gl2.h>\n")
+    file.Write("#include <GLES2/gl2ext.h>\n\n")
+    file.Write("typedef struct _dispatch {\n")
     for func in self.functions:
       file.Write("    ")
       func.WriteStructFunctionPointer(file)
       file.Write("\n")
-    file.Write("} gpuproxy_server_t;")
+    file.Write("} dispatch_t;")
     file.Write("\n")
+    file.Write("#endif /* HAS_GLES2 */\n")
     file.Close()
 
   def WriteGetSizeFunction(self, file, functions):
@@ -2916,7 +2931,7 @@ def main(argv):
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
-  gen.WriteServerDispatchTable("server_dispatch_table.h")
+  gen.WriteServerDispatchTable("dispatch_gles2_private.h")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors
