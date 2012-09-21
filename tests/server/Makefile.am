@@ -7,6 +7,10 @@ rootsrcdir=../..
 gpuproxy_test_SOURCES = \
 	$(rootsrcdir)/src/egl_states.h \
 	$(rootsrcdir)/src/egl_server_private.h \
+	$(rootsrcdir)/src/ring_buffer.c \
+	$(rootsrcdir)/src/ring_buffer.h \
+	$(rootsrcdir)/src/server/command_buffer_server.c \
+	$(rootsrcdir)/src/server/command_buffer_server.h \
 	$(rootsrcdir)/src/server/dispatch_private.h \
 	$(rootsrcdir)/src/server/dispatch_gles2.c \
 	$(rootsrcdir)/src/server/egl_server.c \
