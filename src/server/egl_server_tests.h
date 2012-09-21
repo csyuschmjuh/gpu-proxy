@@ -2,102 +2,120 @@
 #define GPUPROCESS_EGL_SEVER_TESTS_H
 
 #include "egl_server_private.h"
+#include "command_buffer_server.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 exposed_to_tests EGLint
-_egl_get_error (void);
+_egl_get_error (command_buffer_server_t *server);
 
 exposed_to_tests EGLDisplay
-_egl_get_display (EGLNativeDisplayType display_id);
+_egl_get_display (command_buffer_server_t *server,
+                  EGLNativeDisplayType display_id);
 
 exposed_to_tests EGLBoolean
-_egl_initialize (EGLDisplay display,
+_egl_initialize (command_buffer_server_t *server,
+                 EGLDisplay display,
                  EGLint *major,
                  EGLint *minor);
 
 exposed_to_tests EGLBoolean
-_egl_terminate (EGLDisplay display);
+_egl_terminate (command_buffer_server_t *server,
+                EGLDisplay display);
 
 exposed_to_tests EGLBoolean
-_egl_get_configs (EGLDisplay display,
+_egl_get_configs (command_buffer_server_t *server,
+                  EGLDisplay display,
                   EGLConfig *configs, 
                   EGLint config_size,
                   EGLint *num_config);
 
 exposed_to_tests EGLBoolean
-_egl_choose_config (EGLDisplay display,
+_egl_choose_config (command_buffer_server_t *server,
+                    EGLDisplay display,
                     const EGLint *attrib_list,
                     EGLConfig *configs,
                     EGLint config_size,
                     EGLint *num_config);
 
 exposed_to_tests EGLBoolean
-_egl_get_config_attrib (EGLDisplay display,
+_egl_get_config_attrib (command_buffer_server_t *server,
+                        EGLDisplay display,
                         EGLConfig config,
                         EGLint attribute,
                         EGLint *value);
 
 exposed_to_tests EGLSurface
-_egl_create_window_surface (EGLDisplay display,
+_egl_create_window_surface (command_buffer_server_t *server,
+                            EGLDisplay display,
                             EGLConfig config,
                             EGLNativeWindowType win,
                             const EGLint *attrib_list);
 
 
 exposed_to_tests EGLSurface
-_egl_create_pbuffer_surface (EGLDisplay display,
+_egl_create_pbuffer_surface (command_buffer_server_t *server,
+                             EGLDisplay display,
                              EGLConfig config,
                              const EGLint *attrib_list);
 
 exposed_to_tests EGLSurface
-_egl_create_pixmap_surface (EGLDisplay display,
+_egl_create_pixmap_surface (command_buffer_server_t *server,
+                            EGLDisplay display,
                             EGLConfig config,
                             EGLNativePixmapType pixmap, 
                             const EGLint *attrib_list);
 
 exposed_to_tests EGLBoolean
-_egl_destroy_surface (EGLDisplay display,
+_egl_destroy_surface (command_buffer_server_t *server,
+                      EGLDisplay display,
                       EGLSurface surface);
 
 exposed_to_tests EGLBoolean
-_egl_query_surface (EGLDisplay display,
+_egl_query_surface (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLSurface surface,
                     EGLint attribute,
                     EGLint *value);
 
 exposed_to_tests EGLBoolean
-_egl_bind_api (EGLenum api);
+_egl_bind_api (command_buffer_server_t *server,
+               EGLenum api);
 
 exposed_to_tests EGLContext
-_egl_create_context (EGLDisplay display,
+_egl_create_context (command_buffer_server_t *server,
+                     EGLDisplay display,
                      EGLConfig config,
                      EGLContext share_context,
                      const EGLint *attrib_list);
 
 exposed_to_tests EGLBoolean
-_egl_destroy_context (EGLDisplay dpy,
+_egl_destroy_context (command_buffer_server_t *server,
+                      EGLDisplay dpy,
                       EGLContext ctx);
 
 exposed_to_tests EGLContext
-_egl_get_current_context (void);
+_egl_get_current_context (command_buffer_server_t *server);
 
 exposed_to_tests EGLDisplay
-_egl_get_current_display (void);
+_egl_get_current_display (command_buffer_server_t *server);
 
 exposed_to_tests EGLSurface
-_egl_get_current_surface (EGLint readdraw);
+_egl_get_current_surface (command_buffer_server_t *server,
+                          EGLint readdraw);
 
 exposed_to_tests EGLBoolean
-_egl_query_context (EGLDisplay display,
+_egl_query_context (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLContext ctx,
                     EGLint attribute,
                     EGLint *value);
 
 exposed_to_tests EGLBoolean 
-_egl_make_current (EGLDisplay display,
+_egl_make_current (command_buffer_server_t *server,
+                   EGLDisplay display,
                    EGLSurface draw,
                    EGLSurface read,
                    EGLContext ctx);

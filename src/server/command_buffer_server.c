@@ -1,4 +1,5 @@
 
+#include "ring_buffer.h"
 #include "command_buffer_server.h"
 #include "egl_server_private.h"
 #include "thread_private.h"

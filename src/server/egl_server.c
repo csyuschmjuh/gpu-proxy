@@ -35,7 +35,7 @@ __thread link_list_t    *active_state
   __attribute__(( tls_model ("initial-exec"))) = NULL;
 
 exposed_to_tests EGLint
-_egl_get_error (void)
+_egl_get_error (command_buffer_server_t *server)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
@@ -51,7 +51,8 @@ _egl_get_error (void)
  * we also initialize gl client states
  */
 exposed_to_tests EGLDisplay
-_egl_get_display (EGLNativeDisplayType display_id)
+_egl_get_display (command_buffer_server_t *server,
+                  EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
    
@@ -64,7 +65,8 @@ _egl_get_display (EGLNativeDisplayType display_id)
 }
 
 exposed_to_tests EGLBoolean
-_egl_initialize (EGLDisplay display,
+_egl_initialize (command_buffer_server_t *server,
+                 EGLDisplay display,
                  EGLint *major,
                  EGLint *minor)
 {
@@ -80,7 +82,8 @@ _egl_initialize (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_terminate (EGLDisplay display)
+_egl_terminate (command_buffer_server_t *server,
+                EGLDisplay display)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -97,7 +100,8 @@ _egl_terminate (EGLDisplay display)
 }
 
 static const char *
-_egl_query_string (EGLDisplay display,
+_egl_query_string (command_buffer_server_t *server,
+                   EGLDisplay display,
                    EGLint name)
 {
     const char *result = NULL;
@@ -109,8 +113,9 @@ _egl_query_string (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_get_configs (EGLDisplay display,
-                  EGLConfig *configs, 
+_egl_get_configs (command_buffer_server_t *server,
+                  EGLDisplay display,
+                  EGLConfig *configs,
                   EGLint config_size,
                   EGLint *num_config)
 {
@@ -123,7 +128,8 @@ _egl_get_configs (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_choose_config (EGLDisplay display,
+_egl_choose_config (command_buffer_server_t *server,
+                    EGLDisplay display,
                     const EGLint *attrib_list,
                     EGLConfig *configs,
                     EGLint config_size,
@@ -139,7 +145,8 @@ _egl_choose_config (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_get_config_attrib (EGLDisplay display,
+_egl_get_config_attrib (command_buffer_server_t *server,
+                        EGLDisplay display,
                         EGLConfig config,
                         EGLint attribute,
                         EGLint *value)
@@ -153,7 +160,8 @@ _egl_get_config_attrib (EGLDisplay display,
 }
 
 exposed_to_tests EGLSurface
-_egl_create_window_surface (EGLDisplay display,
+_egl_create_window_surface (command_buffer_server_t *server,
+                            EGLDisplay display,
                             EGLConfig config,
                             EGLNativeWindowType win,
                             const EGLint *attrib_list)
@@ -168,7 +176,8 @@ _egl_create_window_surface (EGLDisplay display,
 }
 
 exposed_to_tests EGLSurface
-_egl_create_pbuffer_surface (EGLDisplay display,
+_egl_create_pbuffer_surface (command_buffer_server_t *server,
+                             EGLDisplay display,
                              EGLConfig config,
                              const EGLint *attrib_list)
 {
@@ -181,7 +190,8 @@ _egl_create_pbuffer_surface (EGLDisplay display,
 }
 
 exposed_to_tests EGLSurface
-_egl_create_pixmap_surface (EGLDisplay display,
+_egl_create_pixmap_surface (command_buffer_server_t *server,
+                            EGLDisplay display,
                             EGLConfig config,
                             EGLNativePixmapType pixmap, 
                             const EGLint *attrib_list)
@@ -196,7 +206,8 @@ _egl_create_pixmap_surface (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_destroy_surface (EGLDisplay display,
+_egl_destroy_surface (command_buffer_server_t *server,
+                      EGLDisplay display,
                       EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
@@ -217,7 +228,8 @@ _egl_destroy_surface (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_query_surface (EGLDisplay display,
+_egl_query_surface (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLSurface surface,
                     EGLint attribute,
                     EGLint *value)
@@ -231,7 +243,8 @@ _egl_query_surface (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_bind_api (EGLenum api)
+_egl_bind_api (command_buffer_server_t *server,
+               EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -242,7 +255,7 @@ _egl_bind_api (EGLenum api)
 }
 
 static EGLenum 
-_egl_query_api (void)
+_egl_query_api (command_buffer_server_t *server)
 {
     EGLenum result = EGL_NONE;
 
@@ -253,7 +266,7 @@ _egl_query_api (void)
 }
 
 static EGLBoolean
-_egl_wait_client (void)
+_egl_wait_client (command_buffer_server_t *server)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -264,7 +277,7 @@ _egl_wait_client (void)
 }
 
 exposed_to_tests EGLBoolean
-_egl_release_thread (void)
+_egl_release_thread (command_buffer_server_t *server)
 {
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
@@ -294,7 +307,8 @@ _egl_release_thread (void)
 }
 
 static EGLSurface
-_egl_create_pbuffer_from_client_buffer (EGLDisplay display,
+_egl_create_pbuffer_from_client_buffer (command_buffer_server_t *server,
+                                        EGLDisplay display,
                                         EGLenum buftype,
                                         EGLClientBuffer buffer,
                                         EGLConfig config,
@@ -311,7 +325,8 @@ _egl_create_pbuffer_from_client_buffer (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_surface_attrib (EGLDisplay display,
+_egl_surface_attrib (command_buffer_server_t *server,
+                     EGLDisplay display,
                      EGLSurface surface, 
                      EGLint attribute,
                      EGLint value)
@@ -325,7 +340,8 @@ _egl_surface_attrib (EGLDisplay display,
 }
     
 static EGLBoolean
-_egl_bind_tex_image (EGLDisplay display,
+_egl_bind_tex_image (command_buffer_server_t *server,
+                     EGLDisplay display,
                      EGLSurface surface,
                      EGLint buffer)
 {
@@ -338,7 +354,8 @@ _egl_bind_tex_image (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_release_tex_image (EGLDisplay display,
+_egl_release_tex_image (command_buffer_server_t *server,
+                        EGLDisplay display,
                         EGLSurface surface,
                         EGLint buffer)
 {
@@ -351,7 +368,8 @@ _egl_release_tex_image (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_swap_interval (EGLDisplay display,
+_egl_swap_interval (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLint interval)
 {
     EGLBoolean result = EGL_FALSE;
@@ -363,7 +381,8 @@ _egl_swap_interval (EGLDisplay display,
 }
 
 exposed_to_tests EGLContext
-_egl_create_context (EGLDisplay display,
+_egl_create_context (command_buffer_server_t *server,
+                     EGLDisplay display,
                      EGLConfig config,
                      EGLContext share_context,
                      const EGLint *attrib_list)
@@ -378,7 +397,8 @@ _egl_create_context (EGLDisplay display,
 }
 
 exposed_to_tests EGLBoolean
-_egl_destroy_context (EGLDisplay dpy,
+_egl_destroy_context (command_buffer_server_t *server,
+                      EGLDisplay dpy,
                       EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
@@ -395,7 +415,7 @@ _egl_destroy_context (EGLDisplay dpy,
 }
 
 exposed_to_tests EGLContext
-_egl_get_current_context (void)
+_egl_get_current_context (command_buffer_server_t *server)
 {
     return command_buffer_server->dispatch.eglGetCurrentContext (command_buffer_server);
     egl_state_t *state;
@@ -408,7 +428,7 @@ _egl_get_current_context (void)
 }
 
 exposed_to_tests EGLDisplay
-_egl_get_current_display (void)
+_egl_get_current_display (command_buffer_server_t *server)
 {
     return command_buffer_server->dispatch.eglGetCurrentDisplay (command_buffer_server);
     egl_state_t *state;
@@ -421,7 +441,8 @@ _egl_get_current_display (void)
 }
 
 exposed_to_tests EGLSurface
-_egl_get_current_surface (EGLint readdraw)
+_egl_get_current_surface (command_buffer_server_t *server,
+                          EGLint readdraw)
 {
     return command_buffer_server->dispatch.eglGetCurrentSurface (command_buffer_server, readdraw);
     egl_state_t *state;
@@ -445,7 +466,8 @@ _egl_get_current_surface (EGLint readdraw)
 
 
 exposed_to_tests EGLBoolean
-_egl_query_context (EGLDisplay display,
+_egl_query_context (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLContext ctx,
                     EGLint attribute,
                     EGLint *value)
@@ -461,7 +483,7 @@ _egl_query_context (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_wait_gl (void)
+_egl_wait_gl (command_buffer_server_t *server)
 {
     EGLBoolean result = EGL_FALSE;
     
@@ -474,7 +496,8 @@ _egl_wait_gl (void)
 }
 
 static EGLBoolean
-_egl_wait_native (EGLint engine)
+_egl_wait_native (command_buffer_server_t *server,
+                  EGLint engine)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -487,7 +510,8 @@ _egl_wait_native (EGLint engine)
 }
 
 static EGLBoolean
-_egl_swap_buffers (EGLDisplay display,
+_egl_swap_buffers (command_buffer_server_t *server,
+                   EGLDisplay display,
                    EGLSurface surface)
 {
     EGLBoolean result = EGL_BAD_DISPLAY;
@@ -498,7 +522,8 @@ _egl_swap_buffers (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_copy_buffers (EGLDisplay display,
+_egl_copy_buffers (command_buffer_server_t *server,
+                   EGLDisplay display,
                    EGLSurface surface,
                    EGLNativePixmapType target)
 {
@@ -513,13 +538,15 @@ _egl_copy_buffers (EGLDisplay display,
 }
 
 static __eglMustCastToProperFunctionPointerType
-_egl_get_proc_address (const char *procname)
+_egl_get_proc_address (command_buffer_server_t *server,
+                       const char *procname)
 {
     return command_buffer_server->dispatch.eglGetProcAddress (command_buffer_server, procname);
 }
 
 exposed_to_tests EGLBoolean 
-_egl_make_current (EGLDisplay display,
+_egl_make_current (command_buffer_server_t *server,
+                   EGLDisplay display,
                    EGLSurface draw,
                    EGLSurface read,
                    EGLContext ctx) 
@@ -558,7 +585,8 @@ _egl_make_current (EGLDisplay display,
 /* start of eglext.h */
 #ifdef EGL_KHR_lock_surface
 static EGLBoolean
-_egl_lock_surface_khr (EGLDisplay display,
+_egl_lock_surface_khr (command_buffer_server_t *server,
+                       EGLDisplay display,
                        EGLSurface surface,
                        const EGLint *attrib_list)
 {
@@ -573,7 +601,8 @@ _egl_lock_surface_khr (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_unlock_surface_khr (EGLDisplay display,
+_egl_unlock_surface_khr (command_buffer_server_t *server,
+                         EGLDisplay display,
                          EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
@@ -589,7 +618,8 @@ _egl_unlock_surface_khr (EGLDisplay display,
 
 #ifdef EGL_KHR_image
 static EGLImageKHR
-_egl_create_image_khr (EGLDisplay display,
+_egl_create_image_khr (command_buffer_server_t *server,
+                       EGLDisplay display,
                        EGLContext ctx,
                        EGLenum target,
                        EGLClientBuffer buffer,
@@ -610,7 +640,8 @@ _egl_create_image_khr (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_destroy_image_khr (EGLDisplay display,
+_egl_destroy_image_khr (command_buffer_server_t *server,
+                        EGLDisplay display,
                         EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
@@ -626,7 +657,8 @@ _egl_destroy_image_khr (EGLDisplay display,
 
 #ifdef EGL_KHR_reusable_sync
 static EGLSyncKHR
-_egl_create_sync_khr (EGLDisplay display,
+_egl_create_sync_khr (command_buffer_server_t *server,
+                      EGLDisplay display,
                       EGLenum type,
                       const EGLint *attrib_list)
 {
@@ -641,7 +673,8 @@ _egl_create_sync_khr (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_destroy_sync_khr (EGLDisplay display,
+_egl_destroy_sync_khr (command_buffer_server_t *server,
+                       EGLDisplay display,
                        EGLSyncKHR sync)
 {
     EGLBoolean result = EGL_FALSE;
@@ -655,7 +688,8 @@ _egl_destroy_sync_khr (EGLDisplay display,
 }
 
 static EGLint
-_egl_client_wait_sync_khr (EGLDisplay display,
+_egl_client_wait_sync_khr (command_buffer_server_t *server,
+                           EGLDisplay display,
                            EGLSyncKHR sync,
                            EGLint flags,
                            EGLTimeKHR timeout)
@@ -671,7 +705,8 @@ _egl_client_wait_sync_khr (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_signal_sync_khr (EGLDisplay display,
+_egl_signal_sync_khr (command_buffer_server_t *server,
+                      EGLDisplay display,
                       EGLSyncKHR sync,
                       EGLenum mode)
 {
@@ -686,7 +721,8 @@ _egl_signal_sync_khr (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_get_sync_attrib_khr (EGLDisplay display,
+_egl_get_sync_attrib_khr (command_buffer_server_t *server,
+                          EGLDisplay display,
                           EGLSyncKHR sync,
                           EGLint attribute,
                           EGLint *value)
@@ -704,7 +740,8 @@ _egl_get_sync_attrib_khr (EGLDisplay display,
 
 #ifdef EGL_NV_sync
 static EGLSyncNV 
-_egl_create_fence_sync_nv (EGLDisplay display,
+_egl_create_fence_sync_nv (command_buffer_server_t *server,
+                           EGLDisplay display,
                            EGLenum condition,
                            const EGLint *attrib_list)
 {
@@ -719,7 +756,8 @@ _egl_create_fence_sync_nv (EGLDisplay display,
 }
 
 static EGLBoolean 
-_egl_destroy_sync_nv (EGLSyncNV sync) 
+_egl_destroy_sync_nv (command_buffer_server_t *server,
+                      EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -732,7 +770,8 @@ _egl_destroy_sync_nv (EGLSyncNV sync)
 }
 
 static EGLBoolean
-_egl_fence_nv (EGLSyncNV sync)
+_egl_fence_nv (command_buffer_server_t *server,
+               EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
     
@@ -745,7 +784,8 @@ _egl_fence_nv (EGLSyncNV sync)
 }
 
 static EGLint
-_egl_client_wait_sync_nv (EGLSyncNV sync,
+_egl_client_wait_sync_nv (command_buffer_server_t *server,
+                          EGLSyncNV sync,
                           EGLint flags,
                           EGLTimeNV timeout)
 {
@@ -761,7 +801,8 @@ _egl_client_wait_sync_nv (EGLSyncNV sync,
 }
 
 static EGLBoolean
-_egl_signal_sync_nv (EGLSyncNV sync,
+_egl_signal_sync_nv (command_buffer_server_t *server,
+                     EGLSyncNV sync,
                      EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
@@ -775,7 +816,8 @@ _egl_signal_sync_nv (EGLSyncNV sync,
 }
 
 static EGLBoolean
-_egl_get_sync_attrib_nv (EGLSyncNV sync,
+_egl_get_sync_attrib_nv (command_buffer_server_t *server,
+                         EGLSyncNV sync,
                          EGLint attribute,
                          EGLint *value)
 {
@@ -792,7 +834,8 @@ _egl_get_sync_attrib_nv (EGLSyncNV sync,
 
 #ifdef EGL_HI_clientpixmap
 static EGLSurface
-_egl_create_pixmap_surface_hi (EGLDisplay display,
+_egl_create_pixmap_surface_hi (command_buffer_server_t *server,
+                               EGLDisplay display,
                                EGLConfig config,
                                struct EGLClientPixmapHI *pixmap)
 {
@@ -809,7 +852,8 @@ _egl_create_pixmap_surface_hi (EGLDisplay display,
 
 #ifdef EGL_MESA_drm_image
 static EGLImageKHR
-_egl_create_drm_image_mesa (EGLDisplay display,
+_egl_create_drm_image_mesa (command_buffer_server_t *server,
+                            EGLDisplay display,
                             const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
@@ -823,7 +867,8 @@ _egl_create_drm_image_mesa (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_export_drm_image_mesa (EGLDisplay display,
+_egl_export_drm_image_mesa (command_buffer_server_t *server,
+                            EGLDisplay display,
                             EGLImageKHR image,
                             EGLint *name,
                             EGLint *handle,
@@ -842,7 +887,8 @@ _egl_export_drm_image_mesa (EGLDisplay display,
 
 #ifdef EGL_NV_post_sub_buffer
 static EGLBoolean 
-_egl_post_subbuffer_nv (EGLDisplay display,
+_egl_post_subbuffer_nv (command_buffer_server_t *server,
+                        EGLDisplay display,
                         EGLSurface surface, 
                         EGLint x,
                         EGLint y,
@@ -862,7 +908,8 @@ _egl_post_subbuffer_nv (EGLDisplay display,
 
 #ifdef EGL_SEC_image_map
 static void *
-_egl_map_image_sec (EGLDisplay display,
+_egl_map_image_sec (command_buffer_server_t *server,
+                    EGLDisplay display,
                     EGLImageKHR image)
 {
     void *result = NULL;
@@ -876,7 +923,8 @@ _egl_map_image_sec (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_unmap_image_sec (EGLDisplay display,
+_egl_unmap_image_sec (command_buffer_server_t *server,
+                      EGLDisplay display,
                       EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
@@ -890,7 +938,8 @@ _egl_unmap_image_sec (EGLDisplay display,
 }
 
 static EGLBoolean
-_egl_get_image_attrib_sec (EGLDisplay display,
+_egl_get_image_attrib_sec (command_buffer_server_t *server,
+                           EGLDisplay display,
                            EGLImageKHR image,
                            EGLint attribute,
                            EGLint *value)
