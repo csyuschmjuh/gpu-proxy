@@ -6,10 +6,11 @@
 
 typedef void (*FunctionPointerType)(void);
 
+typedef struct _command_buffer_server command_buffer_server_t;
 #include "dispatch_gles2_private.h"
 #include "dispatch_private_desktop.h"
 
 private void
-dispatch_init (dispatch_t *dispatch);
+dispatch_init (server_dispatch_table_t *dispatch);
 
 #endif /* GPUPROCESS_DISPATCH_PRIVATE_H */

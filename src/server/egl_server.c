@@ -15,21 +15,20 @@
  */
 
 #include "config.h"
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <stdlib.h>
-
-/* XXX: we should move it to the srv */
+#include "command_buffer_server.h"
 #include "dispatch_private.h"
 #include "egl_states.h"
 #include "egl_server_private.h"
 #include "types_private.h"
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <stdlib.h>
 
 /* server thread global variables, referenced from 
  * egl_server_helper.c
  */
-extern dispatch_t dispatch;
 extern gl_server_states_t server_states;
+extern command_buffer_server_t *command_buffer_server;
 
 /* server thread local variable */
 __thread link_list_t    *active_state
@@ -40,10 +39,10 @@ _egl_get_error (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
-    if (! dispatch.eglGetError)
+    if (! command_buffer_server->dispatch.eglGetError)
         return error;
 
-    error = dispatch.eglGetError();
+    error = command_buffer_server->dispatch.eglGetError(command_buffer_server);
 
     return error;
 }
@@ -56,10 +55,10 @@ _egl_get_display (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
    
-    /* XXX: we should initialize once for both dispatch and srv structure */
-    _server_init ();
+    command_buffer_server = malloc (sizeof (command_buffer_server_t));
+    _server_init (command_buffer_server);
 
-    display = dispatch.eglGetDisplay (display_id);
+    display = command_buffer_server->dispatch.eglGetDisplay (command_buffer_server, display_id);
 
     return display;
 }
@@ -71,8 +70,8 @@ _egl_initialize (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglInitialize) 
-        result = dispatch.eglInitialize (display, major, minor);
+    if (command_buffer_server->dispatch.eglInitialize) 
+        result = command_buffer_server->dispatch.eglInitialize (command_buffer_server, display, major, minor);
 
     if (result == EGL_TRUE)
         _server_initialize (display);
@@ -85,8 +84,8 @@ _egl_terminate (EGLDisplay display)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglTerminate) {
-        result = dispatch.eglTerminate (display);
+    if (command_buffer_server->dispatch.eglTerminate) {
+        result = command_buffer_server->dispatch.eglTerminate (command_buffer_server, display);
 
         if (result == EGL_TRUE) {
             /* XXX: remove srv structure */
@@ -103,8 +102,8 @@ _egl_query_string (EGLDisplay display,
 {
     const char *result = NULL;
 
-    if (dispatch.eglQueryString)
-        result = dispatch.eglQueryString (display, name);
+    if (command_buffer_server->dispatch.eglQueryString)
+        result = command_buffer_server->dispatch.eglQueryString (command_buffer_server, display, name);
 
     return result;
 }
@@ -117,8 +116,8 @@ _egl_get_configs (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglGetConfigs)
-        result = dispatch.eglGetConfigs (display, configs, config_size, num_config);
+    if (command_buffer_server->dispatch.eglGetConfigs)
+        result = command_buffer_server->dispatch.eglGetConfigs (command_buffer_server, display, configs, config_size, num_config);
 
     return result;
 }
@@ -132,8 +131,8 @@ _egl_choose_config (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglChooseConfig)
-        result = dispatch.eglChooseConfig (display, attrib_list, configs,
+    if (command_buffer_server->dispatch.eglChooseConfig)
+        result = command_buffer_server->dispatch.eglChooseConfig (command_buffer_server, display, attrib_list, configs,
                                            config_size, num_config);
 
     return result;
@@ -147,8 +146,8 @@ _egl_get_config_attrib (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglGetConfigAttrib)
-        result = dispatch.eglGetConfigAttrib (display, config, attribute, value);
+    if (command_buffer_server->dispatch.eglGetConfigAttrib)
+        result = command_buffer_server->dispatch.eglGetConfigAttrib (command_buffer_server, display, config, attribute, value);
 
     return result;
 }
@@ -161,8 +160,8 @@ _egl_create_window_surface (EGLDisplay display,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (dispatch.eglCreateWindowSurface)
-        surface = dispatch.eglCreateWindowSurface (display, config, win,
+    if (command_buffer_server->dispatch.eglCreateWindowSurface)
+        surface = command_buffer_server->dispatch.eglCreateWindowSurface (command_buffer_server, display, config, win,
                                                    attrib_list);
 
     return surface;
@@ -175,8 +174,8 @@ _egl_create_pbuffer_surface (EGLDisplay display,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (dispatch.eglCreatePbufferSurface)
-        surface = dispatch.eglCreatePbufferSurface (display, config, attrib_list);
+    if (command_buffer_server->dispatch.eglCreatePbufferSurface)
+        surface = command_buffer_server->dispatch.eglCreatePbufferSurface (command_buffer_server, display, config, attrib_list);
 
     return surface;
 }
@@ -189,8 +188,8 @@ _egl_create_pixmap_surface (EGLDisplay display,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (dispatch.eglCreatePixmapSurface)
-        surface = dispatch.eglCreatePixmapSurface (display, config, pixmap,
+    if (command_buffer_server->dispatch.eglCreatePixmapSurface)
+        surface = command_buffer_server->dispatch.eglCreatePixmapSurface (command_buffer_server, display, config, pixmap,
                                                    attrib_list);
 
     return surface;
@@ -205,8 +204,8 @@ _egl_destroy_surface (EGLDisplay display,
     if (!active_state)
         return result;
 
-    if (dispatch.eglDestroySurface) { 
-        result = dispatch.eglDestroySurface (display, surface);
+    if (command_buffer_server->dispatch.eglDestroySurface) { 
+        result = command_buffer_server->dispatch.eglDestroySurface (command_buffer_server, display, surface);
 
         if (result == EGL_TRUE) {
             /* update srv states */
@@ -225,8 +224,8 @@ _egl_query_surface (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglQuerySurface) 
-        result = dispatch.eglQuerySurface (display, surface, attribute, value);
+    if (command_buffer_server->dispatch.eglQuerySurface) 
+        result = command_buffer_server->dispatch.eglQuerySurface (command_buffer_server, display, surface, attribute, value);
 
     return result;
 }
@@ -236,8 +235,8 @@ _egl_bind_api (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglBindAPI) 
-        result = dispatch.eglBindAPI (api);
+    if (command_buffer_server->dispatch.eglBindAPI) 
+        result = command_buffer_server->dispatch.eglBindAPI (command_buffer_server, api);
 
     return result;
 }
@@ -247,8 +246,8 @@ _egl_query_api (void)
 {
     EGLenum result = EGL_NONE;
 
-    if (dispatch.eglQueryAPI) 
-        result = dispatch.eglQueryAPI ();
+    if (command_buffer_server->dispatch.eglQueryAPI) 
+        result = command_buffer_server->dispatch.eglQueryAPI (command_buffer_server);
 
     return result;
 }
@@ -258,8 +257,8 @@ _egl_wait_client (void)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (dispatch.eglWaitClient)
-        result = dispatch.eglWaitClient ();
+    if (command_buffer_server->dispatch.eglWaitClient)
+        result = command_buffer_server->dispatch.eglWaitClient (command_buffer_server);
 
     return result;
 }
@@ -271,8 +270,8 @@ _egl_release_thread (void)
     egl_state_t *egl_state;
     link_list_t *active_state_out = NULL;
 
-    if (dispatch.eglReleaseThread) {
-        result = dispatch.eglReleaseThread ();
+    if (command_buffer_server->dispatch.eglReleaseThread) {
+        result = command_buffer_server->dispatch.eglReleaseThread (command_buffer_server);
 
         if (result == EGL_TRUE) {
             if (! active_state)
@@ -303,8 +302,8 @@ _egl_create_pbuffer_from_client_buffer (EGLDisplay display,
 {
     EGLSurface surface = EGL_NO_SURFACE;
     
-    if (dispatch.eglCreatePbufferFromClientBuffer)
-        surface = dispatch.eglCreatePbufferFromClientBuffer (display, buftype,
+    if (command_buffer_server->dispatch.eglCreatePbufferFromClientBuffer)
+        surface = command_buffer_server->dispatch.eglCreatePbufferFromClientBuffer (command_buffer_server, display, buftype,
                                                              buffer, config,
                                                              attrib_list);
 
@@ -319,8 +318,8 @@ _egl_surface_attrib (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (dispatch.eglSurfaceAttrib)
-        result = dispatch.eglSurfaceAttrib (display, surface, attribute, value);
+    if (command_buffer_server->dispatch.eglSurfaceAttrib)
+        result = command_buffer_server->dispatch.eglSurfaceAttrib (command_buffer_server, display, surface, attribute, value);
 
     return result;
 }
@@ -332,8 +331,8 @@ _egl_bind_tex_image (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (dispatch.eglBindTexImage)
-        result = dispatch.eglBindTexImage (display, surface, buffer);
+    if (command_buffer_server->dispatch.eglBindTexImage)
+        result = command_buffer_server->dispatch.eglBindTexImage (command_buffer_server, display, surface, buffer);
 
     return result;
 }
@@ -345,8 +344,8 @@ _egl_release_tex_image (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (dispatch.eglReleaseTexImage)
-        result = dispatch.eglReleaseTexImage (display, surface, buffer);
+    if (command_buffer_server->dispatch.eglReleaseTexImage)
+        result = command_buffer_server->dispatch.eglReleaseTexImage (command_buffer_server, display, surface, buffer);
 
     return result;
 }
@@ -357,8 +356,8 @@ _egl_swap_interval (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (dispatch.eglSwapInterval)
-        result = dispatch.eglSwapInterval (display, interval);
+    if (command_buffer_server->dispatch.eglSwapInterval)
+        result = command_buffer_server->dispatch.eglSwapInterval (command_buffer_server, display, interval);
 
     return result;
 }
@@ -371,8 +370,8 @@ _egl_create_context (EGLDisplay display,
 {
     EGLContext result = EGL_NO_CONTEXT;
     
-    if (dispatch.eglCreateContext)
-        result = dispatch.eglCreateContext (display, config, share_context, 
+    if (command_buffer_server->dispatch.eglCreateContext)
+        result = command_buffer_server->dispatch.eglCreateContext (command_buffer_server, display, config, share_context, 
                                             attrib_list);
 
     return result;
@@ -384,8 +383,8 @@ _egl_destroy_context (EGLDisplay dpy,
 {
     EGLBoolean result = GL_FALSE;
 
-    if (dispatch.eglDestroyContext) {
-        result = dispatch.eglDestroyContext (dpy, ctx); 
+    if (command_buffer_server->dispatch.eglDestroyContext) {
+        result = command_buffer_server->dispatch.eglDestroyContext (command_buffer_server, dpy, ctx); 
 
         if (result == GL_TRUE) {
             _server_destroy_context (dpy, ctx, active_state);
@@ -398,7 +397,7 @@ _egl_destroy_context (EGLDisplay dpy,
 exposed_to_tests EGLContext
 _egl_get_current_context (void)
 {
-    return dispatch.eglGetCurrentContext ();
+    return command_buffer_server->dispatch.eglGetCurrentContext (command_buffer_server);
     egl_state_t *state;
 
     if (!active_state)
@@ -411,7 +410,7 @@ _egl_get_current_context (void)
 exposed_to_tests EGLDisplay
 _egl_get_current_display (void)
 {
-    return dispatch.eglGetCurrentDisplay ();
+    return command_buffer_server->dispatch.eglGetCurrentDisplay (command_buffer_server);
     egl_state_t *state;
 
     if (!active_state)
@@ -424,7 +423,7 @@ _egl_get_current_display (void)
 exposed_to_tests EGLSurface
 _egl_get_current_surface (EGLint readdraw)
 {
-    return dispatch.eglGetCurrentSurface (readdraw);
+    return command_buffer_server->dispatch.eglGetCurrentSurface (command_buffer_server, readdraw);
     egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
 
@@ -453,10 +452,10 @@ _egl_query_context (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglQueryContext)
+    if (! command_buffer_server->dispatch.eglQueryContext)
         return result;
 
-    result = dispatch.eglQueryContext (display, ctx, attribute, value);
+    result = command_buffer_server->dispatch.eglQueryContext (command_buffer_server, display, ctx, attribute, value);
 
     return result;
 }
@@ -466,10 +465,10 @@ _egl_wait_gl (void)
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (! dispatch.eglWaitGL)
+    if (! command_buffer_server->dispatch.eglWaitGL)
         return result;
 
-    result = dispatch.eglWaitGL ();
+    result = command_buffer_server->dispatch.eglWaitGL (command_buffer_server);
 
     return result;
 }
@@ -479,10 +478,10 @@ _egl_wait_native (EGLint engine)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglWaitNative)
+    if (! command_buffer_server->dispatch.eglWaitNative)
         return result;
     
-    result = dispatch.eglWaitNative (engine);
+    result = command_buffer_server->dispatch.eglWaitNative (command_buffer_server, engine);
 
     return result;
 }
@@ -493,7 +492,7 @@ _egl_swap_buffers (EGLDisplay display,
 {
     EGLBoolean result = EGL_BAD_DISPLAY;
 
-    result = dispatch.eglSwapBuffers (display, surface);
+    result = command_buffer_server->dispatch.eglSwapBuffers (command_buffer_server, display, surface);
 
     return result;
 }
@@ -505,10 +504,10 @@ _egl_copy_buffers (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglCopyBuffers)
+    if (! command_buffer_server->dispatch.eglCopyBuffers)
         return result;
 
-    result = dispatch.eglCopyBuffers (display, surface, target);
+    result = command_buffer_server->dispatch.eglCopyBuffers (command_buffer_server, display, surface, target);
 
     return result;
 }
@@ -516,7 +515,7 @@ _egl_copy_buffers (EGLDisplay display,
 static __eglMustCastToProperFunctionPointerType
 _egl_get_proc_address (const char *procname)
 {
-    return dispatch.eglGetProcAddress (procname);
+    return command_buffer_server->dispatch.eglGetProcAddress (command_buffer_server, procname);
 }
 
 exposed_to_tests EGLBoolean 
@@ -530,7 +529,7 @@ _egl_make_current (EGLDisplay display,
     link_list_t *active_state_out = NULL;
     bool found = false;
 
-    if (! dispatch.eglMakeCurrent)
+    if (! command_buffer_server->dispatch.eglMakeCurrent)
         return result;
 
     /* look for existing */
@@ -540,13 +539,13 @@ _egl_make_current (EGLDisplay display,
         active_state = exist;
 
         /* call real makeCurrent */
-        return dispatch.eglMakeCurrent (display, draw, read, ctx);
+        return command_buffer_server->dispatch.eglMakeCurrent (command_buffer_server, display, draw, read, ctx);
     }
 
     /* We could not find in the saved state, we don't know whether
      * parameters are valid or not 
      */
-    result = dispatch.eglMakeCurrent (display, draw, read, ctx);
+    result = command_buffer_server->dispatch.eglMakeCurrent (command_buffer_server, display, draw, read, ctx);
     if (result == EGL_TRUE) {
         _server_make_current (display, draw, read, ctx,
                                          active_state, 
@@ -565,10 +564,10 @@ _egl_lock_surface_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (! dispatch.eglLockSurfaceKHR)
+    if (! command_buffer_server->dispatch.eglLockSurfaceKHR)
         return result;
 
-    result = dispatch.eglLockSurfaceKHR (display, surface, attrib_list);
+    result = command_buffer_server->dispatch.eglLockSurfaceKHR (command_buffer_server, display, surface, attrib_list);
 
     return result;
 }
@@ -579,10 +578,10 @@ _egl_unlock_surface_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglUnlockSurfaceKHR)
+    if (! command_buffer_server->dispatch.eglUnlockSurfaceKHR)
         return result;
     
-    result = dispatch.eglUnlockSurfaceKHR (display, surface);
+    result = command_buffer_server->dispatch.eglUnlockSurfaceKHR (command_buffer_server, display, surface);
 
     return result;
 }
@@ -598,13 +597,13 @@ _egl_create_image_khr (EGLDisplay display,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    if (! dispatch.eglCreateImageKHR)
+    if (! command_buffer_server->dispatch.eglCreateImageKHR)
         return result;
 
     if (display == EGL_NO_DISPLAY)
         return result;
     
-    result = dispatch.eglCreateImageKHR (display, ctx, target,
+    result = command_buffer_server->dispatch.eglCreateImageKHR (command_buffer_server, display, ctx, target,
                                          buffer, attrib_list);
 
     return result;
@@ -616,10 +615,10 @@ _egl_destroy_image_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglDestroyImageKHR)
+    if (! command_buffer_server->dispatch.eglDestroyImageKHR)
         return result;
     
-    result = dispatch.eglDestroyImageKHR (display, image);
+    result = command_buffer_server->dispatch.eglDestroyImageKHR (command_buffer_server, display, image);
 
     return result;
 }
@@ -633,10 +632,10 @@ _egl_create_sync_khr (EGLDisplay display,
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
-    if (! dispatch.eglCreateSyncKHR)
+    if (! command_buffer_server->dispatch.eglCreateSyncKHR)
         return result;
     
-    result = dispatch.eglCreateSyncKHR (display, type, attrib_list);
+    result = command_buffer_server->dispatch.eglCreateSyncKHR (command_buffer_server, display, type, attrib_list);
 
     return result;
 }
@@ -647,10 +646,10 @@ _egl_destroy_sync_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglDestroySyncKHR)
+    if (! command_buffer_server->dispatch.eglDestroySyncKHR)
         return result;
 
-    result = dispatch.eglDestroySyncKHR (display, sync);
+    result = command_buffer_server->dispatch.eglDestroySyncKHR (command_buffer_server, display, sync);
 
     return result;
 }
@@ -663,10 +662,10 @@ _egl_client_wait_sync_khr (EGLDisplay display,
 {
     EGLint result = EGL_FALSE;
 
-    if (! dispatch.eglClientWaitSyncKHR)
+    if (! command_buffer_server->dispatch.eglClientWaitSyncKHR)
         return result;
     
-    result = dispatch.eglClientWaitSyncKHR (display, sync, flags, timeout);
+    result = command_buffer_server->dispatch.eglClientWaitSyncKHR (command_buffer_server, display, sync, flags, timeout);
 
     return result;
 }
@@ -678,10 +677,10 @@ _egl_signal_sync_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglSignalSyncKHR)
+    if (! command_buffer_server->dispatch.eglSignalSyncKHR)
         return result;
     
-    result = dispatch.eglSignalSyncKHR (display, sync, mode);
+    result = command_buffer_server->dispatch.eglSignalSyncKHR (command_buffer_server, display, sync, mode);
 
     return result;
 }
@@ -694,10 +693,10 @@ _egl_get_sync_attrib_khr (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglGetSyncAttribKHR)
+    if (! command_buffer_server->dispatch.eglGetSyncAttribKHR)
         return result;
     
-    result = dispatch.eglGetSyncAttribKHR (display, sync, attribute, value);
+    result = command_buffer_server->dispatch.eglGetSyncAttribKHR (command_buffer_server, display, sync, attribute, value);
 
     return result;
 }
@@ -711,10 +710,10 @@ _egl_create_fence_sync_nv (EGLDisplay display,
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
-    if (! dispatch.eglCreateFenceSyncNV)
+    if (! command_buffer_server->dispatch.eglCreateFenceSyncNV)
         return result;
     
-    result = dispatch.eglCreateFenceSyncNV (display, condition, attrib_list);
+    result = command_buffer_server->dispatch.eglCreateFenceSyncNV (command_buffer_server, display, condition, attrib_list);
 
     return result;
 }
@@ -724,10 +723,10 @@ _egl_destroy_sync_nv (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglDestroySyncNV)
+    if (! command_buffer_server->dispatch.eglDestroySyncNV)
         return result;
     
-    result = dispatch.eglDestroySyncNV (sync);
+    result = command_buffer_server->dispatch.eglDestroySyncNV (command_buffer_server, sync);
 
     return result;
 }
@@ -737,10 +736,10 @@ _egl_fence_nv (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
     
-    if (! dispatch.eglFenceNV)
+    if (! command_buffer_server->dispatch.eglFenceNV)
         return result;
 
-    result = dispatch.eglFenceNV (sync);
+    result = command_buffer_server->dispatch.eglFenceNV (command_buffer_server, sync);
 
     return result;
 }
@@ -753,10 +752,10 @@ _egl_client_wait_sync_nv (EGLSyncNV sync,
     /* XXX: is this supposed to be default value ? */
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
 
-    if (! dispatch.eglClientWaitSyncNV)
+    if (! command_buffer_server->dispatch.eglClientWaitSyncNV)
         return result;
 
-    result = dispatch.eglClientWaitSyncNV (sync, flags, timeout);
+    result = command_buffer_server->dispatch.eglClientWaitSyncNV (command_buffer_server, sync, flags, timeout);
 
     return result;
 }
@@ -767,10 +766,10 @@ _egl_signal_sync_nv (EGLSyncNV sync,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglSignalSyncNV)
+    if (! command_buffer_server->dispatch.eglSignalSyncNV)
         return result;
 
-    result = dispatch.eglSignalSyncNV (sync, mode);
+    result = command_buffer_server->dispatch.eglSignalSyncNV (command_buffer_server, sync, mode);
 
     return result;
 }
@@ -782,10 +781,10 @@ _egl_get_sync_attrib_nv (EGLSyncNV sync,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglGetSyncAttribNV)
+    if (! command_buffer_server->dispatch.eglGetSyncAttribNV)
         return result;
 
-    result = dispatch.eglGetSyncAttribNV (sync, attribute, value);
+    result = command_buffer_server->dispatch.eglGetSyncAttribNV (command_buffer_server, sync, attribute, value);
 
     return result;
 }
@@ -799,10 +798,10 @@ _egl_create_pixmap_surface_hi (EGLDisplay display,
 {
     EGLSurface result = EGL_NO_SURFACE;
 
-    if (! dispatch.eglCreatePixmapSurfaceHI)
+    if (! command_buffer_server->dispatch.eglCreatePixmapSurfaceHI)
         return result;
     
-    result = dispatch.eglCreatePixmapSurfaceHI (display, config, pixmap);
+    result = command_buffer_server->dispatch.eglCreatePixmapSurfaceHI (command_buffer_server, display, config, pixmap);
 
     return result;
 }
@@ -815,10 +814,10 @@ _egl_create_drm_image_mesa (EGLDisplay display,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    if (! dispatch.eglCreateDRMImageMESA)
+    if (! command_buffer_server->dispatch.eglCreateDRMImageMESA)
         return result;
     
-    result = dispatch.eglCreateDRMImageMESA (display, attrib_list);
+    result = command_buffer_server->dispatch.eglCreateDRMImageMESA (command_buffer_server, display, attrib_list);
 
     return result;
 }
@@ -832,10 +831,10 @@ _egl_export_drm_image_mesa (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglExportDRMImageMESA)
+    if (! command_buffer_server->dispatch.eglExportDRMImageMESA)
         return result;
     
-    result = dispatch.eglExportDRMImageMESA (display, image, name, handle, stride);
+    result = command_buffer_server->dispatch.eglExportDRMImageMESA (command_buffer_server, display, image, name, handle, stride);
 
     return result;
 }
@@ -852,10 +851,10 @@ _egl_post_subbuffer_nv (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglExportDRMImageMESA)
+    if (! command_buffer_server->dispatch.eglExportDRMImageMESA)
         return result;
 
-    result = dispatch.eglPostSubBufferNV (display, surface, x, y, width, height);
+    result = command_buffer_server->dispatch.eglPostSubBufferNV (command_buffer_server, display, surface, x, y, width, height);
 
     return result;
 }
@@ -868,10 +867,10 @@ _egl_map_image_sec (EGLDisplay display,
 {
     void *result = NULL;
 
-    if (! dispatch.eglMapImageSEC)
+    if (! command_buffer_server->dispatch.eglMapImageSEC)
         return result;
     
-    result = dispatch.eglMapImageSEC (display, image);
+    result = command_buffer_server->dispatch.eglMapImageSEC (command_buffer_server, display, image);
 
     return result;
 }
@@ -882,10 +881,10 @@ _egl_unmap_image_sec (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglUnmapImageSEC)
+    if (! command_buffer_server->dispatch.eglUnmapImageSEC)
         return result;
     
-    result = dispatch.eglUnmapImageSEC (display, image);
+    result = command_buffer_server->dispatch.eglUnmapImageSEC (command_buffer_server, display, image);
 
     return result;
 }
@@ -898,10 +897,10 @@ _egl_get_image_attrib_sec (EGLDisplay display,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! dispatch.eglGetImageAttribSEC)
+    if (! command_buffer_server->dispatch.eglGetImageAttribSEC)
         return result;
     
-    result = dispatch.eglGetImageAttribSEC (display, image, attribute, value);
+    result = command_buffer_server->dispatch.eglGetImageAttribSEC (command_buffer_server, display, image, attribute, value);
 
     return result;
 }

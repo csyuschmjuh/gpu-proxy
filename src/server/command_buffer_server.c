@@ -41,7 +41,7 @@ server_thread_func (void *ptr)
     command_buffer_server_t *command_buffer_server = (command_buffer_server_t *)ptr;
 
     /* populate dispatch table, create global egl_states structures */
-    _server_init ();
+    _server_init (command_buffer_server);
     /* This signals the producer thread to start producing. */
     mutex_unlock (server_thread_started_mutex);
 

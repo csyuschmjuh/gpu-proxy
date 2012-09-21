@@ -2510,7 +2510,7 @@ class Function(object):
   def MakeTypedOriginalArgString(self, prefix, add_separator = False, separator = ", "):
     """Gets a list of arguments as they arg in GL."""
     args = self.GetOriginalArgs()
-    arg_string = ", ".join(
+    arg_string = separator.join(
         ["%s%s %s" % (prefix, arg.type, arg.name) for arg in args])
     return self.__GetArgList(arg_string, add_separator, separator)
 
@@ -2802,7 +2802,7 @@ class GLGenerator(object):
         indent = " " * len(header)
         file.Write(header + "command")
 
-        args = func.MakeOriginalArgString(indent, separator = ",\n", add_separator=True)
+        args = func.MakeOriginalArgString(indent, separator = ",\n", add_separator = True)
         if args:
             file.Write(args)
 
@@ -2852,21 +2852,74 @@ class GLGenerator(object):
     file.Close()
 
   def WriteServerDispatchTable(self, filename):
-    """Writes the dispatch table implementation for the server-side"""
+    """Writes the dispatch struct for the server-side"""
     file = CHeaderWriter(filename)
     file.Write("#ifdef HAS_GLES2\n")
     file.Write("#include <EGL/egl.h>\n")
     file.Write("#include <EGL/eglext.h>\n")
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
-    file.Write("typedef struct _dispatch {\n")
+    file.Write("typedef struct _server_dispatch_table {\n")
     for func in self.functions:
-      file.Write("    ")
-      func.WriteStructFunctionPointer(file)
-      file.Write("\n")
-    file.Write("} dispatch_t;")
+        file.Write("    %s (*%s) (command_buffer_server_t* server" % (func.return_type, func.name))
+        file.Write(func.MakeTypedOriginalArgString("", add_separator = True), split=False)
+        file.Write(");\n")
+    file.Write("} server_dispatch_table_t;")
     file.Write("\n")
     file.Write("#endif /* HAS_GLES2 */\n")
+    file.Close()
+
+  def WriteBaseServerDispatchTableImplementation(self, filename):
+    """Writes the pass-through dispatch table implementation for the server-side"""
+    file = CWriter(filename)
+
+    for func in self.functions:
+        file.Write("static %s (*real_%s) (" % (func.return_type, func.name))
+        file.Write(func.MakeTypedOriginalArgString(""), split=False)
+        file.Write(");\n")
+
+    for func in self.functions:
+        file.Write("static %s\n" % func.return_type)
+
+        func_name = "passthrough_%s (" % func.name
+        indent = " " * len(func_name)
+        file.Write("%scommand_buffer_server_t* server" % func_name)
+        file.Write(func.MakeTypedOriginalArgString(indent, separator = ",\n", add_separator = True), split=False)
+        file.Write(")\n")
+        file.Write("{\n")
+
+        file.Write("    ")
+        if func.return_type != "void":
+            file.Write("return ")
+        file.Write("real_%s (" % func.name)
+        file.Write(func.MakeOriginalArgString(""))
+        file.Write(");\n")
+        file.Write("}\n\n")
+
+    file.Write("void\n")
+    file.Write("dispatch_init (server_dispatch_table_t *dispatch)\n")
+    file.Write("{\n")
+    file.Write("    FunctionPointerType *temp = NULL;\n")
+
+    for func in self.functions:
+        if not func.name.startswith("egl"):
+            continue
+        file.Write('    temp = (FunctionPointerType *) &real_%s;\n' % func.name)
+        file.Write('    *temp = dlsym (libegl_handle (), "%s");\n' % func.name)
+
+    for func in self.functions:
+        if func.name.startswith("egl"):
+            continue
+        file.Write('    temp = (FunctionPointerType *) &real_%s;\n' % func.name)
+        file.Write('    *temp = find_gl_symbol (libgl_handle (),\n')
+        file.Write('                            real_eglGetProcAddress,\n')
+        file.Write('                            "%s");\n' % func.name)
+
+    for func in self.functions:
+        file.Write('    dispatch->%s = passthrough_%s;\n' % (func.name, func.name))
+
+    file.Write("}\n")
+
     file.Close()
 
   def WriteGetSizeFunction(self, file, functions):
@@ -2932,6 +2985,7 @@ def main(argv):
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
   gen.WriteServerDispatchTable("dispatch_gles2_private.h")
+  gen.WriteBaseServerDispatchTableImplementation("dispatch_gles2_autogen.c")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors

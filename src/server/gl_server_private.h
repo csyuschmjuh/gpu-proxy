@@ -34,7 +34,7 @@ gl_server_states_t        server_states;
 
 /* called within eglInitialize () */
 private void 
-_server_init ();
+_server_init (command_buffer_server_t *server);
 
 private void 
 _server_destroy ();

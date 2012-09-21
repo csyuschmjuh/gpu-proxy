@@ -1,15 +1,16 @@
 /* This file is a helper file for some of the private functions that
  * manipulate the server_states variable 
  */
-#include "egl_server_private.h"
 #include "dispatch_private.h"
+#include "command_buffer_server.h"
+#include "egl_server_private.h"
 #include "thread_private.h"
 #include <stdlib.h>
 #include <string.h>
 
 /* global state variable for all server threads */
 gl_server_states_t              server_states;
-dispatch_t           dispatch;
+command_buffer_server_t *command_buffer_server;
 
 mutex_static_init (egl_mutex);
 
@@ -271,14 +272,14 @@ _server_get_state (EGLDisplay dpy,
 }
 
 void 
-_server_init ()
+_server_init (command_buffer_server_t *server)
 {
     mutex_lock (egl_mutex);
     if (server_states.initialized == false) {
         server_states.num_contexts = 0;
         server_states.states = NULL;
-        
-        dispatch_init (&dispatch);
+
+        dispatch_init (&server->dispatch);
         server_states.initialized = true;
     }
     mutex_unlock (egl_mutex);
