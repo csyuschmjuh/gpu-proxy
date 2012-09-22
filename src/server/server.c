@@ -1,11 +1,8 @@
-
+#include "caching_server_private.h"
 #include "ring_buffer.h"
 #include "server.h"
-#include "caching_server_private.h"
 #include "thread_private.h"
 #include <time.h>
-
-mutex_static_init (server_thread_started_mutex);
 
 static void
 server_handle_set_token (server_t *server,
@@ -43,8 +40,9 @@ server_thread_func (void *ptr)
 
     /* populate dispatch table, create global egl_states structures */
     _server_init (server);
+
     /* This signals the producer thread to start producing. */
-    mutex_unlock (server_thread_started_mutex);
+    mutex_unlock (server->thread_started_mutex);
 
     /* FIXME: initialize GL state and start consuming commands in the loop. */
     /* FIXME: add exit condition of the loop. */
@@ -84,9 +82,13 @@ server_init (server_t *server,
 
     if (threaded) {
         /* We use a mutex here to wait until the thread has started. */
-        mutex_lock (server_thread_started_mutex);
+        mutex_init (server->thread_started_mutex);
+        mutex_lock (server->thread_started_mutex);
+
         pthread_create (&server->thread, NULL, server_thread_func, server);
-        mutex_lock (server_thread_started_mutex);
+
+        mutex_lock (server->thread_started_mutex);
+        mutex_destroy (server->thread_started_mutex);
     } else {
         _server_init (server);
     }
