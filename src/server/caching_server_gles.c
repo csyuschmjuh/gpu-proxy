@@ -6,27 +6,593 @@
  * gl functions, the cached error state is set to GL_INVALID_OPERATION
  * if the cached error has not been set to one of the errors.
  */
+
+/* This file implements the server thread side of egl functions.
+ * After the server thread reads the command buffer, if it is 
+ * egl calls, it is routed to here.
+ *
+ * It keeps two global variables for all server threads:
+ * (1) dispatch - a dispatch table to real egl and gl calls. It 
+ * is initialized during eglGetDisplay() -> _egl_get_display()
+ * (2) server_states - this is a double-linked structure contains
+ * all active and inactive egl states.  When a client switches context,
+ * the previous egl_state is set to be inactive and thus is subject to
+ * be destroyed during _egl_terminate(), _egl_destroy_context() and
+ * _egl_release_thread()  The inactive context's surface can also be 
+ * destroyed by _egl_destroy_surface().
+ * (3) active_state - this is the pointer to the current active state.
+ */
+
 #include "config.h"
-#include "server.h"
+#include "caching_server_private.h"
 
-#ifndef HAS_GLES2
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#else
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#endif
-#include <string.h>
-#include <stdlib.h>
-
-/* XXX: we should move it to the srv */
 #include "dispatch_private.h"
-#include "types_private.h"
 #include "egl_states.h"
-#include "egl_server_private.h"
+#include "server.h"
+#include "types_private.h"
+#include <EGL/eglext.h>
+#include <EGL/egl.h>
+#include <GLES2/gl2ext.h>
+#include <GLES2/gl2.h>
+#include <stdlib.h>
+#include <string.h>
 
-/* server local variable, referenced from egl_server.c */
-extern __thread link_list_t        *active_state;
+/* server thread local variable */
+__thread link_list_t    *active_state
+  __attribute__(( tls_model ("initial-exec"))) = NULL;
+
+/* global state variable for all server threads */
+gl_server_states_t              server_states;
+
+mutex_static_init (egl_mutex);
+
+static void
+_server_copy_egl_state (egl_state_t *dst, egl_state_t *src)
+{
+    memcpy (dst, src, sizeof (egl_state_t));
+}
+
+static bool
+_server_has_context (egl_state_t *state,
+                             EGLDisplay  display,
+                             EGLContext  context)
+{
+    return (state->context == context && state->display == display);
+}
+
+static void
+_server_init_gles2_states (egl_state_t *egl_state)
+{
+    int i, j;
+    gles2_state_t *state = &egl_state->state;
+
+    egl_state->context = EGL_NO_CONTEXT;
+    egl_state->display = EGL_NO_DISPLAY;
+    egl_state->drawable = EGL_NO_SURFACE;
+    egl_state->readable = EGL_NO_SURFACE;
+
+    egl_state->active = false;
+
+    egl_state->destroy_dpy = false;
+    egl_state->destroy_ctx = false;
+    egl_state->destroy_draw = false;
+    egl_state->destroy_read = false;
+
+    state->vertex_attribs.count = 0;
+    state->vertex_attribs.attribs = state->vertex_attribs.embedded_attribs;
+
+    state->max_combined_texture_image_units = 8;
+    state->max_vertex_attribs_queried = false;
+    state->max_vertex_attribs = 8;
+    state->max_cube_map_texture_size = 16;
+    state->max_fragment_uniform_vectors = 16;
+    state->max_renderbuffer_size = 1;
+    state->max_texture_image_units = 8;
+    state->max_texture_size = 64;
+    state->max_varying_vectors = 8;
+    state->max_vertex_uniform_vectors = 128;
+    state->max_vertex_texture_image_units = 0;
+
+
+    state->error = GL_NO_ERROR;
+    state->need_get_error = false;
+    state->programs = NULL;
+   
+    state->active_texture = GL_TEXTURE0;
+    state->array_buffer_binding = 0;
+
+    state->blend = GL_FALSE;
+
+    for (i = 0; i < 4; i++) {
+        state->blend_color[i] = GL_ZERO;
+        state->blend_dst[i] = GL_ZERO;
+        state->blend_src[i] = GL_ONE;
+    }
+    
+    state->blend_equation[0] = state->blend_equation[1] = GL_FUNC_ADD;
+
+    memset (state->color_clear_value, 0, sizeof (GLfloat) * 4);
+    for (i = 0; i < 4; i++)
+        state->color_writemask[i] = GL_TRUE;    
+
+    state->cull_face = GL_FALSE;
+    state->cull_face_mode = GL_BACK;
+
+    state->current_program = 0;
+
+    state->depth_clear_value = 1;
+    state->depth_func = GL_LESS;
+    state->depth_range[0] = 0; state->depth_range[1] = 1;
+    state->depth_test = GL_FALSE;
+    state->depth_writemask = GL_TRUE;
+
+    state->dither = GL_TRUE;
+
+    state->element_array_buffer_binding = 0;
+    state->framebuffer_binding = 0;
+    state->renderbuffer_binding = 0;
+    
+    state->front_face = GL_CCW;
+   
+    state->generate_mipmap_hint = GL_DONT_CARE;
+
+    state->line_width = 1;
+    
+    state->pack_alignment = 4; 
+    state->unpack_alignment = 4;
+
+    state->polygon_offset_factor = 0;
+    state->polygon_offset_fill = GL_FALSE;
+    state->polygon_offset_units = 0;
+
+    state->sample_alpha_to_coverage = 0;
+    state->sample_coverage = GL_FALSE;
+    
+    memset (state->scissor_box, 0, sizeof (GLint) * 4);
+    state->scissor_test = GL_FALSE;
+
+    /* XXX: should we set this */
+    state->shader_compiler = GL_TRUE; 
+
+    state->stencil_back_fail = GL_KEEP;
+    state->stencil_back_func = GL_ALWAYS;
+    state->stencil_back_pass_depth_fail = GL_KEEP;
+    state->stencil_back_pass_depth_pass = GL_KEEP;
+    state->stencil_back_ref = 0;
+    memset (&state->stencil_back_value_mask, 1, sizeof (GLint));
+    state->stencil_clear_value = 0;
+    state->stencil_fail = GL_KEEP;
+    state->stencil_func = GL_ALWAYS;
+    state->stencil_pass_depth_fail = GL_KEEP;
+    state->stencil_pass_depth_pass = GL_KEEP;
+    state->stencil_ref = 0;
+    state->stencil_test = GL_FALSE;
+    memset (&state->stencil_value_mask, 1, sizeof (GLint));
+    memset (&state->stencil_writemask, 1, sizeof (GLint));
+    memset (&state->stencil_back_writemask, 1, sizeof (GLint));
+
+    memset (state->texture_binding, 0, sizeof (GLint) * 2);
+
+    memset (state->viewport, 0, sizeof (GLint) * 4);
+
+    for (i = 0; i < 32; i++) {
+        for (j = 0; j < 3; j++) {
+            state->texture_mag_filter[i][j] = GL_LINEAR;
+            state->texture_mag_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
+            state->texture_wrap_s[i][j] = GL_REPEAT;
+            state->texture_wrap_t[i][j] = GL_REPEAT;
+        }
+#ifdef GL_OES_texture_3D
+        state->texture_3d_wrap_r[i] = GL_REPEAT;
+#endif
+    }
+
+    state->buffer_size[0] = state->buffer_size[1] = 0;
+    state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
+    /* XXX: initialize a thread */
+}
+
+static void
+_server_set_egl_states (egl_state_t *egl_state, 
+                                   EGLDisplay  display,
+                                   EGLSurface  drawable,
+                                   EGLSurface  readable,
+                                   EGLContext  context)
+{
+    egl_state->context = context;
+    egl_state->display = display;
+    egl_state->drawable = drawable;
+    egl_state->readable = readable;
+}
+
+static void 
+_server_remove_state (link_list_t **state)
+{
+    egl_state_t *egl_state = (egl_state_t *) (*state)->data;
+
+    if (egl_state->state.vertex_attribs.attribs != 
+        egl_state->state.vertex_attribs.embedded_attribs)
+        free (egl_state->state.vertex_attribs.attribs);
+
+    if (*state == server_states.states) {
+        server_states.states = server_states.states->next;
+        if (server_states.states != NULL)
+            server_states.states->prev = NULL;
+    }
+
+    if ((*state)->prev)
+        (*state)->prev->next = (*state)->next;
+    if ((*state)->next)
+        (*state)->next->prev = (*state)->prev;
+
+    free (egl_state);
+    free (*state);
+    *state = NULL;
+
+    server_states.num_contexts --;
+}
+
+static void 
+_server_remove_surface (link_list_t *state, bool read)
+{
+    egl_state_t *egl_state = (egl_state_t *) state->data;
+
+    if (read == true)
+        egl_state->readable = EGL_NO_SURFACE;
+    else
+        egl_state->drawable = EGL_NO_SURFACE;
+
+}
+
+static link_list_t *
+_server_get_state (EGLDisplay dpy,
+                              EGLSurface draw,
+                              EGLSurface read,
+                              EGLContext ctx)
+{
+    link_list_t *new_list;
+    egl_state_t   *new_state;
+    link_list_t *list = server_states.states;
+
+    if (server_states.num_contexts == 0 || ! server_states.states) {
+        server_states.num_contexts = 1;
+        server_states.states = (link_list_t *)malloc (sizeof (link_list_t));
+        server_states.states->prev = NULL;
+        server_states.states->next = NULL;
+
+        new_state = (egl_state_t *)malloc (sizeof (egl_state_t));
+
+        _server_init_gles2_states (new_state);
+        _server_set_egl_states (new_state, dpy, draw, read, ctx); 
+        server_states.states->data = new_state;
+        new_state->active = true;
+	return server_states.states;
+    }
+
+    /* look for matching context in existing states */
+    while (list) {
+        egl_state_t *state = (egl_state_t *)list->data;
+
+        if (state->context == ctx &&
+            state->display == dpy) {
+            _server_set_egl_states (state, dpy, draw, read, ctx);
+            state->active = true;
+            return list;
+        }
+        list = list->next;
+    }
+
+    /* we have not found a context match */
+    new_state = (egl_state_t *) malloc (sizeof (egl_state_t));
+
+    _server_init_gles2_states (new_state);
+    _server_set_egl_states (new_state, dpy, draw, read, ctx); 
+    server_states.num_contexts ++;
+
+    list = server_states.states;
+    while (list->next != NULL)
+        list = list->next;
+
+    new_list = (link_list_t *)malloc (sizeof (link_list_t));
+    new_list->prev = list;
+    new_list->next = NULL;
+    new_list->data = new_state;
+    new_state->active = true;
+    list->next = new_list;
+
+    return new_list;
+}
+
+void 
+_server_init (server_t *server)
+{
+    mutex_lock (egl_mutex);
+    if (server_states.initialized == false) {
+        server_states.num_contexts = 0;
+        server_states.states = NULL;
+
+        dispatch_init (&server->dispatch);
+        server_states.initialized = true;
+    }
+    mutex_unlock (egl_mutex);
+}
+
+/* the server first calls eglTerminate (display),
+ * then look over the cached states
+ */
+static void 
+_server_terminate (EGLDisplay display, link_list_t *active_state) 
+{
+    link_list_t *head = server_states.states;
+    link_list_t *list = head;
+    link_list_t *current;
+
+    egl_state_t *egl_state;
+
+    mutex_lock (egl_mutex);
+
+    if (server_states.initialized == false ||
+        server_states.num_contexts == 0 || (! server_states.states)) {
+        mutex_unlock (egl_mutex);
+        return;
+    }
+    
+    while (list != NULL) {
+        egl_state = (egl_state_t *) list->data;
+        current = list;
+        list = list->next;
+
+        if (egl_state->display == display) {
+            if (! egl_state->active)
+                _server_remove_state (&current);
+                /* XXX: Do we need to stop the thread? */
+        }
+    }
+
+    /* is current active state affected ?*/
+    if (active_state) { 
+        egl_state = (egl_state_t *) active_state->data;
+        if (egl_state->display == display)
+	    egl_state->destroy_dpy = true;
+    }
+    /* XXX: should we stop current server thread ? */
+    /*
+    else if (! active_state) {
+    } */
+    mutex_unlock (egl_mutex);
+}
+
+static bool
+_server_is_equal (egl_state_t *state,
+                             EGLDisplay  display,
+                             EGLSurface  drawable,
+                             EGLSurface  readable,
+                             EGLContext  context)
+{
+   return (state->display == display && state->drawable == drawable &&
+       state->readable == readable && state->context == context);
+}
+
+/* we should call real eglMakeCurrent() before, and wait for result
+ * if eglMakeCurrent() returns EGL_TRUE, then we call this
+ */
+static void 
+_server_make_current (EGLDisplay display,
+                                 EGLSurface drawable,
+                                 EGLSurface readable,
+                                 EGLContext context,
+                                 link_list_t *active_state,
+                                 link_list_t **active_state_out)
+{
+    egl_state_t *new_state, *egl_state;
+    link_list_t *list = server_states.states;
+    link_list_t *new_list;
+    link_list_t *match_state = NULL;
+
+    mutex_lock (egl_mutex);
+    /* we are switching to None context */
+    if (context == EGL_NO_CONTEXT || display == EGL_NO_DISPLAY) {
+        /* current is None too */
+        if (! active_state) {
+            *active_state_out = NULL;
+            mutex_unlock (egl_mutex);
+            return;
+        }
+        
+        egl_state = (egl_state_t *) active_state->data;
+        egl_state->active = false;
+        
+        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
+            _server_remove_state (&active_state);
+        
+        if (active_state) {
+            if (egl_state->destroy_read)
+                _server_remove_surface (active_state, true);
+
+            if (egl_state->destroy_draw)
+                _server_remove_surface (active_state, false);
+        }
+
+        *active_state_out = NULL;
+        mutex_unlock (egl_mutex);
+        return;
+    }
+
+    /* we are switch to one of the valid context */
+    if (active_state) {
+        egl_state = (egl_state_t *) active_state->data;
+        egl_state->active = false;
+        
+        /* XXX did eglTerminate()/eglDestroyContext()/eglDestroySurface()
+         * called affect us?
+         */
+        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
+            _server_remove_state (&active_state);
+        
+        if (active_state) {
+            if (egl_state->destroy_read)
+                _server_remove_surface (active_state, true);
+
+            if (egl_state->destroy_draw)
+                _server_remove_surface (active_state, false);
+        }
+    }
+
+    /* get existing state or create a new one */
+    *active_state_out = _server_get_state (display, drawable,
+                                                   readable, context);
+    mutex_unlock (egl_mutex);
+}
+
+/* called by eglDestroyContext() - once we know there is matching context
+ * we call real eglDestroyContext(), and if returns EGL_TRUE, we call 
+ * this function 
+ */
+static void
+_server_destroy_context (EGLDisplay display, 
+                                    EGLContext context,
+                                    link_list_t *active_state)
+{
+    egl_state_t *state;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
+
+    mutex_lock (egl_mutex);
+    if (server_states.num_contexts == 0 || ! server_states.states) {
+        mutex_unlock (egl_mutex);
+        return;
+    }
+
+    while (list != NULL) {
+        current = list;
+        list = list->next;
+        state = (egl_state_t *)current->data;
+    
+        if (_server_has_context (state, display, context)) {
+            state->destroy_ctx = true;
+            if (state->active == false) 
+                _server_remove_state (&current);
+        }
+    }
+    mutex_unlock (egl_mutex);
+}
+
+static void
+_server_destroy_surface (EGLDisplay display, 
+                                    EGLSurface surface,
+                                    link_list_t *active_state)
+{
+    egl_state_t *state;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
+
+    mutex_lock (egl_mutex);
+    if (server_states.num_contexts == 0 || ! server_states.states) {
+        mutex_unlock (egl_mutex);
+        return;
+    }
+
+    while (list != NULL) {
+        current = list;
+        list = list->next;
+        state = (egl_state_t *)current->data;
+
+        if (state->display == display) {
+            if (state->readable == surface)
+                state->destroy_read = true;
+            if (state->drawable == surface)
+                state->destroy_draw = true;
+
+            if (state->active == false) {
+                if (state->readable == surface && 
+                    state->destroy_read == true)
+                    state->readable = EGL_NO_SURFACE;
+                if (state->drawable == surface && 
+                    state->destroy_draw == true)
+                    state->drawable = EGL_NO_SURFACE;
+            }
+        }
+    }
+
+    mutex_unlock (egl_mutex);
+}
+
+static bool
+_match (EGLDisplay display,
+                   EGLSurface drawable,
+                   EGLSurface readable,
+                   EGLContext context, 
+                   link_list_t **state)
+{
+    egl_state_t *egl_state;
+    link_list_t *list = server_states.states;
+    link_list_t *current;
+
+    mutex_lock (egl_mutex);
+    if (server_states.num_contexts == 0 || ! server_states.states) {
+        mutex_unlock (egl_mutex);
+        return false;
+    }
+
+    while (list != NULL) {
+        current = list;
+        list = list->next;
+        egl_state = (egl_state_t *)current->data;
+
+        /* we check matching of display, context, readable and drawable,
+         * and also whether destroy_dpy is true or not
+         * if destroy_dpy has been set, we should not return as it
+         * as a valid state
+         */
+        if (egl_state->display == display && 
+            egl_state->context == context &&
+            egl_state->drawable == drawable &&
+            egl_state->readable == readable &&
+            egl_state->active == false && 
+            ! egl_state->destroy_dpy ) {
+            egl_state->active = true;
+            *state = current;
+            mutex_unlock (egl_mutex);
+            return true;
+        }
+
+    }
+
+    mutex_unlock (egl_mutex);
+    return false;
+}
+/* the server first calls eglInitialize (),
+ * then look over the cached states
+ */
+static void 
+_server_initialize (EGLDisplay display) 
+{
+    link_list_t *head = server_states.states;
+    link_list_t *list = head;
+    link_list_t *current;
+
+    egl_state_t *egl_state;
+
+    mutex_lock (egl_mutex);
+
+    if (server_states.initialized == false ||
+        server_states.num_contexts == 0 || (! server_states.states)) {
+        mutex_unlock (egl_mutex);
+        return;
+    }
+    
+    while (list != NULL) {
+        egl_state = (egl_state_t *) list->data;
+        current = list;
+        list = list->next;
+
+        if (egl_state->display == display) {
+            if (egl_state->destroy_dpy)
+                egl_state->destroy_dpy = false;
+        }
+    }
+    mutex_unlock (egl_mutex);
+}
 
 exposed_to_tests inline bool
 _gl_is_valid_func (server_t *server, void *func)
@@ -5100,3 +5666,935 @@ _gl_end_tiling_qcom (server_t *server, GLbitfield preserveMask)
     }
 }
 #endif
+
+exposed_to_tests EGLint
+_egl_get_error (server_t *server)
+{
+    EGLint error = EGL_NOT_INITIALIZED;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglGetError)
+        return error;
+
+    error = CACHING_SERVER(server)->super_dispatch.eglGetError(server);
+
+    return error;
+}
+
+exposed_to_tests EGLDisplay
+_egl_get_display (server_t *server,
+                  EGLNativeDisplayType display_id)
+{
+    EGLDisplay display = EGL_NO_DISPLAY;
+
+    display = CACHING_SERVER(server)->super_dispatch.eglGetDisplay (server, display_id);
+
+    return display;
+}
+
+exposed_to_tests EGLBoolean
+_egl_initialize (server_t *server,
+                 EGLDisplay display,
+                 EGLint *major,
+                 EGLint *minor)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglInitialize) 
+        result = CACHING_SERVER(server)->super_dispatch.eglInitialize (server, display, major, minor);
+
+    if (result == EGL_TRUE)
+        _server_initialize (display);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_terminate (server_t *server,
+                EGLDisplay display)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglTerminate) {
+        result = CACHING_SERVER(server)->super_dispatch.eglTerminate (server, display);
+
+        if (result == EGL_TRUE) {
+            /* XXX: remove srv structure */
+            _server_terminate (display, active_state);
+        }
+    }
+
+    return result;
+}
+
+static const char *
+_egl_query_string (server_t *server,
+                   EGLDisplay display,
+                   EGLint name)
+{
+    const char *result = NULL;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglQueryString)
+        result = CACHING_SERVER(server)->super_dispatch.eglQueryString (server, display, name);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_get_configs (server_t *server,
+                  EGLDisplay display,
+                  EGLConfig *configs,
+                  EGLint config_size,
+                  EGLint *num_config)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglGetConfigs)
+        result = CACHING_SERVER(server)->super_dispatch.eglGetConfigs (server, display, configs, config_size, num_config);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_choose_config (server_t *server,
+                    EGLDisplay display,
+                    const EGLint *attrib_list,
+                    EGLConfig *configs,
+                    EGLint config_size,
+                    EGLint *num_config)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglChooseConfig)
+        result = CACHING_SERVER(server)->super_dispatch.eglChooseConfig (server, display, attrib_list, configs,
+                                           config_size, num_config);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_get_config_attrib (server_t *server,
+                        EGLDisplay display,
+                        EGLConfig config,
+                        EGLint attribute,
+                        EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglGetConfigAttrib)
+        result = CACHING_SERVER(server)->super_dispatch.eglGetConfigAttrib (server, display, config, attribute, value);
+
+    return result;
+}
+
+exposed_to_tests EGLSurface
+_egl_create_window_surface (server_t *server,
+                            EGLDisplay display,
+                            EGLConfig config,
+                            EGLNativeWindowType win,
+                            const EGLint *attrib_list)
+{
+    EGLSurface surface = EGL_NO_SURFACE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglCreateWindowSurface)
+        surface = CACHING_SERVER(server)->super_dispatch.eglCreateWindowSurface (server, display, config, win,
+                                                   attrib_list);
+
+    return surface;
+}
+
+exposed_to_tests EGLSurface
+_egl_create_pbuffer_surface (server_t *server,
+                             EGLDisplay display,
+                             EGLConfig config,
+                             const EGLint *attrib_list)
+{
+    EGLSurface surface = EGL_NO_SURFACE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglCreatePbufferSurface)
+        surface = CACHING_SERVER(server)->super_dispatch.eglCreatePbufferSurface (server, display, config, attrib_list);
+
+    return surface;
+}
+
+exposed_to_tests EGLSurface
+_egl_create_pixmap_surface (server_t *server,
+                            EGLDisplay display,
+                            EGLConfig config,
+                            EGLNativePixmapType pixmap, 
+                            const EGLint *attrib_list)
+{
+    EGLSurface surface = EGL_NO_SURFACE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglCreatePixmapSurface)
+        surface = CACHING_SERVER(server)->super_dispatch.eglCreatePixmapSurface (server, display, config, pixmap,
+                                                   attrib_list);
+
+    return surface;
+}
+
+exposed_to_tests EGLBoolean
+_egl_destroy_surface (server_t *server,
+                      EGLDisplay display,
+                      EGLSurface surface)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (!active_state)
+        return result;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglDestroySurface) { 
+        result = CACHING_SERVER(server)->super_dispatch.eglDestroySurface (server, display, surface);
+
+        if (result == EGL_TRUE) {
+            /* update srv states */
+            _server_destroy_surface (display, surface, active_state);
+        }
+    }
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_query_surface (server_t *server,
+                    EGLDisplay display,
+                    EGLSurface surface,
+                    EGLint attribute,
+                    EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglQuerySurface) 
+        result = CACHING_SERVER(server)->super_dispatch.eglQuerySurface (server, display, surface, attribute, value);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_bind_api (server_t *server,
+               EGLenum api)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglBindAPI) 
+        result = CACHING_SERVER(server)->super_dispatch.eglBindAPI (server, api);
+
+    return result;
+}
+
+static EGLenum 
+_egl_query_api (server_t *server)
+{
+    EGLenum result = EGL_NONE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglQueryAPI) 
+        result = CACHING_SERVER(server)->super_dispatch.eglQueryAPI (server);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_wait_client (server_t *server)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglWaitClient)
+        result = CACHING_SERVER(server)->super_dispatch.eglWaitClient (server);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_release_thread (server_t *server)
+{
+    EGLBoolean result = EGL_FALSE;
+    egl_state_t *egl_state;
+    link_list_t *active_state_out = NULL;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglReleaseThread) {
+        result = CACHING_SERVER(server)->super_dispatch.eglReleaseThread (server);
+
+        if (result == EGL_TRUE) {
+            if (! active_state)
+                return result;
+            
+            egl_state = (egl_state_t *) active_state->data;
+
+            _server_make_current (egl_state->display,
+                                             EGL_NO_SURFACE,
+                                             EGL_NO_SURFACE,
+                                             EGL_NO_CONTEXT,
+                                             active_state,
+                                             &active_state_out);
+	    active_state = active_state_out;
+
+        }
+    }
+
+    return result;
+}
+
+static EGLSurface
+_egl_create_pbuffer_from_client_buffer (server_t *server,
+                                        EGLDisplay display,
+                                        EGLenum buftype,
+                                        EGLClientBuffer buffer,
+                                        EGLConfig config,
+                                        const EGLint *attrib_list)
+{
+    EGLSurface surface = EGL_NO_SURFACE;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglCreatePbufferFromClientBuffer)
+        surface = CACHING_SERVER(server)->super_dispatch.eglCreatePbufferFromClientBuffer (server, display, buftype,
+                                                             buffer, config,
+                                                             attrib_list);
+
+    return surface;
+}
+
+static EGLBoolean
+_egl_surface_attrib (server_t *server,
+                     EGLDisplay display,
+                     EGLSurface surface, 
+                     EGLint attribute,
+                     EGLint value)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglSurfaceAttrib)
+        result = CACHING_SERVER(server)->super_dispatch.eglSurfaceAttrib (server, display, surface, attribute, value);
+
+    return result;
+}
+    
+static EGLBoolean
+_egl_bind_tex_image (server_t *server,
+                     EGLDisplay display,
+                     EGLSurface surface,
+                     EGLint buffer)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglBindTexImage)
+        result = CACHING_SERVER(server)->super_dispatch.eglBindTexImage (server, display, surface, buffer);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_release_tex_image (server_t *server,
+                        EGLDisplay display,
+                        EGLSurface surface,
+                        EGLint buffer)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglReleaseTexImage)
+        result = CACHING_SERVER(server)->super_dispatch.eglReleaseTexImage (server, display, surface, buffer);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_swap_interval (server_t *server,
+                    EGLDisplay display,
+                    EGLint interval)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglSwapInterval)
+        result = CACHING_SERVER(server)->super_dispatch.eglSwapInterval (server, display, interval);
+
+    return result;
+}
+
+exposed_to_tests EGLContext
+_egl_create_context (server_t *server,
+                     EGLDisplay display,
+                     EGLConfig config,
+                     EGLContext share_context,
+                     const EGLint *attrib_list)
+{
+    EGLContext result = EGL_NO_CONTEXT;
+    
+    if (CACHING_SERVER(server)->super_dispatch.eglCreateContext)
+        result = CACHING_SERVER(server)->super_dispatch.eglCreateContext (server, display, config, share_context, 
+                                            attrib_list);
+
+    return result;
+}
+
+exposed_to_tests EGLBoolean
+_egl_destroy_context (server_t *server,
+                      EGLDisplay dpy,
+                      EGLContext ctx)
+{
+    EGLBoolean result = GL_FALSE;
+
+    if (CACHING_SERVER(server)->super_dispatch.eglDestroyContext) {
+        result = CACHING_SERVER(server)->super_dispatch.eglDestroyContext (server, dpy, ctx); 
+
+        if (result == GL_TRUE) {
+            _server_destroy_context (dpy, ctx, active_state);
+        }
+    }
+
+    return result;
+}
+
+exposed_to_tests EGLContext
+_egl_get_current_context (server_t *server)
+{
+    return CACHING_SERVER(server)->super_dispatch.eglGetCurrentContext (server);
+    egl_state_t *state;
+
+    if (!active_state)
+        return EGL_NO_CONTEXT;
+
+    state = (egl_state_t *) active_state->data;
+    return state->context;
+}
+
+exposed_to_tests EGLDisplay
+_egl_get_current_display (server_t *server)
+{
+    return CACHING_SERVER(server)->super_dispatch.eglGetCurrentDisplay (server);
+    egl_state_t *state;
+
+    if (!active_state)
+        return EGL_NO_DISPLAY;
+
+    state = (egl_state_t *) active_state->data;
+    return state->display;
+}
+
+exposed_to_tests EGLSurface
+_egl_get_current_surface (server_t *server,
+                          EGLint readdraw)
+{
+    return CACHING_SERVER(server)->super_dispatch.eglGetCurrentSurface (server, readdraw);
+    egl_state_t *state;
+    EGLSurface surface = EGL_NO_SURFACE;
+
+    if (!active_state)
+        return EGL_NO_SURFACE;
+
+    state = (egl_state_t *) active_state->data;
+
+    if (state->display == EGL_NO_DISPLAY || state->context == EGL_NO_CONTEXT)
+        goto FINISH;
+
+    if (readdraw == EGL_DRAW)
+        surface = state->drawable;
+    else
+        surface = state->readable;
+ FINISH:
+    return surface;
+}
+
+
+exposed_to_tests EGLBoolean
+_egl_query_context (server_t *server,
+                    EGLDisplay display,
+                    EGLContext ctx,
+                    EGLint attribute,
+                    EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglQueryContext)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglQueryContext (server, display, ctx, attribute, value);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_wait_gl (server_t *server)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (! CACHING_SERVER(server)->super_dispatch.eglWaitGL)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglWaitGL (server);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_wait_native (server_t *server,
+                  EGLint engine)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglWaitNative)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglWaitNative (server, engine);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_swap_buffers (server_t *server,
+                   EGLDisplay display,
+                   EGLSurface surface)
+{
+    EGLBoolean result = EGL_BAD_DISPLAY;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglSwapBuffers (server, display, surface);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_copy_buffers (server_t *server,
+                   EGLDisplay display,
+                   EGLSurface surface,
+                   EGLNativePixmapType target)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCopyBuffers)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglCopyBuffers (server, display, surface, target);
+
+    return result;
+}
+
+static __eglMustCastToProperFunctionPointerType
+_egl_get_proc_address (server_t *server,
+                       const char *procname)
+{
+    return CACHING_SERVER(server)->super_dispatch.eglGetProcAddress (server, procname);
+}
+
+exposed_to_tests EGLBoolean 
+_egl_make_current (server_t *server,
+                   EGLDisplay display,
+                   EGLSurface draw,
+                   EGLSurface read,
+                   EGLContext ctx) 
+{
+    EGLBoolean result = EGL_FALSE;
+    link_list_t *exist = NULL;
+    link_list_t *active_state_out = NULL;
+    bool found = false;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglMakeCurrent)
+        return result;
+
+    /* look for existing */
+    found = _match (display, draw, read, ctx, &exist);
+    if (found == true) {
+        /* set active to exist, tell client about it */
+        active_state = exist;
+
+        /* call real makeCurrent */
+        return CACHING_SERVER(server)->super_dispatch.eglMakeCurrent (server, display, draw, read, ctx);
+    }
+
+    /* We could not find in the saved state, we don't know whether
+     * parameters are valid or not 
+     */
+    result = CACHING_SERVER(server)->super_dispatch.eglMakeCurrent (server, display, draw, read, ctx);
+    if (result == EGL_TRUE) {
+        _server_make_current (display, draw, read, ctx,
+                                         active_state, 
+                                         &active_state_out);
+        active_state = active_state_out;
+    }
+    return result;
+}
+
+/* start of eglext.h */
+#ifdef EGL_KHR_lock_surface
+static EGLBoolean
+_egl_lock_surface_khr (server_t *server,
+                       EGLDisplay display,
+                       EGLSurface surface,
+                       const EGLint *attrib_list)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (! CACHING_SERVER(server)->super_dispatch.eglLockSurfaceKHR)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglLockSurfaceKHR (server, display, surface, attrib_list);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_unlock_surface_khr (server_t *server,
+                         EGLDisplay display,
+                         EGLSurface surface)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglUnlockSurfaceKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglUnlockSurfaceKHR (server, display, surface);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_KHR_image
+static EGLImageKHR
+_egl_create_image_khr (server_t *server,
+                       EGLDisplay display,
+                       EGLContext ctx,
+                       EGLenum target,
+                       EGLClientBuffer buffer,
+                       const EGLint *attrib_list)
+{
+    EGLImageKHR result = EGL_NO_IMAGE_KHR;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCreateImageKHR)
+        return result;
+
+    if (display == EGL_NO_DISPLAY)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglCreateImageKHR (server, display, ctx, target,
+                                         buffer, attrib_list);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_destroy_image_khr (server_t *server,
+                        EGLDisplay display,
+                        EGLImageKHR image)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglDestroyImageKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglDestroyImageKHR (server, display, image);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_KHR_reusable_sync
+static EGLSyncKHR
+_egl_create_sync_khr (server_t *server,
+                      EGLDisplay display,
+                      EGLenum type,
+                      const EGLint *attrib_list)
+{
+    EGLSyncKHR result = EGL_NO_SYNC_KHR;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCreateSyncKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglCreateSyncKHR (server, display, type, attrib_list);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_destroy_sync_khr (server_t *server,
+                       EGLDisplay display,
+                       EGLSyncKHR sync)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglDestroySyncKHR)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglDestroySyncKHR (server, display, sync);
+
+    return result;
+}
+
+static EGLint
+_egl_client_wait_sync_khr (server_t *server,
+                           EGLDisplay display,
+                           EGLSyncKHR sync,
+                           EGLint flags,
+                           EGLTimeKHR timeout)
+{
+    EGLint result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglClientWaitSyncKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglClientWaitSyncKHR (server, display, sync, flags, timeout);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_signal_sync_khr (server_t *server,
+                      EGLDisplay display,
+                      EGLSyncKHR sync,
+                      EGLenum mode)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglSignalSyncKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglSignalSyncKHR (server, display, sync, mode);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_get_sync_attrib_khr (server_t *server,
+                          EGLDisplay display,
+                          EGLSyncKHR sync,
+                          EGLint attribute,
+                          EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglGetSyncAttribKHR)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglGetSyncAttribKHR (server, display, sync, attribute, value);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_NV_sync
+static EGLSyncNV 
+_egl_create_fence_sync_nv (server_t *server,
+                           EGLDisplay display,
+                           EGLenum condition,
+                           const EGLint *attrib_list)
+{
+    EGLSyncNV result = EGL_NO_SYNC_NV;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCreateFenceSyncNV)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglCreateFenceSyncNV (server, display, condition, attrib_list);
+
+    return result;
+}
+
+static EGLBoolean 
+_egl_destroy_sync_nv (server_t *server,
+                      EGLSyncNV sync)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglDestroySyncNV)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglDestroySyncNV (server, sync);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_fence_nv (server_t *server,
+               EGLSyncNV sync)
+{
+    EGLBoolean result = EGL_FALSE;
+    
+    if (! CACHING_SERVER(server)->super_dispatch.eglFenceNV)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglFenceNV (server, sync);
+
+    return result;
+}
+
+static EGLint
+_egl_client_wait_sync_nv (server_t *server,
+                          EGLSyncNV sync,
+                          EGLint flags,
+                          EGLTimeNV timeout)
+{
+    /* XXX: is this supposed to be default value ? */
+    EGLint result = EGL_TIMEOUT_EXPIRED_NV;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglClientWaitSyncNV)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglClientWaitSyncNV (server, sync, flags, timeout);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_signal_sync_nv (server_t *server,
+                     EGLSyncNV sync,
+                     EGLenum mode)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglSignalSyncNV)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglSignalSyncNV (server, sync, mode);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_get_sync_attrib_nv (server_t *server,
+                         EGLSyncNV sync,
+                         EGLint attribute,
+                         EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglGetSyncAttribNV)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglGetSyncAttribNV (server, sync, attribute, value);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_HI_clientpixmap
+static EGLSurface
+_egl_create_pixmap_surface_hi (server_t *server,
+                               EGLDisplay display,
+                               EGLConfig config,
+                               struct EGLClientPixmapHI *pixmap)
+{
+    EGLSurface result = EGL_NO_SURFACE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCreatePixmapSurfaceHI)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglCreatePixmapSurfaceHI (server, display, config, pixmap);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_MESA_drm_image
+static EGLImageKHR
+_egl_create_drm_image_mesa (server_t *server,
+                            EGLDisplay display,
+                            const EGLint *attrib_list)
+{
+    EGLImageKHR result = EGL_NO_IMAGE_KHR;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglCreateDRMImageMESA)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglCreateDRMImageMESA (server, display, attrib_list);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_export_drm_image_mesa (server_t *server,
+                            EGLDisplay display,
+                            EGLImageKHR image,
+                            EGLint *name,
+                            EGLint *handle,
+                            EGLint *stride)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglExportDRMImageMESA)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglExportDRMImageMESA (server, display, image, name, handle, stride);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_NV_post_sub_buffer
+static EGLBoolean 
+_egl_post_subbuffer_nv (server_t *server,
+                        EGLDisplay display,
+                        EGLSurface surface, 
+                        EGLint x,
+                        EGLint y,
+                        EGLint width,
+                        EGLint height)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglExportDRMImageMESA)
+        return result;
+
+    result = CACHING_SERVER(server)->super_dispatch.eglPostSubBufferNV (server, display, surface, x, y, width, height);
+
+    return result;
+}
+#endif
+
+#ifdef EGL_SEC_image_map
+static void *
+_egl_map_image_sec (server_t *server,
+                    EGLDisplay display,
+                    EGLImageKHR image)
+{
+    void *result = NULL;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglMapImageSEC)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglMapImageSEC (server, display, image);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_unmap_image_sec (server_t *server,
+                      EGLDisplay display,
+                      EGLImageKHR image)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglUnmapImageSEC)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglUnmapImageSEC (server, display, image);
+
+    return result;
+}
+
+static EGLBoolean
+_egl_get_image_attrib_sec (server_t *server,
+                           EGLDisplay display,
+                           EGLImageKHR image,
+                           EGLint attribute,
+                           EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! CACHING_SERVER(server)->super_dispatch.eglGetImageAttribSEC)
+        return result;
+    
+    result = CACHING_SERVER(server)->super_dispatch.eglGetImageAttribSEC (server, display, image, attribute, value);
+
+    return result;
+}
+#endif
+
+exposed_to_tests void
+caching_server_init (caching_server_t *server, buffer_t *buffer)
+{
+    server_init (&server->super, buffer, false);
+    server->super_dispatch = server->super.dispatch;
+
+    /* TODO: Override the methods in the super dispatch table. */
+}
+
+exposed_to_tests caching_server_t *
+caching_server_new (buffer_t *buffer)
+{
+    caching_server_t *server = malloc (sizeof(caching_server_t));
+    caching_server_init (server, buffer);
+    return server;
+}

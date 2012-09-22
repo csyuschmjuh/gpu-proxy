@@ -14,16 +14,15 @@
  * command buffer, while the server thread reads from the command from
  * the command buffer
  */
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <stdlib.h>
 
 #include "config.h"
 
 #include "client_state.h"
 #include "thread_private.h"
 #include "types_private.h"
-#include "egl_server_private.h"
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <stdlib.h>
 
 EGLAPI EGLint EGLAPIENTRY
 eglGetError (void)

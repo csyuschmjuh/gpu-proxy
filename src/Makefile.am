@@ -29,6 +29,7 @@ libGPUProcess_la_SOURCES = \
 	name_handler.c \
 	ring_buffer.h \
 	ring_buffer.c \
+	server/caching_server_private.h \
 	server/server.c \
 	server/server.h \
 	server/dispatch_private.h \
@@ -54,10 +55,7 @@ libGPUProcess_la_SOURCES += \
 	gles2_utils.c \
 	gles2_utils.h \
 	server/dispatch_gles2.c \
-	server/egl_server.c \
-	server/egl_server_private.h \
-	server/egl_server_helper.c \
-	server/gles2_server.c
+	server/caching_server_gles.c
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/dispatch_gles2_private.h \
