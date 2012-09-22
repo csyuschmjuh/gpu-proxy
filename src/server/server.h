@@ -19,6 +19,7 @@ typedef struct _server server_t;
 typedef struct _server {
     server_dispatch_table_t dispatch;
 
+    mutex_t thread_started_mutex;
     buffer_t *buffer;
     thread_t thread;
     bool threaded;
