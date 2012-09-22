@@ -5,11 +5,11 @@ libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
+	-Wunused-function \
+	-Werror \
 	-Igenerated \
 	-Iclient \
-	-Iserver \
-	-Wunused-function \
-	-Werror
+	-Iserver
 
 libGPUProcess_la_LDFLAGS = \
 	-version-info 0:0:0 \
@@ -67,7 +67,13 @@ nodist_libGPUProcess_la_SOURCES = \
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-generated/dispatch_gles2_private.h generated/gles2_api_autogen.c generated/command_autogen.c generated/command_autogen.h generated/command_id_autogen.h: generated/build_gles2_cmd_buffer.py generated/egl_functions.txt generated/gles2_functions.txt
+generated/dispatch_gles2_private.h: generated/gles2_api_autogen.c
+generated/gles2_api_autogen.c: generated/command_autogen.c
+generated/command_autogen.c : generated/command_autogen.h
+generated/command_autogen.h : generated/command_id_autogen.h
+generated/command_id_autogen.h : generated/build_gles2_cmd_buffer.py \
+								 generated/egl_functions.txt \
+								 generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 
@@ -93,4 +99,4 @@ endif
 
 all-local: $(symlinks)
 clean-local:
-	rm generated/*.c generated/*.h
+	rm -f generated/*.c generated/*.h
