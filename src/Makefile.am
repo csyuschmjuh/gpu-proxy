@@ -8,6 +8,7 @@ libGPUProcess_la_CFLAGS = \
 	-Igenerated \
 	-Iclient \
 	-Iserver \
+	-Wunused-function \
 	-Werror
 
 libGPUProcess_la_LDFLAGS = \
