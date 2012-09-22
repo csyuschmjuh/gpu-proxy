@@ -1,7 +1,7 @@
 
 #include "ring_buffer.h"
 #include "server.h"
-#include "egl_server_private.h"
+#include "caching_server_private.h"
 #include "thread_private.h"
 #include <time.h>
 

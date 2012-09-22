@@ -5,17 +5,15 @@ noinst_PROGRAMS = \
 rootsrcdir=../..
 
 gpuproxy_test_SOURCES = \
-	$(rootsrcdir)/src/egl_states.h \
-	$(rootsrcdir)/src/egl_server_private.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
+	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
+	$(rootsrcdir)/src/server/caching_server_gles_private.h \
+	$(rootsrcdir)/src/server/caching_server_gles.c \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/server/dispatch_private.h \
 	$(rootsrcdir)/src/server/dispatch_gles2.c \
-	$(rootsrcdir)/src/server/egl_server.c \
-	$(rootsrcdir)/src/server/egl_server_helper.c \
-	$(rootsrcdir)/src/server/gles2_server.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	test_egl.c \
