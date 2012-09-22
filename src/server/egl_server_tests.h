@@ -8,6 +8,12 @@
 extern "C" {
 #endif
 
+exposed_to_tests void
+caching_server_init (caching_server_t *server, buffer_t *buffer);
+
+exposed_to_tests caching_server_t *
+caching_server_new (buffer_t *buffer);
+
 exposed_to_tests EGLint
 _egl_get_error (command_buffer_server_t *server);
 

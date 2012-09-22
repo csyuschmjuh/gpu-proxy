@@ -16,9 +16,15 @@ report_exceptional_condition(const char* error)
 }
 
 void
-buffer_create(buffer_t *buffer,
-              unsigned long length)
+buffer_create(buffer_t *buffer)
 {
+    /* The size of the buffer (in bytes). Note that for some buffers
+     * such as the memory-mirrored ring buffer the actual buffer size
+     * may be larger.
+     */
+    /* TODO: Make this configurable. */
+    static unsigned long default_buffer_size = 1024;
+
     char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
     void *address;
@@ -36,7 +42,7 @@ buffer_create(buffer_t *buffer,
 
     // Round up the length to the nearest page boundary.
     long page_size = sysconf(_SC_PAGESIZE);
-    buffer->length = ((length + page_size - 1) / page_size) * page_size;
+    buffer->length = ((default_buffer_size + page_size - 1) / page_size) * page_size;
 
     buffer->fill_count = 0;
     buffer->head = buffer->tail = 0;

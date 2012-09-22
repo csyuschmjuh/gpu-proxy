@@ -8,20 +8,20 @@
 mutex_static_init (server_thread_started_mutex);
 
 static void
-command_buffer_server_handle_set_token (command_buffer_server_t *command_buffer_server,
+command_buffer_server_handle_set_token (command_buffer_server_t *server,
                                         command_set_token_t *command)
 {
-    command_buffer_server->buffer->last_token = command->token;
+    server->buffer->last_token = command->token;
 }
 
 static void
-command_buffer_server_handle_command (command_buffer_server_t *command_buffer_server,
+command_buffer_server_handle_command (command_buffer_server_t *server,
                                       command_t *command)
 {
     switch (command->id) {
         case COMMAND_NO_OP: break;
         case COMMAND_SET_TOKEN:
-            command_buffer_server_handle_set_token (command_buffer_server,
+            command_buffer_server_handle_set_token (server,
                                                     (command_set_token_t *)command);
             break;
         }
@@ -67,40 +67,52 @@ server_thread_func (void *ptr)
 }
 
 command_buffer_server_t *
-command_buffer_server_initialize (buffer_t *buffer)
+command_buffer_server_new (buffer_t *buffer)
 {
-    command_buffer_server_t *command_buffer_server;
-
-    command_buffer_server = (command_buffer_server_t *)calloc (1, sizeof (command_buffer_server_t));
-    command_buffer_server->buffer = buffer;
-
-    /* We use a mutex here to wait until the thread has started. */
-    mutex_lock (server_thread_started_mutex);
-    pthread_create (&command_buffer_server->thread, NULL, server_thread_func, command_buffer_server);
-    mutex_lock (server_thread_started_mutex);
-
+    command_buffer_server_t *command_buffer_server = malloc (sizeof (command_buffer_server_t));
+    command_buffer_server_init (command_buffer_server, buffer, true);
     return command_buffer_server;
 }
 
-bool
-command_buffer_server_destroy (command_buffer_server_t *command_buffer_server)
+void
+command_buffer_server_init (command_buffer_server_t *server,
+                            buffer_t *buffer,
+                            bool threaded)
 {
-    command_buffer_server->buffer = NULL;
-    free (command_buffer_server);
+    server->threaded = threaded;
+    server->buffer = buffer;
 
-    pthread_join (command_buffer_server->thread, NULL);
-    /* FIXME: GL termination. */
-    if (command_buffer_server->active_state) {
-        _server_remove_state (&command_buffer_server->active_state);
-        command_buffer_server->active_state = NULL;
+    if (threaded) {
+        /* We use a mutex here to wait until the thread has started. */
+        mutex_lock (server_thread_started_mutex);
+        pthread_create (&server->thread, NULL, server_thread_func, server);
+        mutex_lock (server_thread_started_mutex);
+    } else {
+        _server_init (server);
+    }
+}
+
+bool
+command_buffer_server_destroy (command_buffer_server_t *server)
+{
+    server->buffer = NULL;
+
+    if (server->threaded) {
+        pthread_join (server->thread, NULL);
+        /* FIXME: GL termination. */
+        if (server->active_state) {
+            _server_remove_state (&server->active_state);
+            server->active_state = NULL;
+        }
     }
 
+    free (server);
     return true;
 }
 
 void
-command_buffer_server_set_active_state (command_buffer_server_t *command_buffer_server,
+command_buffer_server_set_active_state (command_buffer_server_t *server,
                                         link_list_t *active_state)
 {
-    command_buffer_server->active_state = active_state;
+    server->active_state = active_state;
 }

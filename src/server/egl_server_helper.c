@@ -10,7 +10,6 @@
 
 /* global state variable for all server threads */
 gl_server_states_t              server_states;
-command_buffer_server_t *command_buffer_server;
 
 mutex_static_init (egl_mutex);
 

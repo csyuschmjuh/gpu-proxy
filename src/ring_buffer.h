@@ -27,7 +27,7 @@ typedef struct buffer
 } buffer_t;
 
 private void
-buffer_create(buffer_t *buffer, unsigned long length);
+buffer_create(buffer_t *buffer);
 
 private void
 buffer_free(buffer_t *buffer);
