@@ -2919,7 +2919,18 @@ class GLGenerator(object):
         file.Write('    dispatch->%s = passthrough_%s;\n' % (func.name, func.name))
 
     file.Write("}\n")
+    file.Close()
 
+  def WriteCachingServerDispatchTableImplementation(self, filename):
+    """Writes the caching server dispatch table implementation for the server-side"""
+    caching_server_text = open(os.path.join('..', 'server', 'caching_server_gles.c')).read()
+    file = CWriter(filename)
+
+    for func in self.functions:
+        caching_func_name = "caching_server_%s" % func.name
+        if caching_server_text.find(caching_func_name) == -1:
+            continue
+        file.Write('    server->super.dispatch.%s = %s;\n' % (func.name, caching_func_name))
     file.Close()
 
   def WriteGetSizeFunction(self, file, functions):
@@ -2986,6 +2997,7 @@ def main(argv):
   gen.WriteClientImplementations("command_autogen.c")
   gen.WriteServerDispatchTable("dispatch_gles2_private.h")
   gen.WriteBaseServerDispatchTableImplementation("dispatch_gles2_autogen.c")
+  gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors

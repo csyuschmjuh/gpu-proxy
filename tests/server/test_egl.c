@@ -1,5 +1,5 @@
 #include "test_egl.h"
-#include "caching_server_gles_tests.h"
+#include "caching_server_private.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
@@ -19,7 +19,7 @@ setup (void)
     dpy = XOpenDisplay (NULL);
     GPUPROCESS_FAIL_IF (dpy == NULL, "XOpenDisplay should work");
 
-    egl_dpy = _egl_get_display (server, dpy);
+    egl_dpy = server->dispatch.eglGetDisplay (server, dpy);
     GPUPROCESS_FAIL_IF (egl_dpy == EGL_NO_DISPLAY, "_egl_get_display failed");
 }
 
@@ -37,15 +37,15 @@ GPUPROCESS_START_TEST
     EGLint get_error_result;
     EGLBoolean result;
 
-    result = _egl_initialize (server, NULL, &major, &minor);
+    result = server->dispatch.eglInitialize (server, NULL, &major, &minor);
     GPUPROCESS_FAIL_IF (result, "_egl_initialize can not be created by an invalid display");
 
-    get_error_result = _egl_get_error (server);
+    get_error_result = server->dispatch.eglGetError (server);
     GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
 
     major = -1;
     minor = -1;
-    result = _egl_initialize (server, egl_dpy, &major, &minor);
+    result = server->dispatch.eglInitialize (server, egl_dpy, &major, &minor);
     GPUPROCESS_FAIL_IF (!result, "_egl_initialize failed");
     GPUPROCESS_FAIL_IF (major < 0 && minor < 0, "_egl_initialize returned wrong major and minor values");
 
@@ -60,13 +60,13 @@ GPUPROCESS_START_TEST
     EGLBoolean result;
     EGLint get_error_result;
 
-    result = _egl_terminate (server, NULL);
+    result = server->dispatch.eglTerminate (server, NULL);
     GPUPROCESS_FAIL_IF (result, "_egl_terminate can not terminate an invalid EGL display connection");
 
-    get_error_result = _egl_get_error (server);
+    get_error_result = server->dispatch.eglGetError (server);
     GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
 
-    result = _egl_terminate (server, egl_dpy);
+    result = server->dispatch.eglTerminate (server, egl_dpy);
     GPUPROCESS_FAIL_IF (!result, "_egl_terminate failed");
 }
 GPUPROCESS_END_TEST
@@ -80,7 +80,7 @@ GPUPROCESS_START_TEST
     EGLConfig *config_list = NULL;
     EGLint get_error_result;
 
-    result = _egl_get_configs (server, egl_dpy, NULL, 0, &config_list_length);
+    result = server->dispatch.eglGetConfigs (server, egl_dpy, NULL, 0, &config_list_length);
     GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
     GPUPROCESS_FAIL_IF (config_list_length <= 0, "config list should not be <= 0");
 
@@ -88,14 +88,14 @@ GPUPROCESS_START_TEST
     GPUPROCESS_FAIL_IF (!config_list, "error allocating config_list");
 
     old_config_list_length = config_list_length;
-    result = _egl_get_configs (server, egl_dpy, config_list, config_list_length, &config_list_length);
+    result = server->dispatch.eglGetConfigs (server, egl_dpy, config_list, config_list_length, &config_list_length);
     GPUPROCESS_FAIL_IF (!result, "_egl_get_configs failed");
     GPUPROCESS_FAIL_UNLESS (config_list_length == old_config_list_length, "They should have the same lenght");
 
-    result = _egl_get_configs (server, NULL, NULL, 0, &config_list_length);
+    result = server->dispatch.eglGetConfigs (server, NULL, NULL, 0, &config_list_length);
     GPUPROCESS_FAIL_IF (result, "_egl_get_configs should return false");
 
-    get_error_result = _egl_get_error (server);
+    get_error_result = server->dispatch.eglGetError (server);
     GPUPROCESS_FAIL_UNLESS (get_error_result == EGL_BAD_DISPLAY, "_egl_get_error should return EGL_BAD_DISPLAY");
 
     free (config_list);
@@ -107,7 +107,7 @@ GPUPROCESS_START_TEST
 {
     EGLBoolean result;
 
-    result = _egl_bind_api (server, EGL_OPENGL_ES_API);
+    result = server->dispatch.eglBindAPI (server, EGL_OPENGL_ES_API);
     GPUPROCESS_FAIL_IF (!result, "_egl_bind_api failed");
 }
 GPUPROCESS_END_TEST
@@ -142,25 +142,25 @@ GPUPROCESS_START_TEST
         EGL_NONE
     };
 
-    result = _egl_choose_config (server, egl_dpy, pbuffer_attribs, &config, 1, &config_list_length);
+    result = server->dispatch.eglChooseConfig (server, egl_dpy, pbuffer_attribs, &config, 1, &config_list_length);
     GPUPROCESS_FAIL_IF (!result, "_egl_choose_config failed");
 
-    pbuffer_context = _egl_create_context (server, egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
+    pbuffer_context = server->dispatch.eglCreateContext (server, egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
     GPUPROCESS_FAIL_IF (!pbuffer_context, "_egl_create_context failed");
 
-    result = _egl_choose_config (server, egl_dpy, window_attribs, &config, 1, &config_list_length);
+    result = server->dispatch.eglChooseConfig (server, egl_dpy, window_attribs, &config, 1, &config_list_length);
     GPUPROCESS_FAIL_IF (!result, "_egl_choose_config failed");
 
-    window_context = _egl_create_context (server, egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
+    window_context = server->dispatch.eglCreateContext (server, egl_dpy, config, EGL_NO_CONTEXT, ctx_attribs);
     GPUPROCESS_FAIL_IF (! window_context, "context should be created");
 
-    result = _egl_destroy_context (server, egl_dpy, window_context);
+    result = server->dispatch.eglDestroyContext (server, egl_dpy, window_context);
     GPUPROCESS_FAIL_IF (!result, "_egl_destroy_context failed");
 
-    result = _egl_destroy_context (server, egl_dpy, pbuffer_context);
+    result = server->dispatch.eglDestroyContext (server, egl_dpy, pbuffer_context);
     GPUPROCESS_FAIL_IF (!result, "_egl_destroy_context failed");
 
-    get_error_result = _egl_get_error (server);
+    get_error_result = server->dispatch.eglGetError (server);
     GPUPROCESS_FAIL_IF (get_error_result != EGL_SUCCESS, "_egl_get_error should fail");
 
 }
