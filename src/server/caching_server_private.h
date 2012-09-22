@@ -22,6 +22,9 @@ typedef struct _caching_server {
      * overrides the original dispatch table. */
     server_dispatch_table_t super_dispatch;
 
+    /* The state of the active GL context. */
+    link_list_t *active_state;
+
 } caching_server_t;
 
 typedef struct gl_server_states
