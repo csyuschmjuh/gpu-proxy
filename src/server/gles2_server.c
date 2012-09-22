@@ -7,7 +7,7 @@
  * if the cached error has not been set to one of the errors.
  */
 #include "config.h"
-#include "command_buffer_server.h"
+#include "server.h"
 
 #ifndef HAS_GLES2
 #include <GLES/gl.h>
@@ -29,7 +29,7 @@
 extern __thread link_list_t        *active_state;
 
 exposed_to_tests inline bool
-_gl_is_valid_func (command_buffer_server_t *server, void *func)
+_gl_is_valid_func (server_t *server, void *func)
 {
     egl_state_t *egl_state;
 
@@ -49,7 +49,7 @@ _gl_is_valid_func (command_buffer_server_t *server, void *func)
 }
 
 exposed_to_tests inline bool
-_gl_is_valid_context (command_buffer_server_t *server)
+_gl_is_valid_context (server_t *server)
 {
     egl_state_t *egl_state;
 
@@ -64,7 +64,7 @@ _gl_is_valid_context (command_buffer_server_t *server)
 }
 
 exposed_to_tests inline void
-_gl_set_error (command_buffer_server_t *server, GLenum error)
+_gl_set_error (server_t *server, GLenum error)
 {
     egl_state_t *egl_state;
 
@@ -77,7 +77,7 @@ _gl_set_error (command_buffer_server_t *server, GLenum error)
 }
 
 /* GLES2 core profile API */
-exposed_to_tests void _gl_active_texture (command_buffer_server_t *server, GLenum texture)
+exposed_to_tests void _gl_active_texture (server_t *server, GLenum texture)
 {
     egl_state_t *egl_state;
 
@@ -101,7 +101,7 @@ exposed_to_tests void _gl_active_texture (command_buffer_server_t *server, GLenu
     }
 }
 
-exposed_to_tests void _gl_attach_shader (command_buffer_server_t *server, GLuint program, GLuint shader)
+exposed_to_tests void _gl_attach_shader (server_t *server, GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -115,7 +115,7 @@ exposed_to_tests void _gl_attach_shader (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests void _gl_bind_attrib_location (command_buffer_server_t *server, GLuint program, GLuint index, const GLchar *name)
+exposed_to_tests void _gl_bind_attrib_location (server_t *server, GLuint program, GLuint index, const GLchar *name)
 {
     egl_state_t *egl_state;
     
@@ -130,7 +130,7 @@ exposed_to_tests void _gl_bind_attrib_location (command_buffer_server_t *server,
         free ((char *)name);
 }
 
-exposed_to_tests void _gl_bind_buffer (command_buffer_server_t *server, GLenum target, GLuint buffer)
+exposed_to_tests void _gl_bind_buffer (server_t *server, GLenum target, GLuint buffer)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -173,7 +173,7 @@ exposed_to_tests void _gl_bind_buffer (command_buffer_server_t *server, GLenum t
     }
 }
 
-exposed_to_tests void _gl_bind_framebuffer (command_buffer_server_t *server, GLenum target, GLuint framebuffer)
+exposed_to_tests void _gl_bind_framebuffer (server_t *server, GLenum target, GLuint framebuffer)
 {
     egl_state_t *egl_state;
     
@@ -210,7 +210,7 @@ exposed_to_tests void _gl_bind_framebuffer (command_buffer_server_t *server, GLe
     }
 }
 
-exposed_to_tests void _gl_bind_renderbuffer (command_buffer_server_t *server, GLenum target, GLuint renderbuffer)
+exposed_to_tests void _gl_bind_renderbuffer (server_t *server, GLenum target, GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     
@@ -227,7 +227,7 @@ exposed_to_tests void _gl_bind_renderbuffer (command_buffer_server_t *server, GL
     }
 }
 
-exposed_to_tests void _gl_bind_texture (command_buffer_server_t *server, GLenum target, GLuint texture)
+exposed_to_tests void _gl_bind_texture (server_t *server, GLenum target, GLuint texture)
 {
     egl_state_t *egl_state;
     
@@ -273,7 +273,7 @@ exposed_to_tests void _gl_bind_texture (command_buffer_server_t *server, GLenum 
     }
 }
 
-exposed_to_tests void _gl_blend_color (command_buffer_server_t *server, GLclampf red, GLclampf green,
+exposed_to_tests void _gl_blend_color (server_t *server, GLclampf red, GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -299,7 +299,7 @@ exposed_to_tests void _gl_blend_color (command_buffer_server_t *server, GLclampf
     }
 }
 
-exposed_to_tests void _gl_blend_equation (command_buffer_server_t *server, GLenum mode)
+exposed_to_tests void _gl_blend_equation (server_t *server, GLenum mode)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -327,7 +327,7 @@ exposed_to_tests void _gl_blend_equation (command_buffer_server_t *server, GLenu
     }
 }
 
-exposed_to_tests void _gl_blend_equation_separate (command_buffer_server_t *server, GLenum modeRGB, GLenum modeAlpha)
+exposed_to_tests void _gl_blend_equation_separate (server_t *server, GLenum modeRGB, GLenum modeAlpha)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -358,7 +358,7 @@ exposed_to_tests void _gl_blend_equation_separate (command_buffer_server_t *serv
     }
 }
 
-exposed_to_tests void _gl_blend_func (command_buffer_server_t *server, GLenum sfactor, GLenum dfactor)
+exposed_to_tests void _gl_blend_func (server_t *server, GLenum sfactor, GLenum dfactor)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -415,7 +415,7 @@ exposed_to_tests void _gl_blend_func (command_buffer_server_t *server, GLenum sf
     }
 }
 
-exposed_to_tests void _gl_blend_func_separate (command_buffer_server_t *server, GLenum srcRGB, GLenum dstRGB,
+exposed_to_tests void _gl_blend_func_separate (server_t *server, GLenum srcRGB, GLenum dstRGB,
                                      GLenum srcAlpha, GLenum dstAlpha)
 {
     egl_state_t *egl_state;
@@ -505,7 +505,7 @@ exposed_to_tests void _gl_blend_func_separate (command_buffer_server_t *server, 
     }
 }
 
-exposed_to_tests void _gl_buffer_data (command_buffer_server_t *server, GLenum target, GLsizeiptr size,
+exposed_to_tests void _gl_buffer_data (server_t *server, GLenum target, GLsizeiptr size,
                              const GLvoid *data, GLenum usage)
 {
     egl_state_t *egl_state;
@@ -526,7 +526,7 @@ exposed_to_tests void _gl_buffer_data (command_buffer_server_t *server, GLenum t
         free ((void *)data);
 }
 
-exposed_to_tests void _gl_buffer_sub_data (command_buffer_server_t *server, GLenum target, GLintptr offset,
+exposed_to_tests void _gl_buffer_sub_data (server_t *server, GLenum target, GLintptr offset,
                                  GLsizeiptr size, const GLvoid *data)
 {
     egl_state_t *egl_state;
@@ -547,7 +547,7 @@ exposed_to_tests void _gl_buffer_sub_data (command_buffer_server_t *server, GLen
         free ((void *)data);
 }
 
-exposed_to_tests GLenum _gl_check_framebuffer_status (command_buffer_server_t *server, GLenum target)
+exposed_to_tests GLenum _gl_check_framebuffer_status (server_t *server, GLenum target)
 {
     GLenum result = GL_INVALID_ENUM;
     egl_state_t *egl_state;
@@ -578,7 +578,7 @@ exposed_to_tests GLenum _gl_check_framebuffer_status (command_buffer_server_t *s
     return result;
 }
 
-exposed_to_tests void _gl_clear (command_buffer_server_t *server, GLbitfield mask)
+exposed_to_tests void _gl_clear (server_t *server, GLbitfield mask)
 {
     egl_state_t *egl_state;
     
@@ -597,7 +597,7 @@ exposed_to_tests void _gl_clear (command_buffer_server_t *server, GLbitfield mas
     }
 }
 
-exposed_to_tests void _gl_clear_color (command_buffer_server_t *server, GLclampf red, GLclampf green,
+exposed_to_tests void _gl_clear_color (server_t *server, GLclampf red, GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -623,7 +623,7 @@ exposed_to_tests void _gl_clear_color (command_buffer_server_t *server, GLclampf
     }
 }
 
-exposed_to_tests void _gl_clear_depthf (command_buffer_server_t *server, GLclampf depth)
+exposed_to_tests void _gl_clear_depthf (server_t *server, GLclampf depth)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -642,7 +642,7 @@ exposed_to_tests void _gl_clear_depthf (command_buffer_server_t *server, GLclamp
     }
 }
 
-exposed_to_tests void _gl_clear_stencil (command_buffer_server_t *server, GLint s)
+exposed_to_tests void _gl_clear_stencil (server_t *server, GLint s)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -661,7 +661,7 @@ exposed_to_tests void _gl_clear_stencil (command_buffer_server_t *server, GLint 
     }
 }
 
-exposed_to_tests void _gl_color_mask (command_buffer_server_t *server, GLboolean red, GLboolean green,
+exposed_to_tests void _gl_color_mask (server_t *server, GLboolean red, GLboolean green,
                             GLboolean blue, GLboolean alpha)
 {
     egl_state_t *egl_state;
@@ -687,7 +687,7 @@ exposed_to_tests void _gl_color_mask (command_buffer_server_t *server, GLboolean
     }
 }
 
-exposed_to_tests void _gl_compressed_tex_image_2d (command_buffer_server_t *server, GLenum target, GLint level,
+exposed_to_tests void _gl_compressed_tex_image_2d (server_t *server, GLenum target, GLint level,
                                          GLenum internalformat,
                                          GLsizei width, GLsizei height,
                                          GLint border, GLsizei imageSize,
@@ -710,7 +710,7 @@ exposed_to_tests void _gl_compressed_tex_image_2d (command_buffer_server_t *serv
         free ((void *)data);
 }
 
-exposed_to_tests void _gl_compressed_tex_sub_image_2d (command_buffer_server_t *server, GLenum target, GLint level,
+exposed_to_tests void _gl_compressed_tex_sub_image_2d (server_t *server, GLenum target, GLint level,
                                              GLint xoffset, GLint yoffset,
                                              GLsizei width, GLsizei height,
                                              GLenum format, 
@@ -734,7 +734,7 @@ exposed_to_tests void _gl_compressed_tex_sub_image_2d (command_buffer_server_t *
         free ((void *)data);
 }
 
-exposed_to_tests void _gl_copy_tex_image_2d (command_buffer_server_t *server, GLenum target, GLint level,
+exposed_to_tests void _gl_copy_tex_image_2d (server_t *server, GLenum target, GLint level,
                                    GLenum internalformat,
                                    GLint x, GLint y,
                                    GLsizei width, GLsizei height,
@@ -753,7 +753,7 @@ exposed_to_tests void _gl_copy_tex_image_2d (command_buffer_server_t *server, GL
     }
 }
 
-exposed_to_tests void _gl_copy_tex_sub_image_2d (command_buffer_server_t *server, GLenum target, GLint level,
+exposed_to_tests void _gl_copy_tex_sub_image_2d (server_t *server, GLenum target, GLint level,
                                        GLint xoffset, GLint yoffset,
                                        GLint x, GLint y,
                                        GLsizei width, GLsizei height)
@@ -772,7 +772,7 @@ exposed_to_tests void _gl_copy_tex_sub_image_2d (command_buffer_server_t *server
 }
 
 /* This is a sync call */
-exposed_to_tests GLuint _gl_create_program  (command_buffer_server_t *server)
+exposed_to_tests GLuint _gl_create_program  (server_t *server)
 {
     GLuint result = 0;
     egl_state_t *egl_state;
@@ -788,7 +788,7 @@ exposed_to_tests GLuint _gl_create_program  (command_buffer_server_t *server)
 }
 
 /* sync call */
-exposed_to_tests GLuint _gl_create_shader (command_buffer_server_t *server, GLenum shaderType)
+exposed_to_tests GLuint _gl_create_shader (server_t *server, GLenum shaderType)
 {
     GLuint result = 0;
     egl_state_t *egl_state;
@@ -809,7 +809,7 @@ exposed_to_tests GLuint _gl_create_shader (command_buffer_server_t *server, GLen
     return result;
 }
 
-exposed_to_tests void _gl_cull_face (command_buffer_server_t *server, GLenum mode)
+exposed_to_tests void _gl_cull_face (server_t *server, GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -833,7 +833,7 @@ exposed_to_tests void _gl_cull_face (command_buffer_server_t *server, GLenum mod
     }
 }
 
-exposed_to_tests void _gl_delete_buffers (command_buffer_server_t *server, GLsizei n, const GLuint *buffers)
+exposed_to_tests void _gl_delete_buffers (server_t *server, GLsizei n, const GLuint *buffers)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -882,7 +882,7 @@ FINISH:
         free ((void *)buffers);
 }
 
-exposed_to_tests void _gl_delete_framebuffers (command_buffer_server_t *server, GLsizei n, const GLuint *framebuffers)
+exposed_to_tests void _gl_delete_framebuffers (server_t *server, GLsizei n, const GLuint *framebuffers)
 {
     egl_state_t *egl_state;
     int i;
@@ -911,7 +911,7 @@ FINISH:
         free ((void *)framebuffers);
 }
 
-exposed_to_tests void _gl_delete_program (command_buffer_server_t *server, GLuint program)
+exposed_to_tests void _gl_delete_program (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
     
@@ -925,7 +925,7 @@ exposed_to_tests void _gl_delete_program (command_buffer_server_t *server, GLuin
     }
 }
 
-exposed_to_tests void _gl_delete_renderbuffers (command_buffer_server_t *server, GLsizei n, const GLuint *renderbuffers)
+exposed_to_tests void _gl_delete_renderbuffers (server_t *server, GLsizei n, const GLuint *renderbuffers)
 {
     egl_state_t *egl_state;
     
@@ -946,7 +946,7 @@ FINISH:
         free ((void *)renderbuffers);
 }
 
-exposed_to_tests void _gl_delete_shader (command_buffer_server_t *server, GLuint shader)
+exposed_to_tests void _gl_delete_shader (server_t *server, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -960,7 +960,7 @@ exposed_to_tests void _gl_delete_shader (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests void _gl_delete_textures (command_buffer_server_t *server, GLsizei n, const GLuint *textures)
+exposed_to_tests void _gl_delete_textures (server_t *server, GLsizei n, const GLuint *textures)
 {
     egl_state_t *egl_state;
     
@@ -981,7 +981,7 @@ FINISH:
         free ((void *)textures);
 }
 
-exposed_to_tests void _gl_depth_func (command_buffer_server_t *server, GLenum func)
+exposed_to_tests void _gl_depth_func (server_t *server, GLenum func)
 {
     egl_state_t *egl_state;
     
@@ -1010,7 +1010,7 @@ exposed_to_tests void _gl_depth_func (command_buffer_server_t *server, GLenum fu
     }
 }
 
-exposed_to_tests void _gl_depth_mask (command_buffer_server_t *server, GLboolean flag)
+exposed_to_tests void _gl_depth_mask (server_t *server, GLboolean flag)
 {
     egl_state_t *egl_state;
     
@@ -1027,7 +1027,7 @@ exposed_to_tests void _gl_depth_mask (command_buffer_server_t *server, GLboolean
     }
 }
 
-exposed_to_tests void _gl_depth_rangef (command_buffer_server_t *server, GLclampf nearVal, GLclampf farVal)
+exposed_to_tests void _gl_depth_rangef (server_t *server, GLclampf nearVal, GLclampf farVal)
 {
     egl_state_t *egl_state;
     
@@ -1046,7 +1046,7 @@ exposed_to_tests void _gl_depth_rangef (command_buffer_server_t *server, GLclamp
     }
 }
 
-exposed_to_tests void _gl_detach_shader (command_buffer_server_t *server, GLuint program, GLuint shader)
+exposed_to_tests void _gl_detach_shader (server_t *server, GLuint program, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -1061,7 +1061,7 @@ exposed_to_tests void _gl_detach_shader (command_buffer_server_t *server, GLuint
 }
 
 exposed_to_tests void
-_gl_set_cap (command_buffer_server_t *server, GLenum cap, GLboolean enable)
+_gl_set_cap (server_t *server, GLenum cap, GLboolean enable)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1144,18 +1144,18 @@ _gl_set_cap (command_buffer_server_t *server, GLenum cap, GLboolean enable)
     }
 }
 
-exposed_to_tests void _gl_disable (command_buffer_server_t *server, GLenum cap)
+exposed_to_tests void _gl_disable (server_t *server, GLenum cap)
 {
     _gl_set_cap (server, cap, GL_FALSE);
 }
 
-exposed_to_tests void _gl_enable (command_buffer_server_t *server, GLenum cap)
+exposed_to_tests void _gl_enable (server_t *server, GLenum cap)
 {
     _gl_set_cap (server, cap, GL_TRUE);
 }
 
 exposed_to_tests bool
-_gl_index_is_too_large (command_buffer_server_t *server, gles2_state_t *state, GLuint index)
+_gl_index_is_too_large (server_t *server, gles2_state_t *state, GLuint index)
 {
     if (index >= state->max_vertex_attribs) {
         if (! state->max_vertex_attribs_queried) {
@@ -1174,7 +1174,7 @@ _gl_index_is_too_large (command_buffer_server_t *server, gles2_state_t *state, G
 }
 
 exposed_to_tests void 
-_gl_set_vertex_attrib_array (command_buffer_server_t *server, GLuint index, gles2_state_t *state, 
+_gl_set_vertex_attrib_array (server_t *server, GLuint index, gles2_state_t *state, 
                              GLboolean enable)
 {
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
@@ -1249,7 +1249,7 @@ _gl_set_vertex_attrib_array (command_buffer_server_t *server, GLuint index, gles
     }
 }   
 
-exposed_to_tests void _gl_disable_vertex_attrib_array (command_buffer_server_t *server, GLuint index)
+exposed_to_tests void _gl_disable_vertex_attrib_array (server_t *server, GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1263,7 +1263,7 @@ exposed_to_tests void _gl_disable_vertex_attrib_array (command_buffer_server_t *
     }
 }
 
-exposed_to_tests void _gl_enable_vertex_attrib_array (command_buffer_server_t *server, GLuint index)
+exposed_to_tests void _gl_enable_vertex_attrib_array (server_t *server, GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1279,7 +1279,7 @@ exposed_to_tests void _gl_enable_vertex_attrib_array (command_buffer_server_t *s
 
 /* FIXME: we should use pre-allocated buffer if possible */
 exposed_to_tests char *
-_gl_create_data_array (command_buffer_server_t *server, vertex_attrib_t *attrib, int count)
+_gl_create_data_array (server_t *server, vertex_attrib_t *attrib, int count)
 {
     int i;
     char *data = NULL;
@@ -1305,7 +1305,7 @@ _gl_create_data_array (command_buffer_server_t *server, vertex_attrib_t *attrib,
     return data;
 }
 
-exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum mode, GLint first, GLsizei count)
+exposed_to_tests void _gl_draw_arrays (server_t *server, GLenum mode, GLint first, GLsizei count)
 {
     gles2_state_t *state;
     egl_state_t *egl_state;
@@ -1405,7 +1405,7 @@ exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum m
 /* FIXME: we should use pre-allocated buffer if possible */
 /*
 static char *
-_gl_create_indices_array (command_buffer_server_t *server, GLenum mode, GLenum type, int count,
+_gl_create_indices_array (server_t *server, GLenum mode, GLenum type, int count,
                           char *indices)
 {
     char *data = NULL;
@@ -1445,7 +1445,7 @@ _gl_create_indices_array (command_buffer_server_t *server, GLenum mode, GLenum t
     return data;
 }*/
 
-exposed_to_tests void _gl_draw_elements (command_buffer_server_t *server, GLenum mode, GLsizei count, GLenum type,
+exposed_to_tests void _gl_draw_elements (server_t *server, GLenum mode, GLsizei count, GLenum type,
                                const GLvoid *indices)
 {
     egl_state_t *egl_state;
@@ -1553,7 +1553,7 @@ FINISH:
     }
 }
 
-exposed_to_tests void _gl_finish (command_buffer_server_t *server)
+exposed_to_tests void _gl_finish (server_t *server)
 {
     egl_state_t *egl_state;
     
@@ -1565,7 +1565,7 @@ exposed_to_tests void _gl_finish (command_buffer_server_t *server)
     }
 }
 
-exposed_to_tests void _gl_flush (command_buffer_server_t *server)
+exposed_to_tests void _gl_flush (server_t *server)
 {
     egl_state_t *egl_state;
     
@@ -1577,7 +1577,7 @@ exposed_to_tests void _gl_flush (command_buffer_server_t *server)
     }
 }
 
-exposed_to_tests void _gl_framebuffer_renderbuffer (command_buffer_server_t *server, GLenum target, GLenum attachment,
+exposed_to_tests void _gl_framebuffer_renderbuffer (server_t *server, GLenum target, GLenum attachment,
                                           GLenum renderbuffertarget,
                                           GLenum renderbuffer)
 {
@@ -1604,7 +1604,7 @@ exposed_to_tests void _gl_framebuffer_renderbuffer (command_buffer_server_t *ser
     }
 }
 
-exposed_to_tests void _gl_framebuffer_texture_2d (command_buffer_server_t *server, GLenum target, GLenum attachment,
+exposed_to_tests void _gl_framebuffer_texture_2d (server_t *server, GLenum target, GLenum attachment,
                                         GLenum textarget, GLuint texture, 
                                         GLint level)
 {
@@ -1625,7 +1625,7 @@ exposed_to_tests void _gl_framebuffer_texture_2d (command_buffer_server_t *serve
     }
 }
 
-exposed_to_tests void _gl_front_face (command_buffer_server_t *server, GLenum mode)
+exposed_to_tests void _gl_front_face (server_t *server, GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -1646,7 +1646,7 @@ exposed_to_tests void _gl_front_face (command_buffer_server_t *server, GLenum mo
     }
 }
 
-exposed_to_tests void _gl_gen_buffers (command_buffer_server_t *server, GLsizei n, GLuint *buffers)
+exposed_to_tests void _gl_gen_buffers (server_t *server, GLsizei n, GLuint *buffers)
 {
     if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenBuffers) &&
         _gl_is_valid_context (server)) {
@@ -1660,7 +1660,7 @@ exposed_to_tests void _gl_gen_buffers (command_buffer_server_t *server, GLsizei 
     }
 }
 
-exposed_to_tests void _gl_gen_framebuffers (command_buffer_server_t *server, GLsizei n, GLuint *framebuffers)
+exposed_to_tests void _gl_gen_framebuffers (server_t *server, GLsizei n, GLuint *framebuffers)
 {
     if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenFramebuffers) &&
         _gl_is_valid_context (server)) {
@@ -1674,7 +1674,7 @@ exposed_to_tests void _gl_gen_framebuffers (command_buffer_server_t *server, GLs
     }
 }
 
-exposed_to_tests void _gl_gen_renderbuffers (command_buffer_server_t *server, GLsizei n, GLuint *renderbuffers)
+exposed_to_tests void _gl_gen_renderbuffers (server_t *server, GLsizei n, GLuint *renderbuffers)
 {
     if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenRenderbuffers) &&
         _gl_is_valid_context (server)) {
@@ -1688,7 +1688,7 @@ exposed_to_tests void _gl_gen_renderbuffers (command_buffer_server_t *server, GL
     }
 }
 
-exposed_to_tests void _gl_gen_textures (command_buffer_server_t *server, GLsizei n, GLuint *textures)
+exposed_to_tests void _gl_gen_textures (server_t *server, GLsizei n, GLuint *textures)
 {
     if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenTextures) &&
         _gl_is_valid_context (server)) {
@@ -1702,7 +1702,7 @@ exposed_to_tests void _gl_gen_textures (command_buffer_server_t *server, GLsizei
     }
 }
 
-exposed_to_tests void _gl_generate_mipmap (command_buffer_server_t *server, GLenum target)
+exposed_to_tests void _gl_generate_mipmap (server_t *server, GLenum target)
 {
     egl_state_t *egl_state;
     
@@ -1726,7 +1726,7 @@ exposed_to_tests void _gl_generate_mipmap (command_buffer_server_t *server, GLen
     }
 }
 
-exposed_to_tests void _gl_get_booleanv (command_buffer_server_t *server, GLenum pname, GLboolean *params)
+exposed_to_tests void _gl_get_booleanv (server_t *server, GLenum pname, GLboolean *params)
 {
     egl_state_t *egl_state;
     
@@ -1778,7 +1778,7 @@ exposed_to_tests void _gl_get_booleanv (command_buffer_server_t *server, GLenum 
     }
 }
 
-exposed_to_tests void _gl_get_floatv (command_buffer_server_t *server, GLenum pname, GLfloat *params)
+exposed_to_tests void _gl_get_floatv (server_t *server, GLenum pname, GLfloat *params)
 {
     egl_state_t *egl_state;
     
@@ -1830,7 +1830,7 @@ exposed_to_tests void _gl_get_floatv (command_buffer_server_t *server, GLenum pn
     }
 }
 
-exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_integerv (server_t *server, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -2020,7 +2020,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
     }
 }
 
-exposed_to_tests void _gl_get_active_attrib (command_buffer_server_t *server, GLuint program, GLuint index,
+exposed_to_tests void _gl_get_active_attrib (server_t *server, GLuint program, GLuint index,
                                    GLsizei bufsize, GLsizei *length,
                                    GLint *size, GLenum *type, GLchar *name)
 {
@@ -2036,7 +2036,7 @@ exposed_to_tests void _gl_get_active_attrib (command_buffer_server_t *server, GL
     }
 }
 
-exposed_to_tests void _gl_get_active_uniform (command_buffer_server_t *server, GLuint program, GLuint index, 
+exposed_to_tests void _gl_get_active_uniform (server_t *server, GLuint program, GLuint index, 
                                     GLsizei bufsize, GLsizei *length, 
                                     GLint *size, GLenum *type, 
                                     GLchar *name)
@@ -2053,7 +2053,7 @@ exposed_to_tests void _gl_get_active_uniform (command_buffer_server_t *server, G
     }
 }
 
-exposed_to_tests void _gl_get_attached_shaders (command_buffer_server_t *server, GLuint program, GLsizei maxCount,
+exposed_to_tests void _gl_get_attached_shaders (server_t *server, GLuint program, GLsizei maxCount,
                                       GLsizei *count, GLuint *shaders)
 {
     egl_state_t *egl_state;
@@ -2068,7 +2068,7 @@ exposed_to_tests void _gl_get_attached_shaders (command_buffer_server_t *server,
     }
 }
 
-exposed_to_tests GLint _gl_get_attrib_location (command_buffer_server_t *server, GLuint program, const GLchar *name)
+exposed_to_tests GLint _gl_get_attrib_location (server_t *server, GLuint program, const GLchar *name)
 {
     egl_state_t *egl_state;
     GLint result = -1;
@@ -2084,7 +2084,7 @@ exposed_to_tests GLint _gl_get_attrib_location (command_buffer_server_t *server,
     return result;
 }
 
-exposed_to_tests void _gl_get_buffer_parameteriv (command_buffer_server_t *server, GLenum target, GLenum value, GLint *data)
+exposed_to_tests void _gl_get_buffer_parameteriv (server_t *server, GLenum target, GLenum value, GLint *data)
 {
     egl_state_t *egl_state;
     
@@ -2098,7 +2098,7 @@ exposed_to_tests void _gl_get_buffer_parameteriv (command_buffer_server_t *serve
     }
 }
 
-exposed_to_tests GLenum _gl_get_error (command_buffer_server_t *server)
+exposed_to_tests GLenum _gl_get_error (server_t *server)
 {
     GLenum error = GL_INVALID_OPERATION;
     egl_state_t *egl_state;
@@ -2122,7 +2122,7 @@ exposed_to_tests GLenum _gl_get_error (command_buffer_server_t *server)
     return error;
 }
 
-exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (command_buffer_server_t *server, GLenum target,
+exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (server_t *server, GLenum target,
                                                         GLenum attachment,
                                                         GLenum pname,
                                                         GLint *params)
@@ -2144,7 +2144,7 @@ exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (command_buffer
     }
 }
 
-exposed_to_tests void _gl_get_program_info_log (command_buffer_server_t *server, GLuint program, GLsizei maxLength,
+exposed_to_tests void _gl_get_program_info_log (server_t *server, GLuint program, GLsizei maxLength,
                                       GLsizei *length, GLchar *infoLog)
 {
     egl_state_t *egl_state;
@@ -2159,7 +2159,7 @@ exposed_to_tests void _gl_get_program_info_log (command_buffer_server_t *server,
     }
 }
 
-exposed_to_tests void _gl_get_programiv (command_buffer_server_t *server, GLuint program, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_programiv (server_t *server, GLuint program, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     
@@ -2173,7 +2173,7 @@ exposed_to_tests void _gl_get_programiv (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests void _gl_get_renderbuffer_parameteriv (command_buffer_server_t *server, GLenum target,
+exposed_to_tests void _gl_get_renderbuffer_parameteriv (server_t *server, GLenum target,
                                               GLenum pname,
                                               GLint *params)
 {
@@ -2194,7 +2194,7 @@ exposed_to_tests void _gl_get_renderbuffer_parameteriv (command_buffer_server_t 
     }
 }
 
-exposed_to_tests void _gl_get_shader_info_log (command_buffer_server_t *server, GLuint program, GLsizei maxLength,
+exposed_to_tests void _gl_get_shader_info_log (server_t *server, GLuint program, GLsizei maxLength,
                                      GLsizei *length, GLchar *infoLog)
 {
     egl_state_t *egl_state;
@@ -2209,7 +2209,7 @@ exposed_to_tests void _gl_get_shader_info_log (command_buffer_server_t *server, 
     }
 }
 
-exposed_to_tests void _gl_get_shader_precision_format (command_buffer_server_t *server, GLenum shaderType, 
+exposed_to_tests void _gl_get_shader_precision_format (server_t *server, GLenum shaderType, 
                                              GLenum precisionType,
                                              GLint *range, 
                                              GLint *precision)
@@ -2227,7 +2227,7 @@ exposed_to_tests void _gl_get_shader_precision_format (command_buffer_server_t *
     }
 }
 
-exposed_to_tests void _gl_get_shader_source  (command_buffer_server_t *server, GLuint shader, GLsizei bufSize, 
+exposed_to_tests void _gl_get_shader_source  (server_t *server, GLuint shader, GLsizei bufSize, 
                                     GLsizei *length, GLchar *source)
 {
     egl_state_t *egl_state;
@@ -2242,7 +2242,7 @@ exposed_to_tests void _gl_get_shader_source  (command_buffer_server_t *server, G
     }
 }
 
-exposed_to_tests void _gl_get_shaderiv (command_buffer_server_t *server, GLuint shader, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_shaderiv (server_t *server, GLuint shader, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     
@@ -2256,7 +2256,7 @@ exposed_to_tests void _gl_get_shaderiv (command_buffer_server_t *server, GLuint 
     }
 }
 
-exposed_to_tests const GLubyte *_gl_get_string (command_buffer_server_t *server, GLenum name)
+exposed_to_tests const GLubyte *_gl_get_string (server_t *server, GLenum name)
 {
     GLubyte *result = NULL;
     egl_state_t *egl_state;
@@ -2280,7 +2280,7 @@ exposed_to_tests const GLubyte *_gl_get_string (command_buffer_server_t *server,
     return (const GLubyte *)result;
 }
 
-exposed_to_tests void _gl_get_tex_parameteriv (command_buffer_server_t *server, GLenum target, GLenum pname, 
+exposed_to_tests void _gl_get_tex_parameteriv (server_t *server, GLenum target, GLenum pname, 
                                      GLint *params)
 {
     egl_state_t *egl_state;
@@ -2338,7 +2338,7 @@ exposed_to_tests void _gl_get_tex_parameteriv (command_buffer_server_t *server, 
     }
 }
 
-exposed_to_tests void _gl_get_tex_parameterfv (command_buffer_server_t *server, GLenum target, GLenum pname, GLfloat *params)
+exposed_to_tests void _gl_get_tex_parameterfv (server_t *server, GLenum target, GLenum pname, GLfloat *params)
 {
     GLint paramsi;
 
@@ -2346,7 +2346,7 @@ exposed_to_tests void _gl_get_tex_parameterfv (command_buffer_server_t *server, 
     *params = paramsi;
 }
 
-exposed_to_tests void _gl_get_uniformiv (command_buffer_server_t *server, GLuint program, GLint location, 
+exposed_to_tests void _gl_get_uniformiv (server_t *server, GLuint program, GLint location, 
                                GLint *params)
 {
     egl_state_t *egl_state;
@@ -2361,7 +2361,7 @@ exposed_to_tests void _gl_get_uniformiv (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests void _gl_get_uniformfv (command_buffer_server_t *server, GLuint program, GLint location, 
+exposed_to_tests void _gl_get_uniformfv (server_t *server, GLuint program, GLint location, 
                                GLfloat *params)
 {
     egl_state_t *egl_state;
@@ -2376,7 +2376,7 @@ exposed_to_tests void _gl_get_uniformfv (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests GLint _gl_get_uniform_location (command_buffer_server_t *server, GLuint program, const GLchar *name)
+exposed_to_tests GLint _gl_get_uniform_location (server_t *server, GLuint program, const GLchar *name)
 {
     GLint result = -1;
     egl_state_t *egl_state;
@@ -2392,7 +2392,7 @@ exposed_to_tests GLint _gl_get_uniform_location (command_buffer_server_t *server
     return result;
 }
 
-exposed_to_tests void _gl_get_vertex_attribfv (command_buffer_server_t *server, GLuint index, GLenum pname, 
+exposed_to_tests void _gl_get_vertex_attribfv (server_t *server, GLuint index, GLenum pname, 
                                      GLfloat *params)
 {
     egl_state_t *egl_state;
@@ -2490,7 +2490,7 @@ exposed_to_tests void _gl_get_vertex_attribfv (command_buffer_server_t *server, 
     }
 }
 
-exposed_to_tests void _gl_get_vertex_attribiv (command_buffer_server_t *server, GLuint index, GLenum pname, GLint *params)
+exposed_to_tests void _gl_get_vertex_attribiv (server_t *server, GLuint index, GLenum pname, GLint *params)
 {
     GLfloat paramsf[4];
     int i;
@@ -2504,7 +2504,7 @@ exposed_to_tests void _gl_get_vertex_attribiv (command_buffer_server_t *server, 
         *params = paramsf[0];
 }
 
-exposed_to_tests void _gl_get_vertex_attrib_pointerv (command_buffer_server_t *server, GLuint index, GLenum pname, 
+exposed_to_tests void _gl_get_vertex_attrib_pointerv (server_t *server, GLuint index, GLenum pname, 
                                             GLvoid **pointer)
 {
     egl_state_t *egl_state;
@@ -2552,7 +2552,7 @@ exposed_to_tests void _gl_get_vertex_attrib_pointerv (command_buffer_server_t *s
     }
 }
 
-exposed_to_tests void _gl_hint (command_buffer_server_t *server, GLenum target, GLenum mode)
+exposed_to_tests void _gl_hint (server_t *server, GLenum target, GLenum mode)
 {
     egl_state_t *egl_state;
 
@@ -2581,7 +2581,7 @@ exposed_to_tests void _gl_hint (command_buffer_server_t *server, GLenum target, 
     }
 }
 
-exposed_to_tests GLboolean _gl_is_buffer (command_buffer_server_t *server, GLuint buffer)
+exposed_to_tests GLboolean _gl_is_buffer (server_t *server, GLuint buffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2595,7 +2595,7 @@ exposed_to_tests GLboolean _gl_is_buffer (command_buffer_server_t *server, GLuin
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_enabled (command_buffer_server_t *server, GLenum cap)
+exposed_to_tests GLboolean _gl_is_enabled (server_t *server, GLenum cap)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2640,7 +2640,7 @@ exposed_to_tests GLboolean _gl_is_enabled (command_buffer_server_t *server, GLen
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_framebuffer (command_buffer_server_t *server, GLuint framebuffer)
+exposed_to_tests GLboolean _gl_is_framebuffer (server_t *server, GLuint framebuffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2654,7 +2654,7 @@ exposed_to_tests GLboolean _gl_is_framebuffer (command_buffer_server_t *server, 
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_program (command_buffer_server_t *server, GLuint program)
+exposed_to_tests GLboolean _gl_is_program (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2668,7 +2668,7 @@ exposed_to_tests GLboolean _gl_is_program (command_buffer_server_t *server, GLui
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_renderbuffer (command_buffer_server_t *server, GLuint renderbuffer)
+exposed_to_tests GLboolean _gl_is_renderbuffer (server_t *server, GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2682,7 +2682,7 @@ exposed_to_tests GLboolean _gl_is_renderbuffer (command_buffer_server_t *server,
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_shader (command_buffer_server_t *server, GLuint shader)
+exposed_to_tests GLboolean _gl_is_shader (server_t *server, GLuint shader)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2696,7 +2696,7 @@ exposed_to_tests GLboolean _gl_is_shader (command_buffer_server_t *server, GLuin
     return result;
 }
 
-exposed_to_tests GLboolean _gl_is_texture (command_buffer_server_t *server, GLuint texture)
+exposed_to_tests GLboolean _gl_is_texture (server_t *server, GLuint texture)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2710,7 +2710,7 @@ exposed_to_tests GLboolean _gl_is_texture (command_buffer_server_t *server, GLui
     return result;
 }
 
-exposed_to_tests void _gl_line_width (command_buffer_server_t *server, GLfloat width)
+exposed_to_tests void _gl_line_width (server_t *server, GLfloat width)
 {
     egl_state_t *egl_state;
 
@@ -2731,7 +2731,7 @@ exposed_to_tests void _gl_line_width (command_buffer_server_t *server, GLfloat w
     }
 }
 
-exposed_to_tests void _gl_link_program (command_buffer_server_t *server, GLuint program)
+exposed_to_tests void _gl_link_program (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -2744,7 +2744,7 @@ exposed_to_tests void _gl_link_program (command_buffer_server_t *server, GLuint 
     }
 }
 
-exposed_to_tests void _gl_pixel_storei (command_buffer_server_t *server, GLenum pname, GLint param)
+exposed_to_tests void _gl_pixel_storei (server_t *server, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
 
@@ -2780,7 +2780,7 @@ exposed_to_tests void _gl_pixel_storei (command_buffer_server_t *server, GLenum 
     }
 }
 
-exposed_to_tests void _gl_polygon_offset (command_buffer_server_t *server, GLfloat factor, GLfloat units)
+exposed_to_tests void _gl_polygon_offset (server_t *server, GLfloat factor, GLfloat units)
 {
     egl_state_t *egl_state;
     
@@ -2800,7 +2800,7 @@ exposed_to_tests void _gl_polygon_offset (command_buffer_server_t *server, GLflo
 }
 
 /* sync call */
-exposed_to_tests void _gl_read_pixels (command_buffer_server_t *server, GLint x, GLint y,
+exposed_to_tests void _gl_read_pixels (server_t *server, GLint x, GLint y,
                              GLsizei width, GLsizei height,
                              GLenum format, GLenum type, GLvoid *data)
 {
@@ -2815,7 +2815,7 @@ exposed_to_tests void _gl_read_pixels (command_buffer_server_t *server, GLint x,
     }
 }
 
-exposed_to_tests void _gl_compile_shader (command_buffer_server_t *server, GLuint shader)
+exposed_to_tests void _gl_compile_shader (server_t *server, GLuint shader)
 {
     egl_state_t *egl_state;
     
@@ -2828,7 +2828,7 @@ exposed_to_tests void _gl_compile_shader (command_buffer_server_t *server, GLuin
     }
 }
 
-exposed_to_tests void _gl_release_shader_compiler (command_buffer_server_t *server)
+exposed_to_tests void _gl_release_shader_compiler (server_t *server)
 {
     egl_state_t *egl_state;
     
@@ -2841,7 +2841,7 @@ exposed_to_tests void _gl_release_shader_compiler (command_buffer_server_t *serv
     }
 }
 
-exposed_to_tests void _gl_renderbuffer_storage (command_buffer_server_t *server, GLenum target, GLenum internalformat,
+exposed_to_tests void _gl_renderbuffer_storage (server_t *server, GLenum target, GLenum internalformat,
                                       GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
@@ -2855,7 +2855,7 @@ exposed_to_tests void _gl_renderbuffer_storage (command_buffer_server_t *server,
     }
 }
 
-exposed_to_tests void _gl_sample_coverage (command_buffer_server_t *server, GLclampf value, GLboolean invert)
+exposed_to_tests void _gl_sample_coverage (server_t *server, GLclampf value, GLboolean invert)
 {
     egl_state_t *egl_state;
     
@@ -2874,7 +2874,7 @@ exposed_to_tests void _gl_sample_coverage (command_buffer_server_t *server, GLcl
     }
 }
 
-exposed_to_tests void _gl_scissor (command_buffer_server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
+exposed_to_tests void _gl_scissor (server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
@@ -2902,7 +2902,7 @@ exposed_to_tests void _gl_scissor (command_buffer_server_t *server, GLint x, GLi
     }
 }
 
-exposed_to_tests void _gl_shader_binary (command_buffer_server_t *server, GLsizei n, const GLuint *shaders,
+exposed_to_tests void _gl_shader_binary (server_t *server, GLsizei n, const GLuint *shaders,
                                GLenum binaryformat, const void *binary,
                                GLsizei length)
 {
@@ -2919,7 +2919,7 @@ exposed_to_tests void _gl_shader_binary (command_buffer_server_t *server, GLsize
         free ((void *)binary);
 }
 
-exposed_to_tests void _gl_shader_source (command_buffer_server_t *server, GLuint shader, GLsizei count,
+exposed_to_tests void _gl_shader_source (server_t *server, GLuint shader, GLsizei count,
                                const GLchar **string, const GLint *length)
 {
     egl_state_t *egl_state;
@@ -2946,7 +2946,7 @@ exposed_to_tests void _gl_shader_source (command_buffer_server_t *server, GLuint
     }
 }
 
-exposed_to_tests void _gl_stencil_func_separate (command_buffer_server_t *server, GLenum face, GLenum func,
+exposed_to_tests void _gl_stencil_func_separate (server_t *server, GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
     egl_state_t *egl_state;
@@ -3018,12 +3018,12 @@ exposed_to_tests void _gl_stencil_func_separate (command_buffer_server_t *server
         CACHING_SERVER(server)->super_dispatch.glStencilFuncSeparate (server, face, func, ref, mask);
 }
 
-exposed_to_tests void _gl_stencil_func (command_buffer_server_t *server, GLenum func, GLint ref, GLuint mask)
+exposed_to_tests void _gl_stencil_func (server_t *server, GLenum func, GLint ref, GLuint mask)
 {
     _gl_stencil_func_separate (server, GL_FRONT_AND_BACK, func, ref, mask);
 }
 
-exposed_to_tests void _gl_stencil_mask_separate (command_buffer_server_t *server, GLenum face, GLuint mask)
+exposed_to_tests void _gl_stencil_mask_separate (server_t *server, GLenum face, GLuint mask)
 {
     egl_state_t *egl_state;
     bool needs_call = false;
@@ -3066,12 +3066,12 @@ exposed_to_tests void _gl_stencil_mask_separate (command_buffer_server_t *server
         CACHING_SERVER(server)->super_dispatch.glStencilMaskSeparate (server, face, mask);
 }
 
-exposed_to_tests void _gl_stencil_mask (command_buffer_server_t *server, GLuint mask)
+exposed_to_tests void _gl_stencil_mask (server_t *server, GLuint mask)
 {
     _gl_stencil_mask_separate (server, GL_FRONT_AND_BACK, mask);
 }
 
-exposed_to_tests void _gl_stencil_op_separate (command_buffer_server_t *server, GLenum face, GLenum sfail, 
+exposed_to_tests void _gl_stencil_op_separate (server_t *server, GLenum face, GLenum sfail, 
                                      GLenum dpfail, GLenum dppass)
 {
     egl_state_t *egl_state;
@@ -3165,12 +3165,12 @@ exposed_to_tests void _gl_stencil_op_separate (command_buffer_server_t *server, 
         CACHING_SERVER(server)->super_dispatch.glStencilOpSeparate (server, face, sfail, dpfail, dppass);
 }
 
-exposed_to_tests void _gl_stencil_op (command_buffer_server_t *server, GLenum sfail, GLenum dpfail, GLenum dppass)
+exposed_to_tests void _gl_stencil_op (server_t *server, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     _gl_stencil_op_separate (server, GL_FRONT_AND_BACK, sfail, dpfail, dppass);
 }
 
-exposed_to_tests void _gl_tex_image_2d (command_buffer_server_t *server, GLenum target, GLint level, 
+exposed_to_tests void _gl_tex_image_2d (server_t *server, GLenum target, GLint level, 
                               GLint internalformat,
                               GLsizei width, GLsizei height, GLint border,
                               GLenum format, GLenum type, 
@@ -3190,7 +3190,7 @@ exposed_to_tests void _gl_tex_image_2d (command_buffer_server_t *server, GLenum 
       free ((void *)data);
 }
 
-exposed_to_tests void _gl_tex_parameteri (command_buffer_server_t *server, GLenum target, GLenum pname, GLint param)
+exposed_to_tests void _gl_tex_parameteri (server_t *server, GLenum target, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -3306,13 +3306,13 @@ exposed_to_tests void _gl_tex_parameteri (command_buffer_server_t *server, GLenu
     }
 }
 
-exposed_to_tests void _gl_tex_parameterf (command_buffer_server_t *server, GLenum target, GLenum pname, GLfloat param)
+exposed_to_tests void _gl_tex_parameterf (server_t *server, GLenum target, GLenum pname, GLfloat param)
 {
     GLint parami = param;
     _gl_tex_parameteri (server, target, pname, parami);
 }
 
-exposed_to_tests void _gl_tex_sub_image_2d (command_buffer_server_t *server, GLenum target, GLint level,
+exposed_to_tests void _gl_tex_sub_image_2d (server_t *server, GLenum target, GLint level,
                                   GLint xoffset, GLint yoffset,
                                   GLsizei width, GLsizei height,
                                   GLenum format, GLenum type, 
@@ -3332,7 +3332,7 @@ exposed_to_tests void _gl_tex_sub_image_2d (command_buffer_server_t *server, GLe
         free ((void *)data);
 }
 
-exposed_to_tests void _gl_uniform1f (command_buffer_server_t *server, GLint location, GLfloat v0)
+exposed_to_tests void _gl_uniform1f (server_t *server, GLint location, GLfloat v0)
 {
     egl_state_t *egl_state;
     
@@ -3345,7 +3345,7 @@ exposed_to_tests void _gl_uniform1f (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform2f (command_buffer_server_t *server, GLint location, GLfloat v0, GLfloat v1)
+exposed_to_tests void _gl_uniform2f (server_t *server, GLint location, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
@@ -3358,7 +3358,7 @@ exposed_to_tests void _gl_uniform2f (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform3f (command_buffer_server_t *server, GLint location, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_uniform3f (server_t *server, GLint location, GLfloat v0, GLfloat v1, 
                            GLfloat v2)
 {
     egl_state_t *egl_state;
@@ -3372,7 +3372,7 @@ exposed_to_tests void _gl_uniform3f (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform4f (command_buffer_server_t *server, GLint location, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_uniform4f (server_t *server, GLint location, GLfloat v0, GLfloat v1, 
                            GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
@@ -3386,7 +3386,7 @@ exposed_to_tests void _gl_uniform4f (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform1i (command_buffer_server_t *server, GLint location, GLint v0)
+exposed_to_tests void _gl_uniform1i (server_t *server, GLint location, GLint v0)
 {
     egl_state_t *egl_state;
 
@@ -3399,7 +3399,7 @@ exposed_to_tests void _gl_uniform1i (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform_2i (command_buffer_server_t *server, GLint location, GLint v0, GLint v1)
+exposed_to_tests void _gl_uniform_2i (server_t *server, GLint location, GLint v0, GLint v1)
 {
     egl_state_t *egl_state;
 
@@ -3412,7 +3412,7 @@ exposed_to_tests void _gl_uniform_2i (command_buffer_server_t *server, GLint loc
     }
 }
 
-exposed_to_tests void _gl_uniform3i (command_buffer_server_t *server, GLint location, GLint v0, GLint v1, GLint v2)
+exposed_to_tests void _gl_uniform3i (server_t *server, GLint location, GLint v0, GLint v1, GLint v2)
 {
     egl_state_t *egl_state;
 
@@ -3425,7 +3425,7 @@ exposed_to_tests void _gl_uniform3i (command_buffer_server_t *server, GLint loca
     }
 }
 
-exposed_to_tests void _gl_uniform4i (command_buffer_server_t *server, GLint location, GLint v0, GLint v1, 
+exposed_to_tests void _gl_uniform4i (server_t *server, GLint location, GLint v0, GLint v1, 
                            GLint v2, GLint v3)
 {
     egl_state_t *egl_state;
@@ -3440,7 +3440,7 @@ exposed_to_tests void _gl_uniform4i (command_buffer_server_t *server, GLint loca
 }
 
 exposed_to_tests void
-_gl_uniform_fv (command_buffer_server_t *server, int i, GLint location,
+_gl_uniform_fv (server_t *server, int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
     egl_state_t *egl_state;
@@ -3479,32 +3479,32 @@ FINISH:
         free ((GLfloat *)value);
 }
 
-exposed_to_tests void _gl_uniform1fv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform1fv (server_t *server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (server, 1, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform2fv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform2fv (server_t *server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (server, 2, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform3fv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform3fv (server_t *server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (server, 3, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform4fv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform4fv (server_t *server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     _gl_uniform_fv (server, 4, location, count, value);
 }
 
 exposed_to_tests void
-_gl_uniform_iv (command_buffer_server_t *server,
+_gl_uniform_iv (server_t *server,
                 int i,
                 GLint location,
                 GLsizei count,
@@ -3546,31 +3546,31 @@ FINISH:
         free ((GLint *)value);
 }
 
-exposed_to_tests void _gl_uniform1iv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform1iv (server_t *server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (server, 1, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform2iv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform2iv (server_t *server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (server, 2, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform3iv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform3iv (server_t *server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (server, 3, location, count, value);
 }
 
-exposed_to_tests void _gl_uniform4iv (command_buffer_server_t *server, GLint location, GLsizei count, 
+exposed_to_tests void _gl_uniform4iv (server_t *server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     _gl_uniform_iv (server, 4, location, count, value);
 }
 
-exposed_to_tests void _gl_use_program (command_buffer_server_t *server, GLuint program)
+exposed_to_tests void _gl_use_program (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -3590,7 +3590,7 @@ exposed_to_tests void _gl_use_program (command_buffer_server_t *server, GLuint p
     }
 }
 
-exposed_to_tests void _gl_validate_program (command_buffer_server_t *server, GLuint program)
+exposed_to_tests void _gl_validate_program (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -3603,7 +3603,7 @@ exposed_to_tests void _gl_validate_program (command_buffer_server_t *server, GLu
     }
 }
 
-exposed_to_tests void _gl_vertex_attrib1f (command_buffer_server_t *server, GLuint index, GLfloat v0)
+exposed_to_tests void _gl_vertex_attrib1f (server_t *server, GLuint index, GLfloat v0)
 {
     egl_state_t *egl_state;
 
@@ -3619,7 +3619,7 @@ exposed_to_tests void _gl_vertex_attrib1f (command_buffer_server_t *server, GLui
     }
 }
 
-exposed_to_tests void _gl_vertex_attrib2f (command_buffer_server_t *server, GLuint index, GLfloat v0, GLfloat v1)
+exposed_to_tests void _gl_vertex_attrib2f (server_t *server, GLuint index, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
@@ -3635,7 +3635,7 @@ exposed_to_tests void _gl_vertex_attrib2f (command_buffer_server_t *server, GLui
     }
 }
 
-exposed_to_tests void _gl_vertex_attrib3f (command_buffer_server_t *server, GLuint index, GLfloat v0, 
+exposed_to_tests void _gl_vertex_attrib3f (server_t *server, GLuint index, GLfloat v0, 
                                  GLfloat v1, GLfloat v2)
 {
     egl_state_t *egl_state;
@@ -3652,7 +3652,7 @@ exposed_to_tests void _gl_vertex_attrib3f (command_buffer_server_t *server, GLui
     }
 }
 
-exposed_to_tests void _gl_vertex_attrib4f (command_buffer_server_t *server, GLuint index, GLfloat v0, GLfloat v1, 
+exposed_to_tests void _gl_vertex_attrib4f (server_t *server, GLuint index, GLfloat v0, GLfloat v1, 
                                  GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
@@ -3669,7 +3669,7 @@ exposed_to_tests void _gl_vertex_attrib4f (command_buffer_server_t *server, GLui
 }
 
 exposed_to_tests void
-_gl_vertex_attrib_fv (command_buffer_server_t *server, int i, GLuint index, const GLfloat *v)
+_gl_vertex_attrib_fv (server_t *server, int i, GLuint index, const GLfloat *v)
 {
     egl_state_t *egl_state;
     
@@ -3709,27 +3709,27 @@ FINISH:
         free ((GLfloat *)v);
 }
 
-exposed_to_tests void _gl_vertex_attrib1fv (command_buffer_server_t *server, GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib1fv (server_t *server, GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (server, 1, index, v);
 }
 
-exposed_to_tests void _gl_vertex_attrib2fv (command_buffer_server_t *server, GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib2fv (server_t *server, GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (server, 2, index, v);
 }
 
-exposed_to_tests void _gl_vertex_attrib3fv (command_buffer_server_t *server, GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib3fv (server_t *server, GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (server, 3, index, v);
 }
 
-exposed_to_tests void _gl_vertex_attrib4fv (command_buffer_server_t *server, GLuint index, const GLfloat *v)
+exposed_to_tests void _gl_vertex_attrib4fv (server_t *server, GLuint index, const GLfloat *v)
 {
     _gl_vertex_attrib_fv (server, 4, index, v);
 }
 
-exposed_to_tests void _gl_vertex_attrib_pointer (command_buffer_server_t *server, GLuint index, GLint size, 
+exposed_to_tests void _gl_vertex_attrib_pointer (server_t *server, GLuint index, GLint size, 
                                        GLenum type, GLboolean normalized, 
                                        GLsizei stride, const GLvoid *pointer)
 {
@@ -3854,7 +3854,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (command_buffer_server_t *server
     }
 }
 
-exposed_to_tests void _gl_viewport (command_buffer_server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
+exposed_to_tests void _gl_viewport (server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
@@ -3885,7 +3885,7 @@ exposed_to_tests void _gl_viewport (command_buffer_server_t *server, GLint x, GL
 
 #ifdef GL_OES_EGL_image
 static void
-_gl_egl_image_target_texture_2d_oes (command_buffer_server_t *server, GLenum target, GLeglImageOES image)
+_gl_egl_image_target_texture_2d_oes (server_t *server, GLenum target, GLeglImageOES image)
 {
     egl_state_t *egl_state;
     
@@ -3904,7 +3904,7 @@ _gl_egl_image_target_texture_2d_oes (command_buffer_server_t *server, GLenum tar
 }
 
 static void
-_gl_egl_image_target_renderbuffer_storage_oes (command_buffer_server_t *server, GLenum target, 
+_gl_egl_image_target_renderbuffer_storage_oes (server_t *server, GLenum target, 
                                                GLeglImageOES image)
 {
     egl_state_t *egl_state;
@@ -3927,7 +3927,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (command_buffer_server_t *server, 
 
 #ifdef GL_OES_get_program_binary
 static void
-_gl_get_program_binary_oes (command_buffer_server_t *server, GLuint program, GLsizei bufSize, 
+_gl_get_program_binary_oes (server_t *server, GLuint program, GLsizei bufSize, 
                             GLsizei *length, GLenum *binaryFormat, 
                             GLvoid *binary)
 {
@@ -3944,7 +3944,7 @@ _gl_get_program_binary_oes (command_buffer_server_t *server, GLuint program, GLs
 }
 
 static void
-_gl_program_binary_oes (command_buffer_server_t *server, GLuint program, GLenum binaryFormat,
+_gl_program_binary_oes (server_t *server, GLuint program, GLenum binaryFormat,
                         const GLvoid *binary, GLint length)
 {
     egl_state_t *egl_state;
@@ -3964,7 +3964,7 @@ _gl_program_binary_oes (command_buffer_server_t *server, GLuint program, GLenum 
 
 #ifdef GL_OES_mapbuffer
 static void* 
-_gl_map_buffer_oes (command_buffer_server_t *server, GLenum target, GLenum access)
+_gl_map_buffer_oes (server_t *server, GLenum target, GLenum access)
 {
     egl_state_t *egl_state;
     void *result = NULL;
@@ -3990,7 +3990,7 @@ _gl_map_buffer_oes (command_buffer_server_t *server, GLenum target, GLenum acces
 }
 
 static GLboolean
-_gl_unmap_buffer_oes (command_buffer_server_t *server, GLenum target)
+_gl_unmap_buffer_oes (server_t *server, GLenum target)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4012,7 +4012,7 @@ _gl_unmap_buffer_oes (command_buffer_server_t *server, GLenum target)
 }
 
 static void
-_gl_get_buffer_pointerv_oes (command_buffer_server_t *server, GLenum target, GLenum pname, GLvoid **params)
+_gl_get_buffer_pointerv_oes (server_t *server, GLenum target, GLenum pname, GLvoid **params)
 {
     egl_state_t *egl_state;
 
@@ -4034,7 +4034,7 @@ _gl_get_buffer_pointerv_oes (command_buffer_server_t *server, GLenum target, GLe
 
 #ifdef GL_OES_texture_3D
 static void
-_gl_tex_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint level, GLenum internalformat,
+_gl_tex_image_3d_oes (server_t *server, GLenum target, GLint level, GLenum internalformat,
                       GLsizei width, GLsizei height, GLsizei depth,
                       GLint border, GLenum format, GLenum type,
                       const GLvoid *pixels)
@@ -4055,7 +4055,7 @@ _gl_tex_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint leve
 }
 
 static void
-_gl_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint level,
+_gl_tex_sub_image_3d_oes (server_t *server, GLenum target, GLint level,
                           GLint xoffset, GLint yoffset, GLint zoffset,
                           GLsizei width, GLsizei height, GLsizei depth,
                           GLenum format, GLenum type, const GLvoid *data)
@@ -4077,7 +4077,7 @@ _gl_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint 
 }
 
 static void
-_gl_copy_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint level,
+_gl_copy_tex_sub_image_3d_oes (server_t *server, GLenum target, GLint level,
                                GLint xoffset, GLint yoffset, GLint zoffset,
                                GLint x, GLint y,
                                GLint width, GLint height)
@@ -4097,7 +4097,7 @@ _gl_copy_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, G
 }
 
 static void
-_gl_compressed_tex_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint level,
+_gl_compressed_tex_image_3d_oes (server_t *server, GLenum target, GLint level,
                                  GLenum internalformat,
                                  GLsizei width, GLsizei height, 
                                  GLsizei depth,
@@ -4121,7 +4121,7 @@ _gl_compressed_tex_image_3d_oes (command_buffer_server_t *server, GLenum target,
 }
 
 static void
-_gl_compressed_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint level,
+_gl_compressed_tex_sub_image_3d_oes (server_t *server, GLenum target, GLint level,
                                      GLint xoffset, GLint yoffset, 
                                      GLint zoffset,
                                      GLsizei width, GLsizei height, 
@@ -4148,7 +4148,7 @@ _gl_compressed_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum tar
 }
 
 static void
-_gl_framebuffer_texture_3d_oes (command_buffer_server_t *server, GLenum target, GLenum attachment,
+_gl_framebuffer_texture_3d_oes (server_t *server, GLenum target, GLenum attachment,
                                 GLenum textarget, GLuint texture,
                                 GLint level, GLint zoffset)
 {
@@ -4182,7 +4182,7 @@ _gl_framebuffer_texture_3d_oes (command_buffer_server_t *server, GLenum target, 
  * we pass them to server.
  */
 static void
-_gl_bind_vertex_array_oes (command_buffer_server_t *server, GLuint array)
+_gl_bind_vertex_array_oes (server_t *server, GLuint array)
 {
     egl_state_t *egl_state;
 
@@ -4201,7 +4201,7 @@ _gl_bind_vertex_array_oes (command_buffer_server_t *server, GLuint array)
 }
 
 static void
-_gl_delete_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, const GLuint *arrays)
+_gl_delete_vertex_arrays_oes (server_t *server, GLsizei n, const GLuint *arrays)
 {
     egl_state_t *egl_state;
     int i;
@@ -4232,7 +4232,7 @@ FINISH:
 }
 
 static void
-_gl_gen_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, GLuint *arrays)
+_gl_gen_vertex_arrays_oes (server_t *server, GLsizei n, GLuint *arrays)
 {
     egl_state_t *egl_state;
 
@@ -4250,7 +4250,7 @@ _gl_gen_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, GLuint *a
 }
 
 static GLboolean
-_gl_is_vertex_array_oes (command_buffer_server_t *server, GLuint array)
+_gl_is_vertex_array_oes (server_t *server, GLuint array)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4271,7 +4271,7 @@ _gl_is_vertex_array_oes (command_buffer_server_t *server, GLuint array)
 
 #ifdef GL_AMD_performance_monitor
 static void
-_gl_get_perf_monitor_groups_amd (command_buffer_server_t *server, GLint *numGroups, GLsizei groupSize, 
+_gl_get_perf_monitor_groups_amd (server_t *server, GLint *numGroups, GLsizei groupSize, 
                                  GLuint *groups)
 {
     egl_state_t *egl_state;
@@ -4286,7 +4286,7 @@ _gl_get_perf_monitor_groups_amd (command_buffer_server_t *server, GLint *numGrou
 }
 
 static void
-_gl_get_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint group, GLint *numCounters, 
+_gl_get_perf_monitor_counters_amd (server_t *server, GLuint group, GLint *numCounters, 
                                    GLint *maxActiveCounters, 
                                    GLsizei counterSize,
                                    GLuint *counters)
@@ -4305,7 +4305,7 @@ _gl_get_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint group
 }
 
 static void
-_gl_get_perf_monitor_group_string_amd (command_buffer_server_t *server, GLuint group, GLsizei bufSize, 
+_gl_get_perf_monitor_group_string_amd (server_t *server, GLuint group, GLsizei bufSize, 
                                        GLsizei *length, 
                                        GLchar *groupString)
 {
@@ -4322,7 +4322,7 @@ _gl_get_perf_monitor_group_string_amd (command_buffer_server_t *server, GLuint g
 }
 
 static void
-_gl_get_perf_monitor_counter_string_amd (command_buffer_server_t *server, GLuint group, GLuint counter, 
+_gl_get_perf_monitor_counter_string_amd (server_t *server, GLuint group, GLuint counter, 
                                          GLsizei bufSize, 
                                          GLsizei *length, 
                                          GLchar *counterString)
@@ -4340,7 +4340,7 @@ _gl_get_perf_monitor_counter_string_amd (command_buffer_server_t *server, GLuint
 }
 
 static void
-_gl_get_perf_monitor_counter_info_amd (command_buffer_server_t *server, GLuint group, GLuint counter, 
+_gl_get_perf_monitor_counter_info_amd (server_t *server, GLuint group, GLuint counter, 
                                        GLenum pname, GLvoid *data)
 {
     egl_state_t *egl_state;
@@ -4356,7 +4356,7 @@ _gl_get_perf_monitor_counter_info_amd (command_buffer_server_t *server, GLuint g
 }
 
 static void
-_gl_gen_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint *monitors) 
+_gl_gen_perf_monitors_amd (server_t *server, GLsizei n, GLuint *monitors) 
 {
     egl_state_t *egl_state;
 
@@ -4370,7 +4370,7 @@ _gl_gen_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint *m
 }
 
 static void
-_gl_delete_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint *monitors) 
+_gl_delete_perf_monitors_amd (server_t *server, GLsizei n, GLuint *monitors) 
 {
     egl_state_t *egl_state;
 
@@ -4384,7 +4384,7 @@ _gl_delete_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint
 }
 
 static void
-_gl_select_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint monitor, GLboolean enable,
+_gl_select_perf_monitor_counters_amd (server_t *server, GLuint monitor, GLboolean enable,
                                       GLuint group, GLint numCounters,
                                       GLuint *countersList) 
 {
@@ -4401,7 +4401,7 @@ _gl_select_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint mo
 }
 
 static void
-_gl_begin_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
+_gl_begin_perf_monitor_amd (server_t *server, GLuint monitor)
 {
     egl_state_t *egl_state;
 
@@ -4415,7 +4415,7 @@ _gl_begin_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
 }
 
 static void
-_gl_end_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
+_gl_end_perf_monitor_amd (server_t *server, GLuint monitor)
 {
     egl_state_t *egl_state;
 
@@ -4429,7 +4429,7 @@ _gl_end_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
 }
 
 static void
-_gl_get_perf_monitor_counter_data_amd (command_buffer_server_t *server, GLuint monitor, GLenum pname,
+_gl_get_perf_monitor_counter_data_amd (server_t *server, GLuint monitor, GLenum pname,
                                        GLsizei dataSize, GLuint *data,
                                        GLint *bytesWritten)
 {
@@ -4448,7 +4448,7 @@ _gl_get_perf_monitor_counter_data_amd (command_buffer_server_t *server, GLuint m
 
 #ifdef GL_ANGLE_framebuffer_blit
 static void
-_gl_blit_framebuffer_angle (command_buffer_server_t *server, GLint srcX0, GLint srcY0, 
+_gl_blit_framebuffer_angle (server_t *server, GLint srcX0, GLint srcY0, 
                             GLint srcX1, GLint srcY1,
                             GLint dstX0, GLint dstY0, 
                             GLint dstX1, GLint dstY1,
@@ -4470,7 +4470,7 @@ _gl_blit_framebuffer_angle (command_buffer_server_t *server, GLint srcX0, GLint 
 
 #ifdef GL_ANGLE_framebuffer_multisample
 static void
-_gl_renderbuffer_storage_multisample_angle (command_buffer_server_t *server, GLenum target, GLsizei samples,
+_gl_renderbuffer_storage_multisample_angle (server_t *server, GLenum target, GLsizei samples,
                                             GLenum internalformat,
                                             GLsizei width, GLsizei height)
 {
@@ -4490,7 +4490,7 @@ _gl_renderbuffer_storage_multisample_angle (command_buffer_server_t *server, GLe
 
 #ifdef GL_APPLE_framebuffer_multisample
 static void
-_gl_renderbuffer_storage_multisample_apple (command_buffer_server_t *server, GLenum target, GLsizei samples,
+_gl_renderbuffer_storage_multisample_apple (server_t *server, GLenum target, GLsizei samples,
                                             GLenum internalformat, 
                                             GLsizei width, GLsizei height)
 {
@@ -4524,7 +4524,7 @@ gl_resolve_multisample_framebuffer_apple (void)
 
 #ifdef GL_EXT_discard_framebuffer
 static void
-gl_discard_framebuffer_ext (command_buffer_server_t *server,
+gl_discard_framebuffer_ext (server_t *server,
                             GLenum target, GLsizei numAttachments,
                             const GLenum *attachments)
 {
@@ -4562,7 +4562,7 @@ FINISH:
 
 #ifdef GL_EXT_multi_draw_arrays
 static void
-_gl_multi_draw_arrays_ext (command_buffer_server_t *server, GLenum mode, const GLint *first, 
+_gl_multi_draw_arrays_ext (server_t *server, GLenum mode, const GLint *first, 
                            const GLsizei *count, GLsizei primcount)
 {
     /* not implemented */
@@ -4578,7 +4578,7 @@ gl_multi_draw_elements_ext (GLenum mode, const GLsizei *count, GLenum type,
 
 #ifdef GL_EXT_multisampled_render_to_texture
 static void
-_gl_renderbuffer_storage_multisample_ext (command_buffer_server_t *server, GLenum target, GLsizei samples,
+_gl_renderbuffer_storage_multisample_ext (server_t *server, GLenum target, GLsizei samples,
                                           GLenum internalformat,
                                           GLsizei width, GLsizei height)
 {
@@ -4596,7 +4596,7 @@ _gl_renderbuffer_storage_multisample_ext (command_buffer_server_t *server, GLenu
 }
 
 static void
-_gl_framebuffer_texture_2d_multisample_ext (command_buffer_server_t *server, GLenum target, 
+_gl_framebuffer_texture_2d_multisample_ext (server_t *server, GLenum target, 
                                             GLenum attachment,
                                             GLenum textarget, 
                                             GLuint texture,
@@ -4623,7 +4623,7 @@ _gl_framebuffer_texture_2d_multisample_ext (command_buffer_server_t *server, GLe
 
 #ifdef GL_IMG_multisampled_render_to_texture
 static void
-_gl_renderbuffer_storage_multisample_img (command_buffer_server_t *server, GLenum target, GLsizei samples,
+_gl_renderbuffer_storage_multisample_img (server_t *server, GLenum target, GLsizei samples,
                                           GLenum internalformat,
                                           GLsizei width, GLsizei height)
 {
@@ -4641,7 +4641,7 @@ _gl_renderbuffer_storage_multisample_img (command_buffer_server_t *server, GLenu
 }
 
 static void
-_gl_framebuffer_texture_2d_multisample_img (command_buffer_server_t *server, GLenum target, 
+_gl_framebuffer_texture_2d_multisample_img (server_t *server, GLenum target, 
                                             GLenum attachment,
                                             GLenum textarget, 
                                             GLuint texture,
@@ -4668,7 +4668,7 @@ _gl_framebuffer_texture_2d_multisample_img (command_buffer_server_t *server, GLe
 
 #ifdef GL_NV_fence
 static void
-_gl_delete_fences_nv (command_buffer_server_t *server, GLsizei n, const GLuint *fences)
+_gl_delete_fences_nv (server_t *server, GLsizei n, const GLuint *fences)
 {
     egl_state_t *egl_state;
 
@@ -4690,7 +4690,7 @@ FINISH:
 }
 
 static void
-_gl_gen_fences_nv (command_buffer_server_t *server, GLsizei n, GLuint *fences)
+_gl_gen_fences_nv (server_t *server, GLsizei n, GLuint *fences)
 {
     egl_state_t *egl_state;
 
@@ -4709,7 +4709,7 @@ _gl_gen_fences_nv (command_buffer_server_t *server, GLsizei n, GLuint *fences)
 }
 
 static GLboolean
-_gl_is_fence_nv (command_buffer_server_t *server, GLuint fence)
+_gl_is_fence_nv (server_t *server, GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4725,7 +4725,7 @@ _gl_is_fence_nv (command_buffer_server_t *server, GLuint fence)
 }
 
 static GLboolean
-_gl_test_fence_nv (command_buffer_server_t *server, GLuint fence)
+_gl_test_fence_nv (server_t *server, GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4741,7 +4741,7 @@ _gl_test_fence_nv (command_buffer_server_t *server, GLuint fence)
 }
 
 static void 
-_gl_get_fenceiv_nv (command_buffer_server_t *server, GLuint fence, GLenum pname, int *params)
+_gl_get_fenceiv_nv (server_t *server, GLuint fence, GLenum pname, int *params)
 {
     egl_state_t *egl_state;
 
@@ -4755,7 +4755,7 @@ _gl_get_fenceiv_nv (command_buffer_server_t *server, GLuint fence, GLenum pname,
 }
 
 static void
-_gl_finish_fence_nv (command_buffer_server_t *server, GLuint fence)
+_gl_finish_fence_nv (server_t *server, GLuint fence)
 {
     egl_state_t *egl_state;
 
@@ -4769,7 +4769,7 @@ _gl_finish_fence_nv (command_buffer_server_t *server, GLuint fence)
 }
 
 static void
-_gl_set_fence_nv (command_buffer_server_t *server, GLuint fence, GLenum condition)
+_gl_set_fence_nv (server_t *server, GLuint fence, GLenum condition)
 {
     egl_state_t *egl_state;
 
@@ -4785,7 +4785,7 @@ _gl_set_fence_nv (command_buffer_server_t *server, GLuint fence, GLenum conditio
 
 #ifdef GL_NV_coverage_sample
 static void
-_gl_coverage_mask_nv (command_buffer_server_t *server, GLboolean mask)
+_gl_coverage_mask_nv (server_t *server, GLboolean mask)
 {
     egl_state_t *egl_state;
 
@@ -4798,7 +4798,7 @@ _gl_coverage_mask_nv (command_buffer_server_t *server, GLboolean mask)
 }
 
 static void
-_gl_coverage_operation_nv (command_buffer_server_t *server, GLenum operation)
+_gl_coverage_operation_nv (server_t *server, GLenum operation)
 {
     egl_state_t *egl_state;
 
@@ -4820,7 +4820,7 @@ _gl_coverage_operation_nv (command_buffer_server_t *server, GLenum operation)
 
 #ifdef GL_QCOM_driver_control
 static void
-_gl_get_driver_controls_qcom (command_buffer_server_t *server, GLint *num, GLsizei size, 
+_gl_get_driver_controls_qcom (server_t *server, GLint *num, GLsizei size, 
                               GLuint *driverControls)
 {
     egl_state_t *egl_state;
@@ -4834,7 +4834,7 @@ _gl_get_driver_controls_qcom (command_buffer_server_t *server, GLint *num, GLsiz
 }
 
 static void
-_gl_get_driver_control_string_qcom (command_buffer_server_t *server, GLuint driverControl, GLsizei bufSize,
+_gl_get_driver_control_string_qcom (server_t *server, GLuint driverControl, GLsizei bufSize,
                                     GLsizei *length, 
                                     GLchar *driverControlString)
 {
@@ -4851,7 +4851,7 @@ _gl_get_driver_control_string_qcom (command_buffer_server_t *server, GLuint driv
 }
 
 static void
-_gl_enable_driver_control_qcom (command_buffer_server_t *server, GLuint driverControl)
+_gl_enable_driver_control_qcom (server_t *server, GLuint driverControl)
 {
     egl_state_t *egl_state;
 
@@ -4865,7 +4865,7 @@ _gl_enable_driver_control_qcom (command_buffer_server_t *server, GLuint driverCo
 }
 
 static void
-_gl_disable_driver_control_qcom (command_buffer_server_t *server, GLuint driverControl)
+_gl_disable_driver_control_qcom (server_t *server, GLuint driverControl)
 {
     egl_state_t *egl_state;
 
@@ -4881,7 +4881,7 @@ _gl_disable_driver_control_qcom (command_buffer_server_t *server, GLuint driverC
 
 #ifdef GL_QCOM_extended_get
 static void
-_gl_ext_get_textures_qcom (command_buffer_server_t *server, GLuint *textures, GLint maxTextures, 
+_gl_ext_get_textures_qcom (server_t *server, GLuint *textures, GLint maxTextures, 
                            GLint *numTextures)
 {
     egl_state_t *egl_state;
@@ -4895,7 +4895,7 @@ _gl_ext_get_textures_qcom (command_buffer_server_t *server, GLuint *textures, GL
 }
 
 static void
-_gl_ext_get_buffers_qcom (command_buffer_server_t *server, GLuint *buffers, GLint maxBuffers, 
+_gl_ext_get_buffers_qcom (server_t *server, GLuint *buffers, GLint maxBuffers, 
                           GLint *numBuffers) 
 {
     egl_state_t *egl_state;
@@ -4909,7 +4909,7 @@ _gl_ext_get_buffers_qcom (command_buffer_server_t *server, GLuint *buffers, GLin
 }
 
 static void
-_gl_ext_get_renderbuffers_qcom (command_buffer_server_t *server, GLuint *renderbuffers, 
+_gl_ext_get_renderbuffers_qcom (server_t *server, GLuint *renderbuffers, 
                                 GLint maxRenderbuffers,
                                 GLint *numRenderbuffers)
 {
@@ -4925,7 +4925,7 @@ _gl_ext_get_renderbuffers_qcom (command_buffer_server_t *server, GLuint *renderb
 }
 
 static void
-_gl_ext_get_framebuffers_qcom (command_buffer_server_t *server, GLuint *framebuffers, GLint maxFramebuffers,
+_gl_ext_get_framebuffers_qcom (server_t *server, GLuint *framebuffers, GLint maxFramebuffers,
                                GLint *numFramebuffers)
 {
     egl_state_t *egl_state;
@@ -4940,7 +4940,7 @@ _gl_ext_get_framebuffers_qcom (command_buffer_server_t *server, GLuint *framebuf
 }
 
 static void
-_gl_ext_get_tex_level_parameteriv_qcom (command_buffer_server_t *server, GLuint texture, GLenum face, 
+_gl_ext_get_tex_level_parameteriv_qcom (server_t *server, GLuint texture, GLenum face, 
                                         GLint level, GLenum pname, 
                                         GLint *params)
 {
@@ -4957,7 +4957,7 @@ _gl_ext_get_tex_level_parameteriv_qcom (command_buffer_server_t *server, GLuint 
 }
 
 static void
-_gl_ext_tex_object_state_overridei_qcom (command_buffer_server_t *server, GLenum target, GLenum pname, 
+_gl_ext_tex_object_state_overridei_qcom (server_t *server, GLenum target, GLenum pname, 
                                          GLint param)
 {
     egl_state_t *egl_state;
@@ -4972,7 +4972,7 @@ _gl_ext_tex_object_state_overridei_qcom (command_buffer_server_t *server, GLenum
 }
 
 static void
-_gl_ext_get_tex_sub_image_qcom (command_buffer_server_t *server, GLenum target, GLint level,
+_gl_ext_get_tex_sub_image_qcom (server_t *server, GLenum target, GLint level,
                                 GLint xoffset, GLint yoffset, 
                                 GLint zoffset,
                                 GLsizei width, GLsizei height, 
@@ -4994,7 +4994,7 @@ _gl_ext_get_tex_sub_image_qcom (command_buffer_server_t *server, GLenum target, 
 }
 
 static void
-_gl_ext_get_buffer_pointerv_qcom (command_buffer_server_t *server, GLenum target, GLvoid **params)
+_gl_ext_get_buffer_pointerv_qcom (server_t *server, GLenum target, GLvoid **params)
 {
     egl_state_t *egl_state;
 
@@ -5010,7 +5010,7 @@ _gl_ext_get_buffer_pointerv_qcom (command_buffer_server_t *server, GLenum target
 
 #ifdef GL_QCOM_extended_get2
 static void
-_gl_ext_get_shaders_qcom (command_buffer_server_t *server, GLuint *shaders, GLint maxShaders, 
+_gl_ext_get_shaders_qcom (server_t *server, GLuint *shaders, GLint maxShaders, 
                           GLint *numShaders)
 {
     egl_state_t *egl_state;
@@ -5024,7 +5024,7 @@ _gl_ext_get_shaders_qcom (command_buffer_server_t *server, GLuint *shaders, GLin
 }
 
 static void
-_gl_ext_get_programs_qcom (command_buffer_server_t *server, GLuint *programs, GLint maxPrograms,
+_gl_ext_get_programs_qcom (server_t *server, GLuint *programs, GLint maxPrograms,
                            GLint *numPrograms)
 {
     egl_state_t *egl_state;
@@ -5038,7 +5038,7 @@ _gl_ext_get_programs_qcom (command_buffer_server_t *server, GLuint *programs, GL
 }
 
 static GLboolean
-_gl_ext_is_program_binary_qcom (command_buffer_server_t *server, GLuint program)
+_gl_ext_is_program_binary_qcom (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
     bool result = false;
@@ -5054,7 +5054,7 @@ _gl_ext_is_program_binary_qcom (command_buffer_server_t *server, GLuint program)
 }
 
 static void
-_gl_ext_get_program_binary_source_qcom (command_buffer_server_t *server, GLuint program, GLenum shadertype,
+_gl_ext_get_program_binary_source_qcom (server_t *server, GLuint program, GLenum shadertype,
                                         GLchar *source, GLint *length)
 {
     egl_state_t *egl_state;
@@ -5072,7 +5072,7 @@ _gl_ext_get_program_binary_source_qcom (command_buffer_server_t *server, GLuint 
 
 #ifdef GL_QCOM_tiled_rendering
 static void
-_gl_start_tiling_qcom (command_buffer_server_t *server, GLuint x, GLuint y, GLuint width, GLuint height,
+_gl_start_tiling_qcom (server_t *server, GLuint x, GLuint y, GLuint width, GLuint height,
                        GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
@@ -5087,7 +5087,7 @@ _gl_start_tiling_qcom (command_buffer_server_t *server, GLuint x, GLuint y, GLui
 }
 
 static void
-_gl_end_tiling_qcom (command_buffer_server_t *server, GLbitfield preserveMask)
+_gl_end_tiling_qcom (server_t *server, GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
 

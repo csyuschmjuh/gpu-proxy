@@ -2,7 +2,7 @@
  * manipulate the server_states variable 
  */
 #include "dispatch_private.h"
-#include "command_buffer_server.h"
+#include "server.h"
 #include "egl_server_private.h"
 #include "thread_private.h"
 #include <stdlib.h>
@@ -271,7 +271,7 @@ _server_get_state (EGLDisplay dpy,
 }
 
 void 
-_server_init (command_buffer_server_t *server)
+_server_init (server_t *server)
 {
     mutex_lock (egl_mutex);
     if (server_states.initialized == false) {

@@ -6,7 +6,7 @@
 
 typedef void (*FunctionPointerType)(void);
 
-typedef struct _command_buffer_server command_buffer_server_t;
+typedef struct _server server_t;
 #include "dispatch_gles2_private.h"
 #include "dispatch_private_desktop.h"
 
