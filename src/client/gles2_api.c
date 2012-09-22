@@ -36,10 +36,10 @@ _is_error_state (void)
 {
     egl_state_t *egl_state;
 
-    if (! client_state_active_egl_state_available ())
+    if (! client_active_egl_state_available ())
         return true;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (! egl_state ||
         ! (egl_state->display == EGL_NO_DISPLAY ||
@@ -236,7 +236,7 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
      * will generate error even the underlying driver supports other
      * types.
      */
-    egl_state = client_state_get_active_egl_state();
+    egl_state = client_get_active_egl_state();
     if (egl_state->state.element_array_buffer_binding == 0) {
         if (indices && count > 0 ) {
             if (type == GL_UNSIGNED_BYTE) {
@@ -260,7 +260,7 @@ void glGenBuffers (GLsizei n, GLuint *buffers)
     if (_is_error_state ())
         return;
 
-    name_handler = client_state_get_name_handler();
+    name_handler = client_get_name_handler();
     buffers = name_handler_alloc_names (name_handler, RESOURCE_GEN_BUFFERS, n);
 
     /* FIXME: post command with generated client buffers. */
@@ -714,7 +714,7 @@ _gl_get_data_width (GLsizei width, GLenum format, GLenum type)
     int padding = 0;
     int mod = 0;
     int total_width = 0;
-    int unpack_alignment = client_state_get_unpack_alignment ();
+    int unpack_alignment = 4;
     
     if (type == GL_UNSIGNED_BYTE) {
         if (format == GL_RGB) {
@@ -767,17 +767,15 @@ void glTexImage2D (GLenum target,
         return;
     }
 
-    command_buffer_t *command_buffer = client_state_get_command_buffer ();
-    command_t *command = command_buffer_get_space_for_command (command_buffer,
-                                                               COMMAND_GLTEXIMAGE2D);
+    command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
     if (!source_data) {
         command_teximage2d_init (command, target, level, internalformat, width,
                                  height, border, format, type, NULL);
-        command_buffer_write_command (command_buffer, command);
+        client_write_command (command);
         return;
     }
 
-    int unpack_alignment = client_state_get_unpack_alignment ();
+    int unpack_alignment = 4;
 
     uint32_t dest_size;
     uint32_t unpadded_row_size;
@@ -796,7 +794,7 @@ void glTexImage2D (GLenum target,
 
     command_teximage2d_init (command, target, level, internalformat, width,
                              height, border, format, type, dest_data);
-    command_buffer_write_command (command_buffer, command);
+    client_write_command (command);
 }
 
 void glTexSubImage2D (GLenum target,
@@ -841,13 +839,11 @@ void glTexSubImage2D (GLenum target,
                          padded_row_size, false /* flip y */, padded_row_size);
 
 
-    command_buffer_t *command_buffer = client_state_get_command_buffer ();
-    command_t *command = command_buffer_get_space_for_command (command_buffer,
-                                                               COMMAND_GLTEXSUBIMAGE2D);
+    command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
     command_texsubimage2d_init (command, target, level, xoffset, yoffset,
                                 width, height, format, type, dest_data);
 
-    command_buffer_write_command (command_buffer, command);
+    client_write_command ( command);
 
 }
 

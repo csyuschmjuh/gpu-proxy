@@ -3,22 +3,14 @@
 
 #include "config.h"
 
-#ifndef HAS_GLES2
-#include <GLES/gl.h>
-#include <GLES/glext.h>
-#else
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-#endif
-#include <string.h>
-#include <stdlib.h>
-
-#include "client_state.h"
+#include "client.h"
 #include "command.h"
 #include "command_buffer.h"
 #include "types_private.h"
 #include "thread_private.h"
 #include "egl_states.h"
+#include <string.h>
+#include <stdlib.h>
 
 private bool
 _is_error_state (void);

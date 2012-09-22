@@ -19,12 +19,10 @@ libGPUProcess_la_LDFLAGS = \
 	-no-undefined
 
 libGPUProcess_la_SOURCES = \
-	client/client_state.c \
-	client/client_state.h \
+	client/client.c \
+	client/client.h \
 	command.c \
 	command.h \
-	command_buffer.h \
-	command_buffer.c \
 	compiler_private.h \
 	gl_states.h \
 	name_handler.h \
