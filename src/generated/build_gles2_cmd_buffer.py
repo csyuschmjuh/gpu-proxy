@@ -2854,11 +2854,14 @@ class GLGenerator(object):
   def WriteServerDispatchTable(self, filename):
     """Writes the dispatch struct for the server-side"""
     file = CHeaderWriter(filename)
-    file.Write("#ifdef HAS_GLES2\n")
+    file.Write("#include \"config.h\"\n")
+    file.Write("#include \"compiler_private.h\"\n")
     file.Write("#include <EGL/egl.h>\n")
     file.Write("#include <EGL/eglext.h>\n")
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
+    file.Write("typedef void (*FunctionPointerType)(void);\n")
+    file.Write("typedef struct _server server_t;\n")
     file.Write("typedef struct _server_dispatch_table {\n")
     for func in self.functions:
         file.Write("    %s (*%s) (server_t* server" % (func.return_type, func.name))
@@ -2866,7 +2869,6 @@ class GLGenerator(object):
         file.Write(");\n")
     file.Write("} server_dispatch_table_t;")
     file.Write("\n")
-    file.Write("#endif /* HAS_GLES2 */\n")
     file.Close()
 
   def WriteBaseServerDispatchTableImplementation(self, filename):
@@ -2897,8 +2899,9 @@ class GLGenerator(object):
         file.Write("}\n\n")
 
     file.Write("void\n")
-    file.Write("dispatch_init (server_dispatch_table_t *dispatch)\n")
+    file.Write("server_fill_dispatch_table (server_t *server)\n")
     file.Write("{\n")
+    file.Write("    server_dispatch_table_t *dispatch = &server->dispatch;\n")
     file.Write("    FunctionPointerType *temp = NULL;\n")
 
     for func in self.functions:
@@ -2995,8 +2998,8 @@ def main(argv):
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
-  gen.WriteServerDispatchTable("dispatch_gles2_private.h")
-  gen.WriteBaseServerDispatchTableImplementation("dispatch_gles2_autogen.c")
+  gen.WriteServerDispatchTable("server_dispatch_table.h")
+  gen.WriteBaseServerDispatchTableImplementation("server_dispatch_table_autogen.c")
   gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:

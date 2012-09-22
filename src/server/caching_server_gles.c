@@ -26,7 +26,7 @@
 #include "config.h"
 #include "caching_server_private.h"
 
-#include "dispatch_private.h"
+#include "server_dispatch_table.h"
 #include "egl_states.h"
 #include "server.h"
 #include "types_private.h"
@@ -302,8 +302,6 @@ _server_init (server_t *server)
     if (server_states.initialized == false) {
         server_states.num_contexts = 0;
         server_states.states = NULL;
-
-        dispatch_init (&server->dispatch);
         server_states.initialized = true;
     }
     mutex_unlock (egl_mutex);

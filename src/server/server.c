@@ -1,8 +1,14 @@
+#include "config.h"
+#include "server.h"
+
 #include "caching_server_private.h"
 #include "ring_buffer.h"
-#include "server.h"
+#include "server_dispatch_table_helpers.h"
 #include "thread_private.h"
 #include <time.h>
+
+static void
+server_fill_dispatch_table (server_t *server);
 
 static void
 server_handle_set_token (server_t *server,
@@ -37,6 +43,8 @@ static void *
 server_thread_func (void *ptr)
 {
     server_t *server = (server_t *)ptr;
+
+    server_fill_dispatch_table (server);
 
     /* populate dispatch table, create global egl_states structures */
     _server_init (server);
@@ -90,6 +98,7 @@ server_init (server_t *server,
         mutex_lock (server->thread_started_mutex);
         mutex_destroy (server->thread_started_mutex);
     } else {
+         server_fill_dispatch_table (server);
         _server_init (server);
     }
 }
@@ -105,3 +114,5 @@ server_destroy (server_t *server)
     free (server);
     return true;
 }
+
+#include "server_dispatch_table_autogen.c"

@@ -4,7 +4,7 @@
 
 #include "command.h"
 #include "compiler_private.h"
-#include "dispatch_private.h"
+#include "server_dispatch_table.h"
 #include "egl_states.h"
 #include "ring_buffer.h"
 #include "thread_private.h"
