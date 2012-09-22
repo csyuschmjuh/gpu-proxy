@@ -37,9 +37,10 @@ extern gl_server_states_t        server_states;
 private void
 _server_init ();
 
-#ifdef __cplusplus
-}
-#endif
+private void
+caching_server_init (caching_server_t *server, buffer_t *buffer);
 
+private caching_server_t *
+caching_server_new (buffer_t *buffer);
 
 #endif /* GPUPROCESS_EGL_SERVER_PRIVATE_H */

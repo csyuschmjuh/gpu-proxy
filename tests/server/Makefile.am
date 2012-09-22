@@ -29,6 +29,7 @@ gpuproxy_test_LDFLAGS = \
 	-lpthread
 
 gpuproxy_test_CFLAGS = \
+	-g \
 	-DENABLE_TESTING=1 \
 	-I$(rootsrcdir)/src \
 	-I$(rootsrcdir)/src/generated \

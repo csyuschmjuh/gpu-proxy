@@ -261,190 +261,20 @@ typedef struct gl_state {
     /* glGetRenderbufferParameter() */
     /* XXX: do we need to cache them ? */
 
-#ifdef GL_OES_compressed_ETC1_RGB8_texture
-#endif
-
-#ifdef GL_OES_compressed_paletted_texture
-#endif
-
-#ifdef GL_OES_depth24
-#endif
-
-#ifdef GL_OES_depth32
-#endif
-
-#ifdef GL_OES_depth_texture
-#endif
-
-#ifdef GL_OES_EGL_image
-#endif
-
-#ifdef GL_OES_EGL_image_external
-#endif
-
-#ifdef GL_OES_element_index_uint
-#endif
-
-#ifdef GL_OES_get_program_binary
-    /* reuse num_program_binary_formats, program_binary_formats */
-#endif 
-
-#ifdef GL_OES_mapbuffer
-    /* XXX: anything worth to save ? */
-#endif
-
-#ifdef GL_OES_packed_depth_stencil
-#endif
-
-#ifdef GL_OES_rgb8_rgba8
-#endif
-
-#ifdef GL_OES_standard_derivatives
-#endif
-
-#ifdef GL_OES_stencil1
-#endif
-
-#ifdef GL_OES_stencil4
-#endif
-
-#ifdef GL_OES_texture_3D
     /* used */
     GLint        texture_binding_3d;
     GLint        max_3d_texture_size;
     bool         max_3d_texture_size_queried;
     /* used */
     GLint        texture_3d_wrap_r[32];         /* initial GL_REPEAT */
-#endif
-
-#ifdef GL_OES_texture_float
-#endif
-
-#ifdef GL_OES_texture_float_linear
-#endif
-
-#ifdef GL_OES_texture_half_float
-#endif
-
-#ifdef GL_OES_texture_half_float_linear
-#endif
-
-#ifdef GL_OES_texture_npot
-#endif
-
-#ifdef GL_OES_vertex_array_object
     GLint        vertex_array_binding;
-#endif
-
-#ifdef GL_OES_vertex_half_float
-#endif
-
-#ifdef GL_OES_vertex_type_10_10_10_2
-#endif
-
-#ifdef GL_AMD_compressed_3DC_texture
-#endif
-
-#ifdef GL_AMD_compressed_ATC_texture
-#endif
-
-#ifdef GL_AMD_performance_monitor
-#endif
-
-#ifdef GL_AMD_program_binary_Z400
-#endif
-
-#ifdef GL_ANGLE_framebuffer_blit
     GLint        draw_framebuffer_binding;                /* initial 0 ? */
     GLint        read_framebuffer_binding;                /* initial 0 ? */
-#endif
 
-#if defined GL_ANGLE_framebuffer_multisample || GL_EXT_multisampled_render_to_texture || GL_IMG_multisampled_render_to_texture
     GLint        max_samples;
     bool         max_samples_queried;
-#endif
 
-#ifdef GL_APPLE_rgb_422
-#endif
-
-#ifdef GL_APPLE_framebuffer_multisample
-        /* reuse GL_ANGLE_framebuffer_blit */
-#endif
-
-#ifdef GL_APPLE_texture_format_BGRA8888
-#endif
-
-#ifdef GL_APPLE_texture_max_level
     GLint        texture_max_level;
-#endif
-
-#ifdef GL_ARM_mali_shader_bindary
-#endif
-
-#ifdef GL_ARM_rgba8
-#endif
-
-#ifdef GL_EXT_blend_minmax
-    /* reuse blend_equation */
-#endif
-
-#ifdef GL_EXT_discard_framebuffer
-#endif
-
-#ifdef GL_EXT_multi_draw_arrays
-#endif
-
-#ifdef GL_EXT_read_format_bgra
-#endif
-
-#ifdef GL_EXT_texture_filter_anisotropic
-#endif
-
-#ifdef GL_EXT_texture_format_BGRA8888
-#endif
-
-#ifdef GL_EXT_texture_compression_dxt1
-#endif
-
-#ifdef GL_IMG_program_binary
-#endif
-
-#ifdef GL_IMG_read_format
-#endif
-
-#ifdef GL_IMG_shader_binary
-#endif
-
-#ifdef GL_IMG_texture_compression_pvrtc
-#endif
-
-
-#ifdef GL_NV_fence
-#endif
-
-#ifdef GL_NV_coverage_sample
-#endif
-
-#ifdef GL_NV_depth_nonlinear
-#endif
-
-#ifdef GL_QCOM_extended_get
-#endif
-
-#ifdef GL_QCOM_extended_get2
-#endif
-
-#ifdef GL_QCOM_perfmon_global_mode
-#endif
-
-#ifdef GL_QCOM_writeonly_rendering
-#endif
-
-#ifdef GL_QCOM_tiled_rendering
-#endif
-
-#ifdef GL_VIV_shader_bindary
-#endif
 
 } gles2_state_t;
 #ifdef __cplusplus
