@@ -1,5 +1,3 @@
-#include "dispatch_private.h"
-#include <assert.h>
 #include <dlfcn.h>
 #include <stdlib.h>
 
@@ -44,5 +42,3 @@ libegl_handle ()
     handle = dlopen (libegl ? libegl : default_libegl_name, RTLD_LAZY | RTLD_DEEPBIND);
     return handle;
 }
-
-#include "dispatch_gles2_autogen.c"

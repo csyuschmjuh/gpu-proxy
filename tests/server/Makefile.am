@@ -12,8 +12,6 @@ gpuproxy_test_SOURCES = \
 	$(rootsrcdir)/src/server/caching_server_gles.c \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
-	$(rootsrcdir)/src/server/dispatch_private.h \
-	$(rootsrcdir)/src/server/dispatch_gles2.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	test_egl.c \
