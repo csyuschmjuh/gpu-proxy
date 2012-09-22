@@ -38,10 +38,8 @@
 #include <string.h>
 
 /* global state variable for all server threads */
-gl_server_states_t              server_states;
-
-mutex_static_init (egl_mutex);
-
+mutex_static_init (server_states_mutex);
+gl_server_states_t server_states;
 static bool
 _server_has_context (egl_state_t *state,
                      EGLDisplay  display,
@@ -294,13 +292,13 @@ _server_get_state (EGLDisplay dpy,
 void 
 _server_init (server_t *server)
 {
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
     if (server_states.initialized == false) {
         server_states.num_contexts = 0;
         server_states.states = NULL;
         server_states.initialized = true;
     }
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 /* the server first calls eglTerminate (display),
@@ -314,11 +312,11 @@ _server_terminate (server_t *server,
     link_list_t *list = head;
     link_list_t *current;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
 
     if (server_states.initialized == false ||
         server_states.num_contexts == 0 || (! server_states.states)) {
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return;
     }
     
@@ -344,7 +342,7 @@ _server_terminate (server_t *server,
     /*
     else if (! CACHING_SERVER(server)->active_state) {
     } */
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 /* we should call real eglMakeCurrent() before, and wait for result
@@ -362,13 +360,13 @@ _server_make_current (server_t *server,
     link_list_t *new_list;
     link_list_t *match_state = NULL;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
     /* we are switching to None context */
     if (context == EGL_NO_CONTEXT || display == EGL_NO_DISPLAY) {
         /* current is None too */
         if (! CACHING_SERVER(server)->active_state) {
             CACHING_SERVER(server)->active_state = NULL;
-            mutex_unlock (egl_mutex);
+            mutex_unlock (server_states_mutex);
             return;
         }
         
@@ -387,7 +385,7 @@ _server_make_current (server_t *server,
         }
 
         CACHING_SERVER(server)->active_state = NULL;
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return;
     }
 
@@ -414,7 +412,7 @@ _server_make_current (server_t *server,
     /* get existing state or create a new one */
     CACHING_SERVER(server)->active_state = _server_get_state (display, drawable,
                                                               readable, context);
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 /* called by eglDestroyContext() - once we know there is matching context
@@ -430,9 +428,9 @@ _server_destroy_context (server_t *server,
     link_list_t *list = server_states.states;
     link_list_t *current;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return;
     }
 
@@ -447,7 +445,7 @@ _server_destroy_context (server_t *server,
                 _server_remove_state (&current);
         }
     }
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 static void
@@ -459,9 +457,9 @@ _server_destroy_surface (server_t *server,
     link_list_t *list = server_states.states;
     link_list_t *current;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return;
     }
 
@@ -487,7 +485,7 @@ _server_destroy_surface (server_t *server,
         }
     }
 
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 static bool
@@ -501,9 +499,9 @@ _match (EGLDisplay display,
     link_list_t *list = server_states.states;
     link_list_t *current;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
     if (server_states.num_contexts == 0 || ! server_states.states) {
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return false;
     }
 
@@ -525,13 +523,13 @@ _match (EGLDisplay display,
             ! egl_state->destroy_dpy ) {
             egl_state->active = true;
             *state = current;
-            mutex_unlock (egl_mutex);
+            mutex_unlock (server_states_mutex);
             return true;
         }
 
     }
 
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
     return false;
 }
 /* the server first calls eglInitialize (),
@@ -546,11 +544,11 @@ _server_initialize (EGLDisplay display)
 
     egl_state_t *egl_state;
 
-    mutex_lock (egl_mutex);
+    mutex_lock (server_states_mutex);
 
     if (server_states.initialized == false ||
         server_states.num_contexts == 0 || (! server_states.states)) {
-        mutex_unlock (egl_mutex);
+        mutex_unlock (server_states_mutex);
         return;
     }
     
@@ -564,7 +562,7 @@ _server_initialize (EGLDisplay display)
                 egl_state->destroy_dpy = false;
         }
     }
-    mutex_unlock (egl_mutex);
+    mutex_unlock (server_states_mutex);
 }
 
 static bool
