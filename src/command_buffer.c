@@ -14,7 +14,7 @@ command_buffer_create ()
 
     buffer_create (command_buffer->buffer);
 
-    command_buffer->server = command_buffer_server_new (command_buffer->buffer);
+    command_buffer->server = server_new (command_buffer->buffer);
     command_buffer->token = 0;
 
     return command_buffer;
@@ -26,7 +26,7 @@ command_buffer_destroy (command_buffer_t *command_buffer)
     buffer_free (command_buffer->buffer);
     free (command_buffer->buffer);
     command_buffer->buffer = NULL;
-    command_buffer_server_destroy (command_buffer->server);
+    server_destroy (command_buffer->server);
     free (command_buffer);
 }
 
@@ -117,12 +117,4 @@ bool
 command_buffer_flush (command_buffer_t *command_buffer)
 {
     return true;
-}
-
-void
-command_buffer_set_active_state (command_buffer_t *command_buffer,
-                                 link_list_t *active_state)
-{
-    command_buffer_server_set_active_state (command_buffer->server,
-                                            active_state);
 }

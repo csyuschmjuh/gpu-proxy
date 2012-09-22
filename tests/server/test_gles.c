@@ -12,7 +12,7 @@
 Display *dpy1 = NULL;
 EGLDisplay egl_dpy;
 EGLContext window_context;
-command_buffer_server_t *server;
+server_t *server;
 
 typedef struct
 {
@@ -90,7 +90,7 @@ setup (void)
 
     buffer_t *first_buffer = malloc (sizeof (buffer_t));
     buffer_create (first_buffer);
-    server = (command_buffer_server_t *) caching_server_new (first_buffer);
+    server = (server_t *) caching_server_new (first_buffer);
 
  //EGL Display 
     egl_dpy = _egl_get_display (server, dpy1);

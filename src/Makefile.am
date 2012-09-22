@@ -29,8 +29,8 @@ libGPUProcess_la_SOURCES = \
 	name_handler.c \
 	ring_buffer.h \
 	ring_buffer.c \
-	server/command_buffer_server.c \
-	server/command_buffer_server.h \
+	server/server.c \
+	server/server.h \
 	server/dispatch_private.h \
 	server/gl_server_private.h \
 	server/gl_states.h \

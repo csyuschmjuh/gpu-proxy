@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-command_buffer_server_t *server;
+server_t *server;
 
 typedef struct _egl_test {
     Display *dpy;
@@ -150,7 +150,7 @@ setup (void)
 
     buffer_t *buffer = malloc (sizeof (buffer_t));
     buffer_create (buffer);
-    server = (command_buffer_server_t *) caching_server_new (buffer);
+    server = (server_t *) caching_server_new (buffer);
 
     first_test_info.dpy = XOpenDisplay (NULL);
     GPUPROCESS_FAIL_IF (first_test_info.dpy == NULL, "XOpenDisplay should work");

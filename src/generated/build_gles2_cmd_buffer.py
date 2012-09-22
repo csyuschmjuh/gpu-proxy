@@ -2861,7 +2861,7 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2ext.h>\n\n")
     file.Write("typedef struct _server_dispatch_table {\n")
     for func in self.functions:
-        file.Write("    %s (*%s) (command_buffer_server_t* server" % (func.return_type, func.name))
+        file.Write("    %s (*%s) (server_t* server" % (func.return_type, func.name))
         file.Write(func.MakeTypedOriginalArgString("", add_separator = True), split=False)
         file.Write(");\n")
     file.Write("} server_dispatch_table_t;")
@@ -2883,7 +2883,7 @@ class GLGenerator(object):
 
         func_name = "passthrough_%s (" % func.name
         indent = " " * len(func_name)
-        file.Write("%scommand_buffer_server_t* server" % func_name)
+        file.Write("%sserver_t* server" % func_name)
         file.Write(func.MakeTypedOriginalArgString(indent, separator = ",\n", add_separator = True), split=False)
         file.Write(")\n")
         file.Write("{\n")

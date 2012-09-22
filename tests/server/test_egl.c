@@ -7,14 +7,14 @@
 
 Display *dpy = NULL;
 EGLDisplay egl_dpy;
-command_buffer_server_t *server;
+server_t *server;
 
 static void
 setup (void)
 {
     buffer_t *first_buffer = malloc (sizeof (buffer_t));
     buffer_create (first_buffer);
-    server = (command_buffer_server_t *) caching_server_new (first_buffer);
+    server = (server_t *) caching_server_new (first_buffer);
 
     dpy = XOpenDisplay (NULL);
     GPUPROCESS_FAIL_IF (dpy == NULL, "XOpenDisplay should work");

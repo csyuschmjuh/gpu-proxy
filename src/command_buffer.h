@@ -4,7 +4,7 @@
 
 #include "compiler_private.h"
 #include "command.h"
-#include "command_buffer_server.h"
+#include "server.h"
 #include "ring_buffer.h"
 #include "types_private.h"
 #include "egl_states.h"
@@ -26,7 +26,7 @@ extern "C" {
  */
 typedef struct command_buffer {
     buffer_t *buffer;
-    command_buffer_server_t *server;
+    server_t *server;
     unsigned int token;
 } command_buffer_t;
 
@@ -53,11 +53,6 @@ command_buffer_insert_token (command_buffer_t *command_buffer);
 private bool
 command_buffer_wait_for_token (command_buffer_t *command_buffer,
                                unsigned int token);
-
-private void
-command_buffer_set_active_state (command_buffer_t *command_buffer,
-                                 link_list_t     *active_state);
-
 #ifdef __cplusplus
 }
 #endif
