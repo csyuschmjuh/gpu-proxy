@@ -17,7 +17,7 @@
 
 #include "config.h"
 
-#include "client_state.h"
+#include "client.h"
 #include "thread_private.h"
 #include "types_private.h"
 #include <EGL/egl.h>
@@ -29,7 +29,7 @@ eglGetError (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return error;
 
     /* XXX: post eglGetError() and wait */
@@ -45,7 +45,7 @@ eglGetDisplay (EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
 
-    client_state_get_thread_local ();
+    client_get_thread_local ();
 
     /* XXX: post eglGetDisplay and wait */
     return display;
@@ -56,7 +56,7 @@ eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglInitialize and wait */
@@ -67,7 +67,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglTerminate and wait */
@@ -77,7 +77,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
      * and application exit?  Obviously, there are still valid context
      * on the driver side, what about our server thread ?
      */
-    if (! client_state_active_egl_state_available ())
+    if (! client_active_egl_state_available ())
         client_buffer_destroy_thread_local ();
 
     return result;
@@ -88,7 +88,7 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 {
     const char *result = NULL;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglQueryString and wait */
@@ -101,7 +101,7 @@ eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglGetConfigs and wait */
@@ -115,7 +115,7 @@ eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglChooseConfig and wait */
@@ -128,7 +128,7 @@ eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* post eglGetConfigAttrib and wait */
@@ -142,7 +142,7 @@ eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return surface;
 
     /* XXX: post eglCreateWindowSurface and wait */
@@ -155,7 +155,7 @@ eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return surface;
 
     /* XXX: post eglCreatePbufferSurface and wait */
@@ -169,7 +169,7 @@ eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return surface;
 
     /* XXX: post eglCreatePixmapSurface and wait */
@@ -181,7 +181,7 @@ eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglDestroySurface and wait */
@@ -194,7 +194,7 @@ eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglQuerySurface and wait */
@@ -206,7 +206,7 @@ eglBindAPI (EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglBindAPI and wait */
@@ -218,7 +218,7 @@ eglQueryAPI (void)
 {
     EGLenum result = EGL_NONE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglQueryAPI and wait */
@@ -231,10 +231,10 @@ eglWaitClient (void)
     egl_state_t *egl_state;
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return EGL_FALSE;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -250,12 +250,12 @@ eglReleaseThread (void)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* current context to None */
     /* XXX: post eglReleaseThread and wait, then set active state to NULL */
-    client_state_set_active_egl_state (NULL);
+    client_set_active_egl_state (NULL);
     return result;
 }
 
@@ -266,7 +266,7 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return surface;
 
     /* XXX: post eglCreatePbufferFromClientBuffer and wait */
@@ -279,7 +279,7 @@ eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglSurfaceAttrib and wait */
@@ -291,7 +291,7 @@ eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
 
@@ -304,7 +304,7 @@ eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglReleaseTexImage and wait */
@@ -316,7 +316,7 @@ eglSwapInterval (EGLDisplay dpy, EGLint interval)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglSwapInterval and wait */
@@ -330,7 +330,7 @@ eglCreateContext (EGLDisplay dpy, EGLConfig config,
 {
     EGLContext result = EGL_NO_CONTEXT;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreateContext and wait */
@@ -342,7 +342,7 @@ eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {
     EGLBoolean result = GL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglDestroyContext and wait */
@@ -354,10 +354,10 @@ eglGetCurrentContext (void)
 {
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return EGL_NO_CONTEXT;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
     return egl_state->context;
 }
 
@@ -366,10 +366,10 @@ eglGetCurrentDisplay (void)
 {
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return EGL_NO_DISPLAY;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
     return egl_state->display;
 }
 
@@ -379,10 +379,10 @@ eglGetCurrentSurface (EGLint readdraw)
     egl_state_t *egl_state;
     EGLSurface surface = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return EGL_NO_SURFACE;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY || egl_state->context == EGL_NO_CONTEXT)
         goto FINISH;
@@ -401,7 +401,7 @@ eglQueryContext (EGLDisplay dpy, EGLContext ctx,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglQueryContext and wait */
@@ -414,10 +414,10 @@ eglWaitGL (void)
     EGLBoolean result = EGL_TRUE;
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return result;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -434,7 +434,7 @@ eglWaitNative (EGLint engine)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *state;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return result;
 
     /* XXX: post eglWaitNative and wait */
@@ -447,10 +447,10 @@ eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
     EGLBoolean result = EGL_BAD_DISPLAY;
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return result;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
     if (egl_state->display == EGL_NO_DISPLAY)
         return result;
 
@@ -474,7 +474,7 @@ eglCopyBuffers (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_and_state_available ())
+    if (! client_buffer_and_state_available ())
         return result;
 
     /* XXX: post eglCopyBuffers and wait */
@@ -486,7 +486,7 @@ eglGetProcAddress (const char *procname)
 {
     void *address = NULL;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return address;
 
     /* XXX: post eglGetProcAddress and wait */
@@ -500,12 +500,12 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state = NULL;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: we need to pass active_context in command buffer */
     /* we are not in any valid context */
-    if (! client_state_active_egl_state_available ()) {
+    if (! client_active_egl_state_available ()) {
         if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             result = EGL_TRUE;
             return result;
@@ -522,7 +522,7 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
             return EGL_TRUE;
         }
         else {
-            egl_state = client_state_get_active_egl_state ();
+            egl_state = client_get_active_egl_state ();
             if (egl_state->display == dpy &&
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
@@ -550,7 +550,7 @@ eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglLockSurfaceKHR and wait */
@@ -562,7 +562,7 @@ eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* post eglUnlockSurfaceKHR and wait */
@@ -577,7 +577,7 @@ eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreateImageKHR and wait */
@@ -589,7 +589,7 @@ eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglDestroyImageKHR and wait */
@@ -603,7 +603,7 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreateSyncKHR and wait */
@@ -615,7 +615,7 @@ eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglDestroySyncKHR and wait */
@@ -628,7 +628,7 @@ eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
 {
     EGLint result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglClientWaitSyncKHR and wait */
@@ -640,7 +640,7 @@ eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglSignalSyncKHR and wait */
@@ -653,7 +653,7 @@ eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglGetSyncAttribKHR and wait */
@@ -668,7 +668,7 @@ eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreateFenceSyncNV and wait */
@@ -680,7 +680,7 @@ eglDestroySyncNV (EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglDestroyFenceSyncNV and wait */
@@ -693,10 +693,10 @@ eglFenceNV (EGLSyncNV sync)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available  ())
+    if (! client_buffer_and_state_available  ())
         return result;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -714,10 +714,10 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available  ())
+    if (! client_buffer_and_state_available  ())
         return result;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -734,10 +734,10 @@ eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
 
-    if (! client_state_buffer_and_state_available  ())
+    if (! client_buffer_and_state_available  ())
         return result;
 
-    egl_state = client_state_get_active_egl_state ();
+    egl_state = client_get_active_egl_state ();
 
     if (egl_state->display == EGL_NO_DISPLAY ||
         egl_state->context == EGL_NO_CONTEXT ||
@@ -753,7 +753,7 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_and_state_available  ())
+    if (! client_buffer_and_state_available  ())
         return result;
 
     /* XXX: post eglGetSyncAttribNV and wait */
@@ -768,7 +768,7 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
 {
     EGLSurface result = EGL_NO_SURFACE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreatePixmapSurfaceHI and wait */
@@ -782,7 +782,7 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglCreateDRMImageMESA and wait */
@@ -795,7 +795,7 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglExportDRMImageMESA and wait */
@@ -811,7 +811,7 @@ eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglPostSubBufferNV and wait */
@@ -825,7 +825,7 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     void *result = NULL;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglMapImageSEC and wait */
@@ -837,7 +837,7 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglUnmapImageSEC and wait */
@@ -850,7 +850,7 @@ eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
 {
     EGLBoolean result = EGL_FALSE;
 
-    if (! client_state_buffer_available ())
+    if (! client_buffer_available ())
         return result;
 
     /* XXX: post eglgetImageAttribSEC and wait */

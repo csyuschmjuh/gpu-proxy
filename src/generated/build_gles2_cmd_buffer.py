@@ -2794,8 +2794,7 @@ class GLGenerator(object):
         file.Write("{\n")
         file.Write("    if (_is_error_state ())\n")
         file.Write("        return;\n\n")
-        file.Write("    command_buffer_t *command_buffer = client_state_get_command_buffer ();\n");
-        file.Write("    command_t *command = command_buffer_get_space_for_command (command_buffer, COMMAND_%s);" %
+        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);" %
                    func.name.upper())
 
         header = "     command_%s_init (" % func.name.lower()
@@ -2808,7 +2807,7 @@ class GLGenerator(object):
 
         file.Write(");\n")
 
-        file.Write("    command_buffer_write_command (command_buffer, command);\n");
+        file.Write("    client_write_command (command);\n");
 
         file.Write("}\n\n")
     file.Close()
