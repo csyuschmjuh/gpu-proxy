@@ -2,11 +2,9 @@
 #ifndef GPUPROCESS_COMMAND_BUFFER_SERVER_H
 #define GPUPROCESS_COMMAND_BUFFER_SERVER_H
 
-
 #include "command.h"
 #include "compiler_private.h"
 #include "dispatch_private.h"
-#include "egl_server_private.h"
 #include "egl_states.h"
 #include "ring_buffer.h"
 #include "thread_private.h"
@@ -17,7 +15,10 @@
 extern "C" {
 #endif
 
+typedef struct _command_buffer_server command_buffer_server_t;
 typedef struct _command_buffer_server {
+    server_dispatch_table_t dispatch;
+
     buffer_t *buffer;
     /* FIXME: do we this?  We have thread local variable for client thread
      * in egl_api.c.
@@ -33,12 +34,16 @@ typedef struct _command_buffer_server {
     link_list_t *active_state;
     /* FIXME: Create a wrapper to avoid thread dependency. */
     thread_t thread;
-
-    server_dispatch_table_t dispatch;
+    bool threaded;
 } command_buffer_server_t;
 
+private void
+command_buffer_server_init (command_buffer_server_t *server,
+                            buffer_t *buffer,
+                            bool threaded);
+
 private command_buffer_server_t *
-command_buffer_server_initialize ();
+command_buffer_server_new (buffer_t *buffer);
 
 private bool
 command_buffer_server_destroy (command_buffer_server_t *command_buffer_server);

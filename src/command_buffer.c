@@ -3,9 +3,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-// The size of the buffer (in bytes). Note that for some buffers
-// such as the memory-mirrored ring buffer the actual buffer size
-// may be larger.
 #define BUFFER_SIZE 10
 
 command_buffer_t *
@@ -15,9 +12,9 @@ command_buffer_create ()
     command_buffer = (command_buffer_t *)malloc (sizeof (command_buffer_t));
     command_buffer->buffer = (buffer_t *)malloc (sizeof (buffer_t));
 
-    buffer_create (command_buffer->buffer, BUFFER_SIZE);
+    buffer_create (command_buffer->buffer);
 
-    command_buffer->server = command_buffer_server_initialize (command_buffer->buffer);
+    command_buffer->server = command_buffer_server_new (command_buffer->buffer);
     command_buffer->token = 0;
 
     return command_buffer;

@@ -23,13 +23,10 @@
 #include "dispatch_private.h"
 #include "types_private.h"
 #include "egl_states.h"
+#include "egl_server_private.h"
 
 /* server local variable, referenced from egl_server.c */
 extern __thread link_list_t        *active_state;
-
-/* global variable for all server threads, referenced from 
- * egl_server_helper.c */
-extern command_buffer_server_t *command_buffer_server;
 
 exposed_to_tests inline bool
 _gl_is_valid_func (command_buffer_server_t *server, void *func)
@@ -84,7 +81,7 @@ exposed_to_tests void _gl_active_texture (command_buffer_server_t *server, GLenu
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glActiveTexture) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glActiveTexture) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -95,7 +92,7 @@ exposed_to_tests void _gl_active_texture (command_buffer_server_t *server, GLenu
             return;
         }
         else {
-            command_buffer_server->dispatch.glActiveTexture (command_buffer_server, texture);
+            CACHING_SERVER(server)->super_dispatch.glActiveTexture (server, texture);
             /* FIXME: this maybe not right because this texture may be 
              * invalid object, we save here to save time in glGetError() 
              */
@@ -108,11 +105,11 @@ exposed_to_tests void _gl_attach_shader (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glAttachShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glAttachShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glAttachShader (command_buffer_server, program, shader);
+        CACHING_SERVER(server)->super_dispatch.glAttachShader (server, program, shader);
 
         egl_state->state.need_get_error = true;
     }
@@ -122,11 +119,11 @@ exposed_to_tests void _gl_bind_attrib_location (command_buffer_server_t *server,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindAttribLocation) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindAttribLocation) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glBindAttribLocation (command_buffer_server, program, index, name);
+        CACHING_SERVER(server)->super_dispatch.glBindAttribLocation (server, program, index, name);
         egl_state->state.need_get_error = true;
     }
     if (name)
@@ -141,7 +138,7 @@ exposed_to_tests void _gl_bind_buffer (command_buffer_server_t *server, GLenum t
     int count;
     int i;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindBuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindBuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -152,7 +149,7 @@ exposed_to_tests void _gl_bind_buffer (command_buffer_server_t *server, GLenum t
             if (egl_state->state.array_buffer_binding == buffer)
                 return;
             else {
-                command_buffer_server->dispatch.glBindBuffer (command_buffer_server, target, buffer);
+                CACHING_SERVER(server)->super_dispatch.glBindBuffer (server, target, buffer);
                 egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -163,7 +160,7 @@ exposed_to_tests void _gl_bind_buffer (command_buffer_server_t *server, GLenum t
             if (egl_state->state.element_array_buffer_binding == buffer)
                 return;
             else {
-                command_buffer_server->dispatch.glBindBuffer (command_buffer_server, target, buffer);
+                CACHING_SERVER(server)->super_dispatch.glBindBuffer (server, target, buffer);
                 egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -180,7 +177,7 @@ exposed_to_tests void _gl_bind_framebuffer (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindFramebuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindFramebuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -203,7 +200,7 @@ exposed_to_tests void _gl_bind_framebuffer (command_buffer_server_t *server, GLe
             _gl_set_error (server, GL_INVALID_ENUM);
         }
 
-        command_buffer_server->dispatch.glBindFramebuffer (command_buffer_server, target, framebuffer);
+        CACHING_SERVER(server)->super_dispatch.glBindFramebuffer (server, target, framebuffer);
         /* FIXME: should we save it, it will be invalid if the
          * framebuffer is invalid 
          */
@@ -217,7 +214,7 @@ exposed_to_tests void _gl_bind_renderbuffer (command_buffer_server_t *server, GL
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindRenderbuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindRenderbuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -225,7 +222,7 @@ exposed_to_tests void _gl_bind_renderbuffer (command_buffer_server_t *server, GL
             _gl_set_error (server, GL_INVALID_ENUM);
         }
 
-        command_buffer_server->dispatch.glBindRenderbuffer (command_buffer_server, target, renderbuffer);
+        CACHING_SERVER(server)->super_dispatch.glBindRenderbuffer (server, target, renderbuffer);
         /* egl_state->state.need_get_error = true; */
     }
 }
@@ -234,7 +231,7 @@ exposed_to_tests void _gl_bind_texture (command_buffer_server_t *server, GLenum 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindTexture) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindTexture) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -259,7 +256,7 @@ exposed_to_tests void _gl_bind_texture (command_buffer_server_t *server, GLenum 
             return;
         }
 
-        command_buffer_server->dispatch.glBindTexture (command_buffer_server, target, texture);
+        CACHING_SERVER(server)->super_dispatch.glBindTexture (server, target, texture);
         egl_state->state.need_get_error = true;
 
         /* FIXME: do we need to save them ? */
@@ -282,7 +279,7 @@ exposed_to_tests void _gl_blend_color (command_buffer_server_t *server, GLclampf
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlendColor) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlendColor) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -298,7 +295,7 @@ exposed_to_tests void _gl_blend_color (command_buffer_server_t *server, GLclampf
         state->blend_color[2] = blue;
         state->blend_color[3] = alpha;
 
-        command_buffer_server->dispatch.glBlendColor (command_buffer_server, red, green, blue, alpha);
+        CACHING_SERVER(server)->super_dispatch.glBlendColor (server, red, green, blue, alpha);
     }
 }
 
@@ -307,7 +304,7 @@ exposed_to_tests void _gl_blend_equation (command_buffer_server_t *server, GLenu
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlendEquation) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlendEquation) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -326,7 +323,7 @@ exposed_to_tests void _gl_blend_equation (command_buffer_server_t *server, GLenu
         state->blend_equation[0] = mode;
         state->blend_equation[1] = mode;
 
-        command_buffer_server->dispatch.glBlendEquation (command_buffer_server, mode);
+        CACHING_SERVER(server)->super_dispatch.glBlendEquation (server, mode);
     }
 }
 
@@ -335,7 +332,7 @@ exposed_to_tests void _gl_blend_equation_separate (command_buffer_server_t *serv
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlendEquationSeparate) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlendEquationSeparate) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -357,7 +354,7 @@ exposed_to_tests void _gl_blend_equation_separate (command_buffer_server_t *serv
         state->blend_equation[0] = modeRGB;
         state->blend_equation[1] = modeAlpha;
 
-        command_buffer_server->dispatch.glBlendEquationSeparate (command_buffer_server, modeRGB, modeAlpha);
+        CACHING_SERVER(server)->super_dispatch.glBlendEquationSeparate (server, modeRGB, modeAlpha);
     }
 }
 
@@ -366,7 +363,7 @@ exposed_to_tests void _gl_blend_func (command_buffer_server_t *server, GLenum sf
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlendFunc) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlendFunc) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -414,7 +411,7 @@ exposed_to_tests void _gl_blend_func (command_buffer_server_t *server, GLenum sf
         state->blend_src[0] = state->blend_src[1] = sfactor;
         state->blend_dst[0] = state->blend_dst[1] = dfactor;
 
-        command_buffer_server->dispatch.glBlendFunc (command_buffer_server, sfactor, dfactor);
+        CACHING_SERVER(server)->super_dispatch.glBlendFunc (server, sfactor, dfactor);
     }
 }
 
@@ -424,7 +421,7 @@ exposed_to_tests void _gl_blend_func_separate (command_buffer_server_t *server, 
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlendFuncSeparate) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlendFuncSeparate) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -504,7 +501,7 @@ exposed_to_tests void _gl_blend_func_separate (command_buffer_server_t *server, 
         state->blend_dst[0] = dstRGB;
         state->blend_dst[0] = dstAlpha;
 
-        command_buffer_server->dispatch.glBlendFuncSeparate (command_buffer_server, srcRGB, dstRGB, srcAlpha, dstAlpha);
+        CACHING_SERVER(server)->super_dispatch.glBlendFuncSeparate (server, srcRGB, dstRGB, srcAlpha, dstAlpha);
     }
 }
 
@@ -513,14 +510,14 @@ exposed_to_tests void _gl_buffer_data (command_buffer_server_t *server, GLenum t
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBufferData) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBufferData) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
         /* XXX: we skip rest of check, because driver
          * can generate GL_OUT_OF_MEMORY, which cannot check
          */
-        command_buffer_server->dispatch.glBufferData (command_buffer_server, target, size, data, usage);
+        CACHING_SERVER(server)->super_dispatch.glBufferData (server, target, size, data, usage);
         egl_state = (egl_state_t *) active_state->data;
         egl_state->state.need_get_error = true;
     }
@@ -534,7 +531,7 @@ exposed_to_tests void _gl_buffer_sub_data (command_buffer_server_t *server, GLen
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBufferSubData) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBufferSubData) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -542,7 +539,7 @@ exposed_to_tests void _gl_buffer_sub_data (command_buffer_server_t *server, GLen
          * can generate GL_INVALID_VALUE, when offset + data can be out of
          * bound
          */
-        command_buffer_server->dispatch.glBufferSubData (command_buffer_server, target, offset, size, data);
+        CACHING_SERVER(server)->super_dispatch.glBufferSubData (server, target, offset, size, data);
         egl_state->state.need_get_error = true;
     }
 
@@ -555,7 +552,7 @@ exposed_to_tests GLenum _gl_check_framebuffer_status (command_buffer_server_t *s
     GLenum result = GL_INVALID_ENUM;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCheckFramebufferStatus) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCheckFramebufferStatus) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -575,7 +572,7 @@ exposed_to_tests GLenum _gl_check_framebuffer_status (command_buffer_server_t *s
             return result;
         }
 
-        return command_buffer_server->dispatch.glCheckFramebufferStatus (command_buffer_server, target);
+        return CACHING_SERVER(server)->super_dispatch.glCheckFramebufferStatus (server, target);
     }
 
     return result;
@@ -585,7 +582,7 @@ exposed_to_tests void _gl_clear (command_buffer_server_t *server, GLbitfield mas
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glClear) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glClear) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -596,7 +593,7 @@ exposed_to_tests void _gl_clear (command_buffer_server_t *server, GLbitfield mas
             return;
         }
 
-        command_buffer_server->dispatch.glClear (command_buffer_server, mask);
+        CACHING_SERVER(server)->super_dispatch.glClear (server, mask);
     }
 }
 
@@ -606,7 +603,7 @@ exposed_to_tests void _gl_clear_color (command_buffer_server_t *server, GLclampf
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glClearColor) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glClearColor) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -622,7 +619,7 @@ exposed_to_tests void _gl_clear_color (command_buffer_server_t *server, GLclampf
         state->color_clear_value[2] = blue;
         state->color_clear_value[3] = alpha;
 
-        command_buffer_server->dispatch.glClearColor (command_buffer_server, red, green, blue, alpha);
+        CACHING_SERVER(server)->super_dispatch.glClearColor (server, red, green, blue, alpha);
     }
 }
 
@@ -631,7 +628,7 @@ exposed_to_tests void _gl_clear_depthf (command_buffer_server_t *server, GLclamp
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glClearDepthf) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glClearDepthf) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -641,7 +638,7 @@ exposed_to_tests void _gl_clear_depthf (command_buffer_server_t *server, GLclamp
 
         state->depth_clear_value = depth;
 
-        command_buffer_server->dispatch.glClearDepthf (command_buffer_server, depth);
+        CACHING_SERVER(server)->super_dispatch.glClearDepthf (server, depth);
     }
 }
 
@@ -650,7 +647,7 @@ exposed_to_tests void _gl_clear_stencil (command_buffer_server_t *server, GLint 
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glClearStencil) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glClearStencil) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -660,7 +657,7 @@ exposed_to_tests void _gl_clear_stencil (command_buffer_server_t *server, GLint 
 
         state->stencil_clear_value = s;
 
-        command_buffer_server->dispatch.glClearStencil (command_buffer_server, s);
+        CACHING_SERVER(server)->super_dispatch.glClearStencil (server, s);
     }
 }
 
@@ -670,7 +667,7 @@ exposed_to_tests void _gl_color_mask (command_buffer_server_t *server, GLboolean
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glColorMask) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glColorMask) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -686,7 +683,7 @@ exposed_to_tests void _gl_color_mask (command_buffer_server_t *server, GLboolean
         state->color_writemask[2] = blue;
         state->color_writemask[3] = alpha;
 
-        command_buffer_server->dispatch.glColorMask (command_buffer_server, red, green, blue, alpha);
+        CACHING_SERVER(server)->super_dispatch.glColorMask (server, red, green, blue, alpha);
     }
 }
 
@@ -698,11 +695,11 @@ exposed_to_tests void _gl_compressed_tex_image_2d (command_buffer_server_t *serv
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCompressedTexImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCompressedTexImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCompressedTexImage2D (command_buffer_server, target, level, internalformat,
+        CACHING_SERVER(server)->super_dispatch.glCompressedTexImage2D (server, target, level, internalformat,
                                        width, height, border, imageSize,
                                        data);
 
@@ -722,11 +719,11 @@ exposed_to_tests void _gl_compressed_tex_sub_image_2d (command_buffer_server_t *
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCompressedTexSubImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCompressedTexSubImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCompressedTexSubImage2D (command_buffer_server, target, level, xoffset, yoffset,
+        CACHING_SERVER(server)->super_dispatch.glCompressedTexSubImage2D (server, target, level, xoffset, yoffset,
                                           width, height, format, imageSize,
                                           data);
 
@@ -745,11 +742,11 @@ exposed_to_tests void _gl_copy_tex_image_2d (command_buffer_server_t *server, GL
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCopyTexImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCopyTexImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCopyTexImage2D (command_buffer_server, target, level, internalformat,
+        CACHING_SERVER(server)->super_dispatch.glCopyTexImage2D (server, target, level, internalformat,
                                  x, y, width, height, border);
 
         egl_state->state.need_get_error = true;
@@ -763,11 +760,11 @@ exposed_to_tests void _gl_copy_tex_sub_image_2d (command_buffer_server_t *server
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCopyTexSubImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCopyTexSubImage2D (command_buffer_server, target, level, xoffset, yoffset,
+        CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage2D (server, target, level, xoffset, yoffset,
                                     x, y, width, height);
 
         egl_state->state.need_get_error = true;
@@ -780,11 +777,11 @@ exposed_to_tests GLuint _gl_create_program  (command_buffer_server_t *server)
     GLuint result = 0;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCreateProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCreateProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glCreateProgram (command_buffer_server);
+        result = CACHING_SERVER(server)->super_dispatch.glCreateProgram (server);
     }
 
     return result;
@@ -796,7 +793,7 @@ exposed_to_tests GLuint _gl_create_shader (command_buffer_server_t *server, GLen
     GLuint result = 0;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCreateShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCreateShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -806,7 +803,7 @@ exposed_to_tests GLuint _gl_create_shader (command_buffer_server_t *server, GLen
             return result;
         }
 
-        result = command_buffer_server->dispatch.glCreateShader (command_buffer_server, shaderType);
+        result = CACHING_SERVER(server)->super_dispatch.glCreateShader (server, shaderType);
     }
 
     return result;
@@ -816,7 +813,7 @@ exposed_to_tests void _gl_cull_face (command_buffer_server_t *server, GLenum mod
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCullFace) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCullFace) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -832,7 +829,7 @@ exposed_to_tests void _gl_cull_face (command_buffer_server_t *server, GLenum mod
 
         egl_state->state.cull_face_mode = mode;
 
-        command_buffer_server->dispatch.glCullFace (command_buffer_server, mode);
+        CACHING_SERVER(server)->super_dispatch.glCullFace (server, mode);
     }
 }
 
@@ -844,7 +841,7 @@ exposed_to_tests void _gl_delete_buffers (command_buffer_server_t *server, GLsiz
     int count;
     int i, j;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteBuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteBuffers) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -856,7 +853,7 @@ exposed_to_tests void _gl_delete_buffers (command_buffer_server_t *server, GLsiz
             goto FINISH;
         }
 
-        command_buffer_server->dispatch.glDeleteBuffers (command_buffer_server, n, buffers);
+        CACHING_SERVER(server)->super_dispatch.glDeleteBuffers (server, n, buffers);
 
         /* check array_buffer_binding and element_array_buffer_binding */
         for (i = 0; i < n; i++) {
@@ -890,7 +887,7 @@ exposed_to_tests void _gl_delete_framebuffers (command_buffer_server_t *server, 
     egl_state_t *egl_state;
     int i;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteFramebuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteFramebuffers) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -899,7 +896,7 @@ exposed_to_tests void _gl_delete_framebuffers (command_buffer_server_t *server, 
             goto FINISH;
         }
 
-        command_buffer_server->dispatch.glDeleteFramebuffers (command_buffer_server, n, framebuffers);
+        CACHING_SERVER(server)->super_dispatch.glDeleteFramebuffers (server, n, framebuffers);
 
         for (i = 0; i < n; i++) {
             if (egl_state->state.framebuffer_binding == framebuffers[i]) {
@@ -918,11 +915,11 @@ exposed_to_tests void _gl_delete_program (command_buffer_server_t *server, GLuin
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glDeleteProgram (command_buffer_server, program);
+        CACHING_SERVER(server)->super_dispatch.glDeleteProgram (server, program);
 
         egl_state->state.need_get_error = true;
     }
@@ -932,7 +929,7 @@ exposed_to_tests void _gl_delete_renderbuffers (command_buffer_server_t *server,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteRenderbuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteRenderbuffers) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -941,7 +938,7 @@ exposed_to_tests void _gl_delete_renderbuffers (command_buffer_server_t *server,
             goto FINISH;
         }
 
-        command_buffer_server->dispatch.glDeleteRenderbuffers (command_buffer_server, n, renderbuffers);
+        CACHING_SERVER(server)->super_dispatch.glDeleteRenderbuffers (server, n, renderbuffers);
     }
 
 FINISH:
@@ -953,11 +950,11 @@ exposed_to_tests void _gl_delete_shader (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glDeleteShader (command_buffer_server, shader);
+        CACHING_SERVER(server)->super_dispatch.glDeleteShader (server, shader);
 
         egl_state->state.need_get_error = true;
     }
@@ -967,7 +964,7 @@ exposed_to_tests void _gl_delete_textures (command_buffer_server_t *server, GLsi
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteTextures) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteTextures) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -976,7 +973,7 @@ exposed_to_tests void _gl_delete_textures (command_buffer_server_t *server, GLsi
             goto FINISH;
         }
 
-        command_buffer_server->dispatch.glDeleteTextures (command_buffer_server, n, textures);
+        CACHING_SERVER(server)->super_dispatch.glDeleteTextures (server, n, textures);
     }
 
 FINISH:
@@ -988,7 +985,7 @@ exposed_to_tests void _gl_depth_func (command_buffer_server_t *server, GLenum fu
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDepthFunc) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDepthFunc) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1009,7 +1006,7 @@ exposed_to_tests void _gl_depth_func (command_buffer_server_t *server, GLenum fu
 
         egl_state->state.depth_func = func;
 
-        command_buffer_server->dispatch.glDepthFunc (command_buffer_server, func);
+        CACHING_SERVER(server)->super_dispatch.glDepthFunc (server, func);
     }
 }
 
@@ -1017,7 +1014,7 @@ exposed_to_tests void _gl_depth_mask (command_buffer_server_t *server, GLboolean
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDepthMask) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDepthMask) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1026,7 +1023,7 @@ exposed_to_tests void _gl_depth_mask (command_buffer_server_t *server, GLboolean
 
         egl_state->state.depth_writemask = flag;
 
-        command_buffer_server->dispatch.glDepthMask (command_buffer_server, flag);
+        CACHING_SERVER(server)->super_dispatch.glDepthMask (server, flag);
     }
 }
 
@@ -1034,7 +1031,7 @@ exposed_to_tests void _gl_depth_rangef (command_buffer_server_t *server, GLclamp
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDepthRangef) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDepthRangef) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1045,7 +1042,7 @@ exposed_to_tests void _gl_depth_rangef (command_buffer_server_t *server, GLclamp
         egl_state->state.depth_range[0] = nearVal;
         egl_state->state.depth_range[1] = farVal;
 
-        command_buffer_server->dispatch.glDepthRangef (command_buffer_server, nearVal, farVal);
+        CACHING_SERVER(server)->super_dispatch.glDepthRangef (server, nearVal, farVal);
     }
 }
 
@@ -1053,12 +1050,12 @@ exposed_to_tests void _gl_detach_shader (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDetachShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDetachShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
         /* XXX: command buffer, error code generated */
-        command_buffer_server->dispatch.glDetachShader (command_buffer_server, program, shader);
+        CACHING_SERVER(server)->super_dispatch.glDetachShader (server, program, shader);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1070,8 +1067,8 @@ _gl_set_cap (command_buffer_server_t *server, GLenum cap, GLboolean enable)
     gles2_state_t *state;
     bool needs_call = false;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDisable) &&
-        _gl_is_valid_func (server, command_buffer_server->dispatch.glEnable) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDisable) &&
+        _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEnable) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1140,9 +1137,9 @@ _gl_set_cap (command_buffer_server_t *server, GLenum cap, GLboolean enable)
 
         if (needs_call) {
             if (enable)
-                command_buffer_server->dispatch.glEnable (command_buffer_server, cap);
+                CACHING_SERVER(server)->super_dispatch.glEnable (server, cap);
             else
-                command_buffer_server->dispatch.glDisable (command_buffer_server, cap);
+                CACHING_SERVER(server)->super_dispatch.glDisable (server, cap);
         }
     }
 }
@@ -1163,7 +1160,7 @@ _gl_index_is_too_large (command_buffer_server_t *server, gles2_state_t *state, G
     if (index >= state->max_vertex_attribs) {
         if (! state->max_vertex_attribs_queried) {
             /* XXX: command buffer */
-            command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, GL_MAX_VERTEX_ATTRIBS,
+            CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, GL_MAX_VERTEX_ATTRIBS,
                                   &(state->max_vertex_attribs));
         }
         if (index >= state->max_vertex_attribs) {
@@ -1206,9 +1203,9 @@ _gl_set_vertex_attrib_array (command_buffer_server_t *server, GLuint index, gles
     }
 
     if (enable == GL_FALSE)
-        command_buffer_server->dispatch.glDisableVertexAttribArray (command_buffer_server, index);
+        CACHING_SERVER(server)->super_dispatch.glDisableVertexAttribArray (server, index);
     else
-        command_buffer_server->dispatch.glEnableVertexAttribArray (command_buffer_server, index);
+        CACHING_SERVER(server)->super_dispatch.glEnableVertexAttribArray (server, index);
 
     bound_buffer = state->array_buffer_binding;
 
@@ -1257,7 +1254,7 @@ exposed_to_tests void _gl_disable_vertex_attrib_array (command_buffer_server_t *
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDisableVertexAttribArray) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDisableVertexAttribArray) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1271,7 +1268,7 @@ exposed_to_tests void _gl_enable_vertex_attrib_array (command_buffer_server_t *s
     egl_state_t *egl_state;
     gles2_state_t *state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEnableVertexAttribArray) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEnableVertexAttribArray) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1321,7 +1318,7 @@ exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum m
     int i, found_index = -1;
     int n = 0;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDrawArrays) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDrawArrays) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1346,7 +1343,7 @@ exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum m
 #ifdef GL_OES_vertex_array_object
         /* if vertex array binding is not 0 */
         if (state->vertex_array_binding) {
-            command_buffer_server->dispatch.glDrawArrays (command_buffer_server, mode, first, count);
+            CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
             state->need_get_error = true;
             return;
         } else
@@ -1360,7 +1357,7 @@ exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum m
                 data = _gl_create_data_array (server, &attribs[i], count);
                 if (! data)
                     continue;
-                command_buffer_server->dispatch.glVertexAttribPointer (command_buffer_server, attribs[i].index,
+                CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
@@ -1388,7 +1385,7 @@ exposed_to_tests void _gl_draw_arrays (command_buffer_server_t *server, GLenum m
         }
 
         /* we need call DrawArrays */
-        command_buffer_server->dispatch.glDrawArrays (command_buffer_server, mode, first, count);
+        CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
 
         /* remove data */
         array = array_data;
@@ -1463,7 +1460,7 @@ exposed_to_tests void _gl_draw_elements (command_buffer_server_t *server, GLenum
     int n = 0;
     bool element_binding = false;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDrawElements) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDrawElements) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -1493,7 +1490,7 @@ exposed_to_tests void _gl_draw_elements (command_buffer_server_t *server, GLenum
 
 #ifdef GL_OES_vertex_array_object
         if (state->vertex_array_binding) {
-            command_buffer_server->dispatch.glDrawElements (command_buffer_server, mode, count, type, indices);
+            CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, count, type, indices);
             state->need_get_error = true;
             goto FINISH;
         } else
@@ -1507,7 +1504,7 @@ exposed_to_tests void _gl_draw_elements (command_buffer_server_t *server, GLenum
                 data = _gl_create_data_array (server, &attribs[i], count);
                 if (! data)
                     continue;
-                command_buffer_server->dispatch.glVertexAttribPointer (command_buffer_server, attribs[i].index,
+                CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
@@ -1534,7 +1531,7 @@ exposed_to_tests void _gl_draw_elements (command_buffer_server_t *server, GLenum
             }
         }
 
-        command_buffer_server->dispatch.glDrawElements (command_buffer_server, mode, type, count, indices);
+        CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, type, count, indices);
 
         array = array_data;
         while (array != NULL) {
@@ -1560,11 +1557,11 @@ exposed_to_tests void _gl_finish (command_buffer_server_t *server)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFinish) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFinish) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glFinish (command_buffer_server);
+        CACHING_SERVER(server)->super_dispatch.glFinish (server);
     }
 }
 
@@ -1572,11 +1569,11 @@ exposed_to_tests void _gl_flush (command_buffer_server_t *server)
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFlush) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFlush) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glFlush (command_buffer_server);
+        CACHING_SERVER(server)->super_dispatch.glFlush (server);
     }
 }
 
@@ -1586,7 +1583,7 @@ exposed_to_tests void _gl_framebuffer_renderbuffer (command_buffer_server_t *ser
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferRenderbuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferRenderbuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1600,7 +1597,7 @@ exposed_to_tests void _gl_framebuffer_renderbuffer (command_buffer_server_t *ser
             return;
         }
 
-        command_buffer_server->dispatch.glFramebufferRenderbuffer (command_buffer_server, target, attachment,
+        CACHING_SERVER(server)->super_dispatch.glFramebufferRenderbuffer (server, target, attachment,
                                           renderbuffertarget, 
                                           renderbuffer);
         egl_state->state.need_get_error = true;
@@ -1613,7 +1610,7 @@ exposed_to_tests void _gl_framebuffer_texture_2d (command_buffer_server_t *serve
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferTexture2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1622,7 +1619,7 @@ exposed_to_tests void _gl_framebuffer_texture_2d (command_buffer_server_t *serve
             return;
         }
 
-        command_buffer_server->dispatch.glFramebufferTexture2D (command_buffer_server, target, attachment, textarget,
+        CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2D (server, target, attachment, textarget,
                                        texture, level);
         egl_state->state.need_get_error = true;
     }
@@ -1632,7 +1629,7 @@ exposed_to_tests void _gl_front_face (command_buffer_server_t *server, GLenum mo
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferTexture2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1645,13 +1642,13 @@ exposed_to_tests void _gl_front_face (command_buffer_server_t *server, GLenum mo
         }
 
         egl_state->state.front_face = mode;
-        command_buffer_server->dispatch.glFrontFace (command_buffer_server, mode);
+        CACHING_SERVER(server)->super_dispatch.glFrontFace (server, mode);
     }
 }
 
 exposed_to_tests void _gl_gen_buffers (command_buffer_server_t *server, GLsizei n, GLuint *buffers)
 {
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenBuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenBuffers) &&
         _gl_is_valid_context (server)) {
 
         if (n < 0) {
@@ -1659,13 +1656,13 @@ exposed_to_tests void _gl_gen_buffers (command_buffer_server_t *server, GLsizei 
             return;
         }
     
-        command_buffer_server->dispatch.glGenBuffers (command_buffer_server, n, buffers);
+        CACHING_SERVER(server)->super_dispatch.glGenBuffers (server, n, buffers);
     }
 }
 
 exposed_to_tests void _gl_gen_framebuffers (command_buffer_server_t *server, GLsizei n, GLuint *framebuffers)
 {
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenFramebuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenFramebuffers) &&
         _gl_is_valid_context (server)) {
 
         if (n < 0) {
@@ -1673,13 +1670,13 @@ exposed_to_tests void _gl_gen_framebuffers (command_buffer_server_t *server, GLs
             return;
         }
         
-        command_buffer_server->dispatch.glGenFramebuffers (command_buffer_server, n, framebuffers);
+        CACHING_SERVER(server)->super_dispatch.glGenFramebuffers (server, n, framebuffers);
     }
 }
 
 exposed_to_tests void _gl_gen_renderbuffers (command_buffer_server_t *server, GLsizei n, GLuint *renderbuffers)
 {
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenRenderbuffers) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenRenderbuffers) &&
         _gl_is_valid_context (server)) {
 
         if (n < 0) {
@@ -1687,13 +1684,13 @@ exposed_to_tests void _gl_gen_renderbuffers (command_buffer_server_t *server, GL
             return;
         }
         
-        command_buffer_server->dispatch.glGenRenderbuffers (command_buffer_server, n, renderbuffers);
+        CACHING_SERVER(server)->super_dispatch.glGenRenderbuffers (server, n, renderbuffers);
     }
 }
 
 exposed_to_tests void _gl_gen_textures (command_buffer_server_t *server, GLsizei n, GLuint *textures)
 {
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenTextures) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenTextures) &&
         _gl_is_valid_context (server)) {
 
         if (n < 0) {
@@ -1701,7 +1698,7 @@ exposed_to_tests void _gl_gen_textures (command_buffer_server_t *server, GLsizei
             return;
         }
         
-        command_buffer_server->dispatch.glGenTextures (command_buffer_server, n, textures);
+        CACHING_SERVER(server)->super_dispatch.glGenTextures (server, n, textures);
     }
 }
 
@@ -1709,7 +1706,7 @@ exposed_to_tests void _gl_generate_mipmap (command_buffer_server_t *server, GLen
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenerateMipmap) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenerateMipmap) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1724,7 +1721,7 @@ exposed_to_tests void _gl_generate_mipmap (command_buffer_server_t *server, GLen
             return;
         }
 
-        command_buffer_server->dispatch.glGenerateMipmap (command_buffer_server, target);
+        CACHING_SERVER(server)->super_dispatch.glGenerateMipmap (server, target);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1733,7 +1730,7 @@ exposed_to_tests void _gl_get_booleanv (command_buffer_server_t *server, GLenum 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetBooleanv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetBooleanv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1775,7 +1772,7 @@ exposed_to_tests void _gl_get_booleanv (command_buffer_server_t *server, GLenum 
             *params = egl_state->state.stencil_test;
             break;
         default:
-            command_buffer_server->dispatch.glGetBooleanv (command_buffer_server, pname, params);
+            CACHING_SERVER(server)->super_dispatch.glGetBooleanv (server, pname, params);
             break;
         }
     }
@@ -1785,7 +1782,7 @@ exposed_to_tests void _gl_get_floatv (command_buffer_server_t *server, GLenum pn
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetFloatv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetFloatv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -1827,7 +1824,7 @@ exposed_to_tests void _gl_get_floatv (command_buffer_server_t *server, GLenum pn
             *params = egl_state->state.polygon_offset_factor;
             break; 
         default:
-            command_buffer_server->dispatch.glGetFloatv (command_buffer_server, pname, params);
+            CACHING_SERVER(server)->super_dispatch.glGetFloatv (server, pname, params);
             break;
         }
     }
@@ -1841,7 +1838,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
     int count;
     int i;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetIntegerv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetIntegerv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -1870,7 +1867,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_combined_texture_image_units_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_combined_texture_image_units_queried = true;
                 egl_state->state.max_combined_texture_image_units = *params;
             } else
@@ -1878,7 +1875,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
             if (! egl_state->state.max_cube_map_texture_size_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_cube_map_texture_size = *params;
                 egl_state->state.max_cube_map_texture_size_queried = true;
             } else
@@ -1886,7 +1883,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
         break;
         case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
             if (! egl_state->state.max_fragment_uniform_vectors_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_fragment_uniform_vectors = *params;
                 egl_state->state.max_fragment_uniform_vectors_queried = true;
             } else
@@ -1894,7 +1891,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_RENDERBUFFER_SIZE:
             if (! egl_state->state.max_renderbuffer_size_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_renderbuffer_size = *params;
                 egl_state->state.max_renderbuffer_size_queried = true;
             } else
@@ -1902,7 +1899,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_texture_image_units_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_texture_image_units = *params;
                 egl_state->state.max_texture_image_units_queried = true;
             } else
@@ -1910,7 +1907,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_VARYING_VECTORS:
             if (! egl_state->state.max_varying_vectors_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_varying_vectors = *params;
                 egl_state->state.max_varying_vectors_queried = true;
             } else
@@ -1918,7 +1915,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_TEXTURE_SIZE:
             if (! egl_state->state.max_texture_size_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_texture_size = *params;
                 egl_state->state.max_texture_size_queried = true;
             } else
@@ -1926,7 +1923,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_VERTEX_ATTRIBS:
             if (! egl_state->state.max_vertex_attribs_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_vertex_attribs = *params;
                 egl_state->state.max_vertex_attribs_queried = true;
             } else
@@ -1934,7 +1931,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
             if (! egl_state->state.max_vertex_texture_image_units_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_vertex_texture_image_units = *params;
                 egl_state->state.max_vertex_texture_image_units_queried = true;
             } else
@@ -1942,7 +1939,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             break;
         case GL_MAX_VERTEX_UNIFORM_VECTORS:
             if (! egl_state->state.max_vertex_uniform_vectors_queried) {
-                command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+                CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
                 egl_state->state.max_vertex_uniform_vectors = *params;
                 egl_state->state.max_vertex_uniform_vectors_queried = true;
             } else
@@ -2003,7 +2000,7 @@ exposed_to_tests void _gl_get_integerv (command_buffer_server_t *server, GLenum 
             memcpy (params, egl_state->state.viewport, sizeof (GLint) * 4);
             break;
         default:
-            command_buffer_server->dispatch.glGetIntegerv (command_buffer_server, pname, params);
+            CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
             break;
         }
 
@@ -2029,11 +2026,11 @@ exposed_to_tests void _gl_get_active_attrib (command_buffer_server_t *server, GL
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetActiveAttrib) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetActiveAttrib) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetActiveAttrib (command_buffer_server, program, index, bufsize, length,
+        CACHING_SERVER(server)->super_dispatch.glGetActiveAttrib (server, program, index, bufsize, length,
                                   size, type, name);
         egl_state->state.need_get_error = true;
     }
@@ -2046,11 +2043,11 @@ exposed_to_tests void _gl_get_active_uniform (command_buffer_server_t *server, G
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetActiveUniform) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetActiveUniform) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetActiveUniform (command_buffer_server, program, index, bufsize, length,
+        CACHING_SERVER(server)->super_dispatch.glGetActiveUniform (server, program, index, bufsize, length,
                                    size, type, name);
         egl_state->state.need_get_error = true;
     }
@@ -2061,11 +2058,11 @@ exposed_to_tests void _gl_get_attached_shaders (command_buffer_server_t *server,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetAttachedShaders) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetAttachedShaders) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetAttachedShaders (command_buffer_server, program, maxCount, count, shaders);
+        CACHING_SERVER(server)->super_dispatch.glGetAttachedShaders (server, program, maxCount, count, shaders);
 
         egl_state->state.need_get_error = true;
     }
@@ -2076,11 +2073,11 @@ exposed_to_tests GLint _gl_get_attrib_location (command_buffer_server_t *server,
     egl_state_t *egl_state;
     GLint result = -1;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetAttribLocation) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetAttribLocation) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = command_buffer_server->dispatch.glGetAttribLocation (command_buffer_server, program, name);
+        result = CACHING_SERVER(server)->super_dispatch.glGetAttribLocation (server, program, name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2091,11 +2088,11 @@ exposed_to_tests void _gl_get_buffer_parameteriv (command_buffer_server_t *serve
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetBufferParameteriv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetBufferParameteriv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetBufferParameteriv (command_buffer_server, target, value, data);
+        CACHING_SERVER(server)->super_dispatch.glGetBufferParameteriv (server, target, value, data);
 
         egl_state->state.need_get_error = true;
     }
@@ -2106,7 +2103,7 @@ exposed_to_tests GLenum _gl_get_error (command_buffer_server_t *server)
     GLenum error = GL_INVALID_OPERATION;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetError) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetError) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -2116,7 +2113,7 @@ exposed_to_tests GLenum _gl_get_error (command_buffer_server_t *server)
             return error;
         }
 
-        error = command_buffer_server->dispatch.glGetError (command_buffer_server);
+        error = CACHING_SERVER(server)->super_dispatch.glGetError (server);
 
         egl_state->state.need_get_error = false;
         egl_state->state.error = GL_NO_ERROR;
@@ -2132,7 +2129,7 @@ exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (command_buffer
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetFramebufferAttachmentParameteriv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetFramebufferAttachmentParameteriv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -2141,7 +2138,7 @@ exposed_to_tests void _gl_get_framebuffer_attachment_parameteriv (command_buffer
             return;
         }
 
-        command_buffer_server->dispatch.glGetFramebufferAttachmentParameteriv (command_buffer_server, target, attachment,
+        CACHING_SERVER(server)->super_dispatch.glGetFramebufferAttachmentParameteriv (server, target, attachment,
                                                       pname, params);
         egl_state->state.need_get_error = true;
     }
@@ -2152,11 +2149,11 @@ exposed_to_tests void _gl_get_program_info_log (command_buffer_server_t *server,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetProgramInfoLog) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetProgramInfoLog) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetProgramInfoLog (command_buffer_server, program, maxLength, length, infoLog);
+        CACHING_SERVER(server)->super_dispatch.glGetProgramInfoLog (server, program, maxLength, length, infoLog);
 
         egl_state->state.need_get_error = true;
     }
@@ -2166,11 +2163,11 @@ exposed_to_tests void _gl_get_programiv (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetProgramiv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetProgramiv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetProgramiv (command_buffer_server, program, pname, params);
+        CACHING_SERVER(server)->super_dispatch.glGetProgramiv (server, program, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2182,7 +2179,7 @@ exposed_to_tests void _gl_get_renderbuffer_parameteriv (command_buffer_server_t 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetRenderbufferParameteriv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetRenderbufferParameteriv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2191,7 +2188,7 @@ exposed_to_tests void _gl_get_renderbuffer_parameteriv (command_buffer_server_t 
             return;
         }
 
-        command_buffer_server->dispatch.glGetRenderbufferParameteriv (command_buffer_server, target, pname, params);
+        CACHING_SERVER(server)->super_dispatch.glGetRenderbufferParameteriv (server, target, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2202,11 +2199,11 @@ exposed_to_tests void _gl_get_shader_info_log (command_buffer_server_t *server, 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetShaderInfoLog) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetShaderInfoLog) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetShaderInfoLog (command_buffer_server, program, maxLength, length, infoLog);
+        CACHING_SERVER(server)->super_dispatch.glGetShaderInfoLog (server, program, maxLength, length, infoLog);
 
         egl_state->state.need_get_error = true;
     }
@@ -2219,11 +2216,11 @@ exposed_to_tests void _gl_get_shader_precision_format (command_buffer_server_t *
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetShaderPrecisionFormat) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetShaderPrecisionFormat) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetShaderPrecisionFormat (command_buffer_server, shaderType, precisionType,
+        CACHING_SERVER(server)->super_dispatch.glGetShaderPrecisionFormat (server, shaderType, precisionType,
                                            range, precision);
 
         egl_state->state.need_get_error = true;
@@ -2235,11 +2232,11 @@ exposed_to_tests void _gl_get_shader_source  (command_buffer_server_t *server, G
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetShaderSource) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetShaderSource) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetShaderSource (command_buffer_server, shader, bufSize, length, source);
+        CACHING_SERVER(server)->super_dispatch.glGetShaderSource (server, shader, bufSize, length, source);
 
         egl_state->state.need_get_error = true;
     }
@@ -2249,11 +2246,11 @@ exposed_to_tests void _gl_get_shaderiv (command_buffer_server_t *server, GLuint 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetShaderiv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetShaderiv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetShaderiv (command_buffer_server, shader, pname, params);
+        CACHING_SERVER(server)->super_dispatch.glGetShaderiv (server, shader, pname, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2264,7 +2261,7 @@ exposed_to_tests const GLubyte *_gl_get_string (command_buffer_server_t *server,
     GLubyte *result = NULL;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetString) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetString) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2276,7 +2273,7 @@ exposed_to_tests const GLubyte *_gl_get_string (command_buffer_server_t *server,
             return NULL;
         }
 
-        result = (GLubyte *)command_buffer_server->dispatch.glGetString (command_buffer_server, name);
+        result = (GLubyte *)CACHING_SERVER(server)->super_dispatch.glGetString (server, name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2290,7 +2287,7 @@ exposed_to_tests void _gl_get_tex_parameteriv (command_buffer_server_t *server, 
     int active_texture_index;
     int target_index;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetTexParameteriv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetTexParameteriv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2354,11 +2351,11 @@ exposed_to_tests void _gl_get_uniformiv (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetUniformiv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetUniformiv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetUniformiv (command_buffer_server, program, location, params);
+        CACHING_SERVER(server)->super_dispatch.glGetUniformiv (server, program, location, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2369,11 +2366,11 @@ exposed_to_tests void _gl_get_uniformfv (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetUniformfv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetUniformfv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glGetUniformfv (command_buffer_server, program, location, params);
+        CACHING_SERVER(server)->super_dispatch.glGetUniformfv (server, program, location, params);
 
         egl_state->state.need_get_error = true;
     }
@@ -2384,11 +2381,11 @@ exposed_to_tests GLint _gl_get_uniform_location (command_buffer_server_t *server
     GLint result = -1;
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetUniformLocation) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetUniformLocation) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glGetUniformLocation (command_buffer_server, program, name);
+        result = CACHING_SERVER(server)->super_dispatch.glGetUniformLocation (server, program, name);
 
         egl_state->state.need_get_error = true;
     }
@@ -2405,7 +2402,7 @@ exposed_to_tests void _gl_get_vertex_attribfv (command_buffer_server_t *server, 
     int count;
     int i, found_index = -1;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetVertexAttribfv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetVertexAttribfv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -2431,7 +2428,7 @@ exposed_to_tests void _gl_get_vertex_attribfv (command_buffer_server_t *server, 
 #ifdef GL_OES_vertex_array_object
         /* we cannot use client state */
         if (egl_state->state.vertex_array_binding) {
-            command_buffer_server->dispatch.glGetVertexAttribfv (command_buffer_server, index, pname, params);
+            CACHING_SERVER(server)->super_dispatch.glGetVertexAttribfv (server, index, pname, params);
             return;
         }
 #endif
@@ -2498,7 +2495,7 @@ exposed_to_tests void _gl_get_vertex_attribiv (command_buffer_server_t *server, 
     GLfloat paramsf[4];
     int i;
 
-    command_buffer_server->dispatch.glGetVertexAttribfv (command_buffer_server, index, pname, paramsf);
+    CACHING_SERVER(server)->super_dispatch.glGetVertexAttribfv (server, index, pname, paramsf);
 
     if (pname == GL_CURRENT_VERTEX_ATTRIB) {
         for (i = 0; i < 4; i++)
@@ -2519,7 +2516,7 @@ exposed_to_tests void _gl_get_vertex_attrib_pointerv (command_buffer_server_t *s
     
     *pointer = 0;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetVertexAttribPointerv) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetVertexAttribPointerv) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         attrib_list = &egl_state->state.vertex_attribs;
@@ -2539,7 +2536,7 @@ exposed_to_tests void _gl_get_vertex_attrib_pointerv (command_buffer_server_t *s
 #ifdef GL_OES_vertex_array_object
         /* we cannot use client state */
         if (egl_state->state.vertex_array_binding) {
-            command_buffer_server->dispatch.glGetVertexAttribPointerv (command_buffer_server, index, pname, pointer);
+            CACHING_SERVER(server)->super_dispatch.glGetVertexAttribPointerv (server, index, pname, pointer);
             egl_state->state.need_get_error = true;
             return;
         }
@@ -2559,7 +2556,7 @@ exposed_to_tests void _gl_hint (command_buffer_server_t *server, GLenum target, 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glHint) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glHint) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2577,7 +2574,7 @@ exposed_to_tests void _gl_hint (command_buffer_server_t *server, GLenum target, 
         if (target == GL_GENERATE_MIPMAP_HINT)
             egl_state->state.generate_mipmap_hint = mode;
 
-        command_buffer_server->dispatch.glHint (command_buffer_server, target, mode);
+        CACHING_SERVER(server)->super_dispatch.glHint (server, target, mode);
 
         if (target != GL_GENERATE_MIPMAP_HINT)
         egl_state->state.need_get_error = true;
@@ -2589,11 +2586,11 @@ exposed_to_tests GLboolean _gl_is_buffer (command_buffer_server_t *server, GLuin
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsBuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsBuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsBuffer (command_buffer_server, buffer);
+        result = CACHING_SERVER(server)->super_dispatch.glIsBuffer (server, buffer);
     }
     return result;
 }
@@ -2603,7 +2600,7 @@ exposed_to_tests GLboolean _gl_is_enabled (command_buffer_server_t *server, GLen
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsEnabled) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsEnabled) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2648,11 +2645,11 @@ exposed_to_tests GLboolean _gl_is_framebuffer (command_buffer_server_t *server, 
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsFramebuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsFramebuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsFramebuffer (command_buffer_server, framebuffer);
+        result = CACHING_SERVER(server)->super_dispatch.glIsFramebuffer (server, framebuffer);
     }
     return result;
 }
@@ -2662,11 +2659,11 @@ exposed_to_tests GLboolean _gl_is_program (command_buffer_server_t *server, GLui
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsProgram (command_buffer_server, program);
+        result = CACHING_SERVER(server)->super_dispatch.glIsProgram (server, program);
     }
     return result;
 }
@@ -2676,11 +2673,11 @@ exposed_to_tests GLboolean _gl_is_renderbuffer (command_buffer_server_t *server,
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsRenderbuffer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsRenderbuffer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsRenderbuffer (command_buffer_server, renderbuffer);
+        result = CACHING_SERVER(server)->super_dispatch.glIsRenderbuffer (server, renderbuffer);
     }
     return result;
 }
@@ -2690,11 +2687,11 @@ exposed_to_tests GLboolean _gl_is_shader (command_buffer_server_t *server, GLuin
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsShader (command_buffer_server, shader);
+        result = CACHING_SERVER(server)->super_dispatch.glIsShader (server, shader);
     }
     return result;
 }
@@ -2704,11 +2701,11 @@ exposed_to_tests GLboolean _gl_is_texture (command_buffer_server_t *server, GLui
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsTexture) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsTexture) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        result = command_buffer_server->dispatch.glIsTexture (command_buffer_server, texture);
+        result = CACHING_SERVER(server)->super_dispatch.glIsTexture (server, texture);
     }
     return result;
 }
@@ -2717,7 +2714,7 @@ exposed_to_tests void _gl_line_width (command_buffer_server_t *server, GLfloat w
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glLineWidth) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glLineWidth) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2730,7 +2727,7 @@ exposed_to_tests void _gl_line_width (command_buffer_server_t *server, GLfloat w
         }
 
         egl_state->state.line_width = width;
-        command_buffer_server->dispatch.glLineWidth (command_buffer_server, width);
+        CACHING_SERVER(server)->super_dispatch.glLineWidth (server, width);
     }
 }
 
@@ -2738,11 +2735,11 @@ exposed_to_tests void _gl_link_program (command_buffer_server_t *server, GLuint 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glLinkProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glLinkProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glLinkProgram (command_buffer_server, program);
+        CACHING_SERVER(server)->super_dispatch.glLinkProgram (server, program);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2751,7 +2748,7 @@ exposed_to_tests void _gl_pixel_storei (command_buffer_server_t *server, GLenum 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glPixelStorei) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glPixelStorei) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2779,7 +2776,7 @@ exposed_to_tests void _gl_pixel_storei (command_buffer_server_t *server, GLenum 
         else
            egl_state->state.unpack_alignment = param;
 
-        command_buffer_server->dispatch.glPixelStorei (command_buffer_server, pname, param);
+        CACHING_SERVER(server)->super_dispatch.glPixelStorei (server, pname, param);
     }
 }
 
@@ -2787,7 +2784,7 @@ exposed_to_tests void _gl_polygon_offset (command_buffer_server_t *server, GLflo
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glPolygonOffset) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glPolygonOffset) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2798,7 +2795,7 @@ exposed_to_tests void _gl_polygon_offset (command_buffer_server_t *server, GLflo
         egl_state->state.polygon_offset_factor = factor;
         egl_state->state.polygon_offset_units = units;
 
-        command_buffer_server->dispatch.glPolygonOffset (command_buffer_server, factor, units);
+        CACHING_SERVER(server)->super_dispatch.glPolygonOffset (server, factor, units);
     }
 }
 
@@ -2809,11 +2806,11 @@ exposed_to_tests void _gl_read_pixels (command_buffer_server_t *server, GLint x,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glReadPixels) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glReadPixels) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glReadPixels (command_buffer_server, x, y, width, height, format, type, data);
+        CACHING_SERVER(server)->super_dispatch.glReadPixels (server, x, y, width, height, format, type, data);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2822,11 +2819,11 @@ exposed_to_tests void _gl_compile_shader (command_buffer_server_t *server, GLuin
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCompileShader) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCompileShader) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCompileShader (command_buffer_server, shader);
+        CACHING_SERVER(server)->super_dispatch.glCompileShader (server, shader);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2835,11 +2832,11 @@ exposed_to_tests void _gl_release_shader_compiler (command_buffer_server_t *serv
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glReleaseShaderCompiler) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glReleaseShaderCompiler) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glReleaseShaderCompiler (command_buffer_server);
+        CACHING_SERVER(server)->super_dispatch.glReleaseShaderCompiler (server);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2849,11 +2846,11 @@ exposed_to_tests void _gl_renderbuffer_storage (command_buffer_server_t *server,
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glRenderbufferStorage) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorage) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glRenderbufferStorage (command_buffer_server, target, internalformat, width, height);
+        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorage (server, target, internalformat, width, height);
         egl_state->state.need_get_error = true;
     }
 }
@@ -2862,7 +2859,7 @@ exposed_to_tests void _gl_sample_coverage (command_buffer_server_t *server, GLcl
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glSampleCoverage) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glSampleCoverage) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2873,7 +2870,7 @@ exposed_to_tests void _gl_sample_coverage (command_buffer_server_t *server, GLcl
         egl_state->state.sample_coverage_invert = invert;
         egl_state->state.sample_coverage_value = value;
 
-        command_buffer_server->dispatch.glSampleCoverage (command_buffer_server, value, invert);
+        CACHING_SERVER(server)->super_dispatch.glSampleCoverage (server, value, invert);
     }
 }
 
@@ -2881,7 +2878,7 @@ exposed_to_tests void _gl_scissor (command_buffer_server_t *server, GLint x, GLi
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glScissor) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glScissor) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -2901,7 +2898,7 @@ exposed_to_tests void _gl_scissor (command_buffer_server_t *server, GLint x, GLi
         egl_state->state.scissor_box[2] = width;
         egl_state->state.scissor_box[3] = height;
 
-        command_buffer_server->dispatch.glScissor (command_buffer_server, x, y, width, height);
+        CACHING_SERVER(server)->super_dispatch.glScissor (server, x, y, width, height);
     }
 }
 
@@ -2911,11 +2908,11 @@ exposed_to_tests void _gl_shader_binary (command_buffer_server_t *server, GLsize
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glShaderBinary) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glShaderBinary) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glShaderBinary (command_buffer_server, n, shaders, binaryformat, binary, length);
+        CACHING_SERVER(server)->super_dispatch.glShaderBinary (server, n, shaders, binaryformat, binary, length);
         egl_state->state.need_get_error = true;
     }
     if (binary)
@@ -2928,11 +2925,11 @@ exposed_to_tests void _gl_shader_source (command_buffer_server_t *server, GLuint
     egl_state_t *egl_state;
     int i;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glShaderSource) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glShaderSource) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glShaderSource (command_buffer_server, shader, count, string, length);
+        CACHING_SERVER(server)->super_dispatch.glShaderSource (server, shader, count, string, length);
         egl_state->state.need_get_error = true;
     }
 
@@ -2955,7 +2952,7 @@ exposed_to_tests void _gl_stencil_func_separate (command_buffer_server_t *server
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glStencilFuncSeparate) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glStencilFuncSeparate) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3018,7 +3015,7 @@ exposed_to_tests void _gl_stencil_func_separate (command_buffer_server_t *server
     }
 
     if (needs_call)
-        command_buffer_server->dispatch.glStencilFuncSeparate (command_buffer_server, face, func, ref, mask);
+        CACHING_SERVER(server)->super_dispatch.glStencilFuncSeparate (server, face, func, ref, mask);
 }
 
 exposed_to_tests void _gl_stencil_func (command_buffer_server_t *server, GLenum func, GLint ref, GLuint mask)
@@ -3031,7 +3028,7 @@ exposed_to_tests void _gl_stencil_mask_separate (command_buffer_server_t *server
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glStencilMaskSeparate) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glStencilMaskSeparate) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3066,7 +3063,7 @@ exposed_to_tests void _gl_stencil_mask_separate (command_buffer_server_t *server
         }
     }
     if (needs_call)
-        command_buffer_server->dispatch.glStencilMaskSeparate (command_buffer_server, face, mask);
+        CACHING_SERVER(server)->super_dispatch.glStencilMaskSeparate (server, face, mask);
 }
 
 exposed_to_tests void _gl_stencil_mask (command_buffer_server_t *server, GLuint mask)
@@ -3080,7 +3077,7 @@ exposed_to_tests void _gl_stencil_op_separate (command_buffer_server_t *server, 
     egl_state_t *egl_state;
     bool needs_call = false;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glStencilOpSeparate) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glStencilOpSeparate) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3165,7 +3162,7 @@ exposed_to_tests void _gl_stencil_op_separate (command_buffer_server_t *server, 
     }
 
     if (needs_call)
-        command_buffer_server->dispatch.glStencilOpSeparate (command_buffer_server, face, sfail, dpfail, dppass);
+        CACHING_SERVER(server)->super_dispatch.glStencilOpSeparate (server, face, sfail, dpfail, dppass);
 }
 
 exposed_to_tests void _gl_stencil_op (command_buffer_server_t *server, GLenum sfail, GLenum dpfail, GLenum dppass)
@@ -3181,11 +3178,11 @@ exposed_to_tests void _gl_tex_image_2d (command_buffer_server_t *server, GLenum 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTexImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTexImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glTexImage2D (command_buffer_server, target, level, internalformat, width, height,
+        CACHING_SERVER(server)->super_dispatch.glTexImage2D (server, target, level, internalformat, width, height,
                              border, format, type, data);
         egl_state->state.need_get_error = true;
     }
@@ -3200,7 +3197,7 @@ exposed_to_tests void _gl_tex_parameteri (command_buffer_server_t *server, GLenu
     int active_texture_index;
     int target_index;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTexParameteri) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTexParameteri) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -3305,7 +3302,7 @@ exposed_to_tests void _gl_tex_parameteri (command_buffer_server_t *server, GLenu
             return;
         }
 
-        command_buffer_server->dispatch.glTexParameteri (command_buffer_server, target, pname, param);
+        CACHING_SERVER(server)->super_dispatch.glTexParameteri (server, target, pname, param);
     }
 }
 
@@ -3323,11 +3320,11 @@ exposed_to_tests void _gl_tex_sub_image_2d (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTexSubImage2D) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTexSubImage2D) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glTexSubImage2D (command_buffer_server, target, level, xoffset, yoffset,
+        CACHING_SERVER(server)->super_dispatch.glTexSubImage2D (server, target, level, xoffset, yoffset,
                                 width, height, format, type, data);
         egl_state->state.need_get_error = true;
     }
@@ -3339,11 +3336,11 @@ exposed_to_tests void _gl_uniform1f (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform1f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform1f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform1f (command_buffer_server, location, v0);
+        CACHING_SERVER(server)->super_dispatch.glUniform1f (server, location, v0);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3352,11 +3349,11 @@ exposed_to_tests void _gl_uniform2f (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform2f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform2f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform2f (command_buffer_server, location, v0, v1);
+        CACHING_SERVER(server)->super_dispatch.glUniform2f (server, location, v0, v1);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3366,11 +3363,11 @@ exposed_to_tests void _gl_uniform3f (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform3f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform3f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform3f (command_buffer_server, location, v0, v1, v2);
+        CACHING_SERVER(server)->super_dispatch.glUniform3f (server, location, v0, v1, v2);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3380,11 +3377,11 @@ exposed_to_tests void _gl_uniform4f (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform4f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform4f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform4f (command_buffer_server, location, v0, v1, v2, v3);
+        CACHING_SERVER(server)->super_dispatch.glUniform4f (server, location, v0, v1, v2, v3);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3393,11 +3390,11 @@ exposed_to_tests void _gl_uniform1i (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform1i) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform1i) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform1i (command_buffer_server, location, v0);
+        CACHING_SERVER(server)->super_dispatch.glUniform1i (server, location, v0);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3406,11 +3403,11 @@ exposed_to_tests void _gl_uniform_2i (command_buffer_server_t *server, GLint loc
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform2i) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform2i) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform2i (command_buffer_server, location, v0, v1);
+        CACHING_SERVER(server)->super_dispatch.glUniform2i (server, location, v0, v1);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3419,11 +3416,11 @@ exposed_to_tests void _gl_uniform3i (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform3i) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform3i) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform3i (command_buffer_server, location, v0, v1, v2);
+        CACHING_SERVER(server)->super_dispatch.glUniform3i (server, location, v0, v1, v2);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3433,11 +3430,11 @@ exposed_to_tests void _gl_uniform4i (command_buffer_server_t *server, GLint loca
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUniform4i) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform4i) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glUniform4i (command_buffer_server, location, v0, v1, v2, v3);
+        CACHING_SERVER(server)->super_dispatch.glUniform4i (server, location, v0, v1, v2, v3);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3453,24 +3450,24 @@ _gl_uniform_fv (command_buffer_server_t *server, int i, GLint location,
 
     switch (i) {
     case 1:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform1fv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform1fv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform1fv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform1fv (server, location, count, value);
         break;
     case 2:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform2fv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform2fv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform2fv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform2fv (server, location, count, value);
         break;
     case 3:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform3fv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform3fv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform3fv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform3fv (server, location, count, value);
         break;
     default:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform4fv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform4fv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform4fv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform4fv (server, location, count, value);
         break;
     }
 
@@ -3520,24 +3517,24 @@ _gl_uniform_iv (command_buffer_server_t *server,
 
     switch (i) {
     case 1:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform1iv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform1iv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform1iv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform1iv (server, location, count, value);
         break;
     case 2:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform2iv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform2iv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform2iv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform2iv (server, location, count, value);
         break;
     case 3:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform3iv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform3iv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform3iv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform3iv (server, location, count, value);
         break;
     default:
-        if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glUniform4iv))
+        if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUniform4iv))
             goto FINISH;
-        command_buffer_server->dispatch.glUniform4iv (command_buffer_server, location, count, value);
+        CACHING_SERVER(server)->super_dispatch.glUniform4iv (server, location, count, value);
         break;
     }
 
@@ -3577,14 +3574,14 @@ exposed_to_tests void _gl_use_program (command_buffer_server_t *server, GLuint p
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUseProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUseProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
         if (egl_state->state.current_program == program)
             return;
 
-        command_buffer_server->dispatch.glUseProgram (command_buffer_server, program);
+        CACHING_SERVER(server)->super_dispatch.glUseProgram (server, program);
         /* FIXME: this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
         egl_state->state.current_program = program;
@@ -3597,11 +3594,11 @@ exposed_to_tests void _gl_validate_program (command_buffer_server_t *server, GLu
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glValidateProgram) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glValidateProgram) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glValidateProgram (command_buffer_server, program);
+        CACHING_SERVER(server)->super_dispatch.glValidateProgram (server, program);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3610,7 +3607,7 @@ exposed_to_tests void _gl_vertex_attrib1f (command_buffer_server_t *server, GLui
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib1f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib1f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3618,7 +3615,7 @@ exposed_to_tests void _gl_vertex_attrib1f (command_buffer_server_t *server, GLui
             return;
         }
 
-        command_buffer_server->dispatch.glVertexAttrib1f (command_buffer_server, index, v0);
+        CACHING_SERVER(server)->super_dispatch.glVertexAttrib1f (server, index, v0);
     }
 }
 
@@ -3626,7 +3623,7 @@ exposed_to_tests void _gl_vertex_attrib2f (command_buffer_server_t *server, GLui
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib2f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib2f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3634,7 +3631,7 @@ exposed_to_tests void _gl_vertex_attrib2f (command_buffer_server_t *server, GLui
             return;
         }
 
-        command_buffer_server->dispatch.glVertexAttrib2f (command_buffer_server, index, v0, v1);
+        CACHING_SERVER(server)->super_dispatch.glVertexAttrib2f (server, index, v0, v1);
     }
 }
 
@@ -3643,7 +3640,7 @@ exposed_to_tests void _gl_vertex_attrib3f (command_buffer_server_t *server, GLui
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib3f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib3f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3651,7 +3648,7 @@ exposed_to_tests void _gl_vertex_attrib3f (command_buffer_server_t *server, GLui
             return;
         }
 
-        command_buffer_server->dispatch.glVertexAttrib3f (command_buffer_server, index, v0, v1, v2);
+        CACHING_SERVER(server)->super_dispatch.glVertexAttrib3f (server, index, v0, v1, v2);
     }
 }
 
@@ -3660,14 +3657,14 @@ exposed_to_tests void _gl_vertex_attrib4f (command_buffer_server_t *server, GLui
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib3f) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib3f) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
         if (_gl_index_is_too_large (server, &egl_state->state, index))
             return;
 
-        command_buffer_server->dispatch.glVertexAttrib4f (command_buffer_server, index, v0, v1, v2, v3);
+        CACHING_SERVER(server)->super_dispatch.glVertexAttrib4f (server, index, v0, v1, v2, v3);
     }
 }
 
@@ -3686,24 +3683,24 @@ _gl_vertex_attrib_fv (command_buffer_server_t *server, int i, GLuint index, cons
 
     switch (i) {
         case 1:
-            if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib1fv))
+            if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib1fv))
                 goto FINISH;
-            command_buffer_server->dispatch.glVertexAttrib1fv (command_buffer_server, index, v);
+            CACHING_SERVER(server)->super_dispatch.glVertexAttrib1fv (server, index, v);
             break;
         case 2:
-            if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib2fv))
+            if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib2fv))
                 goto FINISH;
-            command_buffer_server->dispatch.glVertexAttrib2fv (command_buffer_server, index, v);
+            CACHING_SERVER(server)->super_dispatch.glVertexAttrib2fv (server, index, v);
             break;
         case 3:
-            if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib3fv))
+            if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib3fv))
                 goto FINISH;
-            command_buffer_server->dispatch.glVertexAttrib3fv (command_buffer_server, index, v);
+            CACHING_SERVER(server)->super_dispatch.glVertexAttrib3fv (server, index, v);
             break;
         default:
-            if(! _gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttrib4fv))
+            if(! _gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttrib4fv))
                 goto FINISH;
-            command_buffer_server->dispatch.glVertexAttrib4fv (command_buffer_server, index, v);
+            CACHING_SERVER(server)->super_dispatch.glVertexAttrib4fv (server, index, v);
             break;
     }
 
@@ -3749,7 +3746,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (command_buffer_server_t *server
     int n = 0;
     GLint bound_buffer = 0;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glVertexAttribPointer) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         state = &egl_state->state;
@@ -3777,7 +3774,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (command_buffer_server_t *server
         
 #ifdef GL_OES_vertex_array_object
         if (egl_state->state.vertex_array_binding) {
-            command_buffer_server->dispatch.glVertexAttribPointer (command_buffer_server, index, size, type, normalized,
+            CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, index, size, type, normalized,
                                           stride, pointer);
             //egl_state->state.need_get_error = true;
             return;
@@ -3804,7 +3801,7 @@ exposed_to_tests void _gl_vertex_attrib_pointer (command_buffer_server_t *server
 
         /* use array_buffer? */
         if (bound_buffer) {
-            command_buffer_server->dispatch.glVertexAttribPointer (command_buffer_server, index, size, type, normalized,
+            CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, index, size, type, normalized,
                                           stride, pointer);
             //egl_state->state.need_get_error = true;
         }
@@ -3861,7 +3858,7 @@ exposed_to_tests void _gl_viewport (command_buffer_server_t *server, GLint x, GL
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glViewport) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glViewport) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3881,7 +3878,7 @@ exposed_to_tests void _gl_viewport (command_buffer_server_t *server, GLint x, GL
         egl_state->state.viewport[2] = width;
         egl_state->state.viewport[3] = height;
 
-        command_buffer_server->dispatch.glViewport (command_buffer_server, x, y, width, height);
+        CACHING_SERVER(server)->super_dispatch.glViewport (server, x, y, width, height);
     }
 }
 /* end of GLES2 core profile */
@@ -3892,7 +3889,7 @@ _gl_egl_image_target_texture_2d_oes (command_buffer_server_t *server, GLenum tar
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEGLImageTargetTexture2DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEGLImageTargetTexture2DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -3901,7 +3898,7 @@ _gl_egl_image_target_texture_2d_oes (command_buffer_server_t *server, GLenum tar
             return;
         }
 
-        command_buffer_server->dispatch.glEGLImageTargetTexture2DOES (command_buffer_server, target, image);
+        CACHING_SERVER(server)->super_dispatch.glEGLImageTargetTexture2DOES (server, target, image);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3912,7 +3909,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (command_buffer_server_t *server, 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEGLImageTargetRenderbufferStorageOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEGLImageTargetRenderbufferStorageOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 #ifndef HAS_GLES2
@@ -3922,7 +3919,7 @@ _gl_egl_image_target_renderbuffer_storage_oes (command_buffer_server_t *server, 
         }
 #endif
 
-        command_buffer_server->dispatch.glEGLImageTargetRenderbufferStorageOES (command_buffer_server, target, image);
+        CACHING_SERVER(server)->super_dispatch.glEGLImageTargetRenderbufferStorageOES (server, target, image);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3936,11 +3933,11 @@ _gl_get_program_binary_oes (command_buffer_server_t *server, GLuint program, GLs
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetProgramBinaryOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetProgramBinaryOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetProgramBinaryOES (command_buffer_server, program, bufSize, length, 
+        CACHING_SERVER(server)->super_dispatch.glGetProgramBinaryOES (server, program, bufSize, length, 
                                       binaryFormat, binary);
         egl_state->state.need_get_error = true;
     }
@@ -3952,11 +3949,11 @@ _gl_program_binary_oes (command_buffer_server_t *server, GLuint program, GLenum 
 {
     egl_state_t *egl_state;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glProgramBinaryOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glProgramBinaryOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glProgramBinaryOES (command_buffer_server, program, binaryFormat, binary, length);
+        CACHING_SERVER(server)->super_dispatch.glProgramBinaryOES (server, program, binaryFormat, binary, length);
         egl_state->state.need_get_error = true;
     }
 
@@ -3972,7 +3969,7 @@ _gl_map_buffer_oes (command_buffer_server_t *server, GLenum target, GLenum acces
     egl_state_t *egl_state;
     void *result = NULL;
     
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glMapBufferOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glMapBufferOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -3986,7 +3983,7 @@ _gl_map_buffer_oes (command_buffer_server_t *server, GLenum target, GLenum acces
             return result;
         }
 
-        result = command_buffer_server->dispatch.glMapBufferOES (command_buffer_server, target, access);
+        result = CACHING_SERVER(server)->super_dispatch.glMapBufferOES (server, target, access);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -3998,7 +3995,7 @@ _gl_unmap_buffer_oes (command_buffer_server_t *server, GLenum target)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glUnmapBufferOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glUnmapBufferOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4008,7 +4005,7 @@ _gl_unmap_buffer_oes (command_buffer_server_t *server, GLenum target)
             return result;
         }
 
-        result = command_buffer_server->dispatch.glUnmapBufferOES (command_buffer_server, target);
+        result = CACHING_SERVER(server)->super_dispatch.glUnmapBufferOES (server, target);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4019,7 +4016,7 @@ _gl_get_buffer_pointerv_oes (command_buffer_server_t *server, GLenum target, GLe
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetBufferPointervOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetBufferPointervOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4029,7 +4026,7 @@ _gl_get_buffer_pointerv_oes (command_buffer_server_t *server, GLenum target, GLe
             return;
         }
 
-        command_buffer_server->dispatch.glGetBufferPointervOES (command_buffer_server, target, pname, params);
+        CACHING_SERVER(server)->super_dispatch.glGetBufferPointervOES (server, target, pname, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4044,11 +4041,11 @@ _gl_tex_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint leve
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTexImage3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTexImage3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glTexImage3DOES (command_buffer_server, target, level, internalformat, 
+        CACHING_SERVER(server)->super_dispatch.glTexImage3DOES (server, target, level, internalformat, 
                                 width, height, depth, 
                                 border, format, type, pixels);
         egl_state->state.need_get_error = true;
@@ -4065,11 +4062,11 @@ _gl_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, GLint 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTexSubImage3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTexSubImage3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glTexSubImage3DOES (command_buffer_server, target, level, 
+        CACHING_SERVER(server)->super_dispatch.glTexSubImage3DOES (server, target, level, 
                                    xoffset, yoffset, zoffset,
                                    width, height, depth, 
                                    format, type, data);
@@ -4087,11 +4084,11 @@ _gl_copy_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum target, G
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCopyTexSubImage3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCopyTexSubImage3DOES (command_buffer_server, target, level,
+        CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage3DOES (server, target, level,
                                        xoffset, yoffset, zoffset,
                                        x, y, width, height);
 
@@ -4109,11 +4106,11 @@ _gl_compressed_tex_image_3d_oes (command_buffer_server_t *server, GLenum target,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCompressedTexImage3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCompressedTexImage3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCompressedTexImage3DOES (command_buffer_server, target, level, internalformat,
+        CACHING_SERVER(server)->super_dispatch.glCompressedTexImage3DOES (server, target, level, internalformat,
                                           width, height, depth,
                                           border, imageSize, data);
 
@@ -4134,11 +4131,11 @@ _gl_compressed_tex_sub_image_3d_oes (command_buffer_server_t *server, GLenum tar
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCompressedTexSubImage3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCompressedTexSubImage3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
-        command_buffer_server->dispatch.glCompressedTexSubImage3DOES (command_buffer_server, target, level,
+        CACHING_SERVER(server)->super_dispatch.glCompressedTexSubImage3DOES (server, target, level,
                                              xoffset, yoffset, zoffset,
                                              width, height, depth,
                                              format, imageSize, data);
@@ -4157,7 +4154,7 @@ _gl_framebuffer_texture_3d_oes (command_buffer_server_t *server, GLenum target, 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferTexture3DOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferTexture3DOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
@@ -4166,7 +4163,7 @@ _gl_framebuffer_texture_3d_oes (command_buffer_server_t *server, GLenum target, 
             return;
         }
 
-        command_buffer_server->dispatch.glFramebufferTexture3DOES (command_buffer_server, target, attachment, textarget,
+        CACHING_SERVER(server)->super_dispatch.glFramebufferTexture3DOES (server, target, attachment, textarget,
                                           texture, level, zoffset);
         egl_state->state.need_get_error = true;
     }
@@ -4189,14 +4186,14 @@ _gl_bind_vertex_array_oes (command_buffer_server_t *server, GLuint array)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBindVertexArrayOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBindVertexArrayOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
 
         if (egl_state->state.vertex_array_binding == array)
             return;
 
-        command_buffer_server->dispatch.glBindVertexArrayOES (command_buffer_server, array);
+        CACHING_SERVER(server)->super_dispatch.glBindVertexArrayOES (server, array);
         egl_state->state.need_get_error = true;
         /* FIXME: should we save this ? */
         egl_state->state.vertex_array_binding = array;
@@ -4209,7 +4206,7 @@ _gl_delete_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, const 
     egl_state_t *egl_state;
     int i;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteVertexArraysOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteVertexArraysOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4218,7 +4215,7 @@ _gl_delete_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, const 
             goto FINISH;
         }
 
-        command_buffer_server->dispatch.glDeleteVertexArraysOES (command_buffer_server, n, arrays);
+        CACHING_SERVER(server)->super_dispatch.glDeleteVertexArraysOES (server, n, arrays);
 
         /* matching vertex_array_binding ? */
         for (i = 0; i < n; i++) {
@@ -4239,7 +4236,7 @@ _gl_gen_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, GLuint *a
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenVertexArraysOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenVertexArraysOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4248,7 +4245,7 @@ _gl_gen_vertex_arrays_oes (command_buffer_server_t *server, GLsizei n, GLuint *a
             return;
         }
 
-        command_buffer_server->dispatch.glGenVertexArraysOES (command_buffer_server, n, arrays);
+        CACHING_SERVER(server)->super_dispatch.glGenVertexArraysOES (server, n, arrays);
     }
 }
 
@@ -4258,11 +4255,11 @@ _gl_is_vertex_array_oes (command_buffer_server_t *server, GLuint array)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsVertexArrayOES) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsVertexArrayOES) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        result = command_buffer_server->dispatch.glIsVertexArrayOES (command_buffer_server, array);
+        result = CACHING_SERVER(server)->super_dispatch.glIsVertexArrayOES (server, array);
 
         if (result == GL_FALSE && 
             egl_state->state.vertex_array_binding == array)
@@ -4279,11 +4276,11 @@ _gl_get_perf_monitor_groups_amd (command_buffer_server_t *server, GLint *numGrou
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorGroupsAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorGroupsAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorGroupsAMD (command_buffer_server, numGroups, groupSize, groups);
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorGroupsAMD (server, numGroups, groupSize, groups);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4296,11 +4293,11 @@ _gl_get_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint group
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorCountersAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCountersAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorCountersAMD (command_buffer_server, group, numCounters,
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCountersAMD (server, group, numCounters,
                                             maxActiveCounters,
                                             counterSize, counters);
         egl_state->state.need_get_error = true;
@@ -4314,11 +4311,11 @@ _gl_get_perf_monitor_group_string_amd (command_buffer_server_t *server, GLuint g
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorGroupStringAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorGroupStringAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorGroupStringAMD (command_buffer_server, group, bufSize, length,
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorGroupStringAMD (server, group, bufSize, length,
                                                groupString);
         egl_state->state.need_get_error = true;
     }
@@ -4332,11 +4329,11 @@ _gl_get_perf_monitor_counter_string_amd (command_buffer_server_t *server, GLuint
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorCounterStringAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterStringAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorCounterStringAMD (command_buffer_server, group, counter, bufSize, 
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterStringAMD (server, group, counter, bufSize, 
                                                  length, counterString);
         egl_state->state.need_get_error = true;
     }
@@ -4348,11 +4345,11 @@ _gl_get_perf_monitor_counter_info_amd (command_buffer_server_t *server, GLuint g
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorCounterInfoAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterInfoAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorCounterInfoAMD (command_buffer_server, group, counter, 
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterInfoAMD (server, group, counter, 
                                                pname, data); 
         egl_state->state.need_get_error = true;
     }
@@ -4363,11 +4360,11 @@ _gl_gen_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint *m
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenPerfMonitorsAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenPerfMonitorsAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGenPerfMonitorsAMD (command_buffer_server, n, monitors); 
+        CACHING_SERVER(server)->super_dispatch.glGenPerfMonitorsAMD (server, n, monitors); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4377,11 +4374,11 @@ _gl_delete_perf_monitors_amd (command_buffer_server_t *server, GLsizei n, GLuint
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeletePerfMonitorsAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeletePerfMonitorsAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glDeletePerfMonitorsAMD (command_buffer_server, n, monitors); 
+        CACHING_SERVER(server)->super_dispatch.glDeletePerfMonitorsAMD (server, n, monitors); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4393,11 +4390,11 @@ _gl_select_perf_monitor_counters_amd (command_buffer_server_t *server, GLuint mo
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glSelectPerfMonitorCountersAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glSelectPerfMonitorCountersAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glSelectPerfMonitorCountersAMD (command_buffer_server, monitor, enable, group,
+        CACHING_SERVER(server)->super_dispatch.glSelectPerfMonitorCountersAMD (server, monitor, enable, group,
                                                numCounters, countersList); 
         egl_state->state.need_get_error = true;
     }
@@ -4408,11 +4405,11 @@ _gl_begin_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBeginPerfMonitorAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBeginPerfMonitorAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glBeginPerfMonitorAMD (command_buffer_server, monitor); 
+        CACHING_SERVER(server)->super_dispatch.glBeginPerfMonitorAMD (server, monitor); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4422,11 +4419,11 @@ _gl_end_perf_monitor_amd (command_buffer_server_t *server, GLuint monitor)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEndPerfMonitorAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEndPerfMonitorAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glEndPerfMonitorAMD (command_buffer_server, monitor); 
+        CACHING_SERVER(server)->super_dispatch.glEndPerfMonitorAMD (server, monitor); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4438,11 +4435,11 @@ _gl_get_perf_monitor_counter_data_amd (command_buffer_server_t *server, GLuint m
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetPerfMonitorCounterDataAMD) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterDataAMD) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glGetPerfMonitorCounterDataAMD (command_buffer_server, monitor, pname, dataSize,
+        CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterDataAMD (server, monitor, pname, dataSize,
                                                data, bytesWritten); 
         egl_state->state.need_get_error = true;
     }
@@ -4459,11 +4456,11 @@ _gl_blit_framebuffer_angle (command_buffer_server_t *server, GLint srcX0, GLint 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glBlitFramebufferANGLE) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glBlitFramebufferANGLE) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glBlitFramebufferANGLE (command_buffer_server, srcX0, srcY0, srcX1, srcY1,
+        CACHING_SERVER(server)->super_dispatch.glBlitFramebufferANGLE (server, srcX0, srcY0, srcX1, srcY1,
                                        dstX0, dstY0, dstX1, dstY1,
                                        mask, filter);
         egl_state->state.need_get_error = true;
@@ -4479,11 +4476,11 @@ _gl_renderbuffer_storage_multisample_angle (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glRenderbufferStorageMultisampleANGLE) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleANGLE) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glRenderbufferStorageMultisampleANGLE (command_buffer_server, target, samples,
+        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleANGLE (server, target, samples,
                                                       internalformat,
                                                       width, height);
         egl_state->state.need_get_error = true;
@@ -4499,11 +4496,11 @@ _gl_renderbuffer_storage_multisample_apple (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glRenderbufferStorageMultisampleAPPLE) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleAPPLE) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glRenderbufferStorageMultisampleAPPLE (command_buffer_server, target, samples,
+        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleAPPLE (server, target, samples,
                                                       internalformat,
                                                       width, height);
         egl_state->state.need_get_error = true;
@@ -4515,11 +4512,11 @@ gl_resolve_multisample_framebuffer_apple (void)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glResolveMultisampleFramebufferAPPLE) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glResolveMultisampleFramebufferAPPLE) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glResolveMultisampleFramebufferAPPLE (command_buffer_server);
+        CACHING_SERVER(server)->super_dispatch.glResolveMultisampleFramebufferAPPLE (server);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4534,7 +4531,7 @@ gl_discard_framebuffer_ext (command_buffer_server_t *server,
     egl_state_t *egl_state;
     int i;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDiscardFramebufferEXT) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDiscardFramebufferEXT) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4554,7 +4551,7 @@ gl_discard_framebuffer_ext (command_buffer_server_t *server,
                 goto FINISH;
             }
         }
-        command_buffer_server->dispatch.glDiscardFramebufferEXT (command_buffer_server, target, numAttachments, 
+        CACHING_SERVER(server)->super_dispatch.glDiscardFramebufferEXT (server, target, numAttachments, 
                                         attachments);
     }
 FINISH:
@@ -4587,11 +4584,11 @@ _gl_renderbuffer_storage_multisample_ext (command_buffer_server_t *server, GLenu
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glRenderbufferStorageMultisampleEXT) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleEXT) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glRenderbufferStorageMultisampleEXT (command_buffer_server, target, samples, 
+        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleEXT (server, target, samples, 
                                                     internalformat, 
                                                     width, height);
         egl_state->state.need_get_error = true;
@@ -4607,7 +4604,7 @@ _gl_framebuffer_texture_2d_multisample_ext (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferTexture2DMultisampleEXT) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2DMultisampleEXT) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4616,7 +4613,7 @@ _gl_framebuffer_texture_2d_multisample_ext (command_buffer_server_t *server, GLe
            return;
         }
 
-        command_buffer_server->dispatch.glFramebufferTexture2DMultisampleEXT (command_buffer_server, target, attachment, 
+        CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2DMultisampleEXT (server, target, attachment, 
                                                      textarget, texture, 
                                                      level, samples);
         egl_state->state.need_get_error = true;
@@ -4632,11 +4629,11 @@ _gl_renderbuffer_storage_multisample_img (command_buffer_server_t *server, GLenu
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glRenderbufferStorageMultisampleIMG) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleIMG) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
-        command_buffer_server->dispatch.glRenderbufferStorageMultisampleIMG (command_buffer_server, target, samples, 
+        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleIMG (server, target, samples, 
                                                     internalformat, 
                                                     width, height);
         egl_state->state.need_get_error = true;
@@ -4652,7 +4649,7 @@ _gl_framebuffer_texture_2d_multisample_img (command_buffer_server_t *server, GLe
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFramebufferTexture2DMultisampleIMG) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2DMultisampleIMG) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
         
@@ -4661,7 +4658,7 @@ _gl_framebuffer_texture_2d_multisample_img (command_buffer_server_t *server, GLe
            return;
         }
 
-        command_buffer_server->dispatch.glFramebufferTexture2DMultisampleIMG (command_buffer_server, target, attachment,
+        CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2DMultisampleIMG (server, target, attachment,
                                                      textarget, texture,
                                                      level, samples);
         egl_state->state.need_get_error = true;
@@ -4675,7 +4672,7 @@ _gl_delete_fences_nv (command_buffer_server_t *server, GLsizei n, const GLuint *
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDeleteFencesNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDeleteFencesNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4684,7 +4681,7 @@ _gl_delete_fences_nv (command_buffer_server_t *server, GLsizei n, const GLuint *
             goto FINISH;
         }
     
-        command_buffer_server->dispatch.glDeleteFencesNV (command_buffer_server, n, fences); 
+        CACHING_SERVER(server)->super_dispatch.glDeleteFencesNV (server, n, fences); 
         egl_state->state.need_get_error = true;
     }
 FINISH:
@@ -4697,7 +4694,7 @@ _gl_gen_fences_nv (command_buffer_server_t *server, GLsizei n, GLuint *fences)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGenFencesNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGenFencesNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4706,7 +4703,7 @@ _gl_gen_fences_nv (command_buffer_server_t *server, GLsizei n, GLuint *fences)
             return;
         }
     
-        command_buffer_server->dispatch.glGenFencesNV (command_buffer_server, n, fences); 
+        CACHING_SERVER(server)->super_dispatch.glGenFencesNV (server, n, fences); 
         egl_state->state.need_get_error = true;
     }
 }
@@ -4717,11 +4714,11 @@ _gl_is_fence_nv (command_buffer_server_t *server, GLuint fence)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glIsFenceNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glIsFenceNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = command_buffer_server->dispatch.glIsFenceNV (command_buffer_server, fence);
+        result = CACHING_SERVER(server)->super_dispatch.glIsFenceNV (server, fence);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4733,11 +4730,11 @@ _gl_test_fence_nv (command_buffer_server_t *server, GLuint fence)
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glTestFenceNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glTestFenceNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = command_buffer_server->dispatch.glTestFenceNV (command_buffer_server, fence);
+        result = CACHING_SERVER(server)->super_dispatch.glTestFenceNV (server, fence);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -4748,11 +4745,11 @@ _gl_get_fenceiv_nv (command_buffer_server_t *server, GLuint fence, GLenum pname,
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetFenceivNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetFenceivNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetFenceivNV (command_buffer_server, fence, pname, params);
+        CACHING_SERVER(server)->super_dispatch.glGetFenceivNV (server, fence, pname, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4762,11 +4759,11 @@ _gl_finish_fence_nv (command_buffer_server_t *server, GLuint fence)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glFinishFenceNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glFinishFenceNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glFinishFenceNV (command_buffer_server, fence);
+        CACHING_SERVER(server)->super_dispatch.glFinishFenceNV (server, fence);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4776,11 +4773,11 @@ _gl_set_fence_nv (command_buffer_server_t *server, GLuint fence, GLenum conditio
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glSetFenceNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glSetFenceNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glSetFenceNV (command_buffer_server, fence, condition);
+        CACHING_SERVER(server)->super_dispatch.glSetFenceNV (server, fence, condition);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4792,11 +4789,11 @@ _gl_coverage_mask_nv (command_buffer_server_t *server, GLboolean mask)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCoverageMaskNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCoverageMaskNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glCoverageMaskNV (command_buffer_server, mask);
+        CACHING_SERVER(server)->super_dispatch.glCoverageMaskNV (server, mask);
     }
 }
 
@@ -4805,7 +4802,7 @@ _gl_coverage_operation_nv (command_buffer_server_t *server, GLenum operation)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glCoverageOperationNV) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glCoverageOperationNV) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
@@ -4816,7 +4813,7 @@ _gl_coverage_operation_nv (command_buffer_server_t *server, GLenum operation)
             return;
         }
 
-        command_buffer_server->dispatch.glCoverageOperationNV (command_buffer_server, operation);
+        CACHING_SERVER(server)->super_dispatch.glCoverageOperationNV (server, operation);
     }
 }
 #endif
@@ -4828,11 +4825,11 @@ _gl_get_driver_controls_qcom (command_buffer_server_t *server, GLint *num, GLsiz
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetDriverControlsQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetDriverControlsQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetDriverControlsQCOM (command_buffer_server, num, size, driverControls);
+        CACHING_SERVER(server)->super_dispatch.glGetDriverControlsQCOM (server, num, size, driverControls);
     }
 }
 
@@ -4843,11 +4840,11 @@ _gl_get_driver_control_string_qcom (command_buffer_server_t *server, GLuint driv
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glGetDriverControlStringQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glGetDriverControlStringQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glGetDriverControlStringQCOM (command_buffer_server, driverControl, bufSize,
+        CACHING_SERVER(server)->super_dispatch.glGetDriverControlStringQCOM (server, driverControl, bufSize,
                                              length, driverControlString);
         egl_state->state.need_get_error = true;
     }
@@ -4858,11 +4855,11 @@ _gl_enable_driver_control_qcom (command_buffer_server_t *server, GLuint driverCo
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEnableDriverControlQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEnableDriverControlQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glEnableDriverControlQCOM (command_buffer_server, driverControl);
+        CACHING_SERVER(server)->super_dispatch.glEnableDriverControlQCOM (server, driverControl);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4872,11 +4869,11 @@ _gl_disable_driver_control_qcom (command_buffer_server_t *server, GLuint driverC
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glDisableDriverControlQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glDisableDriverControlQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glDisableDriverControlQCOM (command_buffer_server, driverControl);
+        CACHING_SERVER(server)->super_dispatch.glDisableDriverControlQCOM (server, driverControl);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4889,11 +4886,11 @@ _gl_ext_get_textures_qcom (command_buffer_server_t *server, GLuint *textures, GL
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetTexturesQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexturesQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetTexturesQCOM (command_buffer_server, textures, maxTextures, numTextures);
+        CACHING_SERVER(server)->super_dispatch.glExtGetTexturesQCOM (server, textures, maxTextures, numTextures);
     }
 }
 
@@ -4903,11 +4900,11 @@ _gl_ext_get_buffers_qcom (command_buffer_server_t *server, GLuint *buffers, GLin
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetBuffersQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetBuffersQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetBuffersQCOM (command_buffer_server, buffers, maxBuffers, numBuffers);
+        CACHING_SERVER(server)->super_dispatch.glExtGetBuffersQCOM (server, buffers, maxBuffers, numBuffers);
     }
 }
 
@@ -4918,11 +4915,11 @@ _gl_ext_get_renderbuffers_qcom (command_buffer_server_t *server, GLuint *renderb
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetRenderbuffersQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetRenderbuffersQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetRenderbuffersQCOM (command_buffer_server, renderbuffers, maxRenderbuffers,
+        CACHING_SERVER(server)->super_dispatch.glExtGetRenderbuffersQCOM (server, renderbuffers, maxRenderbuffers,
                                           numRenderbuffers);
     }
 }
@@ -4933,11 +4930,11 @@ _gl_ext_get_framebuffers_qcom (command_buffer_server_t *server, GLuint *framebuf
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetFramebuffersQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetFramebuffersQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetFramebuffersQCOM (command_buffer_server, framebuffers, maxFramebuffers,
+        CACHING_SERVER(server)->super_dispatch.glExtGetFramebuffersQCOM (server, framebuffers, maxFramebuffers,
                                          numFramebuffers);
     }
 }
@@ -4949,11 +4946,11 @@ _gl_ext_get_tex_level_parameteriv_qcom (command_buffer_server_t *server, GLuint 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetTexLevelParameterivQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexLevelParameterivQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetTexLevelParameterivQCOM (command_buffer_server, texture, face, level,
+        CACHING_SERVER(server)->super_dispatch.glExtGetTexLevelParameterivQCOM (server, texture, face, level,
                                                 pname, params);
         egl_state->state.need_get_error = true;
     }
@@ -4965,11 +4962,11 @@ _gl_ext_tex_object_state_overridei_qcom (command_buffer_server_t *server, GLenum
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtTexObjectStateOverrideiQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtTexObjectStateOverrideiQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtTexObjectStateOverrideiQCOM (command_buffer_server, target, pname, param);
+        CACHING_SERVER(server)->super_dispatch.glExtTexObjectStateOverrideiQCOM (server, target, pname, param);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4984,11 +4981,11 @@ _gl_ext_get_tex_sub_image_qcom (command_buffer_server_t *server, GLenum target, 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetTexSubImageQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexSubImageQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetTexSubImageQCOM (command_buffer_server, target, level,
+        CACHING_SERVER(server)->super_dispatch.glExtGetTexSubImageQCOM (server, target, level,
                                         xoffset, yoffset, zoffset,
                                         width, height, depth,
                                         format, type, texels);
@@ -5001,11 +4998,11 @@ _gl_ext_get_buffer_pointerv_qcom (command_buffer_server_t *server, GLenum target
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetBufferPointervQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetBufferPointervQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetBufferPointervQCOM (command_buffer_server, target, params);
+        CACHING_SERVER(server)->super_dispatch.glExtGetBufferPointervQCOM (server, target, params);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5018,11 +5015,11 @@ _gl_ext_get_shaders_qcom (command_buffer_server_t *server, GLuint *shaders, GLin
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetShadersQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetShadersQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetShadersQCOM (command_buffer_server, shaders, maxShaders, numShaders);
+        CACHING_SERVER(server)->super_dispatch.glExtGetShadersQCOM (server, shaders, maxShaders, numShaders);
     }
 }
 
@@ -5032,11 +5029,11 @@ _gl_ext_get_programs_qcom (command_buffer_server_t *server, GLuint *programs, GL
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetProgramsQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetProgramsQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetProgramsQCOM (command_buffer_server, programs, maxPrograms, numPrograms);
+        CACHING_SERVER(server)->super_dispatch.glExtGetProgramsQCOM (server, programs, maxPrograms, numPrograms);
     }
 }
 
@@ -5046,11 +5043,11 @@ _gl_ext_is_program_binary_qcom (command_buffer_server_t *server, GLuint program)
     egl_state_t *egl_state;
     bool result = false;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtIsProgramBinaryQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtIsProgramBinaryQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        result = command_buffer_server->dispatch.glExtIsProgramBinaryQCOM (command_buffer_server, program);
+        result = CACHING_SERVER(server)->super_dispatch.glExtIsProgramBinaryQCOM (server, program);
         egl_state->state.need_get_error = true;
     }
     return result;
@@ -5062,11 +5059,11 @@ _gl_ext_get_program_binary_source_qcom (command_buffer_server_t *server, GLuint 
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glExtGetProgramBinarySourceQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glExtGetProgramBinarySourceQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glExtGetProgramBinarySourceQCOM (command_buffer_server, program, shadertype,
+        CACHING_SERVER(server)->super_dispatch.glExtGetProgramBinarySourceQCOM (server, program, shadertype,
                                                 source, length);
         egl_state->state.need_get_error = true;
     }
@@ -5080,11 +5077,11 @@ _gl_start_tiling_qcom (command_buffer_server_t *server, GLuint x, GLuint y, GLui
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glStartTilingQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glStartTilingQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glStartTilingQCOM (command_buffer_server, x, y, width, height, preserveMask);
+        CACHING_SERVER(server)->super_dispatch.glStartTilingQCOM (server, x, y, width, height, preserveMask);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5094,11 +5091,11 @@ _gl_end_tiling_qcom (command_buffer_server_t *server, GLbitfield preserveMask)
 {
     egl_state_t *egl_state;
 
-    if (_gl_is_valid_func (server, command_buffer_server->dispatch.glEndTilingQCOM) &&
+    if (_gl_is_valid_func (server, CACHING_SERVER(server)->super_dispatch.glEndTilingQCOM) &&
         _gl_is_valid_context (server)) {
         egl_state = (egl_state_t *) active_state->data;
     
-        command_buffer_server->dispatch.glEndTilingQCOM (command_buffer_server, preserveMask);
+        CACHING_SERVER(server)->super_dispatch.glEndTilingQCOM (server, preserveMask);
         egl_state->state.need_get_error = true;
     }
 }

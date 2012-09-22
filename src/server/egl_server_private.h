@@ -1,6 +1,7 @@
 #ifndef GPUPROCESS_EGL_SERVER_PRIVATE_H
 #define GPUPROCESS_EGL_SERVER_PRIVATE_H
 
+#include "command_buffer_server.h"
 #include "compiler_private.h"
 #include "egl_states.h"
 #include "types_private.h"
@@ -11,6 +12,17 @@ extern "C" {
 #endif
 
 #define NUM_CONTEXTS 4
+
+#define CACHING_SERVER(object) ((caching_server_t *) (object))
+typedef struct _caching_server {
+    command_buffer_server_t super;
+
+    /* We maintain a copy of the superclass' dispatch table here, so
+     * that we can chain up to the superclass. The process of subclassing
+     * overrides the original dispatch table. */
+    server_dispatch_table_t super_dispatch;
+
+} caching_server_t;
 
 typedef struct gl_server_states
 {
