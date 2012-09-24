@@ -9,8 +9,13 @@
 
 extern __thread bool on_client_thread;
 
+/* These two methods are auto-generated into server_autogen.c
+ * and included at the end of this file. */
 static void
 server_fill_dispatch_table (server_t *server);
+static void
+server_handle_command_autogen (server_t *server,
+                               command_t *command);
 
 static void
 server_handle_set_token (server_t *server,
@@ -26,9 +31,10 @@ server_handle_command (server_t *server,
     switch (command->id) {
         case COMMAND_NO_OP: break;
         case COMMAND_SET_TOKEN:
-            server_handle_set_token (server,
-                                                    (command_set_token_t *)command);
+            server_handle_set_token (server, (command_set_token_t *)command);
             break;
+        defualt:
+            server_handle_command_autogen (server, command);
         }
 }
 
@@ -97,4 +103,4 @@ server_destroy (server_t *server)
     return true;
 }
 
-#include "server_dispatch_table_autogen.c"
+#include "server_autogen.c"
