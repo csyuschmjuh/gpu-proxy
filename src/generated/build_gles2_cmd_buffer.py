@@ -1903,9 +1903,9 @@ class TypeHandler(object):
       file.Write(comment)
     file.Write("typedef struct _command_%s {\n" % func.name.lower())
     file.Write("  command_t header;\n")
-    args = func.GetCmdArgs()
+    args = func.GetOriginalArgs()
     for arg in args:
-      file.Write("  %s %s;\n" % (arg.cmd_type, arg.name))
+      file.Write("  %s %s;\n" % (arg.type, arg.name))
     file.Write("} command_%s_t;\n" % (func.name.lower()))
     file.Write("\n")
 
@@ -1922,7 +1922,7 @@ class TypeHandler(object):
     subclass_command_type = "command_%s_t" % func.name.lower()
     file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
 
-    args = func.GetInitArgs()[:-1]
+    args = func.GetOriginalArgs()
     for arg in args:
       if arg.type.find("char*") != -1:
         file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
@@ -1935,21 +1935,13 @@ class TypeHandler(object):
     """Writes the declaration of the init function for a given function."""
     file.Write("void\n") 
 
-    name = "command_%s_init (" % func.name.lower()
-    indent = " " * len(name)
-    file.Write(name)
-
+    call = "command_%s_init (" % func.name.lower()
+    file.Write(call)
     file.Write("command_t *abstract_command")
 
-    args = func.GetInitArgs()[:-1]
-    if not len(args):
-        file.Write(")")
-        return
-
-    for arg in args:
-      file.Write(",\n%s%s %s" % (indent, arg.cmd_type, arg.name))
-
-    file.Write(")")
+    file.Write(func.MakeTypedOriginalArgString("", separator=",\n" + (" " * len(call)),
+                                               add_separator = True))
+    file.Write(")\n")
 
   def WriteEnumName(self, func, file):
     """Writes an enum name that matches the name of a function."""
@@ -2819,6 +2811,10 @@ class GLGenerator(object):
     file = CWriter(filename)
 
     file.Write("#include \"compiler_private.h\"\n\n")
+    file.Write("#include <EGL/egl.h>\n")
+    file.Write("#include <EGL/eglext.h>\n")
+    file.Write("#include <GLES2/gl2.h>\n")
+    file.Write("#include <GLES2/gl2ext.h>\n\n")
 
     for func in self.functions:
       if not self.FunctionDoesNotReturnAnything(func):
@@ -2871,10 +2867,42 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
-  def WriteBaseServerDispatchTableImplementation(self, filename):
-    """Writes the pass-through dispatch table implementation for the server-side"""
+  def WriteBaseServer(self, filename):
     file = CWriter(filename)
+    self.WriteBaseServerDispatchTableImplementation(file)
+    self.WriteBaseServerCommandHandler(file)
+    file.Close()
 
+  def WriteBaseServerCommandHandler(self, file):
+    file.Write("static void\n")
+    file.Write("server_handle_command_autogen (server_t* server,\n")
+    file.Write("                                           command_t* abstract_command)\n")
+    file.Write("{\n")
+    file.Write("    switch (abstract_command->id) {\n")
+
+    void_return_functions = filter(self.FunctionDoesNotReturnAnything, self.functions)
+    for func in void_return_functions:
+        file.Write("    case COMMAND_%s: {\n" % func.name.upper())
+        file.Write("       command_%s_t *command = (command_%s_t *)abstract_command;\n" % (func.name.lower(), func.name.lower()))
+
+        call = "        server->dispatch.%s (" % func.name
+        file.Write(call)
+        file.Write("server")
+        file.Write(func.MakeOriginalArgString(prefix = "command->", 
+                                              separator = ",\n" + " " * len(call),
+                                              add_separator = True))
+        file.Write(");\n")
+        file.Write("        break;\n")
+        file.Write("    }\n")
+
+    file.Write("    default:\n")
+    file.Write("        assert (0); /* Should not be reached. */\n")
+    file.Write("        break;\n")
+    file.Write("    }\n")
+    file.Write("}\n\n")
+
+  def WriteBaseServerDispatchTableImplementation(self, file):
+    """Writes the pass-through dispatch table implementation for the server-side"""
     for func in self.functions:
         file.Write("static %s (*real_%s) (" % (func.return_type, func.name))
         file.Write(func.MakeTypedOriginalArgString(""), split=False)
@@ -2999,7 +3027,7 @@ def main(argv):
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
   gen.WriteServerDispatchTable("server_dispatch_table.h")
-  gen.WriteBaseServerDispatchTableImplementation("server_dispatch_table_autogen.c")
+  gen.WriteBaseServer("server_autogen.c")
   gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:

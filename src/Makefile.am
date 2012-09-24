@@ -56,7 +56,6 @@ libGPUProcess_la_SOURCES += \
 	server/caching_server_gles.c
 
 nodist_libGPUProcess_la_SOURCES = \
-	generated/dispatch_gles2_private.h \
 	generated/gles2_api_autogen.c \
 	generated/command_autogen.c \
 	generated/command_autogen.h \
@@ -65,13 +64,15 @@ nodist_libGPUProcess_la_SOURCES = \
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
-generated/dispatch_gles2_private.h: generated/gles2_api_autogen.c
-generated/gles2_api_autogen.c: generated/command_autogen.c
-generated/command_autogen.c : generated/command_autogen.h
-generated/command_autogen.h : generated/command_id_autogen.h
-generated/command_id_autogen.h : generated/build_gles2_cmd_buffer.py \
-								 generated/egl_functions.txt \
-								 generated/gles2_functions.txt
+generated/command_autogen.c: generated/command_autogen.h
+generated/command_autogen.h: generated/command_id_autogen.h
+generated/command_id_autogen.h: generated/gles2_api_autogen.c
+generated/gles2_api_autogen.c: generated/server_autogen.c
+generated/server_autogen.c: generated/server_dispatch_table_autogen.c
+generated/server_dispatch_table_autogen.c: generated/server_dispatch_table.h
+generated/server_dispatch_table.h: generated/build_gles2_cmd_buffer.py \
+								   generated/egl_functions.txt \
+								   generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
 endif
 
