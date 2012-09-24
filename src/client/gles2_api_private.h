@@ -5,7 +5,6 @@
 
 #include "client.h"
 #include "command.h"
-#include "command_buffer.h"
 #include "types_private.h"
 #include "thread_private.h"
 #include "egl_states.h"
