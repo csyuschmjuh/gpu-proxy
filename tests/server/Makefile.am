@@ -12,6 +12,13 @@ gpuproxy_test_SOURCES = \
 	$(rootsrcdir)/src/server/caching_server_gles.c \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
+	$(rootsrcdir)/src/name_handler.h \
+	$(rootsrcdir)/src/name_handler.c \
+	$(rootsrcdir)/src/command.h \
+	$(rootsrcdir)/src/command.c \
+	$(rootsrcdir)/src/generated/command_autogen.c \
+	$(rootsrcdir)/src/client/client.h \
+	$(rootsrcdir)/src/client/client.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	test_egl.c \

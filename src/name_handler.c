@@ -15,7 +15,7 @@ name_handler_create () {
 
 void
 name_handler_destroy (name_handler_t *name_handler) {
-    g_free (name_handler);
+    free (name_handler);
 }
 
 GLuint *

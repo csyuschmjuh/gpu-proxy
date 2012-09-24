@@ -7,6 +7,8 @@
 #include "thread_private.h"
 #include <time.h>
 
+extern __thread bool on_client_thread;
+
 static void
 server_fill_dispatch_table (server_t *server);
 
@@ -77,6 +79,7 @@ server_new (buffer_t *buffer)
 {
     server_t *server = malloc (sizeof (server_t));
     server_init (server, buffer, true);
+    on_client_thread = false;
     return server;
 }
 
