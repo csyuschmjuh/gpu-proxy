@@ -23,8 +23,10 @@ typedef struct client {
     link_list_t *active_egl_state;
 
     buffer_t buffer;
-    server_t *server;
     unsigned int token;
+
+    mutex_t server_started_mutex;
+    thread_t server_thread;
 } client_t;
 
 private client_t *

@@ -28,14 +28,16 @@ struct _server {
 
 private void
 server_init (server_t *server,
-             buffer_t *buffer,
-             bool threaded);
+             buffer_t *buffer);
 
 private server_t *
 server_new (buffer_t *buffer);
 
 private bool
 server_destroy (server_t *server);
+
+private void
+server_start_work_loop (server_t *server);
 
 #ifdef __cplusplus
 }
