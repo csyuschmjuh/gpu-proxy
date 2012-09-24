@@ -4,7 +4,6 @@
 
 #include "command.h"
 #include "compiler_private.h"
-#include "server_dispatch_table.h"
 #include "egl_states.h"
 #include "ring_buffer.h"
 #include "thread_private.h"
@@ -16,14 +15,16 @@ extern "C" {
 #endif
 
 typedef struct _server server_t;
-typedef struct _server {
+#include "server_dispatch_table.h"
+
+struct _server {
     server_dispatch_table_t dispatch;
 
     mutex_t thread_started_mutex;
     buffer_t *buffer;
     thread_t thread;
     bool threaded;
-} server_t;
+};
 
 private void
 server_init (server_t *server,

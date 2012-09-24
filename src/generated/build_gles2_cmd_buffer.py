@@ -2862,7 +2862,6 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
     file.Write("typedef void (*FunctionPointerType)(void);\n")
-    file.Write("typedef struct _server server_t;\n")
     file.Write("typedef struct _server_dispatch_table {\n")
     for func in self.functions:
         file.Write("    %s (*%s) (server_t* server" % (func.return_type, func.name))
