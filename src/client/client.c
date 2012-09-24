@@ -4,6 +4,9 @@
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
+__thread bool on_client_thread
+    __attribute__(( tls_model ("initial-exec"))) = false;
+
 static client_t *
 client_new ()
 {
@@ -12,6 +15,8 @@ client_new ()
     client->name_handler = name_handler_create ();
     client->active_egl_state = NULL;
     client->token = 0;
+
+    on_client_thread = true;
 
     buffer_create (&client->buffer);
     client->server = server_new (&client->buffer);
