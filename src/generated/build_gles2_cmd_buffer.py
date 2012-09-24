@@ -2754,6 +2754,8 @@ class GLGenerator(object):
        func.name.endswith("QCOM") or \
        func.name.endswith("OES") or \
        func.name.endswith("NV") or \
+       func.name.endswith("APPLE") or \
+       func.name.endswith("ANGLE") or \
        func.name.endswith("IMG"):
         return False
     for arg in func.GetInitArgs()[:-1]:
