@@ -29,6 +29,9 @@ gpuproxy_test_LDFLAGS = \
 gpuproxy_test_CFLAGS = \
 	-g \
 	-DENABLE_TESTING=1 \
+	$(GLES_CFLAGS) \
+	$(EGL_CFLAGS) \
+	$(GL_CFLAGS) \
 	-I$(rootsrcdir)/src \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
