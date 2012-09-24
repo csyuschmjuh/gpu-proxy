@@ -25,7 +25,7 @@ libgl_handle ()
     static const char *default_libgl_name = "libGLESv2.so";
     const char *libgl = getenv ("GPUPROCESS_LIBGLES_PATH");
 
-    handle = dlopen (libgl ? libgl : default_libgl_name, RTLD_LAZY | RTLD_DEEPBIND);
+    handle = dlopen (libgl ? libgl : default_libgl_name, RTLD_LAZY);
     return handle;
 }
 
@@ -39,6 +39,6 @@ libegl_handle ()
     static const char *default_libegl_name = "libEGL.so";
     const char *libegl = getenv ("GPUPROCESS_LIBEGL_PATH");
 
-    handle = dlopen (libegl ? libegl : default_libegl_name, RTLD_LAZY | RTLD_DEEPBIND);
+    handle = dlopen (libegl ? libegl : default_libegl_name, RTLD_LAZY);
     return handle;
 }
