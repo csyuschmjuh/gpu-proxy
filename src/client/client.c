@@ -7,6 +7,28 @@ __thread client_t* thread_local_client
 __thread bool on_client_thread
     __attribute__(( tls_model ("initial-exec"))) = false;
 
+static void *
+start_server_thread_func (void *ptr)
+{
+    client_t *client = (client_t *)ptr;
+    server_t *server = server_new (&client->buffer);
+
+    mutex_unlock (client->server_started_mutex);
+    server_start_work_loop (server);
+
+    /* TODO: Clean up the server here. */
+}
+
+static void
+client_start_server (client_t *client)
+{
+    mutex_init (client->server_started_mutex);
+    mutex_lock (client->server_started_mutex);
+    pthread_create (&client->server_thread, NULL, start_server_thread_func, client);
+    mutex_lock (client->server_started_mutex);
+    mutex_destroy (client->server_started_mutex);
+}
+
 static client_t *
 client_new ()
 {
@@ -19,7 +41,7 @@ client_new ()
     on_client_thread = true;
 
     buffer_create (&client->buffer);
-    client->server = server_new (&client->buffer);
+    client_start_server (client);
 
     return client;
 }
@@ -27,8 +49,8 @@ client_new ()
 static bool
 client_destroy (client_t *client)
 {
-    server_destroy (client->server);
-    client->server = NULL;
+    /* TODO: Send a message to the server to signal a stop. */
+    pthread_join (client->server_thread, NULL);
 
     buffer_free (&client->buffer);
 

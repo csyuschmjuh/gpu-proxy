@@ -41,19 +41,9 @@ sleep_nanoseconds (int num_nanoseconds)
     nanosleep (&spec, NULL);
 }
 
-static void *
-server_thread_func (void *ptr)
+void
+server_start_work_loop (server_t *server)
 {
-    server_t *server = (server_t *)ptr;
-
-    server_fill_dispatch_table (server);
-
-    /* populate dispatch table, create global egl_states structures */
-    _server_init (server);
-
-    /* This signals the producer thread to start producing. */
-    mutex_unlock (server->thread_started_mutex);
-
     /* FIXME: initialize GL state and start consuming commands in the loop. */
     /* FIXME: add exit condition of the loop. */
     while (true) {
@@ -78,41 +68,30 @@ server_t *
 server_new (buffer_t *buffer)
 {
     server_t *server = malloc (sizeof (server_t));
-    server_init (server, buffer, true);
+
+    server_init (server, buffer);
     on_client_thread = false;
+
     return server;
 }
 
 void
 server_init (server_t *server,
-             buffer_t *buffer,
-             bool threaded)
+             buffer_t *buffer)
 {
-    server->threaded = threaded;
     server->buffer = buffer;
 
-    if (threaded) {
-        /* We use a mutex here to wait until the thread has started. */
-        mutex_init (server->thread_started_mutex);
-        mutex_lock (server->thread_started_mutex);
+    server_fill_dispatch_table (server);
 
-        pthread_create (&server->thread, NULL, server_thread_func, server);
-
-        mutex_lock (server->thread_started_mutex);
-        mutex_destroy (server->thread_started_mutex);
-    } else {
-         server_fill_dispatch_table (server);
-        _server_init (server);
-    }
+    /* Create global egl_states structures.
+     * TODO: Move this to the caching server constructor. */
+    _server_init (server);
 }
 
 bool
 server_destroy (server_t *server)
 {
     server->buffer = NULL;
-
-    if (server->threaded)
-        pthread_join (server->thread, NULL);
 
     free (server);
     return true;

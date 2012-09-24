@@ -6571,7 +6571,7 @@ caching_server_eglGetImageAttribSEC (server_t *server,
 void
 caching_server_init (caching_server_t *server, buffer_t *buffer)
 {
-    server_init (&server->super, buffer, false);
+    server_init (&server->super, buffer);
     server->super_dispatch = server->super.dispatch;
     server->active_state = NULL;
 
