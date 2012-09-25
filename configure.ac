@@ -33,8 +33,7 @@ AS_IF([test "x$enable_opengl" = "xyes"],
       GPUPROCESS_CFLAGS="$GL_CFLAGS"])
 
 AS_IF([test "x$enable_opengles" = "xyes"],
-    [PKG_CHECK_MODULES(EGL, [egl])
-     PKG_CHECK_MODULES(GLES, [glesv2])
+    [PKG_CHECK_MODULES(GLES, [glesv2])
      AC_DEFINE(HAS_GLES2, 1, [Define to 1 if you have GLES2 available])
      GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"])
 
