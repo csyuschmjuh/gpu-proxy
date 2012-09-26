@@ -38,9 +38,6 @@ typedef struct gl_server_states
 extern gl_server_states_t        server_states;
 
 private void
-_server_init ();
-
-private void
 caching_server_init (caching_server_t *server, buffer_t *buffer);
 
 private caching_server_t *

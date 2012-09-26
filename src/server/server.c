@@ -86,12 +86,7 @@ server_init (server_t *server,
              buffer_t *buffer)
 {
     server->buffer = buffer;
-
     server_fill_dispatch_table (server);
-
-    /* Create global egl_states structures.
-     * TODO: Move this to the caching server constructor. */
-    _server_init (server);
 }
 
 bool
