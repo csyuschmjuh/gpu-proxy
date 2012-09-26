@@ -55,8 +55,6 @@ client_new ()
     client->active_egl_state = NULL;
     client->token = 0;
 
-    on_client_thread = true;
-
     buffer_create (&client->buffer);
     client_start_server (client);
 
