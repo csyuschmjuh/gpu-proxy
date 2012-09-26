@@ -65,6 +65,9 @@ client_wait_for_token (unsigned int token);
 private bool
 client_flush (client_t *client);
 
+private bool
+on_client_thread ();
+
 #ifdef __cplusplus
 }
 #endif
