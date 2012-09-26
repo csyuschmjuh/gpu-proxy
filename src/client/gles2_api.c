@@ -158,9 +158,8 @@ GLuint glCreateShader (GLenum shaderType)
                                  shaderType);
     command_buffer_write_command (command);
 
-    client_t *client = client_get_thread_local ();
-    unsigned int token = client_insert_token(client);
-    command_buffer_wait_for_token (client, token);
+    unsigned int token = client_insert_token();
+    command_buffer_wait_for_token (token);
 
     return ((command_glcreateshader_t *)command)->result;
 }
