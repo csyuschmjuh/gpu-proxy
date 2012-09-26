@@ -2,6 +2,8 @@
 #ifndef GPUPROCESS_SERVER_H
 #define GPUPROCESS_SERVER_H
 
+typedef struct _server server_t;
+
 #include "command.h"
 #include "compiler_private.h"
 #include "egl_states.h"
@@ -15,7 +17,6 @@
 extern "C" {
 #endif
 
-typedef struct _server server_t;
 struct _server {
     server_dispatch_table_t dispatch;
 

@@ -1,5 +1,5 @@
 #include "config.h"
-#include "server_dispatch_table.h"
+#include "server.h"
 #include "types_private.h"
 #include "thread_private.h"
 #include <dlfcn.h>

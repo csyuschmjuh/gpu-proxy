@@ -12,7 +12,7 @@ mutex_static_init (client_thread_mutex);
 bool
 on_client_thread ()
 {
-    static initialized = false;
+    static bool initialized = false;
     if (initialized)
         return client_thread;
 
@@ -22,6 +22,8 @@ on_client_thread ()
     client_thread = true;
     initialized = true;
     mutex_unlock (client_thread_mutex);
+
+    return client_thread;
 }
 
 static void *
