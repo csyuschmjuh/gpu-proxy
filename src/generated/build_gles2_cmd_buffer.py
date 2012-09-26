@@ -2869,11 +2869,6 @@ class GLGenerator(object):
 
   def WriteBaseServer(self, filename):
     file = CWriter(filename)
-    self.WriteBaseServerDispatchTableImplementation(file)
-    self.WriteBaseServerCommandHandler(file)
-    file.Close()
-
-  def WriteBaseServerCommandHandler(self, file):
     file.Write("static void\n")
     file.Write("server_handle_command_autogen (server_t* server,\n")
     file.Write("                                           command_t* abstract_command)\n")
@@ -2901,8 +2896,12 @@ class GLGenerator(object):
     file.Write("    }\n")
     file.Write("}\n\n")
 
-  def WriteBaseServerDispatchTableImplementation(self, file):
+    file.Close()
+
+  def WriteBaseServerDispatchTableImplementation(self, filename):
     """Writes the pass-through dispatch table implementation for the server-side"""
+    file = CWriter(filename)
+
     for func in self.functions:
         file.Write("static %s (*real_%s) (" % (func.return_type, func.name))
         file.Write(func.MakeTypedOriginalArgString(""), split=False)
@@ -2927,9 +2926,8 @@ class GLGenerator(object):
         file.Write("}\n\n")
 
     file.Write("void\n")
-    file.Write("server_fill_dispatch_table (server_t *server)\n")
+    file.Write("server_dispatch_table_fill_base (server_dispatch_table_t *dispatch)\n")
     file.Write("{\n")
-    file.Write("    server_dispatch_table_t *dispatch = &server->dispatch;\n")
     file.Write("    FunctionPointerType *temp = NULL;\n")
 
     for func in self.functions:
@@ -3026,8 +3024,11 @@ def main(argv):
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_id_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
-  gen.WriteServerDispatchTable("server_dispatch_table.h")
   gen.WriteBaseServer("server_autogen.c")
+
+  gen.WriteServerDispatchTable("server_dispatch_table_autogen.h")
+  gen.WriteBaseServerDispatchTableImplementation("server_dispatch_table_autogen.c")
+
   gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:

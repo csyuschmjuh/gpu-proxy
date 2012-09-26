@@ -33,7 +33,6 @@ libGPUProcess_la_SOURCES = \
 	server/gl_server_private.h \
 	server/server.h \
 	server/server.c \
-	server/server_dispatch_table_helpers.h \
 	thread_private.h \
 	types_private.h
 
@@ -53,7 +52,9 @@ libGPUProcess_la_SOURCES += \
 	gles2_states.h \
 	gles2_utils.c \
 	gles2_utils.h \
-	server/caching_server_gles.c
+	server/caching_server_gles.c \
+	server/server_dispatch_table.c \
+	server/server_dispatch_table.h
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/gles2_api_autogen.c \

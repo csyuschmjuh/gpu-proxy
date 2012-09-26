@@ -3,16 +3,14 @@
 
 #include "caching_server_private.h"
 #include "ring_buffer.h"
-#include "server_dispatch_table_helpers.h"
+#include "server_dispatch_table.h"
 #include "thread_private.h"
 #include <time.h>
 
 extern __thread bool on_client_thread;
 
-/* These two methods are auto-generated into server_autogen.c
+/* This method is auto-generated into server_autogen.c 
  * and included at the end of this file. */
-static void
-server_fill_dispatch_table (server_t *server);
 static void
 server_handle_command_autogen (server_t *server,
                                command_t *command);
@@ -86,7 +84,7 @@ server_init (server_t *server,
              buffer_t *buffer)
 {
     server->buffer = buffer;
-    server_fill_dispatch_table (server);
+    server->dispatch = *server_dispatch_table_get_base();
 }
 
 bool
