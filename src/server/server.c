@@ -7,8 +7,6 @@
 #include "thread_private.h"
 #include <time.h>
 
-extern __thread bool on_client_thread;
-
 /* This method is auto-generated into server_autogen.c 
  * and included at the end of this file. */
 static void
@@ -83,10 +81,7 @@ server_t *
 server_new (buffer_t *buffer)
 {
     server_t *server = malloc (sizeof (server_t));
-
     server_init (server, buffer);
-    on_client_thread = false;
-
     return server;
 }
 

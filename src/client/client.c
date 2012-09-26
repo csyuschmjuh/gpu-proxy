@@ -4,8 +4,25 @@
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
-__thread bool on_client_thread
+__thread bool client_thread
     __attribute__(( tls_model ("initial-exec"))) = false;
+
+mutex_static_init (client_thread_mutex);
+
+bool
+on_client_thread ()
+{
+    static initialized = false;
+    if (initialized)
+        return client_thread;
+
+    mutex_lock (client_thread_mutex);
+    if (initialized)
+        return client_thread;
+    client_thread = true;
+    initialized = true;
+    mutex_unlock (client_thread_mutex);
+}
 
 static void *
 start_server_thread_func (void *ptr)
