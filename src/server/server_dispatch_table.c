@@ -1,3 +1,7 @@
+#include "config.h"
+#include "server_dispatch_table.h"
+#include "types_private.h"
+#include "thread_private.h"
 #include <dlfcn.h>
 #include <stdlib.h>
 
@@ -41,4 +45,25 @@ libegl_handle ()
 
     handle = dlopen (libegl ? libegl : default_libegl_name, RTLD_LAZY);
     return handle;
+}
+
+#include "server_dispatch_table_autogen.c"
+
+mutex_static_init (dispatch_table_mutex);
+
+server_dispatch_table_t *
+server_dispatch_table_get_base ()
+{
+    static server_dispatch_table_t dispatch;
+
+    mutex_lock (dispatch_table_mutex);
+    static bool table_initialized = false;
+
+    if (!table_initialized) {
+        server_dispatch_table_fill_base(&dispatch);
+        table_initialized = true;
+    }
+    mutex_unlock (dispatch_table_mutex);
+
+    return &dispatch;
 }

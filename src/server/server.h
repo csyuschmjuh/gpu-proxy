@@ -6,6 +6,7 @@
 #include "compiler_private.h"
 #include "egl_states.h"
 #include "ring_buffer.h"
+#include "server_dispatch_table.h"
 #include "thread_private.h"
 #include "types_private.h"
 #include <pthread.h>
@@ -15,8 +16,6 @@ extern "C" {
 #endif
 
 typedef struct _server server_t;
-#include "server_dispatch_table.h"
-
 struct _server {
     server_dispatch_table_t dispatch;
 
