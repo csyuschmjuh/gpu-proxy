@@ -220,23 +220,108 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
     }
 }
 
+static char *
+_create_data_array (vertex_attrib_t *attrib, int count)
+{
+    int i;
+    char *data = NULL;
+    int size = 0;
+
+    if (attrib->type == GL_BYTE || attrib->type == GL_UNSIGNED_BYTE)
+        size = sizeof (char);
+    else if (attrib->type == GL_SHORT || attrib->type == GL_UNSIGNED_SHORT)
+        size = sizeof (short);
+    else if (attrib->type == GL_FLOAT)
+        size = sizeof (float);
+    else if (attrib->type == GL_FIXED)
+        size = sizeof (int);
+
+    if (size == 0)
+        return NULL;
+
+    data = (char *)malloc (size * count * attrib->size);
+
+    for (i = 0; i < count; i++)
+        memcpy (data + i * attrib->size, attrib->pointer + attrib->stride * i, attrib->size * size);
+
+    return data;
+}
+
+void glDrawArrays (GLenum mode, GLint first, GLsizei count)
+{
+    egl_state_t *egl_state;
+    gles2_state_t *gles_state;
+    char *data;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
+    int i;
+
+    if (_is_error_state ())
+        return;
+
+    egl_state = client_get_active_egl_state();
+    gles_state = &egl_state->state;
+    attrib_list = &gles_state->vertex_attribs;
+    attribs = attrib_list->attribs;
+
+    /* if vertex array has binding buffer */
+    if (gles->vertex_array_binding || count <= 0) {
+	/* post command buffer */
+    }
+
+    for (i = 0; i < attrib_list->count; i++) {
+        if (! attribs[i].array_enabled) 
+	    continue;
+        else if (! attribs[i].array_buffer_binding) {
+            data = _create_data_array (&attribs[i], count);
+            if (! data)
+                continue;
+            attribs[i].data = data;
+    }
+
+    /* post command and no wait */
+}
+	
 void glDrawElements (GLenum mode, GLsizei count, GLenum type,
                      const GLvoid *indices)
 {
     GLvoid *indices_copy = NULL;
     egl_state_t *egl_state;
+    gles2_state_t *gles_state;
+    char *data;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
+    int i;
 
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
+    egl_state = client_get_active_egl_state();
+    gles_state = &egl_state->state;
+    attrib_list = &gles_state->vertex_attribs;
+    attribs = attrib_list->attribs;
+
+    /* if vertex array has binding buffer */
+    if (gles->vertex_array_binding || count <= 0) {
+	/* post command buffer */
+    }
+
+    for (i = 0; i < attrib_list->count; i++) {
+        if (! attribs[i].array_enabled) 
+	    continue;
+        else if (! attribs[i].array_buffer_binding) {
+            data = _create_data_array (&attribs[i], count);
+            if (! data)
+                continue;
+            attribs[i].data = data;
+    }
+
     /* XXX: copy indices.  According to spec, if type is neither 
      * GL_UNSIGNED_BYTE nor GL_UNSIGNED_SHORT, GL_INVALID_ENUM error
      * can be generated, we only support these two types, other types
      * will generate error even the underlying driver supports other
      * types.
      */
-    egl_state = client_get_active_egl_state();
     if (egl_state->state.element_array_buffer_binding == 0) {
         if (indices && count > 0 ) {
             if (type == GL_UNSIGNED_BYTE) {
@@ -251,6 +336,8 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
             }
         }
     }
+
+    /* post command and no wait */
 }
 
 void glGenBuffers (GLsizei n, GLuint *buffers)

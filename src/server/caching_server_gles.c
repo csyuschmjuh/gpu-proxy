@@ -1814,46 +1814,15 @@ caching_server_glEnableVertexAttribArray (server_t *server, GLuint index)
     }
 }
 
-/* FIXME: we should use pre-allocated buffer if possible */
- char *
-caching_server_glCreateDataArray (server_t *server, vertex_attrib_t *attrib, int count)
-{
-    int i;
-    char *data = NULL;
-    int size = 0;
-
-    if (attrib->type == GL_BYTE || attrib->type == GL_UNSIGNED_BYTE)
-        size = sizeof (char);
-    else if (attrib->type == GL_SHORT || attrib->type == GL_UNSIGNED_SHORT)
-        size = sizeof (short);
-    else if (attrib->type == GL_FLOAT)
-        size = sizeof (float);
-    else if (attrib->type == GL_FIXED)
-        size = sizeof (int);
-    
-    if (size == 0)
-        return NULL;
-    
-    data = (char *)malloc (size * count * attrib->size);
-
-    for (i = 0; i < count; i++)
-        memcpy (data + i * attrib->size, attrib->pointer + attrib->stride * i, attrib->size * size);
-
-    return data;
-}
-
 static void
 caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei count)
 {
     gles2_state_t *state;
     egl_state_t *egl_state;
-    char *data;
-    link_list_t *array_data = NULL;
-    link_list_t *array, *new_array_data;
  
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
-    int i, found_index = -1;
+    int i;
     int n = 0;
 
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDrawArrays) &&
@@ -1871,18 +1840,18 @@ caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei
                mode == GL_TRIANGLE_FAN   ||
                mode == GL_TRIANGLES)) {
             caching_server_glSetError (server, GL_INVALID_ENUM);
-            return;
+            goto FINISH;
         }
         else if (count < 0) {
             caching_server_glSetError (server, GL_INVALID_VALUE);
-            return;
+            goto FINISH;
         }
 
         /* if vertex array binding is not 0 */
         if (state->vertex_array_binding) {
             CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
             state->need_get_error = true;
-            return;
+            goto FINISH;
         } else
   
         for (i = 0; i < attrib_list->count; i++) {
@@ -1890,51 +1859,27 @@ caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei
                 continue;
             /* we need to create a separate buffer for it */
             else if (! attribs[i].array_buffer_binding) {
-                data = caching_server_glCreateDataArray (server, &attribs[i], count);
-                if (! data)
+                if (! attribs[i].data)
                     continue;
                 CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
                                               0,
-                                              data);
-                /* create a data list to host our newly created data */
-                if (array_data == NULL) {
-                    array_data = (link_list_t *)malloc (sizeof (link_list_t));
-                    array_data->prev = NULL;
-                    array_data->next = NULL;
-                    array_data->data = data;
-                }
-                else {
-                    array = array_data;
-                    while (array->next)
-                         array = array->next;
-
-                    new_array_data = (link_list_t *)malloc (sizeof (link_list_t));
-                    new_array_data->prev = array;
-                    new_array_data->next = NULL;
-                    array_data->next = new_array_data;
-                    new_array_data->data = data;
-                }
+                                              attribs[i].data);
             }
         }
 
         /* we need call DrawArrays */
         CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
+    }
 
-        /* remove data */
-        array = array_data;
-        while (array != NULL) {
-            new_array_data = array;
-            array = array->next;
-            free (new_array_data->data);
-            free (new_array_data);
+FINISH:
+    for (i = 0; i < attrib_list->count; i++) {
+        if (attribs[i].data) {
+            free (attribs[i].data);
+            attribs[i].data = NULL;
         }
-        /* should we need this?  The only error we could not catch is
-         * GL_INVALID_FRAMEBUFFER_OPERATION
-         */
-        //egl_state->state.need_get_error = true;
     }
 }
 
@@ -2029,59 +1974,34 @@ caching_server_glDrawElements (server_t *server, GLenum mode, GLsizei count, GLe
             CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, count, type, indices);
             state->need_get_error = true;
             goto FINISH;
-        } else
+        }
 
         for (i = 0; i < attrib_list->count; i++) {
             if (! attribs[i].array_enabled)
                 continue;
             /* we need to create a separate buffer for it */
             else if (! attribs[i].array_buffer_binding) {
-                data = caching_server_glCreateDataArray (server, &attribs[i], count);
-                if (! data)
+                if (! attribs[i].data)
                     continue;
                 CACHING_SERVER(server)->super_dispatch.glVertexAttribPointer (server, attribs[i].index,
                                               attribs[i].size,
                                               attribs[i].type,
                                               attribs[i].array_normalized,
                                               0,
-                                              data);
-                /* save data */
-                if (array_data == NULL) {
-                    array_data = (link_list_t *)malloc (sizeof (link_list_t));
-                    array_data->prev = NULL;
-                    array_data->next = NULL;
-                    array_data->data = data;
-                }
-                else {
-                    array = array_data;
-                    while (array->next)
-                        array = array->next;
-
-                    new_array_data = (link_list_t *)malloc (sizeof (link_list_t));
-                    new_array_data->prev = array;
-                    new_array_data->next = NULL;
-                    array_data->next = new_array_data;
-                    new_array_data->data = data;
-                }
+                                              attribs[i].data);
             }
         }
 
         CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, type, count, indices);
-
-        array = array_data;
-        while (array != NULL) {
-            new_array_data = array;
-            array = array->next;
-            free (new_array_data->data);
-            free (new_array_data);
-        }
-
-        /* should we need this?  The only error we could not catch is
-         * GL_INVALID_FRAMEBUFFER_OPERATION
-         */
-        //egl_state->state.need_get_error = true;
     }
 FINISH:
+    for (i = 0; i < attrib_list->count; i++) {
+        if (attribs[i].data) {
+            free (attribs[i].data);
+            attribs[i].data = NULL;
+        }
+    }
+    
     if (element_binding == false) {
         if (indices)
             free ((void *)indices);
