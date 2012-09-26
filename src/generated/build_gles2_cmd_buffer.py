@@ -2760,6 +2760,8 @@ class GLGenerator(object):
         return False
     if func.name.find("PixelStore") != -1:
         return False
+    if func.name.find("DrawArrays") != -1:
+        return False
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("*") != -1 and arg.type.find("char*") == -1:
             return False

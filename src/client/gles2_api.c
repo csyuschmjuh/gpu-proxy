@@ -265,23 +265,24 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
     attribs = attrib_list->attribs;
 
     /* if vertex array has binding buffer */
-    if (gles->vertex_array_binding || count <= 0) {
-	/* post command buffer */
+    if (gles_state->vertex_array_binding || count <= 0) {
+        /* post command buffer */
     }
 
     for (i = 0; i < attrib_list->count; i++) {
         if (! attribs[i].array_enabled) 
-	    continue;
+            continue;
         else if (! attribs[i].array_buffer_binding) {
             data = _create_data_array (&attribs[i], count);
             if (! data)
                 continue;
             attribs[i].data = data;
+        }
     }
 
     /* post command and no wait */
 }
-	
+
 void glDrawElements (GLenum mode, GLsizei count, GLenum type,
                      const GLvoid *indices)
 {
@@ -302,18 +303,19 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     attribs = attrib_list->attribs;
 
     /* if vertex array has binding buffer */
-    if (gles->vertex_array_binding || count <= 0) {
-	/* post command buffer */
+    if (gles_state->vertex_array_binding || count <= 0) {
+        /* post command buffer */
     }
 
     for (i = 0; i < attrib_list->count; i++) {
         if (! attribs[i].array_enabled) 
-	    continue;
+            continue;
         else if (! attribs[i].array_buffer_binding) {
             data = _create_data_array (&attribs[i], count);
             if (! data)
                 continue;
             attribs[i].data = data;
+        }
     }
 
     /* XXX: copy indices.  According to spec, if type is neither 
@@ -780,8 +782,7 @@ void glShaderSource (GLuint shader, GLsizei count,
                             (const void *)string[i],
                             sizeof (GLchar) * length[i]);
                 }
-            }
-            else {
+            } else {
                 str_len = strlen (string[i]);
                 string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * (str_len + 1));
                 memcpy ((void *)string_copy[i],
@@ -791,18 +792,20 @@ void glShaderSource (GLuint shader, GLsizei count,
             }
         }
     }
-     
+
     return;
 }
 
-static int 
-_gl_get_data_width (GLsizei width, GLenum format, GLenum type)
+static int
+_gl_get_data_width (GLsizei width,
+                    GLenum format,
+                    GLenum type)
 {
     int padding = 0;
     int mod = 0;
     int total_width = 0;
     int unpack_alignment = 4;
-    
+
     if (type == GL_UNSIGNED_BYTE) {
         if (format == GL_RGB) {
             mod = width * 3 % unpack_alignment;
