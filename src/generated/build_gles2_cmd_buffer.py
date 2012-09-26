@@ -2741,15 +2741,6 @@ class GLGenerator(object):
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
   def FunctionDoesNotReturnAnything(self, func):
-    if func.name.endswith("EXT") or \
-       func.name.endswith("AMD") or \
-       func.name.endswith("QCOM") or \
-       func.name.endswith("OES") or \
-       func.name.endswith("NV") or \
-       func.name.endswith("APPLE") or \
-       func.name.endswith("ANGLE") or \
-       func.name.endswith("IMG"):
-        return False
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("**") != -1:
             return False

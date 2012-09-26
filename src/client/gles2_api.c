@@ -1151,28 +1151,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 
 /* end of GLES2 core profile */
 
-#ifdef GL_OES_EGL_image
-GL_APICALL void GL_APIENTRY
-glEGLImageTargetTexture2DOES (GLenum target, GLeglImageOES image)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glEGLImageTargetRenderbufferStorageOES (GLenum target, GLeglImageOES image)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-#endif
-
 #ifdef GL_OES_get_program_binary
 /* total parameters size 5 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
@@ -1305,20 +1283,6 @@ glTexSubImage3DOES (GLenum target, GLint level,
     return;
 }
 
-/* total parameters 9 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glCopyTexSubImage3DOES (GLenum target, GLint level,
-                        GLint xoffset, GLint yoffset, GLint zoffset,
-                        GLint x, GLint y,
-                        GLint width, GLint height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 GL_APICALL void GL_APIENTRY
 glCompressedTexImage3DOES (GLenum target, GLint level,
                            GLenum internalformat,
@@ -1361,32 +1325,9 @@ glCompressedTexSubImage3DOES (GLenum target, GLint level,
         
     return;
 }
-
-/* total parameters 6 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture3DOES (GLenum target, GLenum attachment,
-                           GLenum textarget, GLuint texture,
-                           GLint level, GLint zoffset)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
 #endif
 
 #ifdef GL_OES_vertex_array_object
-GL_APICALL void GL_APIENTRY
-glBindVertexArrayOES (GLuint array)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
 GL_APICALL void GL_APIENTRY
 glDeleteVertexArraysOES (GLsizei n, const GLuint *arrays)
 {
@@ -1537,24 +1478,6 @@ glSelectPerfMonitorCountersAMD (GLuint monitor, GLboolean enable,
     return;
 }
 
-GL_APICALL void GL_APIENTRY
-glBeginPerfMonitorAMD (GLuint monitor)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-GL_APICALL void GL_APIENTRY
-glEndPerfMonitorAMD (GLuint monitor)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
 /* total parameters 5 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
 glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
@@ -1565,57 +1488,6 @@ glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
         return;
 
     /* XXX: post command and wait */
-}
-#endif
-
-#ifdef GL_ANGLE_framebuffer_blit
-/* total parameters 10 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glBlitFramebufferANGLE (GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
-                        GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1,
-                        GLbitfield mask, GLenum filter)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-#endif
-
-#ifdef GL_ANGLE_framebuffer_multisample
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleANGLE (GLenum target, GLsizei samples, 
-                                       GLenum internalformat, 
-                                       GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-#endif
-
-#ifdef GL_APPLE_framebuffer_multisample
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleAPPLE (GLenum target, GLsizei samples, 
-                                       GLenum internalformat, 
-                                       GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-GL_APICALL void GL_APIENTRY
-glResolveMultisampleFramebufferAPPLE (void) 
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
 }
 #endif
 
@@ -1655,58 +1527,6 @@ glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
 }
 #endif
 
-#ifdef GL_EXT_multisampled_render_to_texture
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleEXT (GLenum target, GLsizei samples,
-                                     GLenum internalformat,
-                                     GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-/* total parameters 6 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture2DMultisampleEXT (GLenum target, GLenum attachment,
-                                      GLenum textarget, GLuint texture,
-                                      GLint level, GLsizei samples)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-#endif
-
-#ifdef GL_IMG_multisampled_render_to_texture
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glRenderbufferStorageMultisampleIMG (GLenum target, GLsizei samples,
-                                     GLenum internalformat,
-                                     GLsizei width, GLsizei height)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-
-/* total parameter 6 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glFramebufferTexture2DMultisampleIMG (GLenum target, GLenum attachment,
-                                      GLenum textarget, GLuint texture,
-                                      GLint level, GLsizei samples)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-}
-#endif
-
 #ifdef GL_NV_fence
 GL_APICALL void GL_APIENTRY
 glDeleteFencesNV (GLsizei n, const GLuint *fences)
@@ -1734,30 +1554,6 @@ glGenFencesNV (GLsizei n, GLuint *fences)
     /* XXX: post command and wait */
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glIsFenceNV (GLuint fence)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GL_APICALL GLboolean GL_APIENTRY
-glTestFenceNV (GLuint fence)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 GL_APICALL void GL_APIENTRY
 glGetFenceivNV (GLuint fence, GLenum pname, int *params)
 {
@@ -1765,48 +1561,6 @@ glGetFenceivNV (GLuint fence, GLenum pname, int *params)
         return;
 
     /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glFinishFenceivNV (GLuint fence)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glSetFenceNV (GLuint fence, GLenum condition)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-#endif
-
-#ifdef GL_NV_coverage_sample
-GL_APICALL void GL_APIENTRY
-glCoverageMaskNV (GLboolean mask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glCoverageOperationNV (GLenum operation)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 #endif
@@ -1830,26 +1584,6 @@ glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize,
         return;
 
     /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glEnableDriverControlQCOM (GLuint driverControl)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glDisableDriverControlQCOM (GLuint driverControl)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 #endif
@@ -1906,16 +1640,6 @@ glExtGetTexLevelParameterivQCOM (GLuint texture, GLenum face, GLint level,
         return;
 
     /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtTexObjectStateOverrideiQCOM (GLenum target, GLenum pname, GLint param)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 
@@ -1986,30 +1710,6 @@ glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
         return;
 
     /* XXX: post command and wait */
-    return;
-}
-#endif
-
-#ifdef GL_QCOM_tiled_rendering
-/* total parameter 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glStartTilingQCOM (GLuint x, GLuint y, GLuint width, GLuint height,
-                   GLbitfield preserveMask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glEndTilingQCOM (GLbitfield preserveMask)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
     return;
 }
 #endif
