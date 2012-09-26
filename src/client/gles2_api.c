@@ -137,7 +137,7 @@ void glCompressedTexSubImage2D (GLenum target, GLint level,
 GLuint glCreateProgram (void)
 {
     GLuint result = 0;
-    
+
     if (_is_error_state ())
         return result;
 
@@ -149,12 +149,20 @@ GLuint glCreateProgram (void)
 GLuint glCreateShader (GLenum shaderType)
 {
     GLuint result = 0;
-    
+
     if (_is_error_state ())
         return result;
 
-    /* XXX: post command and wait */
-    return result;
+    command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
+    command_glcreateshader_init (command,
+                                 shaderType);
+    command_buffer_write_command (command);
+
+    client_t *client = client_get_thread_local ();
+    unsigned int token = client_insert_token(client);
+    command_buffer_wait_for_token (client, token);
+
+    return ((command_glcreateshader_t *)command)->result;
 }
 
 
