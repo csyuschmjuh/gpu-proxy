@@ -36,6 +36,7 @@ start_server_thread_func (void *ptr)
     server_start_work_loop (server);
 
     /* TODO: Clean up the server here. */
+    return NULL;
 }
 
 static void
@@ -73,6 +74,8 @@ client_destroy (client_t *client)
 
     name_handler_destroy (client->name_handler);
     free (client);
+
+    return true;
 }
 
 client_t *

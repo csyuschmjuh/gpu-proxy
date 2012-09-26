@@ -40,7 +40,7 @@ server_handle_command (server_t *server,
         case COMMAND_GLCREATESHADER:
             server_handle_glcreateshader (server, (command_glcreateshader_t *)command);
             break;
-        defualt:
+        default:
             server_handle_command_autogen (server, command);
         }
 }
