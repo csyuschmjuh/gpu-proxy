@@ -289,18 +289,6 @@ _server_get_state (EGLDisplay dpy,
     return new_list;
 }
 
-void 
-_server_init (server_t *server)
-{
-    mutex_lock (server_states_mutex);
-    if (server_states.initialized == false) {
-        server_states.num_contexts = 0;
-        server_states.states = NULL;
-        server_states.initialized = true;
-    }
-    mutex_unlock (server_states_mutex);
-}
-
 /* the server first calls eglTerminate (display),
  * then look over the cached states
  */
@@ -6574,6 +6562,14 @@ caching_server_init (caching_server_t *server, buffer_t *buffer)
     server_init (&server->super, buffer);
     server->super_dispatch = server->super.dispatch;
     server->active_state = NULL;
+
+    mutex_lock (server_states_mutex);
+    if (server_states.initialized == false) {
+        server_states.num_contexts = 0;
+        server_states.states = NULL;
+        server_states.initialized = true;
+    }
+    mutex_unlock (server_states_mutex);
 
 #include "caching_server_dispatch_autogen.c"
 }
