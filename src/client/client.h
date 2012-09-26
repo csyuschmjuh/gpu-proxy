@@ -57,11 +57,11 @@ private bool
 client_write_command (command_t *command);
 
 private unsigned int
-client_insert_token (client_t *client);
+client_insert_token ();
 
 private bool
-client_wait_for_token (client_t *client,
-                       unsigned int token);
+client_wait_for_token (unsigned int token);
+
 private bool
 client_flush (client_t *client);
 

@@ -147,11 +147,11 @@ client_get_space_for_command (command_id_t command_id)
 }
 
 unsigned int
-client_insert_token (client_t *client)
+client_insert_token ()
 {
     command_t *set_token_command = client_get_space_for_command (COMMAND_SET_TOKEN);
     /* FIXME: Check max size and wrap. */
-    unsigned int token = client->token++;
+    unsigned int token = client_get_thread_local ()->token++;
 
     assert (set_token_command != NULL);
 
@@ -163,9 +163,10 @@ client_insert_token (client_t *client)
 }
 
 bool
-client_wait_for_token (client_t *client,
-                       unsigned int token)
+client_wait_for_token (unsigned int token)
 {
+    client_t *client = client_get_thread_local ();
+
     while (client->buffer.last_token < token) {
         /* FIXME: Do not wait forever and force flush. */
     }
