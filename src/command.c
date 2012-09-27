@@ -7,17 +7,6 @@ command_set_token_init (command_set_token_t *command, unsigned int token)
     command->token = token;
 }
 
-void
-command_glcreateshader_init (command_t *abstract_command,
-                             GLenum shader_type)
-{
-    command_glcreateshader_t *command =
-        (command_glcreateshader_t *) abstract_command;
-
-    command->shader_type = shader_type;
-    command->result = 0;
-}
-
 size_t
 command_get_size (command_id_t command_id)
 {

@@ -134,38 +134,6 @@ void glCompressedTexSubImage2D (GLenum target, GLint level,
     }
 }
 
-/* This is a sync call */
-GLuint glCreateProgram (void)
-{
-    GLuint result = 0;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-/* sync call */
-GLuint glCreateShader (GLenum shaderType)
-{
-    GLuint result = 0;
-
-    if (_is_error_state ())
-        return result;
-
-    command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
-    command_glcreateshader_init (command,
-                                 shaderType);
-    client_write_command (command);
-
-    unsigned int token = client_insert_token();
-    client_wait_for_token (token);
-
-    return ((command_glcreateshader_t *)command)->result;
-}
-
-
 void glDeleteBuffers (GLsizei n, const GLuint *buffers)
 {
     if (_is_error_state ())
@@ -433,16 +401,6 @@ void glGetAttachedShaders (GLuint program, GLsizei maxCount,
     /* XXX: post command and wait */
 }
 
-GLint glGetAttribLocation (GLuint program, const GLchar *name)
-{
-    GLint result = -1;
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 void glGetBufferParameteriv (GLenum target, GLenum value, GLint *data)
 {
     if (_is_error_state ())
@@ -588,17 +546,6 @@ void glGetUniformfv (GLuint program, GLint location, GLfloat *params)
 
     /* XXX: post command and wait */
     return;
-}
-
-GLint glGetUniformLocation (GLuint program, const GLchar *name)
-{
-    GLint result = -1;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
 }
 
 void glGetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)

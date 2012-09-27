@@ -1906,6 +1906,8 @@ class TypeHandler(object):
     args = func.GetOriginalArgs()
     for arg in args:
       file.Write("  %s %s;\n" % (arg.type, arg.name))
+    if func.return_type != "void":
+      file.Write("  %s result;\n" % (func.return_type))
     file.Write("} command_%s_t;\n" % (func.name.lower()))
     file.Write("\n")
 
@@ -1929,6 +1931,9 @@ class TypeHandler(object):
             file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
           else:
             file.Write("    command->%s = %s;\n" % (arg.name, arg.name))
+
+        if func.return_type != "void":
+          file.Write("    command->result = 0;\n")
 
     file.Write("}\n\n")
 
@@ -2741,14 +2746,16 @@ class GLGenerator(object):
     self.ParseAPIFile("gles2_functions.txt", self._gles2_function_re)
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
-  def FunctionDoesNotReturnAnything(self, func):
+  def FunctionReturnsSimpleValues(self, func):
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("**") != -1:
             return False
-    return (not func.name.startswith("Get")) and func.return_type == "void"
+    return (func.return_type == "void" or
+            func.return_type == "GLuint" or
+            func.return_type == "GLint")
 
   def IsSimpleFunction(self, func):
-    if not self.FunctionDoesNotReturnAnything(func):
+    if not self.FunctionReturnsSimpleValues(func):
         return False
     if func.name.find("PixelStore") != -1:
         return False
@@ -2774,18 +2781,21 @@ class GLGenerator(object):
     file = CWriter(filename)
     file.Write('#include "gles2_api_private.h"\n')
 
-    for func in self.functions: 
+    for func in self.functions:
         header = self.GetSimpleFunctionSignature(func)
         if not header:
             continue
         file.Write(header + "\n")
         file.Write("{\n")
         file.Write("    if (_is_error_state ())\n")
-        file.Write("        return;\n\n")
-        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);" %
+        if func.return_type == "void":
+          file.Write("        return;\n\n")
+        else:
+          file.Write("        return 0;\n\n")
+        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" %
                    func.name.upper())
 
-        header = "     command_%s_init (" % func.name.lower()
+        header = "    command_%s_init (" % func.name.lower()
         indent = " " * len(header)
         file.Write(header + "command")
 
@@ -2796,6 +2806,11 @@ class GLGenerator(object):
         file.Write(");\n")
 
         file.Write("    client_write_command (command);\n");
+
+        if func.return_type != "void":
+          file.Write("\n    unsigned int token = client_insert_token();\n")
+          file.Write("    client_wait_for_token (token);\n")
+          file.Write("\n    return ((command_%s_t *)command)->result;\n\n" % func.name.lower())
 
         file.Write("}\n\n")
     file.Close()
@@ -2811,13 +2826,13 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
     for func in self.functions:
-      if not self.FunctionDoesNotReturnAnything(func):
+      if not self.FunctionReturnsSimpleValues(func):
         continue
       func.WriteStruct(file)
     file.Write("\n")
 
     for func in self.functions:
-      if not self.FunctionDoesNotReturnAnything(func):
+      if not self.FunctionReturnsSimpleValues(func):
         continue
       file.Write("private ");
       func.WriteInitSignature(file)
@@ -2832,7 +2847,7 @@ class GLGenerator(object):
     file.Write("#include \"command.h\"\n")
     file.Write("#include <string.h>\n\n")
 
-    void_return_functions = filter(self.FunctionDoesNotReturnAnything, self.functions)
+    void_return_functions = filter(self.FunctionReturnsSimpleValues, self.functions)
 
     for func in void_return_functions:
       func.WriteCommandInit(file)
@@ -2869,14 +2884,17 @@ class GLGenerator(object):
     file.Write("{\n")
     file.Write("    switch (abstract_command->id) {\n")
 
-    void_return_functions = filter(self.FunctionDoesNotReturnAnything, self.functions)
+    void_return_functions = filter(self.FunctionReturnsSimpleValues, self.functions)
     for func in void_return_functions:
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
 
-        if len(func.GetOriginalArgs()):
+        if len(func.GetOriginalArgs()) or func.return_type != "void":
             file.Write("        command_%s_t *command = (command_%s_t *)abstract_command;\n" % (func.name.lower(), func.name.lower()))
 
-        call = "        server->dispatch.%s (" % func.name
+        if func.return_type != "void":
+          call = "        command->result = server->dispatch.%s (" % func.name
+        else:
+          call = "        server->dispatch.%s (" % func.name
         file.Write(call)
         file.Write("server")
         file.Write(func.MakeOriginalArgString(prefix = "command->", 
