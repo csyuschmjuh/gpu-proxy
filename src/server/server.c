@@ -21,14 +21,6 @@ server_handle_set_token (server_t *server,
 }
 
 static void
-server_handle_glcreateshader (server_t *server,
-                              command_glcreateshader_t *command)
-{
-    command->result = server->dispatch.glCreateShader (server,
-                                                       command->shader_type);
-}
-
-static void
 server_handle_command (server_t *server,
                        command_t *command)
 {
@@ -36,9 +28,6 @@ server_handle_command (server_t *server,
         case COMMAND_NO_OP: break;
         case COMMAND_SET_TOKEN:
             server_handle_set_token (server, (command_set_token_t *)command);
-            break;
-        case COMMAND_GLCREATESHADER:
-            server_handle_glcreateshader (server, (command_glcreateshader_t *)command);
             break;
         default:
             server_handle_command_autogen (server, command);
