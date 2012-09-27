@@ -30,6 +30,7 @@
 
 /* This file implements gles2 functions. */
 #include "gles2_api_private.h"
+#include "gles2_utils.h"
 
 bool
 _is_error_state (void)
@@ -156,10 +157,10 @@ GLuint glCreateShader (GLenum shaderType)
     command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
     command_glcreateshader_init (command,
                                  shaderType);
-    command_buffer_write_command (command);
+    client_write_command (command);
 
     unsigned int token = client_insert_token();
-    command_buffer_wait_for_token (token);
+    client_wait_for_token (token);
 
     return ((command_glcreateshader_t *)command)->result;
 }
@@ -167,17 +168,8 @@ GLuint glCreateShader (GLenum shaderType)
 
 void glDeleteBuffers (GLsizei n, const GLuint *buffers)
 {
-    GLuint *buffers_copy = NULL;
-
     if (_is_error_state ())
         return;
-
-    /* XXX: post command and no wait */
-    /* copy data in buffers */
-    if (buffers && n > 0) {
-        buffers_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)buffers, (const void *)buffers, sizeof (GLuint) * n);
-    }
 }
 
 void glDeleteFramebuffers (GLsizei n, const GLuint *framebuffers)
@@ -866,8 +858,8 @@ void glTexImage2D (GLenum target,
 
     command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
     if (!source_data) {
-        command_teximage2d_init (command, target, level, internalformat, width,
-                                 height, border, format, type, NULL);
+        command_glteximage2d_init (command, target, level, internalformat, width,
+                                   height, border, format, type, NULL);
         client_write_command (command);
         return;
     }
@@ -889,8 +881,8 @@ void glTexImage2D (GLenum target,
     copy_rect_to_buffer (source_data, dest_data, height, unpadded_row_size,
                          padded_row_size, false /* flip y */, padded_row_size);
 
-    command_teximage2d_init (command, target, level, internalformat, width,
-                             height, border, format, type, dest_data);
+    command_glteximage2d_init (command, target, level, internalformat, width,
+                               height, border, format, type, dest_data);
     client_write_command (command);
 }
 
@@ -937,8 +929,8 @@ void glTexSubImage2D (GLenum target,
 
 
     command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
-    command_texsubimage2d_init (command, target, level, xoffset, yoffset,
-                                width, height, format, type, dest_data);
+    command_gltexsubimage2d_init (command, target, level, xoffset, yoffset,
+                                  width, height, format, type, dest_data);
 
     client_write_command ( command);
 

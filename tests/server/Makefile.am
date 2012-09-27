@@ -44,5 +44,5 @@ gpuproxy_test_CFLAGS = \
 	-I$(rootsrcdir)/src \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
-	-Wunused-function \
+	-Wall \
 	-Werror

@@ -25,9 +25,6 @@ ChooseWindowVisual(Display *dpy, EGLDisplay egl_dpy, EGLConfig cfg)
 {
     XVisualInfo template, *vinfo;
     EGLint id;
-    unsigned long mask;
-    int screen = DefaultScreen(dpy);
-    Window root_win = RootWindow(dpy, screen);
     int count;
 
     if (! server->dispatch.eglGetConfigAttrib (server, egl_dpy,
@@ -110,7 +107,6 @@ setup (void)
     EGLConfig config;
     EGLint old_config_list_length;
     EGLConfig *config_list = NULL;
-    EGLint get_error_result;
     result = server->dispatch.eglGetConfigs (server, egl_dpy, NULL, 0, &config_list_length);
     config_list = (EGLConfig *) malloc (config_list_length * sizeof (EGLConfig));
     old_config_list_length = config_list_length;
@@ -120,14 +116,6 @@ setup (void)
 
     static const EGLint ctx_attribs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
-    static const EGLint pbuffer_attribs[] = {
-        EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_RED_SIZE, 1,
-        EGL_GREEN_SIZE, 1,
-        EGL_BLUE_SIZE, 1,
         EGL_NONE
     };
     static const EGLint window_attribs[] = {
@@ -255,14 +243,14 @@ GPUPROCESS_START_TEST
 (test_gl_initloaddraw)
 {
     UserData *userData = malloc(sizeof(UserData));
-    GLbyte vShaderStr[] =
+    const char *vShaderStr =
         "attribute vec4 vPosition;    \n"
         "void main()                  \n"
         "{                            \n"
         "   gl_Position = vPosition;  \n"
         "}                            \n";
 
-    GLbyte fShaderStr[] =
+    const char *fShaderStr =
         "precision mediump float;\n"\
         "void main()                                  \n"
         "{                                            \n"

@@ -5,7 +5,7 @@ libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
-	-Wunused-function \
+	-Wall \
 	-Werror \
 	-Igenerated \
 	-Iclient \

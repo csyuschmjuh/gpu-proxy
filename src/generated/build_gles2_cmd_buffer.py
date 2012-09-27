@@ -1919,15 +1919,16 @@ class TypeHandler(object):
     self.WriteInitSignature(func, file)
     file.Write("\n{\n")
 
-    subclass_command_type = "command_%s_t" % func.name.lower()
-    file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
-
     args = func.GetOriginalArgs()
-    for arg in args:
-      if arg.type.find("char*") != -1:
-        file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
-      else:
-        file.Write("    command->%s = %s;\n" % (arg.name, arg.name))
+    if len(args):
+        subclass_command_type = "command_%s_t" % func.name.lower()
+        file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
+
+        for arg in args:
+          if arg.type.find("char*") != -1:
+            file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
+          else:
+            file.Write("    command->%s = %s;\n" % (arg.name, arg.name))
 
     file.Write("}\n\n")
 
@@ -2871,7 +2872,9 @@ class GLGenerator(object):
     void_return_functions = filter(self.FunctionDoesNotReturnAnything, self.functions)
     for func in void_return_functions:
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
-        file.Write("       command_%s_t *command = (command_%s_t *)abstract_command;\n" % (func.name.lower(), func.name.lower()))
+
+        if len(func.GetOriginalArgs()):
+            file.Write("        command_%s_t *command = (command_%s_t *)abstract_command;\n" % (func.name.lower(), func.name.lower()))
 
         call = "        server->dispatch.%s (" % func.name
         file.Write(call)
