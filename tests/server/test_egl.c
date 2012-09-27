@@ -55,8 +55,6 @@ GPUPROCESS_END_TEST
 GPUPROCESS_START_TEST
 (test_egl_srv_terminate)
 {
-    EGLint major;
-    EGLint minor;
     EGLBoolean result;
     EGLint get_error_result;
 
@@ -117,7 +115,6 @@ GPUPROCESS_START_TEST
 {
     EGLBoolean result;
     EGLint config_list_length;
-    EGLint old_config_list_length;
     EGLConfig config;
     EGLint get_error_result;
     EGLContext pbuffer_context, window_context;

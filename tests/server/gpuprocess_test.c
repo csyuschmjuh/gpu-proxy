@@ -140,7 +140,6 @@ void
 gpuprocess_suite_destroy (gpuprocess_suite_t *suite)
 {
     gpuprocess_node_t *suite_node;
-    gpuprocess_node_t *testcase_node;
 
     for (suite_node = suite->testcases->head; suite_node; suite_node = suite_node->next) {
          gpuprocess_testcase_t *testcase = suite_node->data;

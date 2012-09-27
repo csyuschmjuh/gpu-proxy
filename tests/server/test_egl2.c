@@ -51,9 +51,6 @@ ChooseWindowVisual(Display *dpy, EGLDisplay egl_dpy, EGLConfig cfg)
 {
     XVisualInfo template, *vinfo;
     EGLint id;
-    unsigned long mask;
-    int screen = DefaultScreen(dpy);
-    Window root_win = RootWindow(dpy, screen);
     int count;
 
     if (! server->dispatch.eglGetConfigAttrib (server, egl_dpy,
@@ -76,12 +73,12 @@ static Window
 CreateWindow(Display *dpy, XVisualInfo *visinfo,
              int width, int height, const char *name)
 {
-    int screen = DefaultScreen(dpy);
     Window win;
     XSetWindowAttributes attr;
     unsigned long mask;
     Window root;
 
+    int screen = DefaultScreen(dpy);
     root = RootWindow(dpy, screen);
 
     /* window attributes */
@@ -136,11 +133,6 @@ setup (void)
     static const EGLint pbuffer_attribs[] = {
         EGL_WIDTH, 1,
         EGL_HEIGHT, 1,
-        EGL_NONE
-    };
-
-    static config_attribs[] = {
-        EGL_CONFIG_ID, 0,
         EGL_NONE
     };
 
@@ -328,10 +320,7 @@ GPUPROCESS_START_TEST
 (test_egl_initialize)
 {
     EGLBoolean result;
-    EGLint value;
     EGLSurface current_surface;
-    EGLContext current_context;
-    EGLDisplay current_display;
 
     result = server->dispatch.eglMakeCurrent (server,
                                               first_test_info.egl_dpy,
