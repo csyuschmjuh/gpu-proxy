@@ -11,13 +11,22 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/client/client.h \
 	$(rootsrcdir)/src/client/client.c \
+	$(rootsrcdir)/src/client/egl_api.c \
+	$(rootsrcdir)/src/client/gles2_api.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
+	$(rootsrcdir)/src/generated/gles2_api_autogen.c \
+	$(rootsrcdir)/src/gles2_utils.c \
+	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/server_dispatch_table.c \
 	$(rootsrcdir)/src/server/server_dispatch_table.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
+	$(rootsrcdir)/tests/server/gpuprocess_test.c \
+	$(rootsrcdir)/tests/server/gpuprocess_test.h \
+	basic_test.c \
+	basic_test.h \
 	main.c
 
 client_test_LDFLAGS = \
@@ -28,6 +37,7 @@ client_test_LDFLAGS = \
 client_test_CFLAGS = \
 	-g \
 	-DENABLE_TESTING=1 \
+	-rdynamic \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
@@ -35,5 +45,6 @@ client_test_CFLAGS = \
 	-I$(rootsrcdir)/src/client \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
+	-I$(rootsrcdir)/tests/server \
 	-Wall \
 	-Werror

@@ -3,11 +3,15 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define GPUPROCESS_START_TEST(_testname) \
         static void _testname (void)
 
 #define GPUPROCESS_END_TEST
+
+#define GPUPROCESS_ASSERT(expr) \
+    _gpuprocess_assert (expr, #expr, __FILE__, __LINE__)
 
 #define GPUPROCESS_FAIL_IF(expr, ...) \
         _gpuprocess_fail_if (expr, __FILE__, __LINE__, \
@@ -51,7 +55,14 @@ gpuprocess_suite_add_fixture (gpuprocess_suite_t *suite,
                               gpuprocess_func_t teardown);
 
 void
+_gpuprocess_assert (bool result,
+                    const char *expression,
+                    const char *file,
+                    int line);
+
+void
 _gpuprocess_fail_if (int result,
-                     const char *file, int line,
+                     const char *file,
+                     int line,
                      const char *format, ...);
 #endif
