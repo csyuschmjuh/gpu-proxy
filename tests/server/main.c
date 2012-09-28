@@ -18,14 +18,13 @@ int main(int argc, char *argv[])
     gpuprocess_suite_t *suite_egl_make_current;
     gpuprocess_suite_t *suite_gles;
     char *test_name = "gles";
-    int c;
 
     while (1) {
         int option_index = 0;
         static struct option long_options[] = {
             {"test", required_argument, 0, 't'}
         };
-        c = getopt_long(argc, argv, "t:h",
+        int c = getopt_long(argc, argv, "t:h",
                         long_options, &option_index);
         if (c == -1)
             break;
