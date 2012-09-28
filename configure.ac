@@ -43,6 +43,8 @@ AM_CONDITIONAL(HAS_GLES2, test "x$enable_opengles" = "xyes")
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-tests/server/Makefile])
+tests/server/Makefile
+tests/client/Makefile
+])
 
 AC_OUTPUT

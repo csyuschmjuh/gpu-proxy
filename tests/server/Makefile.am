@@ -1,10 +1,10 @@
 noinst_PROGRAMS = \
-	gpuproxy_test
+	server_test
 
 #FIXME: remove this workaround
 rootsrcdir=../..
 
-gpuproxy_test_SOURCES = \
+server_test_SOURCES = \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
@@ -30,12 +30,12 @@ gpuproxy_test_SOURCES = \
 	test_gles.c \
 	main.c
 
-gpuproxy_test_LDFLAGS = \
+server_test_LDFLAGS = \
 	-lX11 \
 	-ldl \
 	-lpthread
 
-gpuproxy_test_CFLAGS = \
+server_test_CFLAGS = \
 	-g \
 	-DENABLE_TESTING=1 \
 	$(GLES_CFLAGS) \

@@ -16,7 +16,11 @@ stamp-h1
 tests/server/.deps
 tests/server/Makefile
 tests/server/Makefile.in
-tests/server/gpuproxy_test
+tests/server/server_test
+tests/client/.deps
+tests/client/Makefile
+tests/client/Makefile.in
+tests/client/client_test
 Makefile
 Makefile.in
 *.lo
