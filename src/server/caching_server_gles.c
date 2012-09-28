@@ -5551,7 +5551,7 @@ caching_server_eglTerminate (server_t *server,
 
         if (result == EGL_TRUE) {
             /* XXX: remove srv structure */
-            _server_terminate (display, CACHING_SERVER(server)->active_state);
+            _server_terminate (server, display);
         }
     }
 
