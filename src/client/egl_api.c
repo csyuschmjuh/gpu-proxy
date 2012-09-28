@@ -384,6 +384,19 @@ eglClientWaitSyncKHR (EGLDisplay dpy,
     return result;
 }
 
+EGLAPI EGLBoolean EGLAPIENTRY
+eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
+                     EGLint attribute, EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! client_get_thread_local ())
+        return result;
+
+    /* XXX: post eglGetSyncAttribKHR and wait */
+    return result;
+}
+
 EGLSyncNV
 eglCreateFenceSyncNV (EGLDisplay dpy,
                       EGLenum condition,
@@ -491,6 +504,21 @@ eglGetImageAttribSEC (EGLDisplay dpy,
                       EGLImageKHR image,
                       EGLint attribute,
                       EGLint *value)
+{
+    EGLBoolean result = EGL_FALSE;
+
+    if (! client_get_thread_local ())
+        return result;
+
+    /* XXX: post eglgetImageAttribSEC and wait */
+    return result;
+}
+
+EGLBoolean
+eglQuerySurfacePointerANGLE (EGLDisplay dpy,
+                             EGLSurface surface,
+                             EGLint attribute,
+                             void **value)
 {
     EGLBoolean result = EGL_FALSE;
 
