@@ -1123,16 +1123,6 @@ glProgramBinaryOES (GLuint program, GLenum binaryFormat,
 #endif
 
 #ifdef GL_OES_mapbuffer
-GL_APICALL void* GL_APIENTRY glMapBufferOES (GLenum target, GLenum access)
-{
-    void *result = NULL;
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 GL_APICALL GLboolean GL_APIENTRY
 glUnmapBufferOES (GLenum target)
 {

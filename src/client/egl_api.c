@@ -37,22 +37,10 @@ eglGetError (void)
     return error;
 }
 
-/* This is the first call to egl system, we initialize dispatch here,
- * we also initialize gl client states
- */
-EGLAPI EGLDisplay EGLAPIENTRY
-eglGetDisplay (EGLNativeDisplayType display_id)
-{
-    EGLDisplay display = EGL_NO_DISPLAY;
-
-    client_get_thread_local ();
-
-    /* XXX: post eglGetDisplay and wait */
-    return display;
-}
-
 EGLAPI EGLBoolean EGLAPIENTRY
-eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
+eglInitialize (EGLDisplay dpy,
+               EGLint *major,
+               EGLint *minor)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -96,8 +84,10 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
-               EGLint config_size, EGLint *num_config)
+eglGetConfigs (EGLDisplay dpy,
+               EGLConfig *configs,
+               EGLint config_size,
+               EGLint *num_config)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -109,8 +99,10 @@ eglGetConfigs (EGLDisplay dpy, EGLConfig *configs,
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
-                 EGLConfig *configs, EGLint config_size,
+eglChooseConfig (EGLDisplay dpy,
+                 const EGLint *attrib_list,
+                 EGLConfig *configs,
+                 EGLint config_size,
                  EGLint *num_config)
 {
     EGLBoolean result = EGL_FALSE;
@@ -123,7 +115,9 @@ eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
+eglGetConfigAttrib (EGLDisplay dpy,
+                    EGLConfig config,
+                    EGLint attribute,
                     EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
@@ -136,7 +130,8 @@ eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute,
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
-eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
+eglCreateWindowSurface (EGLDisplay dpy,
+                        EGLConfig config,
                         EGLNativeWindowType win,
                         const EGLint *attrib_list)
 {
@@ -150,7 +145,8 @@ eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config,
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
-eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
+eglCreatePbufferSurface (EGLDisplay dpy,
+                         EGLConfig config,
                          const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
@@ -163,7 +159,8 @@ eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 }
 
 EGLAPI EGLSurface EGLAPIENTRY
-eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
+eglCreatePixmapSurface (EGLDisplay dpy,
+                        EGLConfig config,
                         EGLNativePixmapType pixmap,
                         const EGLint *attrib_list)
 {
@@ -177,20 +174,10 @@ eglCreatePixmapSurface (EGLDisplay dpy, EGLConfig config,
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglDestroySurface and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
-                 EGLint attribute, EGLint *value)
+eglQuerySurface (EGLDisplay dpy,
+                 EGLSurface surface,
+                 EGLint attribute,
+                 EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -201,68 +188,12 @@ eglQuerySurface (EGLDisplay dpy, EGLSurface surface,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglBindAPI (EGLenum api)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglBindAPI and wait */
-    return result;
-}
-
-EGLAPI EGLenum EGLAPIENTRY
-eglQueryAPI (void)
-{
-    EGLenum result = EGL_NONE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglQueryAPI and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglWaitClient (void)
-{
-    egl_state_t *egl_state;
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_active_egl_state_available ())
-        return EGL_FALSE;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY ||
-        egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == false)
-        return EGL_TRUE;
-
-    /* XXX: post eglWaitClient and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglReleaseThread (void)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* current context to None */
-    /* XXX: post eglReleaseThread and wait, then set active state to NULL */
-    client_set_active_egl_state (NULL);
-    return result;
-}
-
 EGLAPI EGLSurface EGLAPIENTRY
-eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
+eglCreatePbufferFromClientBuffer (EGLDisplay dpy,
+                                  EGLenum buftype,
                                   EGLClientBuffer buffer,
-                                  EGLConfig config, const EGLint *attrib_list)
+                                  EGLConfig config,
+                                  const EGLint *attrib_list)
 {
     EGLSurface surface = EGL_NO_SURFACE;
 
@@ -273,58 +204,9 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy, EGLenum buftype,
     return surface;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglSurfaceAttrib (EGLDisplay dpy, EGLSurface surface,
-                  EGLint attribute, EGLint value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglSurfaceAttrib and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglBindTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-
-    /* XXX: post eglBindTexImage and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglReleaseTexImage (EGLDisplay dpy, EGLSurface surface, EGLint buffer)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglReleaseTexImage and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglSwapInterval (EGLDisplay dpy, EGLint interval)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglSwapInterval and wait */
-    return result;
-}
-
 EGLAPI EGLContext EGLAPIENTRY
-eglCreateContext (EGLDisplay dpy, EGLConfig config,
+eglCreateContext (EGLDisplay dpy,
+                  EGLConfig config,
                   EGLContext share_context,
                   const EGLint *attrib_list)
 {
@@ -338,66 +220,10 @@ eglCreateContext (EGLDisplay dpy, EGLConfig config,
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
-{
-    EGLBoolean result = GL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglDestroyContext and wait */
-    return result;
-}
-
-EGLAPI EGLContext EGLAPIENTRY
-eglGetCurrentContext (void)
-{
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available ())
-        return EGL_NO_CONTEXT;
-
-    egl_state = client_get_active_egl_state ();
-    return egl_state->context;
-}
-
-EGLAPI EGLDisplay EGLAPIENTRY
-eglGetCurrentDisplay (void)
-{
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available ())
-        return EGL_NO_DISPLAY;
-
-    egl_state = client_get_active_egl_state ();
-    return egl_state->display;
-}
-
-EGLAPI EGLSurface EGLAPIENTRY
-eglGetCurrentSurface (EGLint readdraw)
-{
-    egl_state_t *egl_state;
-    EGLSurface surface = EGL_NO_SURFACE;
-
-    if (! client_active_egl_state_available ())
-        return EGL_NO_SURFACE;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY || egl_state->context == EGL_NO_CONTEXT)
-        goto FINISH;
-
-    if (readdraw == EGL_DRAW)
-        surface = egl_state->drawable;
-    else
-        surface = egl_state->readable;
- FINISH:
-    return surface;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglQueryContext (EGLDisplay dpy, EGLContext ctx,
-                 EGLint attribute, EGLint *value)
+eglQueryContext (EGLDisplay dpy,
+                 EGLContext ctx,
+                 EGLint attribute,
+                 EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -409,39 +235,8 @@ eglQueryContext (EGLDisplay dpy, EGLContext ctx,
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglWaitGL (void)
-{
-    EGLBoolean result = EGL_TRUE;
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available ())
-        return result;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY ||
-        egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == false)
-        return EGL_TRUE;
-
-    /* XXX: post eglWaitGL and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglWaitNative (EGLint engine)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_active_egl_state_available ())
-        return result;
-
-    /* XXX: post eglWaitNative and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglSwapBuffers (EGLDisplay dpy, EGLSurface surface)
+eglSwapBuffers (EGLDisplay dpy,
+                EGLSurface surface)
 {
     EGLBoolean result = EGL_BAD_DISPLAY;
     egl_state_t *egl_state;
@@ -467,19 +262,6 @@ FINISH:
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglCopyBuffers (EGLDisplay dpy, EGLSurface surface,
-                EGLNativePixmapType target)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_active_egl_state_available ())
-        return result;
-
-    /* XXX: post eglCopyBuffers and wait */
-    return result;
-}
-
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
 eglGetProcAddress (const char *procname)
 {
@@ -493,7 +275,9 @@ eglGetProcAddress (const char *procname)
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
+eglMakeCurrent (EGLDisplay dpy,
+                EGLSurface draw,
+                EGLSurface read,
                 EGLContext ctx)
 {
     EGLBoolean result = EGL_FALSE;
@@ -544,7 +328,8 @@ eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read,
 /* start of eglext.h */
 #ifdef EGL_KHR_lock_surface
 EGLAPI EGLBoolean EGLAPIENTRY
-eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
+eglLockSurfaceKHR (EGLDisplay display,
+                   EGLSurface surface,
                    const EGLint *attrib_list)
 {
     EGLBoolean result = EGL_FALSE;
@@ -555,24 +340,15 @@ eglLockSurfaceKHR (EGLDisplay display, EGLSurface surface,
     /* XXX: post eglLockSurfaceKHR and wait */
     return result;
 }
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglUnlockSurfaceKHR (EGLDisplay display, EGLSurface surface)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* post eglUnlockSurfaceKHR and wait */
-    return result;
-}
 #endif
 
 #ifdef EGL_KHR_image
 EGLAPI EGLImageKHR EGLAPIENTRY
-eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
-                   EGLClientBuffer buffer, const EGLint *attrib_list)
+eglCreateImageKHR (EGLDisplay dpy,
+                   EGLContext ctx,
+                   EGLenum target,
+                   EGLClientBuffer buffer,
+                   const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
 
@@ -582,23 +358,13 @@ eglCreateImageKHR (EGLDisplay dpy, EGLContext ctx, EGLenum target,
     /* XXX: post eglCreateImageKHR and wait */
     return result;
 }
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglDestroyImageKHR (EGLDisplay dpy, EGLImageKHR image)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglDestroyImageKHR and wait */
-    return result;
-}
 #endif
 
 #ifdef EGL_KHR_reusable_sync
 EGLAPI EGLSyncKHR EGLAPIENTRY
-eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
+eglCreateSyncKHR (EGLDisplay dpy,
+                  EGLenum type,
+                  const EGLint *attrib_list)
 {
     EGLSyncKHR result = EGL_NO_SYNC_KHR;
 
@@ -609,20 +375,10 @@ eglCreateSyncKHR (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list)
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglDestroySyncKHR (EGLDisplay dpy, EGLSyncKHR sync)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglDestroySyncKHR and wait */
-    return result;
-}
-
 EGLAPI EGLint EGLAPIENTRY
-eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
+eglClientWaitSyncKHR (EGLDisplay dpy,
+                      EGLSyncKHR sync,
+                      EGLint flags,
                       EGLTimeKHR timeout)
 {
     EGLint result = EGL_FALSE;
@@ -633,36 +389,12 @@ eglClientWaitSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLint flags,
     /* XXX: post eglClientWaitSyncKHR and wait */
     return result;
 }
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglSignalSyncKHR (EGLDisplay dpy, EGLSyncKHR sync, EGLenum mode)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglSignalSyncKHR and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
-eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
-                     EGLint attribute, EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglGetSyncAttribKHR and wait */
-    return result;
-}
 #endif
 
 #ifdef EGL_NV_sync
 EGLSyncNV
-eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
+eglCreateFenceSyncNV (EGLDisplay dpy,
+                      EGLenum condition,
                       const EGLint *attrib_list)
 {
     EGLSyncNV result = EGL_NO_SYNC_NV;
@@ -674,40 +406,10 @@ eglCreateFenceSyncNV (EGLDisplay dpy, EGLenum condition,
     return result;
 }
 
-EGLBoolean
-eglDestroySyncNV (EGLSyncNV sync)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglDestroyFenceSyncNV and wait */
-    return result;
-}
-
-EGLBoolean
-eglFenceNV (EGLSyncNV sync)
-{
-    EGLBoolean result = EGL_FALSE;
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available  ())
-        return result;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY ||
-        egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == false)
-        return result;
-
-    /* XXX: post eglFenceNV and wait */
-    return result;
-}
-
 EGLint
-eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
+eglClientWaitSyncNV (EGLSyncNV sync,
+                     EGLint flags,
+                     EGLTimeNV timeout)
 {
     /* XXX: is this supposed to be default value ? */
     EGLint result = EGL_TIMEOUT_EXPIRED_NV;
@@ -728,27 +430,9 @@ eglClientWaitSyncNV (EGLSyncNV sync, EGLint flags, EGLTimeNV timeout)
 }
 
 EGLBoolean
-eglSignalSyncNV (EGLSyncNV sync, EGLenum mode)
-{
-    EGLBoolean result = EGL_FALSE;
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available  ())
-        return result;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY ||
-        egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == false)
-        return result;
-
-    /* XXX: post eglSignalSyncNV and wait */
-    return result;
-}
-
-EGLBoolean
-eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
+eglGetSyncAttribNV (EGLSyncNV sync,
+                    EGLint attribute,
+                    EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -762,7 +446,8 @@ eglGetSyncAttribNV (EGLSyncNV sync, EGLint attribute, EGLint *value)
 
 #ifdef EGL_HI_clientpixmap
 EGLAPI EGLSurface EGLAPIENTRY
-eglCreatePixmapSurfaceHI (EGLDisplay dpy, EGLConfig config,
+eglCreatePixmapSurfaceHI (EGLDisplay dpy,
+                          EGLConfig config,
                           struct EGLClientPixmapHI *pixmap)
 {
     EGLSurface result = EGL_NO_SURFACE;
@@ -844,7 +529,9 @@ eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 }
 
 EGLAPI EGLBoolean EGLAPIENTRY
-eglGetImageAttribSEC (EGLDisplay dpy, EGLImageKHR image, EGLint attribute,
+eglGetImageAttribSEC (EGLDisplay dpy,
+                      EGLImageKHR image,
+                      EGLint attribute,
                       EGLint *value)
 {
     EGLBoolean result = EGL_FALSE;
