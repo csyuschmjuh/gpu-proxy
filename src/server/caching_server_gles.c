@@ -1793,6 +1793,7 @@ caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei
     vertex_attrib_list_t *attrib_list = NULL;
     vertex_attrib_t *attribs = NULL;
     int i;
+    bool needs_call = false;
 
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDrawArrays) &&
         caching_server_glIsValidContext (server)) {
@@ -1836,11 +1837,14 @@ caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei
                                               attribs[i].array_normalized,
                                               0,
                                               attribs[i].data);
+                if (! needs_call)
+                    needs_call = true;
             }
         }
 
         /* we need call DrawArrays */
-        CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
+        if (needs_call)
+            CACHING_SERVER(server)->super_dispatch.glDrawArrays (server, mode, first, count);
     }
 
 FINISH:
@@ -1906,6 +1910,7 @@ caching_server_glDrawElements (server_t *server, GLenum mode, GLsizei count, GLe
     vertex_attrib_t *attribs = NULL;
     int i = -1;
     bool element_binding = false;
+    bool needs_call = false;
 
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDrawElements) &&
         caching_server_glIsValidContext (server)) {
@@ -1954,10 +1959,13 @@ caching_server_glDrawElements (server_t *server, GLenum mode, GLsizei count, GLe
                                               attribs[i].array_normalized,
                                               0,
                                               attribs[i].data);
+                if (! needs_call)
+                    needs_call = true;
             }
         }
 
-        CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, type, count, indices);
+        if (needs_call)
+            CACHING_SERVER(server)->super_dispatch.glDrawElements (server, mode, type, count, indices);
     }
 FINISH:
     for (i = 0; i < attrib_list->count; i++) {
