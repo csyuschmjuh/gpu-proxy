@@ -19,6 +19,20 @@ _DO_NOT_EDIT_WARNING = """// This file is auto-generated. DO NOT EDIT!
 
 """
 
+_DEFAULT_RETURN_VALUES = {
+    'const char*': 'NULL',
+    'void*': 'NULL',
+    'GLuint': '0',
+    'EGLDisplay': 'EGL_NO_DISPLAY',
+    'EGLBoolean': 'EGL_FALSE',
+    'EGLSurface': 'EGL_NO_SURFACE',
+    'EGLenum': 'EGL_NONE',
+    'EGLContext': 'EGL_NO_CONTEXT',
+    'EGLImageKHR': 'EGL_NO_IMAGE_KHR',
+    'EGLSyncKHR': 'EGL_NO_SYNC_KHR',
+    'EGLSyncNV': 'EGL_NO_SYNC_NV'
+}
+
 # This string is copied directly out of the gl2.h file from GLES2.0
 #
 # Edits:
@@ -54,6 +68,24 @@ _GL_TYPES = {
 # This is a list of enum names and their valid values. It is used to map
 # GLenum arguments to a specific set of valid values.
 _ENUM_LISTS = {
+  'eglGetError': {
+    'default_return': 'EGL_NOT_INITIALIZED'
+  },
+  'eglWaitGL': {
+    'default_return': 'EGL_TRUE'
+  },
+  'eglGetProcAddress': {
+    'type': 'Manual'
+  },
+  'eglMakeCurrent': {
+    'type': 'Manual'
+  },
+  'eglClientWaitSyncKHR': {
+    'default_return': 'EGL_FALSE'
+  },
+  'eglClientWaitSyncNV': {
+    'default_return': 'EGL_TIMEOUT_EXPIRED_NV'
+  },
   'BlitFilter': {
     'type': 'GLenum',
     'valid': [
@@ -799,916 +831,31 @@ _ENUM_LISTS = {
 # invalid_test: False if no invalid test needed.
 
 _FUNCTION_INFO = {
-  'ActiveTexture': {
-    'decoder_func': 'DoActiveTexture',
-    'unit_test': False,
-    'impl_func': False,
-    'client_test': False,
+  'eglGetError': {
+    'default_return': 'EGL_NOT_INITIALIZED'
   },
-  'AttachShader': {'decoder_func': 'DoAttachShader'},
-  'BindAttribLocation': {'type': 'GLchar', 'bucket': True, 'needs_size': True},
-  'BindBuffer': {
-    'type': 'Bind',
-    'decoder_func': 'DoBindBuffer',
-    'gen_func': 'GenBuffersARB',
+  'eglWaitGL': {
+    'default_return': 'EGL_TRUE'
   },
-  'BindFramebuffer': {
-    'type': 'Bind',
-    'decoder_func': 'DoBindFramebuffer',
-    'gl_test_func': 'glBindFramebufferEXT',
-    'gen_func': 'GenFramebuffersEXT',
+  'eglGetProcAddress': {
+    'type': 'Manual'
   },
-  'BindRenderbuffer': {
-    'type': 'Bind',
-    'decoder_func': 'DoBindRenderbuffer',
-    'gl_test_func': 'glBindRenderbufferEXT',
-    'gen_func': 'GenRenderbuffersEXT',
+  'eglMakeCurrent': {
+    'type': 'Manual'
   },
-  'BindTexture': {
-    'type': 'Bind',
-    'decoder_func': 'DoBindTexture',
-    'gen_func': 'GenTextures',
+  'eglClientWaitSyncKHR': {
+    'default_return': 'EGL_FALSE'
   },
-  'BlitFramebufferEXT': {
-    'decoder_func': 'DoBlitFramebufferEXT',
-    'unit_test': False,
-    'extension': True,
-    'pepper_interface': 'FramebufferBlit',
+  'eglClientWaitSyncNV': {
+    'default_return': 'EGL_TIMEOUT_EXPIRED_NV'
   },
-  'BufferData': {
-    'type': 'Manual',
-    'immediate': True,
-    'client_test': False,
+  'glGetUniformLocation': {
+    'default_return': '-1',
   },
-  'BufferSubData': {
-    'type': 'Data',
-    'client_test': False,
-    'decoder_func': 'DoBufferSubData',
-  },
-  'CheckFramebufferStatus': {
-    'type': 'Is',
-    'decoder_func': 'DoCheckFramebufferStatus',
-    'gl_test_func': 'glCheckFramebufferStatusEXT',
-    'error_value': 'GL_FRAMEBUFFER_UNSUPPORTED',
-    'result': ['GLenum'],
-  },
-  'Clear': {
-    'type': 'Manual',
-    'cmd_args': 'GLbitfield mask'
-  },
-  'ClearColor': {'decoder_func': 'DoClearColor'},
-  'ClearDepthf': {
-    'decoder_func': 'DoClearDepthf',
-    'gl_test_func': 'glClearDepth',
-  },
-  'ColorMask': {'decoder_func': 'DoColorMask', 'expectation': False},
-  'ConsumeTextureCHROMIUM': {
-    'decoder_func': 'DoConsumeTextureCHROMIUM',
-    'type': 'PUT',
-    'data_type': 'GLbyte',
-    'count': 64,
-    'unit_test': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'ClearStencil': {'decoder_func': 'DoClearStencil'},
-  'EnableFeatureCHROMIUM': {
-    'type': 'Custom',
-    'immediate': False,
-    'decoder_func': 'DoEnableFeatureCHROMIUM',
-    'expectation': False,
-    'cmd_args': 'GLuint bucket_id, GLint* result',
-    'result': ['GLint'],
-    'extension': True,
-    'chromium': True,
-    'pepper_interface': 'ChromiumEnableFeature',
-  },
-  'CompileShader': {'decoder_func': 'DoCompileShader', 'unit_test': False},
-  'CompressedTexImage2D': {
-    'type': 'Manual',
-    'immediate': True,
-    'bucket': True,
-  },
-  'CompressedTexSubImage2D': {
-    'type': 'Data',
-    'bucket': True,
-    'decoder_func': 'DoCompressedTexSubImage2D',
-  },
-  'CopyTexImage2D': {
-    'decoder_func': 'DoCopyTexImage2D',
-    'unit_test': False,
-  },
-  'CopyTexSubImage2D': {
-    'decoder_func': 'DoCopyTexSubImage2D',
-  },
-  'CreateProgram': {
-    'type': 'Create',
-    'client_test': False,
-  },
-  'CreateShader': {
-    'type': 'Create',
-    'client_test': False,
-  },
-  'DeleteBuffers': {
-    'type': 'DELn',
-    'gl_test_func': 'glDeleteBuffersARB',
-    'resource_type': 'Buffer',
-    'resource_types': 'Buffers',
-  },
-  'DeleteFramebuffers': {
-    'type': 'DELn',
-    'gl_test_func': 'glDeleteFramebuffersEXT',
-    'resource_type': 'Framebuffer',
-    'resource_types': 'Framebuffers',
-  },
-  'DeleteProgram': {'type': 'Delete', 'decoder_func': 'DoDeleteProgram'},
-  'DeleteRenderbuffers': {
-    'type': 'DELn',
-    'gl_test_func': 'glDeleteRenderbuffersEXT',
-    'resource_type': 'Renderbuffer',
-    'resource_types': 'Renderbuffers',
-  },
-  'DeleteShader': {'type': 'Delete', 'decoder_func': 'DoDeleteShader'},
-  'DeleteSharedIdsCHROMIUM': {
-    'type': 'Custom',
-    'decoder_func': 'DoDeleteSharedIdsCHROMIUM',
-    'impl_func': False,
-    'expectation': False,
-    'immediate': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'DeleteTextures': {
-    'type': 'DELn',
-    'resource_type': 'Texture',
-    'resource_types': 'Textures',
-  },
-  'DepthRangef': {'decoder_func': 'glDepthRange'},
-  'DepthMask': {'decoder_func': 'DoDepthMask', 'expectation': False},
-  'DetachShader': {'decoder_func': 'DoDetachShader'},
-  'Disable': {
-    'decoder_func': 'DoDisable',
-    'impl_func': False,
-  },
-  'DisableVertexAttribArray': {
-    'decoder_func': 'DoDisableVertexAttribArray',
-    'impl_decl': False,
-  },
-  'DrawArrays': {
-    'type': 'Manual',
-    'cmd_args': 'GLenumDrawMode mode, GLint first, GLsizei count',
-  },
-  #'DrawElements': {
-  #  'type': 'Manual',
-  #  'cmd_args': 'GLenumDrawMode mode, GLsizei count, '
-  #              'GLenumIndexType type, GLuint index_offset',
-  #  'client_test': False
-  #},
-  'Enable': {
-    'decoder_func': 'DoEnable',
-    'impl_func': False,
-  },
-  'EnableVertexAttribArray': {
-    'decoder_func': 'DoEnableVertexAttribArray',
-    'impl_decl': False,
-  },
-  'Finish': {
-    'impl_func': False,
-    'client_test': False,
-    'decoder_func': 'DoFinish',
-  },
-  'Flush': {
-    'impl_func': False,
-    'decoder_func': 'DoFlush',
-  },
-  'ShallowFlushCHROMIUM': {
-    'impl_func': False,
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-  },
-  'FramebufferRenderbuffer': {
-    'decoder_func': 'DoFramebufferRenderbuffer',
-    'gl_test_func': 'glFramebufferRenderbufferEXT',
-  },
-  'FramebufferTexture2D': {
-    'decoder_func': 'DoFramebufferTexture2D',
-    'gl_test_func': 'glFramebufferTexture2DEXT',
-  },
-  'GenerateMipmap': {
-    'decoder_func': 'DoGenerateMipmap',
-    'gl_test_func': 'glGenerateMipmapEXT',
-  },
-  'GenBuffers': {
-    'type': 'GENn',
-    'gl_test_func': 'glGenBuffersARB',
-    'resource_type': 'Buffer',
-    'resource_types': 'Buffers',
-  },
-  'GenMailboxCHROMIUM': {
-    'type': 'Manual',
-    'cmd_args': 'GLuint bucket_id',
-    'result': ['SizedResult<GLint>'],
-    'client_test': False,
-    'unit_test': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'GenFramebuffers': {
-    'type': 'GENn',
-    'gl_test_func': 'glGenFramebuffersEXT',
-    'resource_type': 'Framebuffer',
-    'resource_types': 'Framebuffers',
-  },
-  'GenRenderbuffers': {
-    'type': 'GENn', 'gl_test_func': 'glGenRenderbuffersEXT',
-    'resource_type': 'Renderbuffer',
-    'resource_types': 'Renderbuffers',
-  },
-  'GenTextures': {
-    'type': 'GENn',
-    'gl_test_func': 'glGenTextures',
-    'resource_type': 'Texture',
-    'resource_types': 'Textures',
-  },
-  'GenSharedIdsCHROMIUM': {
-    'type': 'Custom',
-    'decoder_func': 'DoGenSharedIdsCHROMIUM',
-    'impl_func': False,
-    'expectation': False,
-    'immediate': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'GetActiveAttrib': {
-    'type': 'Custom',
-    'immediate': False,
-    'cmd_args':
-        'GLidProgram program, GLuint index, uint32_t name_bucket_id, '
-        'void* result',
-    'result': [
-      'int32_t success',
-      'int32_t size',
-      'uint32_t type',
-    ],
-  },
-  'GetActiveUniform': {
-    'type': 'Custom',
-    'immediate': False,
-    'cmd_args':
-        'GLidProgram program, GLuint index, uint32_t name_bucket_id, '
-        'void* result',
-    'result': [
-      'int32_t success',
-      'int32_t size',
-      'uint32_t type',
-    ],
-  },
-  'GetAttachedShaders': {
-    'type': 'Custom',
-    'immediate': False,
-    'cmd_args': 'GLidProgram program, void* result, uint32_t result_size',
-    'result': ['SizedResult<GLuint>'],
-  },
-  'GetAttribLocation': {
-    'type': 'HandWritten',
-    'immediate': True,
-    'bucket': True,
-    'needs_size': True,
-    'cmd_args':
-        'GLidProgram program, const char* name, NonImmediate GLint* location',
-    'result': ['GLint'],
-  },
-  'GetBooleanv': {
-    'type': 'GETn',
-    'result': ['SizedResult<GLboolean>'],
-    'decoder_func': 'DoGetBooleanv',
-    'gl_test_func': 'glGetBooleanv',
-  },
-  'GetBufferParameteriv': {'type': 'GETn', 'result': ['SizedResult<GLint>']},
-  'GetError': {
-    'type': 'Is',
-    'decoder_func': 'GetGLError',
-    'impl_func': False,
-    'result': ['GLenum'],
-    'client_test': False,
-  },
-  'GetFloatv': {
-    'type': 'GETn',
-    'result': ['SizedResult<GLfloat>'],
-    'decoder_func': 'DoGetFloatv',
-    'gl_test_func': 'glGetFloatv',
-  },
-  'GetFramebufferAttachmentParameteriv': {
-    'type': 'GETn',
-    'decoder_func': 'DoGetFramebufferAttachmentParameteriv',
-    'gl_test_func': 'glGetFramebufferAttachmentParameterivEXT',
-    'result': ['SizedResult<GLint>'],
-  },
-  'GetIntegerv': {
-    'type': 'GETn',
-    'result': ['SizedResult<GLint>'],
-    'decoder_func': 'DoGetIntegerv',
-    'client_test': False,
-  },
-  'GetMaxValueInBufferCHROMIUM': {
-    'type': 'Is',
-    'decoder_func': 'DoGetMaxValueInBufferCHROMIUM',
-    'result': ['GLuint'],
-    'unit_test': False,
-    'client_test': False,
-    'extension': True,
-    'chromium': True,
-    'impl_func': False,
-  },
-  'GetMultipleIntegervCHROMIUM': {
-    'type': 'Custom',
-    'immediate': False,
-    'expectation': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-  },
-  'GetProgramiv': {
-    'type': 'GETn',
-    'decoder_func': 'DoGetProgramiv',
-    'result': ['SizedResult<GLint>'],
-    'expectation': False,
-  },
-  'GetProgramInfoCHROMIUM': {
-    'type': 'Custom',
-    'immediate': False,
-    'expectation': False,
-    'impl_func': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-    'cmd_args': 'GLidProgram program, uint32_t bucket_id',
-    'result': [
-      'uint32_t link_status',
-      'uint32_t num_attribs',
-      'uint32_t num_uniforms',
-    ],
-  },
-  'GetProgramInfoLog': {
-    'type': 'STRn',
-    'expectation': False,
-  },
-  'GetRenderbufferParameteriv': {
-    'type': 'GETn',
-    'decoder_func': 'DoGetRenderbufferParameteriv',
-    'gl_test_func': 'glGetRenderbufferParameterivEXT',
-    'result': ['SizedResult<GLint>'],
-  },
-  'GetShaderiv': {
-    'type': 'GETn',
-    'decoder_func': 'DoGetShaderiv',
-    'result': ['SizedResult<GLint>'],
-  },
-  'GetShaderInfoLog': {
-    'type': 'STRn',
-    'get_len_func': 'glGetShaderiv',
-    'get_len_enum': 'GL_INFO_LOG_LENGTH',
-    'unit_test': False,
-  },
-  'GetShaderPrecisionFormat': {
-    'type': 'Custom',
-    'immediate': False,
-    'cmd_args':
-      'GLenumShaderType shadertype, GLenumShaderPrecision precisiontype, '
-      'void* result',
-    'result': [
-      'int32_t success',
-      'int32_t min_range',
-      'int32_t max_range',
-      'int32_t precision',
-    ],
-  },
-  'GetShaderSource': {
-    'type': 'STRn',
-    'get_len_func': 'DoGetShaderiv',
-    'get_len_enum': 'GL_SHADER_SOURCE_LENGTH',
-    'unit_test': False,
-    'client_test': False,
-    },
-  'GetString': {
-      'type': 'Custom',
-      'client_test': False,
-      'cmd_args': 'GLenumStringType name, uint32_t bucket_id',
-  },
-  'GetTexParameterfv': {'type': 'GETn', 'result': ['SizedResult<GLfloat>']},
-  'GetTexParameteriv': {'type': 'GETn', 'result': ['SizedResult<GLint>']},
-  'GetTranslatedShaderSourceANGLE': {
-    'type': 'STRn',
-    'get_len_func': 'DoGetShaderiv',
-    'get_len_enum': 'GL_TRANSLATED_SHADER_SOURCE_LENGTH_ANGLE',
-    'unit_test': False,
-    'extension': True,
-    },
-  'GetUniformfv': {
-    'type': 'Custom',
-    'immediate': False,
-    'result': ['SizedResult<GLfloat>'],
-  },
-  'GetUniformiv': {
-    'type': 'Custom',
-    'immediate': False,
-    'result': ['SizedResult<GLint>'],
-  },
-  'GetUniformLocation': {
-    'type': 'HandWritten',
-    'immediate': True,
-    'bucket': True,
-    'needs_size': True,
-    'cmd_args':
-        'GLidProgram program, const char* name, NonImmediate GLint* location',
-    'result': ['GLint'],
-  },
-  'GetVertexAttribfv': {
-    'type': 'GETn',
-    'result': ['SizedResult<GLfloat>'],
-    'impl_decl': False,
-    'decoder_func': 'DoGetVertexAttribfv',
-    'expectation': False,
-    'client_test': False,
-  },
-  'GetVertexAttribiv': {
-    'type': 'GETn',
-    'result': ['SizedResult<GLint>'],
-    'impl_decl': False,
-    'decoder_func': 'DoGetVertexAttribiv',
-    'expectation': False,
-    'client_test': False,
-  },
-  'GetVertexAttribPointerv': {
-    'type': 'Custom',
-    'immediate': False,
-    'result': ['SizedResult<GLuint>'],
-    'client_test': False,
-  },
-  'IsBuffer': {
-    'type': 'Is',
-    'decoder_func': 'DoIsBuffer',
-    'expectation': False,
-  },
-  'IsEnabled': {
-    'type': 'Is',
-    'decoder_func': 'DoIsEnabled',
-    'impl_func': False,
-  },
-  'IsFramebuffer': {
-    'type': 'Is',
-    'decoder_func': 'DoIsFramebuffer',
-    'expectation': False,
-  },
-  'IsProgram': {
-    'type': 'Is',
-    'decoder_func': 'DoIsProgram',
-    'expectation': False,
-  },
-  'IsRenderbuffer': {
-    'type': 'Is',
-    'decoder_func': 'DoIsRenderbuffer',
-    'expectation': False,
-  },
-  'IsShader': {
-    'type': 'Is',
-    'decoder_func': 'DoIsShader',
-    'expectation': False,
-  },
-  'IsTexture': {
-    'type': 'Is',
-    'decoder_func': 'DoIsTexture',
-    'expectation': False,
-  },
-  'LinkProgram': {
-    'decoder_func': 'DoLinkProgram',
-    'impl_func':  False,
-  },
-  'MapBufferSubDataCHROMIUM': {
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-    'pepper_interface': 'ChromiumMapSub',
-  },
-  'MapTexSubImage2DCHROMIUM': {
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-    'pepper_interface': 'ChromiumMapSub',
-  },
-  'PixelStorei': {'type': 'Manual'},
-  'PostSubBufferCHROMIUM': {
-      'type': 'Custom',
-      'impl_func': False,
-      'unit_test': False,
-      'client_test': False,
-      'extension': True,
-      'chromium': True,
-  },
-  'ProduceTextureCHROMIUM': {
-    'decoder_func': 'DoProduceTextureCHROMIUM',
-    'type': 'PUT',
-    'data_type': 'GLbyte',
-    'count': 64,
-    'unit_test': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'RenderbufferStorage': {
-    'decoder_func': 'DoRenderbufferStorage',
-    'gl_test_func': 'glRenderbufferStorageEXT',
-    'expectation': False,
-  },
-  'RenderbufferStorageMultisampleEXT': {
-    'decoder_func': 'DoRenderbufferStorageMultisample',
-    'gl_test_func': 'glRenderbufferStorageMultisampleEXT',
-    'expectation': False,
-    'unit_test': False,
-    'extension': True,
-    'pepper_interface': 'FramebufferMultisample',
-  },
-  #'ReadPixels': {
-  #  'cmd_comment':
-  #      '// ReadPixels has the result separated from the pixel buffer so that\n'
-  #      '// it is easier to specify the result going to some specific place\n'
-  #      '// that exactly fits the rectangle of pixels.\n',
-  #  'type': 'Custom',
-  #  'immediate': False,
-  #  'impl_func': False,
-  #  'client_test': False,
-  #  'cmd_args':
-  #      'GLint x, GLint y, GLsizei width, GLsizei height, '
-  #      'GLenumReadPixelFormat format, GLenumReadPixelType type, '
-  #      'uint32_t pixels_shm_id, uint32_t pixels_shm_offset, '
-  #      'uint32_t result_shm_id, uint32_t result_shm_offset',
-  #  'result': ['uint32_t'],
-  #},
-  'RegisterSharedIdsCHROMIUM': {
-    'type': 'Custom',
-    'decoder_func': 'DoRegisterSharedIdsCHROMIUM',
-    'impl_func': False,
-    'expectation': False,
-    'immediate': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'ReleaseShaderCompiler': {
-    'decoder_func': 'DoReleaseShaderCompiler',
-    'unit_test': False,
-  },
-  'ShaderBinary': {
-    'type': 'Custom',
-    'client_test': False,
-  },
-  #'ShaderSource': {
-  #  'type': 'Manual',
-  #  'immediate': True,
-  #  'bucket': True,
-  #  'needs_size': True,
-  #  'client_test': False,
-  #  'cmd_args':
-  #      'GLuint shader, const char* data',
-  #},
-  'StencilMask': {'decoder_func': 'DoStencilMask', 'expectation': False},
-  'StencilMaskSeparate': {
-    'decoder_func': 'DoStencilMaskSeparate',
-    'expectation': False,
-  },
-  'SwapBuffers': {
-    'type': 'Custom',
-    'impl_func': False,
-    'unit_test': False,
-    'client_test': False,
-    'extension': True,
-  },
-  'TexImage2D': {
-    'type': 'Manual',
-    'immediate': True,
-    'client_test': False,
-  },
-  'TexParameterf': {
-    'decoder_func': 'DoTexParameterf',
-    'valid_args': {
-      '2': 'GL_NEAREST'
-    },
-  },
-  'TexParameteri': {
-    'decoder_func': 'DoTexParameteri',
-    'valid_args': {
-      '2': 'GL_NEAREST'
-    },
-  },
-  'TexParameterfv': {
-    'type': 'PUT',
-    'data_type': 'GLfloat',
-    'data_value': 'GL_NEAREST',
-    'count': 1,
-    'decoder_func': 'DoTexParameterfv',
-  },
-  'TexParameteriv': {
-    'type': 'PUT',
-    'data_type': 'GLint',
-    'data_value': 'GL_NEAREST',
-    'count': 1,
-    'decoder_func': 'DoTexParameteriv',
-  },
-  'TexSubImage2D': {
-    'type': 'Manual',
-    'immediate': True,
-    'client_test': False
-  },
-  'Uniform1f': {'type': 'PUTXn', 'data_type': 'GLfloat', 'count': 1},
-  'Uniform1fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 1,
-    'decoder_func': 'DoUniform1fv',
-  },
-  'Uniform1i': {'decoder_func': 'DoUniform1i', 'unit_test': False},
-  'Uniform1iv': {
-    'type': 'PUTn',
-    'data_type': 'GLint',
-    'count': 1,
-    'decoder_func': 'DoUniform1iv',
-    'unit_test': False,
-  },
-  'Uniform2i': {'type': 'PUTXn', 'data_type': 'GLint', 'count': 2},
-  'Uniform2f': {'type': 'PUTXn', 'data_type': 'GLfloat', 'count': 2},
-  'Uniform2fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 2,
-    'decoder_func': 'DoUniform2fv',
-  },
-  'Uniform2iv': {
-    'type': 'PUTn',
-    'data_type': 'GLint',
-    'count': 2,
-    'decoder_func': 'DoUniform2iv',
-  },
-  'Uniform3i': {'type': 'PUTXn', 'data_type': 'GLint', 'count': 3},
-  'Uniform3f': {'type': 'PUTXn', 'data_type': 'GLfloat', 'count': 3},
-  'Uniform3fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 3,
-    'decoder_func': 'DoUniform3fv',
-  },
-  'Uniform3iv': {
-    'type': 'PUTn',
-    'data_type': 'GLint',
-    'count': 3,
-    'decoder_func': 'DoUniform3iv',
-  },
-  'Uniform4i': {'type': 'PUTXn', 'data_type': 'GLint', 'count': 4},
-  'Uniform4f': {'type': 'PUTXn', 'data_type': 'GLfloat', 'count': 4},
-  'Uniform4fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 4,
-    'decoder_func': 'DoUniform4fv',
-  },
-  'Uniform4iv': {
-    'type': 'PUTn',
-    'data_type': 'GLint',
-    'count': 4,
-    'decoder_func': 'DoUniform4iv',
-  },
-  'UniformMatrix2fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 4,
-    'decoder_func': 'DoUniformMatrix2fv',
-  },
-  'UniformMatrix3fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 9,
-    'decoder_func': 'DoUniformMatrix3fv',
-  },
-  'UniformMatrix4fv': {
-    'type': 'PUTn',
-    'data_type': 'GLfloat',
-    'count': 16,
-    'decoder_func': 'DoUniformMatrix4fv',
-  },
-  'UnmapBufferSubDataCHROMIUM': {
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-    'pepper_interface': 'ChromiumMapSub',
-  },
-  'UnmapTexSubImage2DCHROMIUM': {
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-    'pepper_interface': 'ChromiumMapSub',
-  },
-  'UseProgram': {'decoder_func': 'DoUseProgram', 'unit_test': False},
-  'ValidateProgram': {'decoder_func': 'DoValidateProgram'},
-  'VertexAttrib1f': {'decoder_func': 'DoVertexAttrib1f'},
-  'VertexAttrib1fv': {
-    'type': 'PUT',
-    'data_type': 'GLfloat',
-    'count': 1,
-    'decoder_func': 'DoVertexAttrib1fv',
-  },
-  'VertexAttrib2f': {'decoder_func': 'DoVertexAttrib2f'},
-  'VertexAttrib2fv': {
-    'type': 'PUT',
-    'data_type': 'GLfloat',
-    'count': 2,
-    'decoder_func': 'DoVertexAttrib2fv',
-  },
-  'VertexAttrib3f': {'decoder_func': 'DoVertexAttrib3f'},
-  'VertexAttrib3fv': {
-    'type': 'PUT',
-    'data_type': 'GLfloat',
-    'count': 3,
-    'decoder_func': 'DoVertexAttrib3fv',
-  },
-  'VertexAttrib4f': {'decoder_func': 'DoVertexAttrib4f'},
-  'VertexAttrib4fv': {
-    'type': 'PUT',
-    'data_type': 'GLfloat',
-    'count': 4,
-    'decoder_func': 'DoVertexAttrib4fv',
-  },
-  #'VertexAttribPointer': {
-  #    'type': 'Manual',
-  #    'cmd_args': 'GLuint indx, GLintVertexAttribSize size, '
-  #                'GLenumVertexAttribType type, GLboolean normalized, '
-  #                'GLsizei stride, GLuint offset',
-  #    'client_test': False,
-  #},
-  'Viewport': {
-    'decoder_func': 'DoViewport',
-  },
-  'ResizeCHROMIUM': {
-      'type': 'Custom',
-      'impl_func': False,
-      'unit_test': False,
-      'extension': True,
-      'chromium': True,
-  },
-  'GetRequestableExtensionsCHROMIUM': {
-    'type': 'Custom',
-    'impl_func': False,
-    'immediate': False,
-    'cmd_args': 'uint32_t bucket_id',
-    'extension': True,
-    'chromium': True,
-  },
-  'RequestExtensionCHROMIUM': {
-    'type': 'Custom',
-    'impl_func': False,
-    'immediate': False,
-    'client_test': False,
-    'cmd_args': 'uint32_t bucket_id',
-    'extension': True,
-    'chromium': True,
-  },
-  'RateLimitOffscreenContextCHROMIUM': {
-    'gen_cmd': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-  },
-  'CreateStreamTextureCHROMIUM':  {
-    'type': 'Custom',
-    'cmd_args': 'GLuint client_id, void* result',
-    'result': ['GLuint'],
-    'immediate': False,
-    'impl_func': False,
-    'expectation': False,
-    'extension': True,
-    'chromium': True,
-    'client_test': False,
-   },
-  'DestroyStreamTextureCHROMIUM':  {
-    'type': 'Custom',
-    'impl_func': False,
-    'expectation': False,
-    'extension': True,
-    'chromium': True,
-   },
-  'TexImageIOSurface2DCHROMIUM': {
-    'decoder_func': 'DoTexImageIOSurface2DCHROMIUM',
-    'unit_test': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'CopyTextureCHROMIUM': {
-    'decoder_func': 'DoCopyTextureCHROMIUM',
-    'unit_test': False,
-    'extension': True,
-    'chromium': True,
-  },
-  'TexStorage2DEXT': {
-    'unit_test': False,
-    'extension': True,
-    'decoder_func': 'DoTexStorage2DEXT',
-  },
-  'DrawArraysInstancedANGLE': {
-    'type': 'Manual',
-    'cmd_args': 'GLenumDrawMode mode, GLint first, GLsizei count, '
-                'GLsizei primcount',
-    'extension': True,
-    'unit_test': False,
-    'pepper_interface': 'InstancedArrays',
-  },
-  'DrawElementsInstancedANGLE': {
-    'type': 'Manual',
-    'cmd_args': 'GLenumDrawMode mode, GLsizei count, '
-                'GLenumIndexType type, GLuint index_offset, GLsizei primcount',
-    'extension': True,
-    'unit_test': False,
-    'client_test': False,
-    'pepper_interface': 'InstancedArrays',
-  },
-  'VertexAttribDivisorANGLE': {
-    'type': 'Manual',
-    'cmd_args': 'GLuint index, GLuint divisor',
-    'extension': True,
-    'unit_test': False,
-    'pepper_interface': 'InstancedArrays',
-  },
-  'GenQueriesEXT': {
-    'type': 'GENn',
-    'gl_test_func': 'glGenQueriesARB',
-    'resource_type': 'Query',
-    'resource_types': 'Queries',
-    'unit_test': False,
-    'pepper_interface': 'Query',
-  },
-  'DeleteQueriesEXT': {
-    'type': 'DELn',
-    'gl_test_func': 'glDeleteQueriesARB',
-    'resource_type': 'Query',
-    'resource_types': 'Queries',
-    'unit_test': False,
-    'pepper_interface': 'Query',
-  },
-  'IsQueryEXT': {
-    'gen_cmd': False,
-    'client_test': False,
-    'pepper_interface': 'Query',
-  },
-  'BeginQueryEXT': {
-    'type': 'Manual',
-    'cmd_args': 'GLenumQueryTarget target, GLidQuery id, void* sync_data',
-    'immediate': False,
-    'gl_test_func': 'glBeginQuery',
-    'pepper_interface': 'Query',
-  },
-  'EndQueryEXT': {
-    'type': 'Manual',
-    'cmd_args': 'GLenumQueryTarget target, GLuint submit_count',
-    'gl_test_func': 'glEndnQuery',
-    'client_test': False,
-    'pepper_interface': 'Query',
-  },
-  'GetQueryivEXT': {
-    'gen_cmd': False,
-    'client_test': False,
-    'gl_test_func': 'glGetQueryiv',
-    'pepper_interface': 'Query',
-  },
-  'GetQueryObjectuivEXT': {
-    'gen_cmd': False,
-    'client_test': False,
-    'gl_test_func': 'glGetQueryObjectuiv',
-    'pepper_interface': 'Query',
-  },
-  'BindUniformLocationCHROMIUM': {
-    'type': 'GLchar',
-    'bucket': True,
-    'needs_size': True,
-    'gl_test_func': 'DoBindUniformLocationCHROMIUM',
-  },
-  'InsertEventMarkerEXT': {
-    'type': 'GLcharN',
-    'decoder_func': 'DoInsertEventMarkerEXT',
-    'expectation': False,
-  },
-  'PushGroupMarkerEXT': {
-    'type': 'GLcharN',
-    'decoder_func': 'DoPushGroupMarkerEXT',
-    'expectation': False,
-  },
-  'PopGroupMarkerEXT': {
-    'decoder_func': 'DoPopGroupMarkerEXT',
-    'expectation': False,
-    'impl_func': False,
-  },
+  'glGetAttribLocation': {
+    'default_return': '-1',
+  }
 }
-
 
 def SplitWords(input_string):
   """Transforms a input_string into a list of lower-case components.
@@ -1998,6 +1145,8 @@ class FunctionInfo(object):
     self.type_handler = type_handler
     if not 'type' in info:
       self.type = ''
+    if not 'default_return' in info:
+      self.default_return = ''
 
 
 class Argument(object):
@@ -2505,6 +1654,15 @@ class Function(object):
       prefix = separator
     return "%s%s" % (prefix, arg_string)
 
+  def MakeDefaultReturnStatement(self):
+    """Make a return statement with the default value."""
+    if self.return_type == "void":
+        return "return"
+    elif self.info.default_return:
+        return "return %s" % self.info.default_return
+    else:
+        return "return %s" % _DEFAULT_RETURN_VALUES[self.return_type]
+
   def MakeTypedOriginalArgString(self, prefix, add_separator = False, separator = ", "):
     """Gets a list of arguments as they arg in GL."""
     args = self.GetOriginalArgs()
@@ -2788,10 +1946,8 @@ class GLGenerator(object):
         file.Write(header + "\n")
         file.Write("{\n")
         file.Write("    if (_is_error_state ())\n")
-        if func.return_type == "void":
-          file.Write("        return;\n\n")
-        else:
-          file.Write("        return 0;\n\n")
+        file.Write("        %s;\n" % func.MakeDefaultReturnStatement());
+
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" %
                    func.name.upper())
 
