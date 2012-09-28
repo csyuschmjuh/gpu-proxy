@@ -24,7 +24,7 @@
 #include <EGL/eglext.h>
 #include <stdlib.h>
 
-EGLAPI EGLint EGLAPIENTRY
+EGLint
 eglGetError (void)
 {
     EGLint error = EGL_NOT_INITIALIZED;
@@ -37,7 +37,7 @@ eglGetError (void)
     return error;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglInitialize (EGLDisplay dpy,
                EGLint *major,
                EGLint *minor)
@@ -51,7 +51,7 @@ eglInitialize (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
+EGLBoolean eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -71,7 +71,7 @@ EGLAPI EGLBoolean EGLAPIENTRY eglTerminate (EGLDisplay dpy)
     return result;
 }
 
-EGLAPI const char * EGLAPIENTRY
+const char *
 eglQueryString (EGLDisplay dpy, EGLint name)
 {
     const char *result = NULL;
@@ -83,7 +83,7 @@ eglQueryString (EGLDisplay dpy, EGLint name)
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglGetConfigs (EGLDisplay dpy,
                EGLConfig *configs,
                EGLint config_size,
@@ -98,7 +98,7 @@ eglGetConfigs (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglChooseConfig (EGLDisplay dpy,
                  const EGLint *attrib_list,
                  EGLConfig *configs,
@@ -114,7 +114,7 @@ eglChooseConfig (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglGetConfigAttrib (EGLDisplay dpy,
                     EGLConfig config,
                     EGLint attribute,
@@ -129,7 +129,7 @@ eglGetConfigAttrib (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY
+EGLSurface
 eglCreateWindowSurface (EGLDisplay dpy,
                         EGLConfig config,
                         EGLNativeWindowType win,
@@ -144,7 +144,7 @@ eglCreateWindowSurface (EGLDisplay dpy,
     return surface;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY
+EGLSurface
 eglCreatePbufferSurface (EGLDisplay dpy,
                          EGLConfig config,
                          const EGLint *attrib_list)
@@ -158,7 +158,7 @@ eglCreatePbufferSurface (EGLDisplay dpy,
     return surface;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY
+EGLSurface
 eglCreatePixmapSurface (EGLDisplay dpy,
                         EGLConfig config,
                         EGLNativePixmapType pixmap,
@@ -173,7 +173,7 @@ eglCreatePixmapSurface (EGLDisplay dpy,
     return surface;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglQuerySurface (EGLDisplay dpy,
                  EGLSurface surface,
                  EGLint attribute,
@@ -188,7 +188,7 @@ eglQuerySurface (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLSurface EGLAPIENTRY
+EGLSurface
 eglCreatePbufferFromClientBuffer (EGLDisplay dpy,
                                   EGLenum buftype,
                                   EGLClientBuffer buffer,
@@ -204,7 +204,7 @@ eglCreatePbufferFromClientBuffer (EGLDisplay dpy,
     return surface;
 }
 
-EGLAPI EGLContext EGLAPIENTRY
+EGLContext
 eglCreateContext (EGLDisplay dpy,
                   EGLConfig config,
                   EGLContext share_context,
@@ -219,7 +219,7 @@ eglCreateContext (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglQueryContext (EGLDisplay dpy,
                  EGLContext ctx,
                  EGLint attribute,
@@ -234,7 +234,7 @@ eglQueryContext (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglSwapBuffers (EGLDisplay dpy,
                 EGLSurface surface)
 {
@@ -262,7 +262,7 @@ FINISH:
     return result;
 }
 
-EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
+__eglMustCastToProperFunctionPointerType
 eglGetProcAddress (const char *procname)
 {
     void *address = NULL;
@@ -274,7 +274,7 @@ eglGetProcAddress (const char *procname)
     return address;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglMakeCurrent (EGLDisplay dpy,
                 EGLSurface draw,
                 EGLSurface read,
@@ -325,9 +325,7 @@ eglMakeCurrent (EGLDisplay dpy,
     return result;
 }
 
-/* start of eglext.h */
-#ifdef EGL_KHR_lock_surface
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglLockSurfaceKHR (EGLDisplay display,
                    EGLSurface surface,
                    const EGLint *attrib_list)
@@ -340,10 +338,8 @@ eglLockSurfaceKHR (EGLDisplay display,
     /* XXX: post eglLockSurfaceKHR and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_KHR_image
-EGLAPI EGLImageKHR EGLAPIENTRY
+EGLImageKHR
 eglCreateImageKHR (EGLDisplay dpy,
                    EGLContext ctx,
                    EGLenum target,
@@ -358,10 +354,8 @@ eglCreateImageKHR (EGLDisplay dpy,
     /* XXX: post eglCreateImageKHR and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_KHR_reusable_sync
-EGLAPI EGLSyncKHR EGLAPIENTRY
+EGLSyncKHR
 eglCreateSyncKHR (EGLDisplay dpy,
                   EGLenum type,
                   const EGLint *attrib_list)
@@ -375,7 +369,7 @@ eglCreateSyncKHR (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLint EGLAPIENTRY
+EGLint
 eglClientWaitSyncKHR (EGLDisplay dpy,
                       EGLSyncKHR sync,
                       EGLint flags,
@@ -389,9 +383,7 @@ eglClientWaitSyncKHR (EGLDisplay dpy,
     /* XXX: post eglClientWaitSyncKHR and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_NV_sync
 EGLSyncNV
 eglCreateFenceSyncNV (EGLDisplay dpy,
                       EGLenum condition,
@@ -442,10 +434,8 @@ eglGetSyncAttribNV (EGLSyncNV sync,
     /* XXX: post eglGetSyncAttribNV and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_HI_clientpixmap
-EGLAPI EGLSurface EGLAPIENTRY
+EGLSurface
 eglCreatePixmapSurfaceHI (EGLDisplay dpy,
                           EGLConfig config,
                           struct EGLClientPixmapHI *pixmap)
@@ -458,10 +448,8 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy,
     /* XXX: post eglCreatePixmapSurfaceHI and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_MESA_drm_image
-EGLAPI EGLImageKHR EGLAPIENTRY
+EGLImageKHR
 eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
 {
     EGLImageKHR result = EGL_NO_IMAGE_KHR;
@@ -473,7 +461,7 @@ eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
                        EGLint *name, EGLint *handle, EGLint *stride)
 {
@@ -485,26 +473,8 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
     /* XXX: post eglExportDRMImageMESA and wait */
     return result;
 }
-#endif
 
-#ifdef EGL_NV_post_sub_buffer
-EGLAPI EGLBoolean EGLAPIENTRY
-eglPostSubBufferNV (EGLDisplay dpy, EGLSurface surface,
-                    EGLint x, EGLint y,
-                    EGLint width, EGLint height)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglPostSubBufferNV and wait */
-    return result;
-}
-#endif
-
-#ifdef EGL_SEC_image_map
-EGLAPI void * EGLAPIENTRY
+void *
 eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
 {
     void *result = NULL;
@@ -516,19 +486,7 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglUnmapImageSEC (EGLDisplay dpy, EGLImageKHR image)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglUnmapImageSEC and wait */
-    return result;
-}
-
-EGLAPI EGLBoolean EGLAPIENTRY
+EGLBoolean
 eglGetImageAttribSEC (EGLDisplay dpy,
                       EGLImageKHR image,
                       EGLint attribute,
@@ -542,4 +500,3 @@ eglGetImageAttribSEC (EGLDisplay dpy,
     /* XXX: post eglgetImageAttribSEC and wait */
     return result;
 }
-#endif

@@ -19,8 +19,6 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
-	$(rootsrcdir)/src/client/client.h \
-	$(rootsrcdir)/src/client/client.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
 	test_egl.c \
@@ -44,5 +42,6 @@ server_test_CFLAGS = \
 	-I$(rootsrcdir)/src \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
+	-I$(rootsrcdir)/src/client \
 	-Wall \
 	-Werror

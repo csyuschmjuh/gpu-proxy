@@ -187,6 +187,18 @@ gpuprocess_suite_add_fixture (gpuprocess_suite_t *suite,
 }
 
 void
+_gpuprocess_assert (bool result,
+                    const char *expression,
+                    const char *file,
+                    int line)
+{
+    if (result)
+        return;
+    printf ("Test assertion failed %s (line %i): %s\n",
+            file, line, expression);
+}
+
+void
 _gpuprocess_fail_if (int result,
                      const char *file, int line,
                      const char *format, ...)
