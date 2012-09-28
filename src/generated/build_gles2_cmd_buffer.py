@@ -854,6 +854,15 @@ _FUNCTION_INFO = {
   },
   'glGetAttribLocation': {
     'default_return': '-1',
+  },
+  'eglTerminate': {
+    'type': 'Manual',
+  },
+  'eglMakeCurrent': {
+    'type': 'Manual',
+  },
+  'eglSwapBuffers': {
+    'type': 'Manual',
   }
 }
 
@@ -1904,16 +1913,18 @@ class GLGenerator(object):
     self.ParseAPIFile("gles2_functions.txt", self._gles2_function_re)
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
-  def FunctionReturnsSimpleValues(self, func):
+  def CanAutogenerateFunctionAtAll(self, func):
+    if func.IsType('Manual'):
+        return False
+
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("**") != -1:
             return False
-    return (func.return_type == "void" or
-            func.return_type == "GLuint" or
-            func.return_type == "GLint")
+    return func.return_type == "void" or \
+           func.return_type in _DEFAULT_RETURN_VALUES
 
   def IsSimpleFunction(self, func):
-    if not self.FunctionReturnsSimpleValues(func):
+    if not self.CanAutogenerateFunctionAtAll(func):
         return False
     if func.name.find("PixelStore") != -1:
         return False
@@ -1982,13 +1993,13 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
     for func in self.functions:
-      if not self.FunctionReturnsSimpleValues(func):
+      if not self.CanAutogenerateFunctionAtAll(func):
         continue
       func.WriteStruct(file)
     file.Write("\n")
 
     for func in self.functions:
-      if not self.FunctionReturnsSimpleValues(func):
+      if not self.CanAutogenerateFunctionAtAll(func):
         continue
       file.Write("private ");
       func.WriteInitSignature(file)
@@ -2003,7 +2014,7 @@ class GLGenerator(object):
     file.Write("#include \"command.h\"\n")
     file.Write("#include <string.h>\n\n")
 
-    void_return_functions = filter(self.FunctionReturnsSimpleValues, self.functions)
+    void_return_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
 
     for func in void_return_functions:
       func.WriteCommandInit(file)
@@ -2040,7 +2051,7 @@ class GLGenerator(object):
     file.Write("{\n")
     file.Write("    switch (abstract_command->id) {\n")
 
-    void_return_functions = filter(self.FunctionReturnsSimpleValues, self.functions)
+    void_return_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
     for func in void_return_functions:
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
 
