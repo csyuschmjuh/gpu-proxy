@@ -1663,13 +1663,13 @@ caching_server_glEnable (server_t *server, GLenum cap)
  bool
 caching_server_glIndexIsTooLarge (server_t *server, gles2_state_t *state, GLuint index)
 {
-    if (index >= state->max_vertex_attribs) {
+    if (index > state->max_vertex_attribs) {
         if (! state->max_vertex_attribs_queried) {
             /* XXX: command buffer */
             CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, GL_MAX_VERTEX_ATTRIBS,
                                   &(state->max_vertex_attribs));
         }
-        if (index >= state->max_vertex_attribs) {
+        if (index > state->max_vertex_attribs) {
             if (state->error == GL_NO_ERROR)
                 state->error = GL_INVALID_VALUE;
             return true;
