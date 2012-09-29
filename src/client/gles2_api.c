@@ -1090,7 +1090,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 
 /* end of GLES2 core profile */
 
-#ifdef GL_OES_get_program_binary
 /* total parameters size 5 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
 glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei *length,
@@ -1120,9 +1119,7 @@ glProgramBinaryOES (GLuint program, GLenum binaryFormat,
     }
     return;
 }
-#endif
 
-#ifdef GL_OES_mapbuffer
 GL_APICALL GLboolean GL_APIENTRY
 glUnmapBufferOES (GLenum target)
 {
@@ -1144,9 +1141,7 @@ glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid **params)
     /* XXX: post command and wait */
     return;
 }
-#endif
 
-#ifdef GL_OES_texture_3D
 /* total parameters 10 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
 glTexImage3DOES (GLenum target, GLint level, GLenum internalformat,
@@ -1254,9 +1249,7 @@ glCompressedTexSubImage3DOES (GLenum target, GLint level,
         
     return;
 }
-#endif
 
-#ifdef GL_OES_vertex_array_object
 GL_APICALL void GL_APIENTRY
 glDeleteVertexArraysOES (GLsizei n, const GLuint *arrays)
 {
@@ -1296,9 +1289,7 @@ glIsVertexArrayOES (GLuint array)
     /* XXX: post command and wait */
     return result;
 }
-#endif
 
-#ifdef GL_AMD_performance_monitor
 GL_APICALL void GL_APIENTRY
 glGetPerfMonitorGroupsAMD (GLint *numGroups, GLsizei groupSize, 
                            GLuint *groups)
@@ -1418,9 +1409,7 @@ glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
 
     /* XXX: post command and wait */
 }
-#endif
 
-#ifdef GL_EXT_discard_framebuffer
 GL_APICALL void GL_APIENTRY
 glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments,
                          const GLenum *attachments)
@@ -1438,9 +1427,7 @@ glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments,
                 sizeof (GLenum) * numAttachments);
     }
 }
-#endif
 
-#ifdef GL_EXT_multi_draw_arrays
 GL_APICALL void GL_APIENTRY
 glMultiDrawArraysEXT (GLenum mode, const GLint *first, 
                       const GLsizei *count, GLsizei primcount)
@@ -1454,9 +1441,7 @@ glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
 {
     /* not implemented */
 }
-#endif
 
-#ifdef GL_NV_fence
 GL_APICALL void GL_APIENTRY
 glDeleteFencesNV (GLsizei n, const GLuint *fences)
 {
@@ -1492,9 +1477,7 @@ glGetFenceivNV (GLuint fence, GLenum pname, int *params)
     /* XXX: post command and wait */
     return;
 }
-#endif
 
-#ifdef GL_QCOM_driver_control
 GL_APICALL void GL_APIENTRY
 glGetDriverControlsQCOM (GLint *num, GLsizei size, GLuint *driverControls)
 {
@@ -1515,9 +1498,7 @@ glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize,
     /* XXX: post command and wait */
     return;
 }
-#endif
 
-#ifdef GL_QCOM_extended_get
 GL_APICALL void GL_APIENTRY
 glExtGetTexturesQCOM (GLuint *textures, GLint maxTextures, 
                       GLint *numTextures)
@@ -1595,9 +1576,7 @@ glExtGetBufferPointervQCOM (GLenum target, GLvoid **params)
     /* XXX: post command and wait */
     return;
 }
-#endif
 
-#ifdef GL_QCOM_extended_get2
 GL_APICALL void GL_APIENTRY
 glExtGetShadersQCOM (GLuint *shaders, GLint maxShaders, GLint *numShaders)
 {
@@ -1641,4 +1620,104 @@ glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
     /* XXX: post command and wait */
     return;
 }
-#endif
+
+
+GLint
+glGetAttribLocation (GLuint program, 
+                     const char *name)
+{
+    if (_is_error_state ())
+        return 0;
+    return 0;
+}
+
+GLint
+glGetUniformLocation (GLuint program,
+                      const char *name)
+{
+    if (_is_error_state ())
+        return 0;
+    return 0;
+}
+
+void
+glTexParameteriv (GLenum target,
+                  GLenum pname,
+                  const GLint *params)
+{
+}
+
+void
+glTexParameterfv (GLenum target,
+                  GLenum pname,
+                  const GLfloat *params)
+{
+}
+
+void
+glUniformMatrix2fv (GLint location,
+                    GLsizei count,
+                    GLboolean transpose,
+                    const GLfloat *value)
+{
+}
+
+void
+glUniformMatrix3fv (GLint location,
+                    GLsizei count,
+                    GLboolean transpose,
+                    const GLfloat *value)
+{
+}
+
+void
+glUniformMatrix4fv (GLint location,
+                    GLsizei count,
+                    GLboolean transpose,
+                    const GLfloat *value)
+{
+}
+
+void
+glGenQueriesEXT (GLsizei n,
+                 GLuint *ids)
+{
+}
+
+void
+glDeleteQueriesEXT (GLsizei n,
+                    const GLuint *ids)
+{
+}
+
+GLboolean
+glIsQueryEXT (GLuint id)
+{
+    return GL_FALSE;
+}
+
+void
+glGetQueryivEXT (GLenum target,
+                 GLenum pname,
+                 GLint *params)
+{
+}
+
+void
+glGetQueryObjectuivEXT (GLuint id,
+                        GLenum pname,
+                        GLuint *params)
+{
+}
+
+GLboolean
+glIsFenceNV (GLuint fence)
+{
+    return GL_FALSE;
+}
+
+GLboolean
+glTestFenceNV (GLuint fence)
+{
+    return GL_FALSE;
+}
