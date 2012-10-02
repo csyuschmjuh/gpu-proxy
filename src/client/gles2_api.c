@@ -222,9 +222,16 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int i;
+    unsigned int token;
 
     if (_is_error_state ())
         return;
+
+    /* we need to flush the command buffer because some previous
+     * glVertexAttribPointer() might have been executed yet
+     */
+    token = client_insert_token ();
+    client_wait_for_token (token); 
 
     egl_state = client_get_active_egl_state();
     gles_state = &egl_state->state;
@@ -260,9 +267,17 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int i;
+    unsigned int token;
 
     if (_is_error_state ())
         return;
+    
+    /* we need to flush the command buffer because some previous
+     * glVertexAttribPointer() might have been executed yet
+     */
+    token = client_insert_token ();
+    client_wait_for_token (token); 
+
 
     egl_state = client_get_active_egl_state();
     gles_state = &egl_state->state;
