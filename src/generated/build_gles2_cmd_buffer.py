@@ -2260,7 +2260,7 @@ def main(argv):
 
   gen.WriteSimpleFunctions("gles2_api_autogen.c")
   gen.WriteCommandHeader("command_autogen.h")
-  gen.WriteCommandEnum("command_type_autogen.h")
+  gen.WriteCommandEnum("command_types_autogen.h")
   gen.WriteClientImplementations("command_autogen.c")
   gen.WriteBaseServer("server_autogen.c")
 

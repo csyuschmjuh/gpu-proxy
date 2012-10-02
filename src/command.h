@@ -14,19 +14,19 @@
 extern "C" {
 #endif
 
-typedef struct command {
-    unsigned int type;
-    size_t size;
-} command_t;
-
 typedef enum command_type {
     COMMAND_NO_OP,
     COMMAND_SET_TOKEN,
 
-#include "generated/command_id_autogen.h"
+#include "generated/command_types_autogen.h"
 
     COMMAND_MAX_COMMAND
 } command_type_t;
+
+typedef struct command {
+    command_type_t type;
+    size_t size;
+} command_t;
 
 /* SetToken command, it writes a token in the command buffer, allowing
   the client to check when it is consumed in the server. */
