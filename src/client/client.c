@@ -171,7 +171,7 @@ client_insert_token ()
 {
     command_t *set_token_command = client_get_space_for_command (COMMAND_SET_TOKEN);
     /* FIXME: Check max size and wrap. */
-    unsigned int token = client_get_thread_local ()->token++;
+    unsigned int token = ++client_get_thread_local ()->token;
 
     assert (set_token_command != NULL);
 
