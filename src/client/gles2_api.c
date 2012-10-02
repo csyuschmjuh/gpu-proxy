@@ -84,16 +84,6 @@ void glBufferSubData (GLenum target, GLintptr offset,
     }
 }
 
-GLenum glCheckFramebufferStatus (GLenum target)
-{
-    GLenum result = GL_INVALID_ENUM;
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 /* total parameters 8 * sizeof (GLint) */
 void glCompressedTexImage2D (GLenum target, GLint level,
                              GLenum internalformat,
@@ -424,17 +414,6 @@ void glGetBufferParameteriv (GLenum target, GLenum value, GLint *data)
     /* XXX: post command and wait */
 }
 
-GLenum glGetError (void)
-{
-    GLenum error = GL_INVALID_OPERATION;
-    
-    if (_is_error_state ())
-        return error;
-
-    /* XXX: post command and wait */
-    return error;
-}
-
 void glGetFramebufferAttachmentParameteriv (GLenum target,
                                             GLenum attachment,
                                             GLenum pname,
@@ -588,83 +567,6 @@ void glGetVertexAttribPointerv (GLuint index, GLenum pname, GLvoid **pointer)
 
     /* XXX: post command and wait */
     return;
-}
-
-GLboolean glIsBuffer (GLuint buffer)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsEnabled (GLenum cap)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsFramebuffer (GLuint framebuffer)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsProgram (GLuint program)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsRenderbuffer (GLuint renderbuffer)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsShader (GLuint shader)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
-GLboolean glIsTexture (GLuint texture)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
 }
 
 void glPixelStorei (GLenum pname, GLint param)
@@ -1135,18 +1037,6 @@ glProgramBinaryOES (GLuint program, GLenum binaryFormat,
     return;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glUnmapBufferOES (GLenum target)
-{
-    GLboolean result = GL_FALSE;
-    
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 GL_APICALL void GL_APIENTRY
 glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid **params)
 {
@@ -1291,18 +1181,6 @@ glGenVertexArraysOES (GLsizei n, GLuint *arrays)
 
     /* XXX: post command and wait */
     return;
-}
-
-GL_APICALL GLboolean GL_APIENTRY
-glIsVertexArrayOES (GLuint array)
-{
-    GLboolean result = GL_FALSE;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
 }
 
 GL_APICALL void GL_APIENTRY
@@ -1613,18 +1491,6 @@ glExtGetProgramsQCOM (GLuint *programs, GLint maxPrograms,
     return;
 }
 
-GL_APICALL GLboolean GL_APIENTRY
-glExtIsProgramBinaryQCOM (GLuint program)
-{
-    GLboolean result = false;
-    
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 GL_APICALL void GL_APIENTRY
 glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
                                  GLchar *source, GLint *length)
@@ -1634,25 +1500,6 @@ glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
 
     /* XXX: post command and wait */
     return;
-}
-
-
-GLint
-glGetAttribLocation (GLuint program, 
-                     const char *name)
-{
-    if (_is_error_state ())
-        return 0;
-    return 0;
-}
-
-GLint
-glGetUniformLocation (GLuint program,
-                      const char *name)
-{
-    if (_is_error_state ())
-        return 0;
-    return 0;
 }
 
 void
@@ -1705,12 +1552,6 @@ glDeleteQueriesEXT (GLsizei n,
 {
 }
 
-GLboolean
-glIsQueryEXT (GLuint id)
-{
-    return GL_FALSE;
-}
-
 void
 glGetQueryivEXT (GLenum target,
                  GLenum pname,
@@ -1723,16 +1564,4 @@ glGetQueryObjectuivEXT (GLuint id,
                         GLenum pname,
                         GLuint *params)
 {
-}
-
-GLboolean
-glIsFenceNV (GLuint fence)
-{
-    return GL_FALSE;
-}
-
-GLboolean
-glTestFenceNV (GLuint fence)
-{
-    return GL_FALSE;
 }
