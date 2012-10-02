@@ -176,7 +176,171 @@ _FUNCTION_INFO = {
   'glVertexAttrib4fv': {
     'argument_element_size': { 'values': 4 }
   },
-
+  'eglInitialize': {
+    'out_arguments': ['major', 'minor']
+  },
+  'eglGetConfigs': {
+    'out_arguments': ['configs', 'num_config']
+  },
+  'eglGetConfigAttrib': {
+    'out_arguments': ['value']
+  },
+  'eglQuerySurface': {
+    'out_arguments': ['value']
+  },
+  'eglQueryContext': {
+    'out_arguments': ['value']
+  },
+  'eglGetSyncAttribKHR': {
+    'out_arguments': ['value']
+  },
+  'eglGetSyncAttribNV': {
+    'out_arguments': ['value']
+  },
+  'eglGetImageAttribSEC': {
+    'out_arguments': ['value']
+  },
+  'eglQuerySurfacePointerANGLE': {
+    'out_arguments': ['value']
+  },
+  'glGetBooleanv': {
+    'out_arguments': ['params']
+  },
+  'glGetFloatv': {
+    'out_arguments': ['params']
+  },
+  'glGetIntegerv': {
+    'out_arguments': ['params']
+  },
+  'glGenBuffers': {
+    'out_arguments': ['buffers']
+  },
+  'glGenFramebuffers': {
+    'out_arguments': ['framebuffers']
+  },
+  'glGenRenderbuffers': {
+    'out_arguments': ['renderbuffers']
+  },
+  'glGenTextures': {
+    'out_arguments': ['textures']
+  },
+  'glGetActiveUniform': {
+    'out_arguments': ['length', 'size', 'type', 'name']
+  },
+  'glGetAttachedShaders': {
+    'out_arguments': ['count', 'shaders']
+  },
+  'glGetBufferParameteriv': {
+    'out_arguments': ['params']
+  },
+  'glGetFramebufferAttachmentParameteriv': {
+    'out_arguments': ['params']
+  },
+  'glGetProgramInfoLog': {
+    'out_arguments': ['length', 'infolog']
+  },
+  'glGetProgramiv': {
+    'out_arguments': ['params']
+  },
+  'glGetRenderbufferParameteriv': {
+    'out_arguments': ['params']
+  },
+  'glGetShaderInfoLog': {
+    'out_arguments': ['length', 'infolog']
+  },
+  'glGetShaderPrecisionFormat': {
+    'out_arguments': ['range', 'precision']
+  },
+  'glGetShaderSource': {
+    'out_arguments': ['length', 'source']
+  },
+  'glGetShaderiv': {
+    'out_arguments': ['params']
+  },
+  'glGetTexParameteriv': {
+    'out_arguments': ['params']
+  },
+  'glGetTexParameterfv': {
+    'out_arguments': ['params']
+  },
+  'glGetUniformiv': {
+    'out_arguments': ['params']
+  },
+  'glGetUniformfv': {
+    'out_arguments': ['params']
+  },
+  'glGetVertexAttribiv': {
+    'out_arguments': ['params']
+  },
+  'glGetVertexAttribfv': {
+    'out_arguments': ['params']
+  },
+  'glGetVertexAttribPointerv': {
+    'out_arguments': ['pointer']
+  },
+  'glGetProgramBinaryOES': {
+    'out_arguments': ['length', 'binaryFormat', 'binary']
+  },
+  'glGetBufferPointervOES': {
+    'out_arguments': ['params']
+  },
+  'glGenVertexArraysOES': {
+    'out_arguments': ['arrays']
+  },
+  'glGenPerfMonitorsAMD': {
+    'out_arguments': ['monitors']
+  },
+  'glGenFencesNV': {
+    'out_arguments': ['fences']
+  },
+  'glGetFenceivNV': {
+    'out_arguments': ['params']
+  },
+  'glGetDriverControlsQCOM': {
+    'out_arguments': ['num', 'driverControls']
+  },
+  'glGetDriverControlStringQCOM': {
+    'out_arguments': ['length', 'driverControlString']
+  },
+  'glExtGetTexturesQCOM': {
+    'out_arguments': ['textures', 'numTextures']
+  },
+  'glExtGetBuffersQCOM': {
+    'out_arguments': ['buffers', 'numBuffers']
+  },
+  'glExtGetRenderbuffersQCOM': {
+    'out_arguments': ['renderbuffers', 'numRenderbuffers']
+  },
+  'glExtGetFramebuffersQCOM': {
+    'out_arguments': ['framebuffers', 'numFramebuffers']
+  },
+  'glExtGetTexLevelParameterivQCOM': {
+    'out_arguments': ['params']
+  },
+  'glExtGetTexSubImageQCOM': {
+    'out_arguments': ['texels']
+  },
+  'glExtGetBufferPointervQCOM': {
+    'out_arguments': ['params']
+  },
+  'glExtGetShadersQCOM': {
+    'out_arguments': ['shaders', 'numShaders']
+  },
+  'glExtGetProgramsQCOM': {
+    'out_arguments': ['programs', 'numPrograms']
+  },
+  'glExtGetProgramBinarySourceQCOM': {
+    'out_arguments': ['source', 'length']
+  },
+  'glGenQueriesEXT': {
+    'out_arguments': ['queries']
+  },
+  'glGetQueryivEXT': {
+    'out_arguments': ['params']
+  },
+  'glGetQueryObjectuivEXT': {
+    'out_arguments': ['params']
+  },
 }
 
 # This string is copied directly out of the gl2.h file from GLES2.0
@@ -1175,7 +1339,6 @@ class TypeHandler(object):
       type = arg.type.replace("const", "")
       file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
 
-
   def WriteCommandInit(self, func, file):
     self.WriteInitSignature(func, file)
     file.Write("\n{\n")
@@ -1258,6 +1421,8 @@ class FunctionInfo(object):
       self.default_return = ''
     if not 'argument_has_size' in info:
       self.argument_has_size = {}
+    if not 'out_arguments' in info:
+      self.out_arguments = []
     if not 'argument_element_size' in info:
       self.argument_element_size = {}
 
@@ -1728,6 +1893,16 @@ class Function(object):
     return (not self.GetInfo('extension') and
             not self.GetInfo('pepper_interface'))
 
+  def IsSynchronous(self):
+    return self.HasReturnValue() or len(self.info.out_arguments) > 0
+
+  def HasReturnValue(self):
+    return self.return_type != 'void'
+
+  def IsOutArgument(self, arg):
+    """Returns true if given argument is an out argument for this function"""
+    return arg.name in self.info.out_arguments
+
   def GetGLFunctionName(self):
     """Gets the function to call to execute GL for this command."""
     if self.GetInfo('decoder_func'):
@@ -2029,7 +2204,7 @@ class GLGenerator(object):
     if func.IsType('Manual'):
         return False
     for arg in func.GetOriginalArgs():
-        if arg.IsDoublePointer():
+        if arg.IsDoublePointer() and not func.IsOutArgument(arg):
             return False
     return func.return_type == "void" or \
            func.return_type in _DEFAULT_RETURN_VALUES
@@ -2043,6 +2218,8 @@ class GLGenerator(object):
         return False
 
     for arg in func.GetInitArgs()[:-1]:
+        if arg.name in func.info.out_arguments:
+            continue
         if arg.name in func.info.argument_has_size:
             continue
         if arg.name in func.info.argument_element_size:
@@ -2099,10 +2276,14 @@ class GLGenerator(object):
 
         file.Write("    client_write_command (command);\n");
 
-        if func.return_type != "void":
-          file.Write("\n    unsigned int token = client_insert_token();\n")
+        if func.IsSynchronous():
+          file.Write("\n")
+          file.Write("    unsigned int token = client_insert_token();\n")
           file.Write("    client_wait_for_token (token);\n")
-          file.Write("\n    return ((command_%s_t *)command)->result;\n\n" % func.name.lower())
+
+        if func.HasReturnValue():
+          file.Write("\n")
+          file.Write("    return ((command_%s_t *)command)->result;\n\n" % func.name.lower())
 
         file.Write("}\n\n")
     file.Close()
