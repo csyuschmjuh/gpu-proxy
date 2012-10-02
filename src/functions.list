@@ -1,0 +1,303 @@
+functions		client		server		comments
+eglGetError		auto		auto		
+eglGetDisplay		manual		manual
+eglInitialize		auto		auto
+eglTerminate		manual		manual
+eglQueryString		auto		auto
+eglGetConfigs		auto		auto
+eglChooseConfig		auto		auto
+eglGetConfigAttrib	auto		auto
+eglCreateWindowSurface	auto		auto
+eglCreatePbufferSurface auto		auto
+eglCreatePixmapSurface	auto		auto
+eglDestroySurface	manual		manual
+eglQuerySurface		auto		auto
+eglBindAPI		auto		auto
+eglWaitClient		auto		auto
+eglReleaseThread	manual		manual
+eglCreatePbufferFromClientBuffer
+			auto		auto
+eglSurfaceAttrib	auto		auto
+eglBindTexImage		auto		auto
+eglReleaseTexImage	auto		auto
+eglSwapInterval		auto		auto
+eglCreateContext	auto		auto
+eglDestroyContext	manual		manual
+eglMakeCurrent		manual		manual
+eglGetCurrentContext	manual		manual
+eglGetCurrentDisplay	manual		manual
+eglGetCurrentSurface	manual		manual
+eglQueryContext		auto		auto
+eglWaitGL		auto		auto
+eglWaitNative		auto		auto
+eglSwapBuffers		manual		manual		it can takes long time, we flush command queue and then no-wait post	
+eglCopyBuffers		auto		auto
+eglGetProcAddress	auto		auto
+eglLockSurfaceKHR	auto		auto
+eglUnlockSurfaceKHR	auto		auto
+eglCreateImageKHR	auto		auto
+eglDestroyImageKHR	auto		auto
+eglCreateSyncKHR	auto		auto
+eglDestroySyncKHR	auto		auto
+eglClientWaitSyncKHR	auto		auto
+eglSignalSyncKHR	auto		auto
+eglGetSyncAttribKHR	auto		auto
+eglCreateFenceSyncNV	auto		auto
+eglDestroySyncNV	auto		auto
+eglFenceNV		auto		auto
+eglClientWaitSyncNV	auto		auto
+eglSignalSyncNV		auto		auto
+eglGetSyncAttribNV	auto		auto
+eglCreatePixmapSurfaceHI
+			auto		auto
+eglCreateDRMImageMESA	auto		auto
+eglExportDRMImageMESA	auto		auto
+eglPostSubBufferNV	auto		auto
+eglMapImageSEC		auto		auto
+eglUnmapImageSEC	auto		auto
+eglGetImageAttribSEC	auto		auto
+
+glActiveTexture		auto		auto/manual	both caching and passthrough
+glAttachShader		auto		auto/manual
+glBindAttribLocation	auto		auto/manual
+glBindBuffer		auto		auto/manual
+glBindFramebuffer	auto		auto/manual
+glBindRenderbuffer	auto		auto/manual
+glBindTexture		auto		auto/manual
+glBlendColor		auto		auto/manual
+glBlendEquation		auto		auto/manual
+glBlendEquationSeparate
+			auto		auto/manual
+glBufferData		manual		manual
+glBufferSubData		manual		manual
+glCheckFramebufferStatus
+			auto		auto/manual
+glClear			auto		auto/manual
+glClearColor		auto		auto/manual
+glClearDepthf		auto		auto/manual
+glClearStencil		auto		auto/manual
+glColorMask		auto		auto/manual
+glCompileShader		auto		auto/manual
+glCompressedTexImage2D  manual		manual
+glCompressedTexSubImage2D
+			manual		manual
+glCopyTexImage2D	auto		auto/manual
+glCopyTexSubImage2D	auto		auto/manual
+glCreateProgram		auto		auto/manual
+glCreateShader		auto		auto/manual
+glCullFace		auto		auto/manual
+glDeleteBuffers		manual		manual
+glDeleteProgram		auto		auto/manual
+glDeleteFramebuffers	manual		manual
+glDeleteRenderbuffers	manual		manual
+glDeleteShader		auto		auto/manual
+glDeleteTextures	manual		auto/manual
+glDepthFunc		auto		auto/manual
+glDepthMask		auto		auto/manual
+glDepthRangef		auto		auto/manual
+glDetachShader		auto		auto/manual
+glDisable		auto		auto/manual
+glDisableVertexAttribArray
+			auto		auto/manual
+glDrawArrays		manual		manual
+glDrawElements		manual		manual
+glEnable		auto		auto/manual
+glEnableVertexAttribArray
+			auto		auto/manual
+glFinish		auto		auto/manual
+glFlush			auto		auto/manual
+glFramebufferRenderbuffer
+			auto		auto/manual
+glFramebufferTexture2D	auto		auto/manual
+glFrontFace		auto		auto/manual
+glGenBuffers		auto		auto/manual
+glGenerateMipmap	auto		auto/manual
+glGenFramebuffers	auto		auto/manual
+glGenRenderbuffers	auto		auto/manual
+glGenTextures		auto		auto/manual
+glGetActiveAttrib	auto		auto/manual
+glGetAttribLocation	auto		auto/manual
+glGetBooleanv		auto		auto/manual
+glGetBufferParameterv	auto		auto/manual
+glGetError		auto		auto/manual
+glGetFloatv		auto		auto/manual
+glGetIntegerv		auto		auto/manual
+glGetProgramiv		auto		auto/manual
+glGetProgramInfoLog	auto		auto/manual
+glGetRenderbufferParameteriv
+			auto		auto/manual
+glGetShaderiv		auto		auto/manual
+glGetShaderInfoLog	auto		auto/manual
+glGetShaderPrecisionFormat
+			auto		auto/manual
+glGetString		auto		auto/manual
+glGetTexParameterfv	auto		auto/manual
+glGetTexParameteriv	auto		auto/manual
+glGetUniformfv		auto		auto/manual
+glGetUniformiv		auto		auto/manual
+glGetUniformLocation	auto		auto/manual
+glGetVertexAttribfv	auto		auto/manual
+glGetVertexAttribiv	auto		auto/manual
+glGetVertexAttribPointerv
+			manual		manual
+glHint			auto		auto/manual
+glIsBuffer		auto		auto/manual
+glIsEnabled		auto		auto/manual
+glIsFramebuffer		auto		auto/manual
+glIsProgram		auto		auto/manual
+glIsRenderbuffer	auto		auto/manual
+glIsShader		auto		auto/manual
+glIsTexture		auto		auto/manual
+glLineWidth		auto		auto/manual
+glLinkProgram		auto		auto/manual
+glPixelStorei		manual		manual
+glPolygonOffset		auto		auto/manual
+glReadPixels		auto		auto/manual
+glReleaseShaderCompiler	auto		auto/manual
+glRenderbufferStorage	auto		auto/manual
+glSampleCoverage	auto		auto/manual
+glScissor		auto		auto/manual
+glShaderBinary		manual		manual
+glShaderSource		manual		manual
+glStencilFunc		auto		auto/manual
+glStencilFuncSeparate	auto		auto/manual
+glStencilMask		auto		auto/manual
+glStencilMastSeparate	auto		auto/manual
+glStencilOp		auto		auto/manual
+glStencilOpSeparate	auto		auto/manual
+glTexImage2D		manual		manual
+glTexParameterf		auto		auto/manual
+glTexParameterfv	manual		manual
+glTexParameteri		auto		auto/manual
+glTexParameteriv	manual		manual
+glTexSubImage2D		manual		manual
+glUniform1f		auto		auto/manual
+glUniform2f		auto		auto/manual
+glUniform3f		auto		auto/manual
+glUniform4f		auto		auto/manual
+glUniform1fv		manual		manual
+glUniform2fv		manual		manual
+glUniform3fv		manual		manual
+glUniform4fv		manual		manual
+glUniform1i		auto		auto/manual
+glUniform2i		auto		auto/manual
+glUniform3i		auto		auto/manual
+glUniform4i		auto		auto/manual
+glUniform1iv		manual		manual
+glUniform2iv		manual		manual
+glUniform3iv		manual		manual
+glUniform4iv		manual		manual
+glUniformMatrix2fv	manual		manual
+glUniformMatrix3fv	manual		manual
+glUniformMatrix4fv	manual		manual
+glUseProgram		auto		auto/manual
+glValidateProgram	auto		auto/manual
+glVertexAttrib1f	auto		auto/manual
+glVertexAttrib2f	auto		auto/manual
+glVertexAttrib3f	auto		auto/manual
+glVertexAttrib4f	auto		auto/manual
+glVertexAttrib1fv	manual		manual
+glVertexAttrib2fv	manual		manual
+glVertexAttrib3fv	manual		manual
+glVertexAttrib4fv	manual		manual
+glVertexAttribPointer	manual		manual
+glViewport		auto		auto/manual
+
+glEGLImageTargetTexture2DOES
+			auto		auto/manual
+glEGLTargetRenderbufferStorageOES
+			auto		auto/manual
+glGetProgramBinaryOES
+			auto		auto/manual
+glProgramBinaryOES
+			manual		manual
+glMapBufferOES		auto		auto/manual
+glUnmapBufferOES	auto		auto/manual
+glGetBufferPointervOES	auto		auto/manual
+glTexImage3DOES		manual		manual
+glTexSubImage3DOES	manual		manual
+glCopyTexSubImage3DOES	auto		auto/manual
+glCompressedTexImage3DOES
+			manual		manual
+glCompressedTexSubImage3DOES
+			manual		manual
+glFramebufferTexture3DOES
+			auto		auto/manual
+glBindVertexArrayOES	auto		auto/manual
+glDeleteVertexArraysOES	manual		manual
+glGenVertexArraysOES	auto		auto/manual
+glIsVertexArraysOES	auto		auto/manual
+glGetPerfMonitorGroupsAMD
+			auto		auto/manual
+glGetPerfMonitorCountersAMD
+			auto		auto/manual
+glGetPerfMonitorGroupStringAMD
+			auto		auto/manual
+glGetPerfMonitorCounterStringAMD
+			auto		auto/manual
+glGetperfMonitorCounterInfoAMD
+			auto		auto/manual
+glGenPerfMonitorsAMD	auto		auto/manual
+glDeletePerfMonitorsAMD	manual		manual
+glSelectPerfMonitorCountersAMD
+			manual		manual
+glBeginPerfMonitorAMD	auto		auto/manual
+glEndPerfMonitorAMD	auto		auto/manual
+glGetPerfMonitorCounterDataAMD
+			auto		auto/manual
+glBlitFramebufferANGLE	auto		auto/manual
+glRenderbufferStorageMultisampleANGLE
+			auto		auto/manual
+glRenderbufferStorageMultisampleAPPLE
+			auto		auto/manual
+glResolveMultsampleFramebufferAPPLE
+			auto		auto/manual
+glDiscardFramebufferEXT	manual		manual
+glMultiDrawArraysEXT	manual		manual			not implemented on client side
+glMultiDrawElementsEXT	manual		manual			not implemented on client side
+glRenderbufferStorageMultisampleEXT
+			auto		auto/manual
+glFramebufferTexcture2DMultisampleEXT
+			auto		auto/manual
+glRenderbufferStorageMultisampleIMG
+			auto		auto/manual
+glFramebufferTexcture2DMultisampleIMG
+			auto		auto/manual
+glDeleteFencesNV	manual		manual
+glGenFencesNV		auto		auto/manual
+glIsFenceNV		auto		auto/manual
+glTestFenceNV		auto		auto/manual
+glGetFenceivNV		auto		auto/manual
+glFinishFenceNV		auto		auto/manual
+glSetFenceNV		auto		auto/manual
+glCoverageMaskNV	auto		auto/manual
+glCoverageOperationNV	auto		auto/manual
+glGetDriverControlsQCOM	auto		auto/manual
+glGetDriverControStringQCOM
+			auto		auto/manual
+glEnableDriverControlQCOM
+			auto		auto/manual
+glDisableDriverControlQCOM
+			auto		auto/manual
+glExtGetRenderbuffersQCOM
+			auto		auto/manual
+glExtGetFramebuffersQCOM
+			auto		auto/manual
+glExtGetTexLevelParameterivQCOM
+			auto		auto/manual
+glExtTexObjectStateOverrideiQCOM
+			auto		auto/manual
+glExtGetTexSubImageQCOM
+			auto		auto/manual
+glExtGetBufferPointervQCOM
+			auto		auto/manual
+glExtGetBufferPointervQCOM
+			auto		auto/manual
+glExtGetShadersQCOM	auto		auto/manual
+glExtGetProgramsQCOM	auto		auto/manual
+glExtIsProgramBinaryQCOM
+			auto		auto/manual
+glExtGetProgramBinarySourceQCOM
+			auto		auto/manual
+glStartTilingQCOM	auto		auto/manual
+glEndTilingQCOM		auto		auto/manual
