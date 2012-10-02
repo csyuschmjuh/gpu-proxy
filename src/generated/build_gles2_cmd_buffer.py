@@ -21,6 +21,7 @@ _DO_NOT_EDIT_WARNING = """// This file is auto-generated. DO NOT EDIT!
 
 _DEFAULT_RETURN_VALUES = {
     'const char*': 'NULL',
+    'const GLubyte*': 'NULL',
     'void*': 'NULL',
     'GLuint': '0',
     'GLint': '0',
@@ -120,6 +121,9 @@ _FUNCTION_INFO = {
   'glDeleteQueriesEXT': {
     'argument_has_size': { 'queries': 'n' }
   },
+  'glShaderBinary': {
+    'argument_has_size': { 'shaders': 'n', 'binary': 'length' }
+  },
   'glUniform1fv': {
     'argument_has_size': { 'v': 'count' },
     'argument_element_size': { 'v': 1 }
@@ -176,6 +180,15 @@ _FUNCTION_INFO = {
   'glVertexAttrib4fv': {
     'argument_element_size': { 'values': 4 }
   },
+  'glProgramBinaryOES': {
+    'argument_has_size': { 'binary': 'length' }
+  },
+  'glDeletePerfMonitorsAMD': {
+    'argument_has_size': { 'monitors': 'n' }
+  },
+  'glSelectPerfMonitorCountersAMD': {
+    'argument_has_size': { 'countersList': 'numCounters' }
+  },
   'eglInitialize': {
     'out_arguments': ['major', 'minor']
   },
@@ -223,6 +236,9 @@ _FUNCTION_INFO = {
   },
   'glGenTextures': {
     'out_arguments': ['textures']
+  },
+  'glGetActiveAttrib': {
+    'out_arguments': ['length', 'size', 'type', 'name']
   },
   'glGetActiveUniform': {
     'out_arguments': ['length', 'size', 'type', 'name']
@@ -275,6 +291,9 @@ _FUNCTION_INFO = {
   'glGetVertexAttribfv': {
     'out_arguments': ['params']
   },
+  'glReadPixels': {
+    'out_arguments': ['pixels']
+  },
   'glGetVertexAttribPointerv': {
     'out_arguments': ['pointer']
   },
@@ -289,6 +308,24 @@ _FUNCTION_INFO = {
   },
   'glGenPerfMonitorsAMD': {
     'out_arguments': ['monitors']
+  },
+  'glGetPerfMonitorGroupsAMD': {
+    'out_arguments': ['numGroups', 'groups']
+  },
+  'glGetPerfMonitorCountersAMD': {
+    'out_arguments': ['numCounters', 'maxActiveCounters', 'counters']
+  },
+  'glGetPerfMonitorCounterDataAMD': {
+    'out_arguments': ['data', 'bytesWritten']
+  },
+  'glGetPerfMonitorGroupStringAMD': {
+    'out_arguments': ['length', 'groupString']
+  },
+  'glGetPerfMonitorCounterStringAMD': {
+    'out_arguments': ['length', 'counterString']
+  },
+  'glGetPerfMonitorCounterInfoAMD': {
+    'out_arguments': ['data']
   },
   'glGenFencesNV': {
     'out_arguments': ['fences']

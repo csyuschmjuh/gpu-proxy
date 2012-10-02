@@ -2,7 +2,7 @@ EGLAPI EGLint          EGLAPIENTRY eglGetError (void);
 EGLAPI EGLDisplay      EGLAPIENTRY eglGetDisplay (EGLNativeDisplayType display_id);
 EGLAPI EGLBoolean      EGLAPIENTRY eglInitialize (EGLDisplay dpy, EGLint* major, EGLint* minor);
 EGLAPI EGLBoolean      EGLAPIENTRY eglTerminate (EGLDisplay dpy);
-EGLAPI const char *    EGLAPIENTRY eglQueryString (EGLDisplay dpy, EGLint name);
+EGLAPI const char*     EGLAPIENTRY eglQueryString (EGLDisplay dpy, EGLint name);
 EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigs (EGLDisplay dpy, EGLConfig* configs, EGLint config_size, EGLint* num_config);
 EGLAPI EGLBoolean      EGLAPIENTRY eglChooseConfig (EGLDisplay dpy, const EGLint* attrib_list, EGLConfig* configs, EGLint config_size, EGLint* num_config);
 EGLAPI EGLBoolean      EGLAPIENTRY eglGetConfigAttrib (EGLDisplay dpy, EGLConfig config, EGLint attribute, EGLint* value);
@@ -64,6 +64,6 @@ EGLAPI EGLBoolean      EGLAPIENTRY eglPostSubBufferNV (EGLDisplay dpy, EGLSurfac
 
 EGLAPI EGLBoolean      EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSurface surface, EGLint attribute, void** value);
 
-EGLAPI void *          EGLAPIENTRY eglMapImageSEC (EGLDisplay display, EGLImageKHR image);
+EGLAPI void*           EGLAPIENTRY eglMapImageSEC (EGLDisplay display, EGLImageKHR image);
 EGLAPI EGLBoolean      EGLAPIENTRY eglUnmapImageSEC (EGLDisplay display, EGLImageKHR image);
 EGLAPI EGLBoolean      EGLAPIENTRY eglGetImageAttribSEC (EGLDisplay display, EGLImageKHR image, EGLint attribute, EGLint* value);

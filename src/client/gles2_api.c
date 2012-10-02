@@ -210,72 +210,12 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     /* post command and no wait */
 }
 
-/* total parameters 7 * sizeof (GLint) */
-void glGetActiveAttrib (GLuint program, GLuint index,
-                        GLsizei bufsize, GLsizei *length,
-                        GLint *size, GLenum *type, GLchar *name)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-const GLubyte *
-glGetString (GLenum name)
-{
-    GLubyte *result = NULL;
-
-    if (_is_error_state ())
-        return result;
-
-    /* XXX: post command and wait */
-    return result;
-}
-
 void glPixelStorei (GLenum pname, GLint param)
 {
     if (_is_error_state ())
         return;
 
     /* XXX: post command and no wait */
-    return;
-}
-
-/* total parameter 7 * sizeof (GLint) */
-void glReadPixels (GLint x, GLint y,
-                   GLsizei width, GLsizei height,
-                   GLenum format, GLenum type, GLvoid *data)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glShaderBinary (GLsizei n, const GLuint *shaders,
-                     GLenum binaryformat, const void *binary,
-                     GLsizei length)
-{
-    void *binary_copy = NULL;
-    GLuint *shaders_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: we must copy data in shaders, binary */
-    if (n > 0 && shaders) {
-        shaders_copy = (GLuint *)malloc (sizeof (GLuint) * n);
-        memcpy ((void *)shaders_copy, (const void *)shaders, 
-                sizeof (GLuint) * n);
-    }
-    if (length > 0 && binary) {
-        binary_copy = (void *) malloc (sizeof (char) * length);
-        memcpy (binary_copy, binary, sizeof (char) * length);
-    }
-
     return;
 }
 
@@ -478,26 +418,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
     return;
 }
 
-/* end of GLES2 core profile */
-
-GL_APICALL void GL_APIENTRY
-glProgramBinaryOES (GLuint program, GLenum binaryFormat,
-                    const GLvoid *binary, GLint length)
-{
-    GLvoid *binary_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in binary */
-    if (length > 0 && binary) {
-        binary_copy = (void *) malloc (sizeof (char) * length);
-        memcpy (binary_copy, binary, sizeof (char) * length);
-    }
-    return;
-}
-
 /* total parameters 10 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
 glTexImage3DOES (GLenum target, GLint level, GLenum internalformat,
@@ -604,116 +524,6 @@ glCompressedTexSubImage3DOES (GLenum target, GLint level,
     }
         
     return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorGroupsAMD (GLint *numGroups, GLsizei groupSize, 
-                           GLuint *groups)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCountersAMD (GLuint group, GLint *numCounters, 
-                             GLint *maxActiveCounters, GLsizei counterSize,
-                             GLuint *counters)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorGroupStringAMD (GLuint group, GLsizei bufSize, 
-                                GLsizei *length, GLchar *groupString)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterStringAMD (GLuint group, GLuint counter, 
-                                  GLsizei bufSize, 
-                                  GLsizei *length, GLchar *counterString)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterInfoAMD (GLuint group, GLuint counter, 
-                                GLenum pname, GLvoid *data)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glDeletePerfMonitorsAMD (GLsizei n, GLuint *monitors) 
-{
-    GLuint *monitors_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in monitors */
-    if (n > 0 && monitors) {
-        monitors_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)monitors_copy, (const void *)monitors,
-                sizeof (GLuint) * n);
-    }
-    return;
-}
-
-/* total parameter 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glSelectPerfMonitorCountersAMD (GLuint monitor, GLboolean enable,
-                                GLuint group, GLint numCounters,
-                                GLuint *countersList) 
-{
-    GLuint *counters_list_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in counterisList */
-    if (numCounters > 0 && countersList) {
-        counters_list_copy = (GLuint *) malloc (sizeof (GLuint) * numCounters);
-        memcpy ((void *)counters_list_copy, (const void *)countersList,
-                sizeof (GLuint) * numCounters);
-    }
-    return;
-}
-
-/* total parameters 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
-                                GLsizei dataSize, GLuint *data,
-                                GLint *bytesWritten)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
 }
 
 GL_APICALL void GL_APIENTRY

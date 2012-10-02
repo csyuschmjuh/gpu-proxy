@@ -57,18 +57,6 @@ EGLBoolean eglTerminate (EGLDisplay dpy)
     return result;
 }
 
-const char *
-eglQueryString (EGLDisplay dpy, EGLint name)
-{
-    const char *result = NULL;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglQueryString and wait */
-    return result;
-}
-
 EGLBoolean
 eglChooseConfig (EGLDisplay dpy,
                  const EGLint *attrib_list,
@@ -383,17 +371,5 @@ eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
         return result;
 
     /* XXX: post eglExportDRMImageMESA and wait */
-    return result;
-}
-
-void *
-eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
-{
-    void *result = NULL;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglMapImageSEC and wait */
     return result;
 }
