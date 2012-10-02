@@ -1248,7 +1248,15 @@ class Argument(object):
 
   def IsPointer(self):
     """Returns true if argument is a pointer."""
-    return False
+    return self.type.find("*") != -1
+
+  def IsDoublePointer(self):
+    """Returns true if argument is a double-pointer."""
+    return self.type.find("**") != -1
+
+  def IsString(self):
+    """Returns true if argument is a double-pointer."""
+    return self.type == "const char*" or self.type == "char*"
 
   def AddCmdArgs(self, args):
     """Adds command arguments for this argument to the given list."""
@@ -1954,8 +1962,8 @@ class GLGenerator(object):
   def CanAutogenerateFunctionAtAll(self, func):
     if func.IsType('Manual'):
         return False
-    for arg in func.GetInitArgs()[:-1]:
-        if arg.type.find("**") != -1:
+    for arg in func.GetOriginalArgs():
+        if arg.IsDoublePointer():
             return False
     return func.return_type == "void" or \
            func.return_type in _DEFAULT_RETURN_VALUES
@@ -1971,7 +1979,7 @@ class GLGenerator(object):
     for arg in func.GetInitArgs()[:-1]:
         if arg.name in func.info.argument_has_size:
             continue
-        if arg.type.find("*") != -1 and arg.type.find("char*") == -1:
+        if arg.IsPointer() and not arg.IsString():
             return False
     return True
 
