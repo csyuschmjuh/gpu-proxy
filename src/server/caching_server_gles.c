@@ -4042,6 +4042,90 @@ caching_server_glUniform4iv (server_t *server, GLint location, GLsizei count,
 }
 
 static void
+caching_server_glUniformMatrix2fv (server_t *server, GLint location,
+				   GLsizei count, GLboolean transpose,
+				   const GLfloat *value)
+{
+    egl_state_t *egl_state;
+
+    if (! caching_server_glIsValidContext (server))
+        goto FINISH;
+
+    egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
+    if (count < 0) {
+        caching_server_glSetError (server, GL_INVALID_VALUE);
+        goto FINISH;
+    }
+
+    CACHING_SERVER(server)->super_dispatch.glUniformMatrix2fv (server, 
+                                                               location,
+                                                               count,
+                                                               transpose,
+                                                               value);
+    egl_state->state.need_get_error = true;
+
+FINISH:
+    if (value)
+        free ((GLfloat *)value);
+}
+
+static void
+caching_server_glUniformMatrix3fv (server_t *server, GLint location,
+				   GLsizei count, GLboolean transpose,
+				   const GLfloat *value)
+{
+    egl_state_t *egl_state;
+
+    if (! caching_server_glIsValidContext (server))
+        goto FINISH;
+
+    egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
+    if (count < 0) {
+        caching_server_glSetError (server, GL_INVALID_VALUE);
+        goto FINISH;
+    }
+
+    CACHING_SERVER(server)->super_dispatch.glUniformMatrix3fv (server, 
+                                                               location,
+                                                               count,
+                                                               transpose,
+                                                               value);
+    egl_state->state.need_get_error = true;
+
+FINISH:
+    if (value)
+        free ((GLfloat *)value);
+}
+
+static void
+caching_server_glUniformMatrix4fv (server_t *server, GLint location,
+				   GLsizei count, GLboolean transpose,
+				   const GLfloat *value)
+{
+    egl_state_t *egl_state;
+
+    if (! caching_server_glIsValidContext (server))
+        goto FINISH;
+
+    egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
+    if (count < 0) {
+        caching_server_glSetError (server, GL_INVALID_VALUE);
+        goto FINISH;
+    }
+
+    CACHING_SERVER(server)->super_dispatch.glUniformMatrix4fv (server, 
+                                                               location,
+                                                               count,
+                                                               transpose,
+                                                               value);
+    egl_state->state.need_get_error = true;
+
+FINISH:
+    if (value)
+        free ((GLfloat *)value);
+}
+
+static void
 caching_server_glUseProgram (server_t *server, GLuint program)
 {
     egl_state_t *egl_state;
