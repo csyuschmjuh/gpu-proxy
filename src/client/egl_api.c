@@ -37,20 +37,6 @@ eglGetError (void)
     return error;
 }
 
-EGLBoolean
-eglInitialize (EGLDisplay dpy,
-               EGLint *major,
-               EGLint *minor)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglInitialize and wait */
-    return result;
-}
-
 EGLBoolean eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
@@ -84,21 +70,6 @@ eglQueryString (EGLDisplay dpy, EGLint name)
 }
 
 EGLBoolean
-eglGetConfigs (EGLDisplay dpy,
-               EGLConfig *configs,
-               EGLint config_size,
-               EGLint *num_config)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglGetConfigs and wait */
-    return result;
-}
-
-EGLBoolean
 eglChooseConfig (EGLDisplay dpy,
                  const EGLint *attrib_list,
                  EGLConfig *configs,
@@ -111,21 +82,6 @@ eglChooseConfig (EGLDisplay dpy,
         return result;
 
     /* XXX: post eglChooseConfig and wait */
-    return result;
-}
-
-EGLBoolean
-eglGetConfigAttrib (EGLDisplay dpy,
-                    EGLConfig config,
-                    EGLint attribute,
-                    EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* post eglGetConfigAttrib and wait */
     return result;
 }
 
@@ -173,21 +129,6 @@ eglCreatePixmapSurface (EGLDisplay dpy,
     return surface;
 }
 
-EGLBoolean
-eglQuerySurface (EGLDisplay dpy,
-                 EGLSurface surface,
-                 EGLint attribute,
-                 EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglQuerySurface and wait */
-    return result;
-}
-
 EGLSurface
 eglCreatePbufferFromClientBuffer (EGLDisplay dpy,
                                   EGLenum buftype,
@@ -216,21 +157,6 @@ eglCreateContext (EGLDisplay dpy,
         return result;
 
     /* XXX: post eglCreateContext and wait */
-    return result;
-}
-
-EGLBoolean
-eglQueryContext (EGLDisplay dpy,
-                 EGLContext ctx,
-                 EGLint attribute,
-                 EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglQueryContext and wait */
     return result;
 }
 
@@ -384,19 +310,6 @@ eglClientWaitSyncKHR (EGLDisplay dpy,
     return result;
 }
 
-EGLAPI EGLBoolean EGLAPIENTRY
-eglGetSyncAttribKHR (EGLDisplay dpy, EGLSyncKHR sync,
-                     EGLint attribute, EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglGetSyncAttribKHR and wait */
-    return result;
-}
-
 EGLSyncNV
 eglCreateFenceSyncNV (EGLDisplay dpy,
                       EGLenum condition,
@@ -431,20 +344,6 @@ eglClientWaitSyncNV (EGLSyncNV sync,
         return result;
 
     /* XXX: post eglClientWaitSyncNV and wait */
-    return result;
-}
-
-EGLBoolean
-eglGetSyncAttribNV (EGLSyncNV sync,
-                    EGLint attribute,
-                    EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_active_egl_state_available  ())
-        return result;
-
-    /* XXX: post eglGetSyncAttribNV and wait */
     return result;
 }
 
@@ -496,35 +395,5 @@ eglMapImageSEC (EGLDisplay dpy, EGLImageKHR image)
         return result;
 
     /* XXX: post eglMapImageSEC and wait */
-    return result;
-}
-
-EGLBoolean
-eglGetImageAttribSEC (EGLDisplay dpy,
-                      EGLImageKHR image,
-                      EGLint attribute,
-                      EGLint *value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglgetImageAttribSEC and wait */
-    return result;
-}
-
-EGLBoolean
-eglQuerySurfacePointerANGLE (EGLDisplay dpy,
-                             EGLSurface surface,
-                             EGLint attribute,
-                             void **value)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglgetImageAttribSEC and wait */
     return result;
 }

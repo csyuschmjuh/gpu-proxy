@@ -210,67 +210,6 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     /* post command and no wait */
 }
 
-void glGenBuffers (GLsizei n, GLuint *buffers)
-{
-    name_handler_t * name_handler;
-
-    if (_is_error_state ())
-        return;
-
-    name_handler = client_get_name_handler();
-    buffers = name_handler_alloc_names (name_handler, RESOURCE_GEN_BUFFERS, n);
-
-    /* FIXME: post command with generated client buffers. */
-}
-
-void glGenFramebuffers (GLsizei n, GLuint *framebuffers)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGenRenderbuffers (GLsizei n, GLuint *renderbuffers)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGenTextures (GLsizei n, GLuint *textures)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetBooleanv (GLenum pname, GLboolean *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetFloatv (GLenum pname, GLfloat *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetIntegerv (GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
 /* total parameters 7 * sizeof (GLint) */
 void glGetActiveAttrib (GLuint program, GLuint index,
                         GLsizei bufsize, GLsizei *length,
@@ -280,115 +219,6 @@ void glGetActiveAttrib (GLuint program, GLuint index,
         return;
 
     /* XXX: post command and wait */
-}
-
-/* total parameters 7 * sizeof (GLint) */
-void glGetActiveUniform (GLuint program, GLuint index, GLsizei bufsize,
-                         GLsizei *length, GLint *size, GLenum *type,
-                         GLchar *name)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetAttachedShaders (GLuint program, GLsizei maxCount,
-                           GLsizei *count, GLuint *shaders)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetBufferParameteriv (GLenum target, GLenum value, GLint *data)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-void glGetFramebufferAttachmentParameteriv (GLenum target,
-                                            GLenum attachment,
-                                            GLenum pname,
-                                            GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetProgramInfoLog (GLuint program, GLsizei maxLength,
-                          GLsizei *length, GLchar *infoLog)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetProgramiv (GLuint program, GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetRenderbufferParameteriv (GLenum target,
-                                   GLenum pname,
-                                   GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetShaderInfoLog (GLuint program, GLsizei maxLength,
-                         GLsizei *length, GLchar *infoLog)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetShaderPrecisionFormat (GLenum shaderType, GLenum precisionType,
-                                 GLint *range, GLint *precision)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetShaderSource (GLuint shader, GLsizei bufSize, GLsizei *length,
-                        GLchar *source)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetShaderiv (GLuint shader, GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
 }
 
 const GLubyte *
@@ -401,69 +231,6 @@ glGetString (GLenum name)
 
     /* XXX: post command and wait */
     return result;
-}
-
-void glGetTexParameteriv (GLenum target, GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetTexParameterfv (GLenum target, GLenum pname, GLfloat *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetUniformiv (GLuint program, GLint location, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetUniformfv (GLuint program, GLint location, GLfloat *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetVertexAttribfv (GLuint index, GLenum pname, GLfloat *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetVertexAttribiv (GLuint index, GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-void glGetVertexAttribPointerv (GLuint index, GLenum pname, GLvoid **pointer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
 }
 
 void glPixelStorei (GLenum pname, GLint param)
@@ -713,18 +480,6 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
 
 /* end of GLES2 core profile */
 
-/* total parameters size 5 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glGetProgramBinaryOES (GLuint program, GLsizei bufSize, GLsizei *length,
-                       GLenum *binaryFormat, GLvoid *binary)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
 GL_APICALL void GL_APIENTRY
 glProgramBinaryOES (GLuint program, GLenum binaryFormat,
                     const GLvoid *binary, GLint length)
@@ -740,16 +495,6 @@ glProgramBinaryOES (GLuint program, GLenum binaryFormat,
         binary_copy = (void *) malloc (sizeof (char) * length);
         memcpy (binary_copy, binary, sizeof (char) * length);
     }
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetBufferPointervOES (GLenum target, GLenum pname, GLvoid **params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
     return;
 }
 
@@ -862,16 +607,6 @@ glCompressedTexSubImage3DOES (GLenum target, GLint level,
 }
 
 GL_APICALL void GL_APIENTRY
-glGenVertexArraysOES (GLsizei n, GLuint *arrays)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
 glGetPerfMonitorGroupsAMD (GLint *numGroups, GLsizei groupSize, 
                            GLuint *groups)
 {
@@ -922,16 +657,6 @@ glGetPerfMonitorCounterStringAMD (GLuint group, GLuint counter,
 GL_APICALL void GL_APIENTRY
 glGetPerfMonitorCounterInfoAMD (GLuint group, GLuint counter, 
                                 GLenum pname, GLvoid *data)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGenPerfMonitorsAMD (GLsizei n, GLuint *monitors) 
 {
     if (_is_error_state ())
         return;
@@ -1005,156 +730,6 @@ glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
     /* not implemented */
 }
 
-GL_APICALL void GL_APIENTRY
-glGenFencesNV (GLsizei n, GLuint *fences)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-}
-
-GL_APICALL void GL_APIENTRY
-glGetFenceivNV (GLuint fence, GLenum pname, int *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetDriverControlsQCOM (GLint *num, GLsizei size, GLuint *driverControls)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glGetDriverControlStringQCOM (GLuint driverControl, GLsizei bufSize,
-                              GLsizei *length, GLchar *driverControlString)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetTexturesQCOM (GLuint *textures, GLint maxTextures, 
-                      GLint *numTextures)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetBuffersQCOM (GLuint *buffers, GLint maxBuffers, GLint *numBuffers) 
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetRenderbuffersQCOM (GLuint *renderbuffers, GLint maxRenderbuffers,
-                           GLint *numRenderbuffers)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetFramebuffersQCOM (GLuint *framebuffers, GLint maxFramebuffers,
-                          GLint *numFramebuffers)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetTexLevelParameterivQCOM (GLuint texture, GLenum face, GLint level,
-                                 GLenum pname, GLint *params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-/* total parameter 11 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glExtGetTexSubImageQCOM (GLenum target, GLint level,
-                         GLint xoffset, GLint yoffset, GLint zoffset,
-                         GLsizei width, GLsizei height, GLsizei depth,
-                         GLenum format, GLenum type, GLvoid *texels)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetBufferPointervQCOM (GLenum target, GLvoid **params)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetShadersQCOM (GLuint *shaders, GLint maxShaders, GLint *numShaders)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetProgramsQCOM (GLuint *programs, GLint maxPrograms,
-                      GLint *numPrograms)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glExtGetProgramBinarySourceQCOM (GLuint program, GLenum shadertype,
-                                 GLchar *source, GLint *length)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and wait */
-    return;
-}
-
 void
 glTexParameteriv (GLenum target,
                   GLenum pname,
@@ -1166,25 +741,5 @@ void
 glTexParameterfv (GLenum target,
                   GLenum pname,
                   const GLfloat *params)
-{
-}
-
-void
-glGenQueriesEXT (GLsizei n,
-                 GLuint *ids)
-{
-}
-
-void
-glGetQueryivEXT (GLenum target,
-                 GLenum pname,
-                 GLint *params)
-{
-}
-
-void
-glGetQueryObjectuivEXT (GLuint id,
-                        GLenum pname,
-                        GLuint *params)
 {
 }
