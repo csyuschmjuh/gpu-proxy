@@ -162,6 +162,7 @@ client_get_space_for_command (command_id_t command_id)
     assert (command_id >= 0 && command_id < COMMAND_MAX_COMMAND);
     command = client_get_space_for_size (client_get_thread_local (),
                                          command_sizes[command_id]);
+    command->id = command_id;
     command->size = command_sizes[command_id];
     return command;
 }
