@@ -83,6 +83,42 @@ _FUNCTION_INFO = {
   },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
+  },
+  'glBufferData': {
+    'argument_has_size': { 'data': 'size' }
+  },
+  'glBufferSubData': {
+    'argument_has_size': { 'data': 'size' }
+  },
+  'glDeleteBuffers': {
+    'argument_has_size': { 'buffers': 'n' }
+  },
+  'glDeleteBuffers': {
+    'argument_has_size': { 'buffers': 'n' }
+  },
+  'glDeleteFramebuffers': {
+    'argument_has_size': { 'framebuffers': 'n' }
+  },
+  'glDeleteRenderbuffers': {
+    'argument_has_size': { 'renderbuffers': 'n' }
+  },
+  'glDeleteTextures': {
+    'argument_has_size': { 'textures': 'n' }
+  },
+  'glDeleteVertexArraysOES': {
+    'argument_has_size': { 'arrays': 'n' }
+  },
+  'glDeleteVertexArraysOES': {
+    'argument_has_size': { 'arrays': 'n' }
+  },
+  'glDiscardFramebufferEXT': {
+    'argument_has_size': { 'attachments': 'numAttachments' }
+  },
+  'glDeleteFencesNV': {
+    'argument_has_size': { 'fences': 'count' }
+  },
+  'glDeleteQueriesEXT': {
+    'argument_has_size': { 'queries': 'n' }
   }
 }
 
@@ -1042,7 +1078,8 @@ class TypeHandler(object):
     file.Write("  command_t header;\n")
     args = func.GetOriginalArgs()
     for arg in args:
-      file.Write("  %s %s;\n" % (arg.type, arg.name))
+      type = arg.type.replace("const", "")
+      file.Write("  %s %s;\n" % (type, arg.name))
     if func.return_type != "void":
       file.Write("  %s result;\n" % (func.return_type))
     file.Write("} command_%s_t;\n" % (func.name.lower()))
@@ -1054,6 +1091,27 @@ class TypeHandler(object):
     file.Write(func.MakeTypedOriginalArgString(""), split=False)
     file.Write(");")
 
+  def WriteCommandInitArgumentCopy(self, func, arg, file):
+    if arg.type.find("char*") != -1:
+      file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
+
+    elif arg.name in func.info.argument_has_size:
+      arg_size = func.info.argument_has_size[arg.name]
+      if arg.type.find("void*") == -1:
+        arg_size += " * sizeof (%s)" % arg.type
+      file.Write("    command->%s = malloc (%s);\n" % (arg.name, arg_size))
+      file.Write("    memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
+
+    else:
+      # FIXME: This is to get rid of the constness of the argument. This should
+      # be fixed in a more general way. When the function is synchronous and there's
+      # no copy, this should remain const. When we make a copy the struct member should
+      # no longer be const. We need this information anyway so that we can write proper
+      # cleanup functions for commands.
+      type = arg.type.replace("const", "")
+      file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
+
+
   def WriteCommandInit(self, func, file):
     self.WriteInitSignature(func, file)
     file.Write("\n{\n")
@@ -1064,10 +1122,7 @@ class TypeHandler(object):
         file.Write("    %s *command = (%s *) abstract_command;\n" % (subclass_command_type, subclass_command_type))
 
         for arg in args:
-          if arg.type.find("char*") != -1:
-            file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
-          else:
-            file.Write("    command->%s = %s;\n" % (arg.name, arg.name))
+            self.WriteCommandInitArgumentCopy(func, arg, file)
 
         if func.return_type != "void":
           file.Write("    command->result = 0;\n")
@@ -1137,6 +1192,8 @@ class FunctionInfo(object):
       self.type = ''
     if not 'default_return' in info:
       self.default_return = ''
+    if not 'argument_has_size' in info:
+      self.argument_has_size = {}
 
 
 class Argument(object):
@@ -1897,7 +1954,6 @@ class GLGenerator(object):
   def CanAutogenerateFunctionAtAll(self, func):
     if func.IsType('Manual'):
         return False
-
     for arg in func.GetInitArgs()[:-1]:
         if arg.type.find("**") != -1:
             return False
@@ -1911,7 +1967,10 @@ class GLGenerator(object):
         return False
     if func.name.find("DrawArrays") != -1:
         return False
+
     for arg in func.GetInitArgs()[:-1]:
+        if arg.name in func.info.argument_has_size:
+            continue
         if arg.type.find("*") != -1 and arg.type.find("char*") == -1:
             return False
     return True

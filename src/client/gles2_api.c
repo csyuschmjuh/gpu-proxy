@@ -52,38 +52,6 @@ _is_error_state (void)
     return false;
 }
 
-void glBufferData (GLenum target, GLsizeiptr size,
-                   const GLvoid *data, GLenum usage)
-{
-    GLvoid *data_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && size > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * size);
-        memcpy (data_copy, data, sizeof (char) * size);
-    }
-}
-
-void glBufferSubData (GLenum target, GLintptr offset,
-                      GLsizeiptr size, const GLvoid *data)
-{
-    GLvoid *data_copy = NULL;
-    
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && size > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * size);
-        memcpy (data_copy, data, sizeof (char) * size);
-    }
-}
-
 /* total parameters 8 * sizeof (GLint) */
 void glCompressedTexImage2D (GLenum target, GLint level,
                              GLenum internalformat,
@@ -124,59 +92,6 @@ void glCompressedTexSubImage2D (GLenum target, GLint level,
     }
 }
 
-void glDeleteBuffers (GLsizei n, const GLuint *buffers)
-{
-    if (_is_error_state ())
-        return;
-}
-
-void glDeleteFramebuffers (GLsizei n, const GLuint *framebuffers)
-{
-    GLuint *framebuffers_copy = NULL;
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* copy data in framebuffers */
-    if (framebuffers && n > 0) {
-        framebuffers_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)framebuffers_copy, (const void *)framebuffers, 
-                sizeof (GLuint) * n);
-    }
-}
-
-void glDeleteRenderbuffers (GLsizei n, const GLuint *renderbuffers)
-{
-    GLuint *renderbuffers_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* copy data in renderbuffers */
-    if (renderbuffers && n > 0) {
-        renderbuffers_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)renderbuffers_copy, (const void *)renderbuffers, 
-                sizeof (GLuint) * n);
-    }
-}
-
-void glDeleteTextures (GLsizei n, const GLuint *textures)
-{
-    GLuint *textures_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* copy data in textures */
-    if (textures && n > 0) {
-        textures_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)textures_copy, (const void *)textures, 
-                sizeof (GLuint) * n);
-    }
-}
-
 static char *
 _create_data_array (vertex_attrib_t *attrib, int count)
 {
@@ -212,16 +127,14 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int i;
-    unsigned int token;
 
     if (_is_error_state ())
         return;
 
-    /* we need to flush the command buffer because some previous
-     * glVertexAttribPointer() might have been executed yet
-     */
-    token = client_insert_token ();
-    client_wait_for_token (token); 
+    /* We need to flush the command buffer because some previous
+     * glVertexAttribPointer() might have been executed yet.*/
+    int token = client_insert_token ();
+    client_wait_for_token (token);
 
     egl_state = client_get_active_egl_state();
     gles_state = &egl_state->state;
@@ -257,17 +170,14 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int i;
-    unsigned int token;
 
     if (_is_error_state ())
         return;
-    
-    /* we need to flush the command buffer because some previous
-     * glVertexAttribPointer() might have been executed yet
-     */
-    token = client_insert_token ();
-    client_wait_for_token (token); 
 
+    /* We need to flush the command buffer because some previous
+     * glVertexAttribPointer() might have been executed yet.*/
+    int token = client_insert_token ();
+    client_wait_for_token (token);
 
     egl_state = client_get_active_egl_state();
     gles_state = &egl_state->state;
@@ -495,7 +405,8 @@ void glGetShaderiv (GLuint shader, GLenum pname, GLint *params)
     return;
 }
 
-const GLubyte *glGetString (GLenum name)
+const GLubyte *
+glGetString (GLenum name)
 {
     GLubyte *result = NULL;
 
@@ -700,16 +611,16 @@ _gl_get_data_width (GLsizei width,
     return total_width;
 }
 
-/* total parameters 9 * sizeof (GLint) */
-void glTexImage2D (GLenum target,
-                   GLint level,
-                   GLint internalformat,
-                   GLsizei width,
-                   GLsizei height,
-                   GLint border,
-                   GLenum format,
-                   GLenum type,
-                   const GLvoid *source_data)
+void
+glTexImage2D (GLenum target,
+              GLint level,
+              GLint internalformat,
+              GLsizei width,
+              GLsizei height,
+              GLint border,
+              GLenum format,
+              GLenum type,
+              const GLvoid *source_data)
 {
     if (_is_error_state ())
         return;
@@ -750,15 +661,16 @@ void glTexImage2D (GLenum target,
     client_write_command (command);
 }
 
-void glTexSubImage2D (GLenum target,
-                      GLint level,
-                      GLint xoffset,
-                      GLint yoffset,
-                      GLsizei width,
-                      GLsizei height,
-                      GLenum format,
-                      GLenum type,
-                      const GLvoid *source_data)
+void
+glTexSubImage2D (GLenum target,
+                 GLint level,
+                 GLint xoffset,
+                 GLint yoffset,
+                 GLsizei width,
+                 GLsizei height,
+                 GLenum format,
+                 GLenum type,
+                 const GLvoid *source_data)
 {
     if (_is_error_state ())
         return;
@@ -1156,24 +1068,6 @@ glCompressedTexSubImage3DOES (GLenum target, GLint level,
 }
 
 GL_APICALL void GL_APIENTRY
-glDeleteVertexArraysOES (GLsizei n, const GLuint *arrays)
-{
-    GLuint *arrays_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in arrays */
-    if (n > 0 && arrays) {
-        arrays_copy = (GLuint *) malloc (sizeof (GLuint) * n);
-        memcpy ((void *)arrays_copy, (const void *)arrays,
-                sizeof (GLuint) * n);
-    }
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
 glGenVertexArraysOES (GLsizei n, GLuint *arrays)
 {
     if (_is_error_state ())
@@ -1304,24 +1198,6 @@ glGetPerfMonitorCounterDataAMD (GLuint monitor, GLenum pname,
 }
 
 GL_APICALL void GL_APIENTRY
-glDiscardFramebufferEXT (GLenum target, GLsizei numAttachments,
-                         const GLenum *attachments)
-{
-    GLenum *attachments_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in attachments */
-    if (numAttachments > 0 && attachments) {
-        attachments_copy = (GLenum *)malloc (sizeof (GLenum) * numAttachments);
-        memcpy ((void *)attachments_copy, (const void *)attachments,
-                sizeof (GLenum) * numAttachments);
-    }
-}
-
-GL_APICALL void GL_APIENTRY
 glMultiDrawArraysEXT (GLenum mode, const GLint *first, 
                       const GLsizei *count, GLsizei primcount)
 {
@@ -1333,23 +1209,6 @@ glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
                         const GLvoid **indices, GLsizei primcount)
 {
     /* not implemented */
-}
-
-GL_APICALL void GL_APIENTRY
-glDeleteFencesNV (GLsizei n, const GLuint *fences)
-{
-    GLuint *fences_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in fences */
-    if (fences && n > 0) {
-        fences_copy = (GLuint *)malloc (sizeof (GLuint) * n);
-        memcpy ((void *)fences_copy, (const void *)fences, 
-                sizeof (GLuint) * n);
-    }
 }
 
 GL_APICALL void GL_APIENTRY
@@ -1576,12 +1435,6 @@ glUniformMatrix4fv (GLint location,
 void
 glGenQueriesEXT (GLsizei n,
                  GLuint *ids)
-{
-}
-
-void
-glDeleteQueriesEXT (GLsizei n,
-                    const GLuint *ids)
 {
 }
 
