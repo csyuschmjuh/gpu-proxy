@@ -24,7 +24,7 @@ static void
 server_handle_command (server_t *server,
                        command_t *command)
 {
-    switch (command->id) {
+    switch (command->type) {
         case COMMAND_NO_OP: break;
         case COMMAND_SET_TOKEN:
             server_handle_set_token (server, (command_set_token_t *)command);
