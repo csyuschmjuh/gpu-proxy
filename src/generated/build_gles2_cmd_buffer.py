@@ -1959,6 +1959,15 @@ class GLGenerator(object):
         file.Write("    if (_is_error_state ())\n")
         file.Write("        %s;\n" % func.MakeDefaultReturnStatement());
 
+        file.Write("    if (! on_client_thread ())\n")
+
+        file.Write("        ")
+        if func.return_type != "void":
+            file.Write("return ")
+        file.Write("server_dispatch_table_get_base ()->%s (NULL" % func.name)
+        file.Write(func.MakeOriginalArgString("", add_separator=True))
+        file.Write(");\n\n")
+
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" %
                    func.name.upper())
 
