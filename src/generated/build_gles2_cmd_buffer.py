@@ -119,9 +119,41 @@ _FUNCTION_INFO = {
   },
   'glDeleteQueriesEXT': {
     'argument_has_size': { 'queries': 'n' }
-  }
-}
+  },
+  'glUniform1fv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 1 }
+  },
+  'glUniform2fv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 2 }
+  },
+  'glUniform3fv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 3 }
+  },
+  'glUniform4fv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 4 }
+  },
+  'glUniform1iv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 1 }
+  },
+  'glUniform2iv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 2 }
+  },
+  'glUniform3iv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 3 }
+  },
+  'glUniform4iv': {
+    'argument_has_size': { 'v': 'count' },
+    'argument_element_size': { 'v': 4 }
+  },
 
+}
 
 # This string is copied directly out of the gl2.h file from GLES2.0
 #
@@ -1099,6 +1131,10 @@ class TypeHandler(object):
       arg_size = func.info.argument_has_size[arg.name]
       if arg.type.find("void*") == -1:
         arg_size += " * sizeof (%s)" % arg.type
+
+      if arg.name in func.info.argument_element_size:
+          arg_size += " * %i" % func.info.argument_element_size[arg.name]
+
       file.Write("    command->%s = malloc (%s);\n" % (arg.name, arg_size))
       file.Write("    memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
 
@@ -1194,7 +1230,8 @@ class FunctionInfo(object):
       self.default_return = ''
     if not 'argument_has_size' in info:
       self.argument_has_size = {}
-
+    if not 'argument_element_size' in info:
+      self.argument_element_size = {}
 
 class Argument(object):
   """A class that represents a function argument."""
