@@ -152,6 +152,18 @@ _FUNCTION_INFO = {
     'argument_has_size': { 'v': 'count' },
     'argument_element_size': { 'v': 4 }
   },
+  'glUniformMatrix2fv': {
+    'argument_has_size': { 'value': 'count' },
+    'argument_element_size': { 'value': 4 }
+  },
+  'glUniformMatrix3fv': {
+    'argument_has_size': { 'value': 'count' },
+    'argument_element_size': { 'value': 9 }
+  },
+  'glUniformMatrix4fv': {
+    'argument_has_size': { 'value': 'count' },
+    'argument_element_size': { 'value': 16 }
+  },
 
 }
 

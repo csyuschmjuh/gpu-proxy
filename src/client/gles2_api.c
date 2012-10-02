@@ -1234,67 +1234,6 @@ glTexParameterfv (GLenum target,
 }
 
 void
-glUniformMatrix2fv (GLint location,
-                    GLsizei count,
-                    GLboolean transpose,
-                    const GLfloat *value)
-{
-    GLfloat *copy;
-
-    if (_is_error_state ())
-        return;
-
-    if (count <= 0 || value == NULL)
-        return;
-    /* post command and no wait */
-
-    copy = (GLfloat *) malloc (sizeof (GLfloat) * 16 * count);
-    memcpy ((void *)copy, (void *)value, sizeof (GLfloat) * 16 * count);
-    /* XXX: post command and no wait */
-}
-
-void
-glUniformMatrix3fv (GLint location,
-                    GLsizei count,
-                    GLboolean transpose,
-                    const GLfloat *value)
-{
-    GLfloat *copy;
-
-    if (_is_error_state ())
-        return;
-
-    if (count <= 0 || value == NULL)
-        return;
-
-    /* post command and no wait */
-
-    copy = (GLfloat *) malloc (sizeof (GLfloat) * 9 * count);
-    memcpy ((void *)copy, (void *)value, sizeof (GLfloat) * 9 * count);
-    /* XXX: post command and no wait */
-}
-
-void
-glUniformMatrix4fv (GLint location,
-                    GLsizei count,
-                    GLboolean transpose,
-                    const GLfloat *value)
-{
-    GLfloat *copy;
-
-    if (_is_error_state ())
-        return;
-
-    if (count <= 0 || value == NULL)
-        return;
-    /* post command and no wait */
-
-    copy = (GLfloat *) malloc (sizeof (GLfloat) * 4 * count);
-    memcpy ((void *)copy, (void *)value, sizeof (GLfloat) * 4 * count);
-    /* XXX: post command and no wait */
-}
-
-void
 glGenQueriesEXT (GLsizei n,
                  GLuint *ids)
 {
