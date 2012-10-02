@@ -1256,7 +1256,8 @@ class Argument(object):
 
   def IsString(self):
     """Returns true if argument is a double-pointer."""
-    return self.type == "const char*" or self.type == "char*"
+    return self.type == "const char*" or self.type == "char*" or \
+           self.type == "const GLchar*" or self.type == "GLchar*"
 
   def AddCmdArgs(self, args):
     """Adds command arguments for this argument to the given list."""
