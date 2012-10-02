@@ -23,6 +23,9 @@ _DEFAULT_RETURN_VALUES = {
     'const char*': 'NULL',
     'void*': 'NULL',
     'GLuint': '0',
+    'GLint': '0',
+    'GLenum': 'GL_INVALID_ENUM',
+    'GLboolean': 'GL_FALSE',
     'EGLDisplay': 'EGL_NO_DISPLAY',
     'EGLBoolean': 'EGL_FALSE',
     'EGLSurface': 'EGL_NO_SURFACE',
@@ -32,6 +35,57 @@ _DEFAULT_RETURN_VALUES = {
     'EGLSyncKHR': 'EGL_NO_SYNC_KHR',
     'EGLSyncNV': 'EGL_NO_SYNC_NV'
 }
+
+# This table specifies types and other special data for the commands that
+# will be generated.
+#
+# Must match function names specified in "cmd_buffer_functions.txt".
+#
+# cmd_comment:  A comment added to the cmd format.
+# type:             Defines how this method is generated. Currently "Manual" is
+#                   is the only interesting type reported.
+# default_return:   Defines what the default return value of this function is, if
+#                   it differs from the list of default return values above.
+
+_FUNCTION_INFO = {
+  'eglGetError': {
+    'default_return': 'EGL_NOT_INITIALIZED'
+  },
+  'eglWaitGL': {
+    'default_return': 'EGL_TRUE'
+  },
+  'eglGetProcAddress': {
+    'type': 'Manual'
+  },
+  'eglMakeCurrent': {
+    'type': 'Manual'
+  },
+  'eglClientWaitSyncKHR': {
+    'default_return': 'EGL_FALSE'
+  },
+  'eglClientWaitSyncNV': {
+    'default_return': 'EGL_TIMEOUT_EXPIRED_NV'
+  },
+  'glGetUniformLocation': {
+    'default_return': '-1',
+  },
+  'glGetAttribLocation': {
+    'default_return': '-1',
+  },
+  'eglTerminate': {
+    'type': 'Manual',
+  },
+  'eglMakeCurrent': {
+    'type': 'Manual',
+  },
+  'eglSwapBuffers': {
+    'type': 'Manual',
+  },
+  'glGetError': {
+    'default_return': 'GL_INVALID_OPERATION',
+  }
+}
+
 
 # This string is copied directly out of the gl2.h file from GLES2.0
 #
@@ -791,79 +845,6 @@ _ENUM_LISTS = {
       'true',
     ],
   },
-}
-
-# This table specifies types and other special data for the commands that
-# will be generated.
-#
-# Must match function names specified in "cmd_buffer_functions.txt".
-#
-# cmd_comment:  A comment added to the cmd format.
-# type:         defines which handler will be used to generate code.
-# decoder_func: defines which function to call in the decoder to execute the
-#               corresponding GL command. If not specified the GL command will
-#               be called directly.
-# gl_test_func: GL function that is expected to be called when testing.
-# cmd_args:     The arguments to use for the command. This overrides generating
-#               them based on the GL function arguments.
-#               a NonImmediate type is a type that stays a pointer even in
-#               and immediate version of acommand.
-# gen_cmd:      Whether or not this function geneates a command. Default = True.
-# immediate:    Whether or not to generate an immediate command for the GL
-#               function. The default is if there is exactly 1 pointer argument
-#               in the GL function an immediate command is generated.
-# bucket:       True to generate a bucket version of the command.
-# impl_func:    Whether or not to generate the GLES2Implementation part of this
-#               command.
-# impl_decl:    Whether or not to generate the GLES2Implementation declaration
-#               for this command.
-# needs_size:   If true a data_size field is added to the command.
-# data_type:    The type of data the command uses. For PUTn or PUT types.
-# count:        The number of units per element. For PUTn or PUT types.
-# unit_test:    If False no service side unit test will be generated.
-# client_test:  If False no client side unit test will be generated.
-# expectation:  If False the unit test will have no expected calls.
-# gen_func:     Name of function that generates GL resource for corresponding
-#               bind function.
-# valid_args:   A dictionary of argument indices to args to use in unit tests
-#               when they can not be automatically determined.
-# pepper_interface: The pepper interface that is used for this extension
-# invalid_test: False if no invalid test needed.
-
-_FUNCTION_INFO = {
-  'eglGetError': {
-    'default_return': 'EGL_NOT_INITIALIZED'
-  },
-  'eglWaitGL': {
-    'default_return': 'EGL_TRUE'
-  },
-  'eglGetProcAddress': {
-    'type': 'Manual'
-  },
-  'eglMakeCurrent': {
-    'type': 'Manual'
-  },
-  'eglClientWaitSyncKHR': {
-    'default_return': 'EGL_FALSE'
-  },
-  'eglClientWaitSyncNV': {
-    'default_return': 'EGL_TIMEOUT_EXPIRED_NV'
-  },
-  'glGetUniformLocation': {
-    'default_return': '-1',
-  },
-  'glGetAttribLocation': {
-    'default_return': '-1',
-  },
-  'eglTerminate': {
-    'type': 'Manual',
-  },
-  'eglMakeCurrent': {
-    'type': 'Manual',
-  },
-  'eglSwapBuffers': {
-    'type': 'Manual',
-  }
 }
 
 def SplitWords(input_string):
