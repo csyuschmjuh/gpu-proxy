@@ -164,6 +164,18 @@ _FUNCTION_INFO = {
     'argument_has_size': { 'value': 'count' },
     'argument_element_size': { 'value': 16 }
   },
+  'glVertexAttrib1fv': {
+    'argument_element_size': { 'values': 1 }
+  },
+  'glVertexAttrib2fv': {
+    'argument_element_size': { 'values': 2 }
+  },
+  'glVertexAttrib3fv': {
+    'argument_element_size': { 'values': 3 }
+  },
+  'glVertexAttrib4fv': {
+    'argument_element_size': { 'values': 4 }
+  },
 
 }
 
@@ -1139,13 +1151,17 @@ class TypeHandler(object):
     if arg.type.find("char*") != -1:
       file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
 
-    elif arg.name in func.info.argument_has_size:
-      arg_size = func.info.argument_has_size[arg.name]
-      if arg.type.find("void*") == -1:
-        arg_size += " * sizeof (%s)" % arg.type
+    elif arg.name in func.info.argument_has_size or \
+         arg.name in func.info.argument_element_size:
 
+      components = []
+      if arg.name in func.info.argument_has_size:
+          components.append(func.info.argument_has_size[arg.name])
       if arg.name in func.info.argument_element_size:
-          arg_size += " * %i" % func.info.argument_element_size[arg.name]
+          components.append("%i" % func.info.argument_element_size[arg.name])
+      if arg.type.find("void*") == -1:
+          components.append("sizeof (%s)" % arg.type)
+      arg_size = " * ".join(components)
 
       file.Write("    command->%s = malloc (%s);\n" % (arg.name, arg_size))
       file.Write("    memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
@@ -2028,6 +2044,8 @@ class GLGenerator(object):
 
     for arg in func.GetInitArgs()[:-1]:
         if arg.name in func.info.argument_has_size:
+            continue
+        if arg.name in func.info.argument_element_size:
             continue
         if arg.IsPointer() and not arg.IsString():
             return False
