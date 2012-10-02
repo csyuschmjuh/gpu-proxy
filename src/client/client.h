@@ -51,7 +51,7 @@ private name_handler_t *
 client_get_name_handler ();
 
 private command_t *
-client_get_space_for_command (command_id_t command_id);
+client_get_space_for_command (command_type_t command_type);
 
 private bool
 client_write_command (command_t *command);

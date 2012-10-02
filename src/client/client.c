@@ -146,7 +146,7 @@ client_get_space_for_size (client_t *client,
     return write_location;
 }
 command_t *
-client_get_space_for_command (command_id_t command_id)
+client_get_space_for_command (command_type_t command_type)
 {
     command_t *command = NULL;
     static bool initialized = false;
@@ -159,11 +159,11 @@ client_get_space_for_command (command_id_t command_id)
         initialized = true;
     }
 
-    assert (command_id >= 0 && command_id < COMMAND_MAX_COMMAND);
+    assert (command_type >= 0 && command_type < COMMAND_MAX_COMMAND);
     command = client_get_space_for_size (client_get_thread_local (),
-                                         command_sizes[command_id]);
-    command->id = command_id;
-    command->size = command_sizes[command_id];
+                                         command_sizes[command_type]);
+    command->type = command_type;
+    command->size = command_sizes[command_type];
     return command;
 }
 
