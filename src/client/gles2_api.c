@@ -35,21 +35,7 @@
 bool
 _is_error_state (void)
 {
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available ())
-        return true;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (! egl_state ||
-        ! (egl_state->display == EGL_NO_DISPLAY ||
-           egl_state->context == EGL_NO_CONTEXT) ||
-           egl_state->active == false) {
-        return true;
-    }
-
-    return false;
+    return !client_get_thread_local();
 }
 
 /* total parameters 8 * sizeof (GLint) */
