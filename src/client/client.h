@@ -14,7 +14,7 @@ extern "C" {
 /* Initialize the commands in the buffer using the following sequence
  * of calls:
  *   COMMAND_NAME_t *command =
- *       COMMAND_NAME_T(client_get_space_for_command (command_id));
+ *       COMMAND_NAME_T(client_get_space_for_command (command_type));
  *   COMMAND_NAME_initialize (command, parameter1, parameter2, ...);
  *   client_write_command (command);
  */
