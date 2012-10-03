@@ -1416,8 +1416,11 @@ class TypeHandler(object):
           components.append("sizeof (%s)" % arg.type)
       arg_size = " * ".join(components)
 
-      file.Write("    command->%s = malloc (%s);\n" % (arg.name, arg_size))
-      file.Write("    memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
+      file.Write("    if (%s) {\n" % (arg.name))
+      file.Write("        command->%s = malloc (%s);\n" % (arg.name, arg_size))
+      file.Write("        memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
+      file.Write("    } else\n")
+      file.Write("        command->%s = 0;\n" % (arg.name))
 
     else:
       # FIXME: This is to get rid of the constness of the argument. This should

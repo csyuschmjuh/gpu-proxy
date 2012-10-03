@@ -212,6 +212,10 @@ size_t
 _get_egl_attrib_list_size (const EGLint *attrib_list)
 {
     size_t offset = 0;
+
+    if (!attrib_list)
+        return 0;
+
     while (attrib_list[offset] != EGL_NONE)
         offset += 2;
     return offset + 1;
