@@ -59,6 +59,15 @@ _FUNCTION_INFO = {
   'glDrawElements' : {
     'type': 'Manual',
   },
+  'eglTerminate': {
+    'type': 'Manual',
+  },
+  'eglSwapBuffers': {
+    'type': 'Manual',
+  },
+  'eglMakeCurrent': {
+    'type': 'Manual'
+  },
   'glShaderSource': {
     'type': 'ManualInit',
   },
@@ -74,9 +83,6 @@ _FUNCTION_INFO = {
   'eglWaitGL': {
     'default_return': 'EGL_TRUE'
   },
-  'eglMakeCurrent': {
-    'type': 'Manual'
-  },
   'eglClientWaitSyncKHR': {
     'default_return': 'EGL_FALSE'
   },
@@ -89,15 +95,6 @@ _FUNCTION_INFO = {
   'glGetAttribLocation': {
     'default_return': '-1',
   },
-  'eglTerminate': {
-    'type': 'Manual',
-  },
-  'eglMakeCurrent': {
-    'type': 'Manual',
-  },
-  'eglSwapBuffers': {
-    'type': 'Manual',
-  },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
   },
@@ -106,6 +103,12 @@ _FUNCTION_INFO = {
   },
   'glBufferSubData': {
     'argument_has_size': { 'data': 'size' }
+  },
+  'glCompressedTexImage2D': {
+    'argument_has_size': { 'data': 'imageSize' }
+  },
+  'glCompressedTexSubImage2D': {
+    'argument_has_size': { 'data': 'imageSize' }
   },
   'glDeleteBuffers': {
     'argument_has_size': { 'buffers': 'n' }
