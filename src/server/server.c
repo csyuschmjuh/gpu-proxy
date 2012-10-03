@@ -21,6 +21,17 @@ server_handle_set_token (server_t *server,
 }
 
 static void
+server_handle_glshadersource (server_t *server,
+                              command_glshadersource_t *command)
+{
+    server->dispatch.glShaderSource (server,
+                                     command->shader,
+                                     command->count,
+                                     command->string,
+                                     command->length);
+}
+
+static void
 server_handle_command (server_t *server,
                        command_t *command)
 {
@@ -28,6 +39,9 @@ server_handle_command (server_t *server,
         case COMMAND_NO_OP: break;
         case COMMAND_SET_TOKEN:
             server_handle_set_token (server, (command_set_token_t *)command);
+            break;
+        case COMMAND_GLSHADERSOURCE:
+            server_handle_glshadersource (server, (command_glshadersource_t *)command);
             break;
         default:
             server_handle_command_autogen (server, command);
