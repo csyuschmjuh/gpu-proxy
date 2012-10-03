@@ -226,16 +226,19 @@ void glShaderSource (GLuint shader, GLsizei count,
     int i;
     int str_len;
 
+    if (! on_client_thread ())
+        return server_dispatch_table_get_base ()->glShaderSource (NULL, shader,
+                                                                  count, string, length);
+
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
     /* XXX: copy data in string and length */
     if (count > 0 && string) {
         string_copy = (GLchar **) malloc (sizeof (GLchar *) * count );
         if (length != NULL) {
             length_copy = (GLint *)malloc (sizeof (GLint) * count);
-        
+
             memcpy ((void *)length_copy, (const void *)length,
                     sizeof (GLint) * count);
         }
@@ -244,7 +247,7 @@ void glShaderSource (GLuint shader, GLsizei count,
             if (length) {
                 if (length[i] > 0) {
                     string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * length[i]);
-                    memcpy ((void *)string_copy[i], 
+                    memcpy ((void *)string_copy[i],
                             (const void *)string[i],
                             sizeof (GLchar) * length[i]);
                 }
@@ -258,6 +261,14 @@ void glShaderSource (GLuint shader, GLsizei count,
             }
         }
     }
+
+    command_t *command = client_get_space_for_command (COMMAND_GLSHADERSOURCE);
+    command_glshadersource_init (command,
+                                 shader,
+                                 count,
+                                 string,
+                                 length);
+    client_write_command (command);
 
     return;
 }
