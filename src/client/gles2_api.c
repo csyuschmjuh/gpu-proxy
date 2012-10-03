@@ -30,7 +30,6 @@
 
 /* This file implements gles2 functions. */
 #include "gles2_api_private.h"
-#include "gles2_utils.h"
 
 bool
 _is_error_state (void)
@@ -262,6 +261,18 @@ void glShaderSource (GLuint shader, GLsizei count,
 
     return;
 }
+/* total parameters 6 * sizeof (GLint) */
+void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
+                            GLboolean normalized, GLsizei stride,
+                            const GLvoid *pointer)
+{
+    if (_is_error_state ())
+        return;
+
+    /* XXX: post command and no wait */
+    /* XXX: no need to copy data in pointer */
+    return;
+}
 
 static int
 _gl_get_data_width (GLsizei width,
@@ -304,119 +315,6 @@ _gl_get_data_width (GLsizei width,
     return total_width;
 }
 
-void
-glTexImage2D (GLenum target,
-              GLint level,
-              GLint internalformat,
-              GLsizei width,
-              GLsizei height,
-              GLint border,
-              GLenum format,
-              GLenum type,
-              const GLvoid *source_data)
-{
-    if (_is_error_state ())
-        return;
-
-    if (level < 0 || height < 0 || width < 0) {
-        /* TODO: Set an error on the client-side. 
-           SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
-        return;
-    }
-
-    command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
-    if (!source_data) {
-        command_glteximage2d_init (command, target, level, internalformat, width,
-                                   height, border, format, type, NULL);
-        client_write_command (command);
-        return;
-    }
-
-    int unpack_alignment = 4;
-
-    uint32_t dest_size;
-    uint32_t unpadded_row_size;
-    uint32_t padded_row_size;
-    if (!compute_image_data_sizes (width, height, format, type,
-                                   unpack_alignment, &dest_size,
-                                   &unpadded_row_size, &padded_row_size)) {
-        /* TODO: Set an error on the client-side.
-         SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
-        return;
-    }
-
-    char* dest_data = malloc (dest_size);
-    copy_rect_to_buffer (source_data, dest_data, height, unpadded_row_size,
-                         padded_row_size, false /* flip y */, padded_row_size);
-
-    command_glteximage2d_init (command, target, level, internalformat, width,
-                               height, border, format, type, dest_data);
-    client_write_command (command);
-}
-
-void
-glTexSubImage2D (GLenum target,
-                 GLint level,
-                 GLint xoffset,
-                 GLint yoffset,
-                 GLsizei width,
-                 GLsizei height,
-                 GLenum format,
-                 GLenum type,
-                 const GLvoid *source_data)
-{
-    if (_is_error_state ())
-        return;
-
-    if (level < 0 || height < 0 || width < 0) {
-        // XXX: Set a GL error on the client side here.
-        // SetGLError(GL_INVALID_VALUE, "glTexSubImage2D", "dimension < 0");
-        return;
-    }
-
-    if (height == 0 || width == 0)
-        return;
-
-    // TODO: This should be read from the current GL client-side state.
-    static const int unpack_alignment = 4;
-
-    uint32_t dest_size;
-    uint32_t unpadded_row_size;
-    uint32_t padded_row_size;
-    if (! compute_image_data_sizes (width, height, format,
-                                    type, unpack_alignment,
-                                    &dest_size, &unpadded_row_size,
-                                    &padded_row_size)) {
-        // XXX: Set a GL error on the client side here.
-        // SetGLError(GL_INVALID_VALUE, "glTexSubImage2D", "size to large");
-        return;
-    }
-
-    char* dest_data = malloc (dest_size);
-    copy_rect_to_buffer (source_data, dest_data, height, unpadded_row_size,
-                         padded_row_size, false /* flip y */, padded_row_size);
-
-
-    command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
-    command_gltexsubimage2d_init (command, target, level, xoffset, yoffset,
-                                  width, height, format, type, dest_data);
-
-    client_write_command ( command);
-
-}
-
-/* total parameters 6 * sizeof (GLint) */
-void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
-                            GLboolean normalized, GLsizei stride,
-                            const GLvoid *pointer)
-{
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: no need to copy data in pointer */
-    return;
-}
 
 /* total parameters 10 * sizeof (GLint) */
 GL_APICALL void GL_APIENTRY
