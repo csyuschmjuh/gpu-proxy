@@ -59,6 +59,9 @@ _FUNCTION_INFO = {
   'glDrawElements' : {
     'type': 'Manual',
   },
+  'glShaderSource': {
+    'type': 'ManualInit',
+  },
   'glTexSubImage2D': {
     'type': 'ManualInit',
   },
@@ -2085,6 +2088,8 @@ class Function(object):
     """Whether or not this function can be auto-generated at all."""
     if self.IsType('Manual'):
         return False
+    if self.IsType('ManualInit'):
+        return True
     for arg in self.GetOriginalArgs():
         if arg.IsDoublePointer() and not self.IsOutArgument(arg):
             return False
@@ -2465,9 +2470,13 @@ class GLGenerator(object):
           call = "        server->dispatch.%s (" % func.name
         file.Write(call)
         file.Write("server")
-        file.Write(func.MakeOriginalArgString(prefix = "command->", 
-                                              separator = ",\n" + " " * len(call),
-                                              add_separator = True))
+
+        for arg in func.GetOriginalArgs():
+            cast = ""
+            if arg.IsDoublePointer() and arg.type.find("const") != -1:
+                cast = "(%s) " % arg.type
+            file.Write(",%scommand->%s" % (cast, arg.name))
+
         file.Write(");\n")
         file.Write("        break;\n")
         file.Write("    }\n")

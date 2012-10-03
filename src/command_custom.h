@@ -25,4 +25,11 @@ command_gltexsubimage2d_init (command_t *abstract_command,
                               GLenum type,
                               const void* pixels);
 
+private void
+command_glshadersource_init (command_t *abstract_command,
+                             GLuint shader,
+                             GLsizei count,
+                             const GLchar **string,
+                             const GLint *length);
+
 #endif /* GPUPROCESS_COMMAND_CUSTOM_H */
