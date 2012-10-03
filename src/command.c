@@ -36,8 +36,6 @@ command_get_size (command_type_t command_type)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLSWAPBUFFERS)
         return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLGETPROCADDRESS)
-        return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLCLIENTWAITSYNCKHR)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLCLIENTWAITSYNCNV)

@@ -85,18 +85,6 @@ FINISH:
     return result;
 }
 
-__eglMustCastToProperFunctionPointerType
-eglGetProcAddress (const char *procname)
-{
-    void *address = NULL;
-
-    if (! client_get_thread_local ())
-        return address;
-
-    /* XXX: post eglGetProcAddress and wait */
-    return address;
-}
-
 EGLBoolean
 eglMakeCurrent (EGLDisplay dpy,
                 EGLSurface draw,

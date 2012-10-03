@@ -20,6 +20,7 @@ _DO_NOT_EDIT_WARNING = """// This file is auto-generated. DO NOT EDIT!
 """
 
 _DEFAULT_RETURN_VALUES = {
+    '__eglMustCastToProperFunctionPointerType': 'NULL',
     'const char*': 'NULL',
     'const GLubyte*': 'NULL',
     'void*': 'NULL',
@@ -69,9 +70,6 @@ _FUNCTION_INFO = {
   },
   'eglWaitGL': {
     'default_return': 'EGL_TRUE'
-  },
-  'eglGetProcAddress': {
-    'type': 'Manual'
   },
   'eglMakeCurrent': {
     'type': 'Manual'
