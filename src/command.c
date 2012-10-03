@@ -14,31 +14,13 @@ command_get_size (command_type_t command_type)
         return 0;
     if (command_type == COMMAND_SET_TOKEN)
         return sizeof (command_set_token_t);
-    if (command_type == COMMAND_GLGETSTRING)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_GLGETVERTEXATTRIBPOINTERV)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_GLGETBUFFERPOINTERVOES)
-        return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_GLMULTIDRAWELEMENTSEXT)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_GLEXTGETBUFFERPOINTERVQCOM)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLGETERROR)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLTERMINATE)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLMAKECURRENT)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_EGLSWAPBUFFERS)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLCLIENTWAITSYNCKHR)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLCLIENTWAITSYNCNV)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLQUERYSURFACEPOINTERANGLE)
-        return 0; /* FIXME: Not implemented. */
-    if (command_type == COMMAND_EGLMAPIMAGESEC)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_GLDRAWARRAYS)
         return 0; /* FIXME: Not implemented. */
