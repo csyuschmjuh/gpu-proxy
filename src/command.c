@@ -7,21 +7,6 @@ command_set_token_init (command_set_token_t *command, unsigned int token)
     command->token = token;
 }
 
-void
-command_glshadersource_init (command_t *abstract_command,
-                             GLuint shader,
-                             GLsizei count,
-                             const GLchar **string,
-                             const GLint *length)
-{
-    command_glshadersource_t *command =
-        (command_glshadersource_t *) abstract_command;
-    command->shader = shader;
-    command->count = count;
-    command->string = string;
-    command->length = length;
-}
-
 size_t
 command_get_size (command_type_t command_type)
 {
@@ -29,8 +14,6 @@ command_get_size (command_type_t command_type)
         return 0;
     if (command_type == COMMAND_SET_TOKEN)
         return sizeof (command_set_token_t);
-    if (command_type == COMMAND_GLSHADERSOURCE)
-        return sizeof (command_glshadersource_t);
     if (command_type == COMMAND_GLGETSTRING)
         return 0; /* FIXME: Not implemented. */
     if (command_type == COMMAND_GLGETVERTEXATTRIBPOINTERV)

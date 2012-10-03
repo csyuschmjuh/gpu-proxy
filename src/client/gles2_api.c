@@ -218,60 +218,6 @@ void glPixelStorei (GLenum pname, GLint param)
     return;
 }
 
-void glShaderSource (GLuint shader, GLsizei count,
-                     const GLchar **string, const GLint *length)
-{
-    GLchar **string_copy = NULL;
-    GLint *length_copy = NULL;
-    int i;
-    int str_len;
-
-    if (! on_client_thread ())
-        return server_dispatch_table_get_base ()->glShaderSource (NULL, shader,
-                                                                  count, string, length);
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: copy data in string and length */
-    if (count > 0 && string) {
-        string_copy = (GLchar **) malloc (sizeof (GLchar *) * count );
-        if (length != NULL) {
-            length_copy = (GLint *)malloc (sizeof (GLint) * count);
-
-            memcpy ((void *)length_copy, (const void *)length,
-                    sizeof (GLint) * count);
-        }
-
-        for (i = 0; i < count; i++) {
-            if (length) {
-                if (length[i] > 0) {
-                    string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * length[i]);
-                    memcpy ((void *)string_copy[i],
-                            (const void *)string[i],
-                            sizeof (GLchar) * length[i]);
-                }
-            } else {
-                str_len = strlen (string[i]);
-                string_copy[i] = (GLchar *)malloc (sizeof (GLchar) * (str_len + 1));
-                memcpy ((void *)string_copy[i],
-                        (const void *)string[i],
-                        sizeof (GLchar) * str_len);
-                string_copy[i][str_len] = 0;
-            }
-        }
-    }
-
-    command_t *command = client_get_space_for_command (COMMAND_GLSHADERSOURCE);
-    command_glshadersource_init (command,
-                                 shader,
-                                 count,
-                                 string,
-                                 length);
-    client_write_command (command);
-
-    return;
-}
 /* total parameters 6 * sizeof (GLint) */
 void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
                             GLboolean normalized, GLsizei stride,

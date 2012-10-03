@@ -83,3 +83,36 @@ command_gltexsubimage2d_init (command_t *abstract_command,
     copy_rect_to_buffer (pixels, command->pixels, height, unpadded_row_size,
                          padded_row_size, false /* flip y */, padded_row_size);
 }
+
+void
+command_glshadersource_init (command_t *abstract_command,
+                             GLuint shader,
+                             GLsizei count,
+                             const GLchar **string,
+                             const GLint *length)
+{
+    command_glshadersource_t *command =
+        (command_glshadersource_t *) abstract_command;
+    command->shader = shader;
+    command->count = count;
+    command->string = NULL;
+    command->length = NULL;
+
+    if (count <= 0 || ! string)
+        return;
+
+    if (length != NULL) {
+        size_t lengths_size = sizeof (GLint *) * count;
+        command->length = malloc (lengths_size);
+        memcpy (command->length, length, lengths_size);
+    }
+
+    command->string = malloc (sizeof (GLchar *) * count);
+
+    unsigned i = 0;
+    for (i = 0; i < count; i++) {
+        size_t string_length = length ? length[i] : strlen (string[i]);
+        command->string[i] = malloc (string_length);
+        memcpy(command->string[i], string[i], string_length);
+    }
+}
