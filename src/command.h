@@ -45,6 +45,7 @@ private void
 command_set_token_init (command_set_token_t *command,
                         unsigned int token);
 
+#include "command_custom.h"
 #include "generated/command_autogen.h"
 
 #ifdef __cplusplus

@@ -82,6 +82,12 @@ _FUNCTION_INFO = {
   'eglSwapBuffers': {
     'type': 'Manual',
   },
+  'glTexSubImage2D': {
+    'type': 'ManualInit',
+  },
+  'glTexImage2D': {
+    'type': 'ManualInit',
+  },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
   },
@@ -2288,6 +2294,11 @@ class GLGenerator(object):
   def IsSimpleFunction(self, func):
     if not self.CanAutogenerateFunctionAtAll(func):
         return False
+
+    # Manual init functions always allow generating the client-side entry.
+    if func.IsType("ManualInit"):
+        return True
+
     if func.name.find("PixelStore") != -1:
         return False
     if func.name.find("DrawArrays") != -1:
@@ -2385,6 +2396,8 @@ class GLGenerator(object):
     for func in self.functions:
       if not self.CanAutogenerateFunctionAtAll(func):
         continue
+      if func.IsType("ManualInit"):
+        continue
       file.Write("private ");
       func.WriteInitSignature(file)
       file.Write(";\n\n")
@@ -2399,12 +2412,13 @@ class GLGenerator(object):
     file.Write("#include <string.h>\n\n")
     file.Write('#include "gles2_utils.h"\n')
 
-    void_return_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
-
-    for func in void_return_functions:
+    generatable_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
+    for func in generatable_functions:
+      if func.IsType("ManualInit"):
+        continue
       func.WriteCommandInit(file)
 
-    self.WriteGetSizeFunction(file, void_return_functions)
+    self.WriteGetSizeFunction(file, generatable_functions)
 
     file.Write("\n")
     file.Close()
