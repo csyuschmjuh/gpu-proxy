@@ -113,6 +113,38 @@ command_glshadersource_init (command_t *abstract_command,
     for (i = 0; i < count; i++) {
         size_t string_length = length ? length[i] : strlen (string[i]);
         command->string[i] = malloc (string_length);
-        memcpy(command->string[i], string[i], string_length);
+        memcpy (command->string[i], string[i], string_length);
     }
+}
+
+void
+command_gltexparameteriv_init (command_t *abstract_command,
+                               GLenum target,
+                               GLenum pname,
+                               const GLint *params)
+{
+    command_gltexparameteriv_t *command =
+        (command_gltexparameteriv_t *) abstract_command;
+    command->target = target;
+    command->pname = pname;
+
+    size_t params_size = sizeof (GLint);
+    command->params = malloc (params_size);
+    memcpy (command->params, params, params_size);
+}
+
+void
+command_gltexparameterfv_init (command_t *abstract_command,
+                               GLenum target,
+                               GLenum pname,
+                               const GLfloat *params)
+{
+    command_gltexparameterfv_t *command =
+        (command_gltexparameterfv_t *) abstract_command;
+    command->target = target;
+    command->pname = pname;
+
+    size_t params_size = sizeof (GLfloat);
+    command->params = malloc (params_size);
+    memcpy (command->params, params, params_size);
 }

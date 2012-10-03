@@ -48,25 +48,3 @@ void glPixelStorei (GLenum pname, GLint param)
     client_write_command (command);
     return;
 }
-
-void
-glTexParameteriv (GLenum target,
-                  GLenum pname,
-                  const GLint *params)
-{
-    command_t *command =
-        client_get_space_for_command (COMMAND_GLTEXPARAMETERIV);
-    command_gltexparameteriv_init (command, target, pname, params);
-    client_write_command (command);
-}
-
-void
-glTexParameterfv (GLenum target,
-                  GLenum pname,
-                  const GLfloat *params)
-{
-    command_t *command =
-        client_get_space_for_command (COMMAND_GLTEXPARAMETERFV);
-    command_gltexparameterfv_init (command, target, pname, params);
-    client_write_command (command);
-}

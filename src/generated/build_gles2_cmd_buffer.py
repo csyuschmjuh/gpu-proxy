@@ -102,6 +102,12 @@ _FUNCTION_INFO = {
   'glTexImage2D': {
     'type': 'ManualInit',
   },
+  'glTexParameteriv': {
+    'type': 'ManualInit',
+  },
+  'glTexParameterfv': {
+    'type': 'ManualInit',
+  },
   # This pointer should be valid until glDrawElements or glDrawArray is
   # called so we can just pass them through without copying. A more advanced
   # implementation would wait until glDrawElements/glDrawArray is called

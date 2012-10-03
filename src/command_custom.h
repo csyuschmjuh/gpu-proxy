@@ -32,4 +32,16 @@ command_glshadersource_init (command_t *abstract_command,
                              const GLchar **string,
                              const GLint *length);
 
+void
+command_gltexparameteriv_init (command_t *abstract_command,
+                               GLenum target,
+                               GLenum pname,
+                               const GLint *params);
+
+void
+command_gltexparameterfv_init (command_t *abstract_command,
+                               GLenum target,
+                               GLenum pname,
+                               const GLfloat *params);
+
 #endif /* GPUPROCESS_COMMAND_CUSTOM_H */
