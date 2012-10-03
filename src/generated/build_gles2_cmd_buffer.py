@@ -2291,18 +2291,18 @@ class GLGenerator(object):
     return func.return_type == "void" or \
            func.return_type in _DEFAULT_RETURN_VALUES
 
-  def IsSimpleFunction(self, func):
+  def HasCustomClientEntryPoint(self, func):
     if not self.CanAutogenerateFunctionAtAll(func):
-        return False
-
-    # Manual init functions always allow generating the client-side entry.
-    if func.IsType("ManualInit"):
         return True
 
+    # Manual init functions always allow generating the client-side entry point.
+    if func.IsType("ManualInit"):
+        return False
+
     if func.name.find("PixelStore") != -1:
-        return False
+        return True
     if func.name.find("DrawArrays") != -1:
-        return False
+        return True
 
     for arg in func.GetInitArgs()[:-1]:
         if arg.name in func.info.out_arguments:
@@ -2314,11 +2314,11 @@ class GLGenerator(object):
         if arg.name in func.info.argument_size_from_function:
             continue
         if arg.IsPointer() and not arg.IsString():
-            return False
-    return True
+            return True
+    return False
 
-  def GetSimpleFunctionSignature(self, func):
-    if not self.IsSimpleFunction(func):
+  def GetClientEntryPointSignature(self, func):
+    if self.HasCustomClientEntryPoint(func):
         return
 
     args = func.MakeTypedOriginalArgString("")
@@ -2327,13 +2327,13 @@ class GLGenerator(object):
 
     return "%s %s (%s)" % (func.return_type, func.name, args)
 
-  def WriteSimpleFunctions(self, filename):
+  def WriteClientEntryPoints(self, filename):
     """Writes the command buffer format"""
     file = CWriter(filename)
     file.Write('#include "gles2_api_private.h"\n')
 
     for func in self.functions:
-        header = self.GetSimpleFunctionSignature(func)
+        header = self.GetClientEntryPointSignature(func)
         if not header:
             continue
         file.Write(header + "\n")
@@ -2404,7 +2404,7 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
-  def WriteClientImplementations(self, filename):
+  def WriteCommandInitilizationAndSizeFunction(self, filename):
     """Writes the command implementation for the client-side"""
     file = CWriter(filename)
 
@@ -2600,15 +2600,18 @@ def main(argv):
   if options.output_dir != None:
     os.chdir(options.output_dir)
 
-  gen.WriteSimpleFunctions("gles2_api_autogen.c")
+  # Shared between the client and the server.
+  gen.WriteServerDispatchTable("server_dispatch_table_autogen.h")
+
+  # These are used on the client-side.
+  gen.WriteClientEntryPoints("gles2_api_autogen.c")
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_types_autogen.h")
-  gen.WriteClientImplementations("command_autogen.c")
+  gen.WriteCommandInitilizationAndSizeFunction("command_autogen.c")
+
+  # These are used on the server-side.
   gen.WriteBaseServer("server_autogen.c")
-
-  gen.WriteServerDispatchTable("server_dispatch_table_autogen.h")
   gen.WriteBaseServerDispatchTableImplementation("server_dispatch_table_autogen.c")
-
   gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:
