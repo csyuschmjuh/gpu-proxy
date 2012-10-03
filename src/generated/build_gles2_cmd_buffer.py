@@ -43,9 +43,22 @@ _DEFAULT_RETURN_VALUES = {
 #
 # Must match function names specified in "cmd_buffer_functions.txt".
 #
-# cmd_comment:  A comment added to the cmd format.
-# type:             Defines how this method is generated. Currently "Manual" is
-#                   is the only interesting type reported.
+# type:             Defines how this method is generated.
+
+#                   Manual: The entry point into the client is custom,
+#                   but the command struct and command init function are not.
+
+#                   ManualInit: The command ini function is custom, but
+#                   the command struct and command init function are not.
+#
+#                   Passthrough: Arguments that are pointers are passed to
+#                   the server thread without making a copy.
+
+#                   Synchronous: The client will wait until the server finishes
+#                   executing this command. Note that this implies "Passthrough."
+#                   For the moment, all functions that return values or have out
+#                   parameters are synchronous.
+
 # default_return:   Defines what the default return value of this function is, if
 #                   it differs from the list of default return values above.
 
@@ -54,10 +67,10 @@ _FUNCTION_INFO = {
     'type': 'Manual',
   },
   'glDrawArrays' : {
-    'type': 'Manual',
+    'type': 'Synchronous',
   },
   'glDrawElements' : {
-    'type': 'Manual',
+    'type': 'Synchronous',
   },
   'eglTerminate': {
     'type': 'Manual',
@@ -76,6 +89,13 @@ _FUNCTION_INFO = {
   },
   'glTexImage2D': {
     'type': 'ManualInit',
+  },
+  # This pointer should be valid until glDrawElements or glDrawArray is
+  # called so we can just pass them through without copying. A more advanced
+  # implementation would wait until glDrawElements/glDrawArray is called
+  # and then make a copy.
+  'glVertexAttribPointer': {
+    'type': 'Passthrough',
   },
   'eglGetError': {
     'default_return': 'EGL_NOT_INITIALIZED'
@@ -1986,7 +2006,9 @@ class Function(object):
             not self.GetInfo('pepper_interface'))
 
   def IsSynchronous(self):
-    return self.HasReturnValue() or len(self.info.out_arguments) > 0
+    return self.IsType('Synchronous') \
+        or self.HasReturnValue() \
+        or len(self.info.out_arguments) > 0
 
   def HasReturnValue(self):
     return self.return_type != 'void'
@@ -2084,6 +2106,8 @@ class Function(object):
     # Passing argument is quite easy for synchronous functions, because
     # we can just pass the pointers without doing a copy.
     if self.IsSynchronous():
+        return True
+    if self.IsType('Passthrough'):
         return True
 
     for arg in self.GetOriginalArgs():
