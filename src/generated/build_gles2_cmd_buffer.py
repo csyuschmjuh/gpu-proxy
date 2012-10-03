@@ -465,24 +465,6 @@ _GL_TYPES = {
 # This is a list of enum names and their valid values. It is used to map
 # GLenum arguments to a specific set of valid values.
 _ENUM_LISTS = {
-  'eglGetError': {
-    'default_return': 'EGL_NOT_INITIALIZED'
-  },
-  'eglWaitGL': {
-    'default_return': 'EGL_TRUE'
-  },
-  'eglGetProcAddress': {
-    'type': 'Manual'
-  },
-  'eglMakeCurrent': {
-    'type': 'Manual'
-  },
-  'eglClientWaitSyncKHR': {
-    'default_return': 'EGL_FALSE'
-  },
-  'eglClientWaitSyncNV': {
-    'default_return': 'EGL_TIMEOUT_EXPIRED_NV'
-  },
   'BlitFilter': {
     'type': 'GLenum',
     'valid': [
@@ -2094,7 +2076,8 @@ class Function(object):
         if arg.IsDoublePointer() and not self.IsOutArgument(arg):
             return False
     return self.return_type == "void" or \
-           self.return_type in _DEFAULT_RETURN_VALUES
+           self.return_type in _DEFAULT_RETURN_VALUES or \
+           self.info.default_return
 
 
 class ImmediateFunction(Function):

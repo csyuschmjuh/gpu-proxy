@@ -24,19 +24,6 @@
 #include <EGL/eglext.h>
 #include <stdlib.h>
 
-EGLint
-eglGetError (void)
-{
-    EGLint error = EGL_NOT_INITIALIZED;
-
-    if (! client_get_thread_local ())
-        return error;
-
-    /* XXX: post eglGetError() and wait */
-
-    return error;
-}
-
 EGLBoolean eglTerminate (EGLDisplay dpy)
 {
     EGLBoolean result = EGL_FALSE;
@@ -133,44 +120,6 @@ eglMakeCurrent (EGLDisplay dpy,
             }
         }
     }
-    return result;
-}
-
-EGLint
-eglClientWaitSyncKHR (EGLDisplay dpy,
-                      EGLSyncKHR sync,
-                      EGLint flags,
-                      EGLTimeKHR timeout)
-{
-    EGLint result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglClientWaitSyncKHR and wait */
-    return result;
-}
-
-EGLint
-eglClientWaitSyncNV (EGLSyncNV sync,
-                     EGLint flags,
-                     EGLTimeNV timeout)
-{
-    /* XXX: is this supposed to be default value ? */
-    EGLint result = EGL_TIMEOUT_EXPIRED_NV;
-    egl_state_t *egl_state;
-
-    if (! client_active_egl_state_available  ())
-        return result;
-
-    egl_state = client_get_active_egl_state ();
-
-    if (egl_state->display == EGL_NO_DISPLAY ||
-        egl_state->context == EGL_NO_CONTEXT ||
-        egl_state->active == false)
-        return result;
-
-    /* XXX: post eglClientWaitSyncNV and wait */
     return result;
 }
 
