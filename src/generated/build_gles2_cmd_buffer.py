@@ -378,6 +378,40 @@ _FUNCTION_INFO = {
   'glGetQueryObjectuivEXT': {
     'out_arguments': ['params']
   },
+  'eglChooseConfig': {
+    'out_arguments': ['configs', 'num_config'],
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateWindowSurface': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreatePbufferSurface': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreatePixmapSurface': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreatePbufferFromClientBuffer': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateContext': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglLockSurfaceKHR': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateImageKHR': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateSyncKHR': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateFenceSyncNV': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
+  'eglCreateDRMImageMESA': {
+    'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
+  },
 }
 
 # This string is copied directly out of the gl2.h file from GLES2.0
@@ -1353,13 +1387,16 @@ class TypeHandler(object):
       file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
 
     elif arg.name in func.info.argument_has_size or \
-         arg.name in func.info.argument_element_size:
+         arg.name in func.info.argument_element_size or \
+         arg.name in func.info.argument_size_from_function:
 
       components = []
       if arg.name in func.info.argument_has_size:
           components.append(func.info.argument_has_size[arg.name])
       if arg.name in func.info.argument_element_size:
           components.append("%i" % func.info.argument_element_size[arg.name])
+      if arg.name in func.info.argument_size_from_function:
+          components.append("%s (%s)" % (func.info.argument_size_from_function[arg.name], arg.name))
       if arg.type.find("void*") == -1:
           components.append("sizeof (%s)" % arg.type)
       arg_size = " * ".join(components)
@@ -1462,6 +1499,8 @@ class FunctionInfo(object):
       self.out_arguments = []
     if not 'argument_element_size' in info:
       self.argument_element_size = {}
+    if not 'argument_size_from_function' in info:
+      self.argument_size_from_function = {}
 
 class Argument(object):
   """A class that represents a function argument."""
@@ -2261,6 +2300,8 @@ class GLGenerator(object):
             continue
         if arg.name in func.info.argument_element_size:
             continue
+        if arg.name in func.info.argument_size_from_function:
+            continue
         if arg.IsPointer() and not arg.IsString():
             return False
     return True
@@ -2356,6 +2397,7 @@ class GLGenerator(object):
 
     file.Write("#include \"command.h\"\n")
     file.Write("#include <string.h>\n\n")
+    file.Write('#include "gles2_utils.h"\n')
 
     void_return_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
 

@@ -201,9 +201,19 @@ bytes_per_element (int type)
     }
 }
 
-uint32_t compute_image_group_size (int format,
-                                   int type)
+uint32_t
+compute_image_group_size (int format,
+                          int type)
 {
   return bytes_per_element (type) * elements_per_group (format, type);
+}
+
+size_t
+_get_egl_attrib_list_size (const EGLint *attrib_list)
+{
+    size_t offset = 0;
+    while (attrib_list[offset] != EGL_NONE)
+        offset += 2;
+    return offset + 1;
 }
 

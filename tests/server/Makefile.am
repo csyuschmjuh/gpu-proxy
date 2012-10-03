@@ -7,6 +7,8 @@ rootsrcdir=../..
 server_test_SOURCES = \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
+	$(rootsrcdir)/src/gles2_utils.c \
+	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
 	$(rootsrcdir)/src/server/caching_server_gles_private.h \
 	$(rootsrcdir)/src/server/caching_server_gles.c \
