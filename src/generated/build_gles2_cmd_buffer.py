@@ -1517,6 +1517,7 @@ class FunctionInfo(object):
     if not 'argument_size_from_function' in info:
       self.argument_size_from_function = {}
 
+
 class Argument(object):
   """A class that represents a function argument."""
 
@@ -2079,6 +2080,17 @@ class Function(object):
   def WriteEnumName(self, file):
     self.type_handler.WriteEnumName(self, file)
 
+  def CanAutogenerate(self):
+    """Whether or not this function can be auto-generated at all."""
+    if self.IsType('Manual'):
+        return False
+    for arg in self.GetOriginalArgs():
+        if arg.IsDoublePointer() and not self.IsOutArgument(arg):
+            return False
+    return self.return_type == "void" or \
+           self.return_type in _DEFAULT_RETURN_VALUES
+
+
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
 
@@ -2181,6 +2193,9 @@ class GLGenerator(object):
       if 'type' in info:
         type = info['type']
       self._function_info[func_name] = FunctionInfo(info, self._empty_type_handler)
+
+  def AutogeneratableFunctions(self):
+    return [func for func in self.functions if func.CanAutogenerate()]
 
   def AddFunction(self, func):
     """Adds a function."""
@@ -2291,19 +2306,7 @@ class GLGenerator(object):
     self.ParseAPIFile("gles2_functions.txt", self._gles2_function_re)
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
-  def CanAutogenerateFunctionAtAll(self, func):
-    if func.IsType('Manual'):
-        return False
-    for arg in func.GetOriginalArgs():
-        if arg.IsDoublePointer() and not func.IsOutArgument(arg):
-            return False
-    return func.return_type == "void" or \
-           func.return_type in _DEFAULT_RETURN_VALUES
-
   def HasCustomClientEntryPoint(self, func):
-    if not self.CanAutogenerateFunctionAtAll(func):
-        return True
-
     # Manual init functions always allow generating the client-side entry point.
     if func.IsType("ManualInit"):
         return False
@@ -2336,7 +2339,7 @@ class GLGenerator(object):
     file = CWriter(filename)
     file.Write('#include "gles2_api_private.h"\n')
 
-    for func in self.functions:
+    for func in self.AutogeneratableFunctions():
         header = self.GetClientEntryPointSignature(func)
         if not header:
             continue
@@ -2391,15 +2394,11 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
-    for func in self.functions:
-      if not self.CanAutogenerateFunctionAtAll(func):
-        continue
+    for func in self.AutogeneratableFunctions():
       func.WriteStruct(file)
     file.Write("\n")
 
-    for func in self.functions:
-      if not self.CanAutogenerateFunctionAtAll(func):
-        continue
+    for func in self.AutogeneratableFunctions():
       if func.IsType("ManualInit"):
         continue
       file.Write("private ");
@@ -2416,13 +2415,12 @@ class GLGenerator(object):
     file.Write("#include <string.h>\n\n")
     file.Write('#include "gles2_utils.h"\n')
 
-    generatable_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
-    for func in generatable_functions:
+    for func in self.AutogeneratableFunctions():
       if func.IsType("ManualInit"):
         continue
       func.WriteCommandInit(file)
 
-    self.WriteGetSizeFunction(file, generatable_functions)
+    self.WriteGetSizeFunction(file, self.AutogeneratableFunctions())
 
     file.Write("\n")
     file.Close()
@@ -2454,8 +2452,7 @@ class GLGenerator(object):
     file.Write("{\n")
     file.Write("    switch (abstract_command->type) {\n")
 
-    void_return_functions = filter(self.CanAutogenerateFunctionAtAll, self.functions)
-    for func in void_return_functions:
+    for func in self.AutogeneratableFunctions():
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
 
         if len(func.GetOriginalArgs()) or func.return_type != "void":
