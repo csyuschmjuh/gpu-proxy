@@ -37,46 +37,6 @@ _is_error_state (void)
     return !client_get_thread_local();
 }
 
-/* total parameters 8 * sizeof (GLint) */
-void glCompressedTexImage2D (GLenum target, GLint level,
-                             GLenum internalformat,
-                             GLsizei width, GLsizei height,
-                             GLint border, GLsizei imageSize,
-                             const GLvoid *data)
-{
-    GLvoid *data_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && imageSize > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * imageSize);
-        memcpy (data_copy, data, sizeof (char) * imageSize);
-    }
-}
-
-/* total parameters 9 * sizeof (GLint) */
-void glCompressedTexSubImage2D (GLenum target, GLint level,
-                                GLint xoffset, GLint yoffset,
-                                GLsizei width, GLsizei height,
-                                GLenum format, GLsizei imageSize,
-                                const GLvoid *data)
-{
-    GLvoid *data_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && imageSize > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * imageSize);
-        memcpy (data_copy, data, sizeof (char) * imageSize);
-    }
-}
-
 static char *
 _create_data_array (vertex_attrib_t *attrib, int count)
 {
