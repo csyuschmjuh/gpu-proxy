@@ -49,6 +49,21 @@ _DEFAULT_RETURN_VALUES = {
 #                   it differs from the list of default return values above.
 
 _FUNCTION_INFO = {
+  'glPixelStorei' : {
+    'type': 'Manual',
+  },
+  'glDrawArrays' : {
+    'type': 'Manual',
+  },
+  'glDrawElements' : {
+    'type': 'Manual',
+  },
+  'glTexSubImage2D': {
+    'type': 'ManualInit',
+  },
+  'glTexImage2D': {
+    'type': 'ManualInit',
+  },
   'eglGetError': {
     'default_return': 'EGL_NOT_INITIALIZED'
   },
@@ -81,12 +96,6 @@ _FUNCTION_INFO = {
   },
   'eglSwapBuffers': {
     'type': 'Manual',
-  },
-  'glTexSubImage2D': {
-    'type': 'ManualInit',
-  },
-  'glTexImage2D': {
-    'type': 'ManualInit',
   },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
@@ -2298,11 +2307,6 @@ class GLGenerator(object):
     # Manual init functions always allow generating the client-side entry point.
     if func.IsType("ManualInit"):
         return False
-
-    if func.name.find("PixelStore") != -1:
-        return True
-    if func.name.find("DrawArrays") != -1:
-        return True
 
     for arg in func.GetInitArgs()[:-1]:
         if arg.name in func.info.out_arguments:
