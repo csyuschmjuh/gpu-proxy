@@ -624,21 +624,6 @@ caching_server_glActiveTexture (server_t *server, GLenum texture)
 }
 
 static void
-caching_server_glAttachShader (server_t *server, GLuint program, GLuint shader)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glAttachShader) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glAttachShader (server, program, shader);
-
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glBindAttribLocation (server_t *server, GLuint program, GLuint index, const GLchar *name)
 {
     egl_state_t *egl_state;
@@ -1235,59 +1220,6 @@ caching_server_glCompressedTexSubImage2D (server_t *server, GLenum target, GLint
         free ((void *)data);
 }
 
-static void
-caching_server_glCopyTexImage2D (server_t *server, GLenum target, GLint level,
-                                   GLenum internalformat,
-                                   GLint x, GLint y,
-                                   GLsizei width, GLsizei height,
-                                   GLint border)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCopyTexImage2D) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glCopyTexImage2D (server, target, level, internalformat,
-                                 x, y, width, height, border);
-
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glCopyTexSubImage2D (server_t *server, GLenum target, GLint level,
-                                       GLint xoffset, GLint yoffset,
-                                       GLint x, GLint y,
-                                       GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage2D) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage2D (server, target, level, xoffset, yoffset,
-                                    x, y, width, height);
-
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static GLuint
-caching_server_glCreateProgram  (server_t *server)
-{
-    GLuint result = 0;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCreateProgram) &&
-        caching_server_glIsValidContext (server)) {
-
-        result = CACHING_SERVER(server)->super_dispatch.glCreateProgram (server);
-    }
-
-    return result;
-}
-
 static GLuint
 caching_server_glCreateShader (server_t *server, GLenum shaderType)
 {
@@ -1412,21 +1344,6 @@ FINISH:
 }
 
 static void
-caching_server_glDeleteProgram (server_t *server, GLuint program)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDeleteProgram) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glDeleteProgram (server, program);
-
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glDeleteRenderbuffers (server_t *server, GLsizei n, const GLuint *renderbuffers)
 {
     
@@ -1444,21 +1361,6 @@ caching_server_glDeleteRenderbuffers (server_t *server, GLsizei n, const GLuint 
 FINISH:
     if (renderbuffers)
         free ((void *)renderbuffers);
-}
-
-static void
-caching_server_glDeleteShader (server_t *server, GLuint shader)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDeleteShader) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glDeleteShader (server, shader);
-
-        egl_state->state.need_get_error = true;
-    }
 }
 
 static void
@@ -1978,28 +1880,6 @@ FINISH:
     if (element_binding == false) {
         if (indices)
             free ((void *)indices);
-    }
-}
-
-static void
-caching_server_glFinish (server_t *server)
-{
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glFinish) &&
-        caching_server_glIsValidContext (server)) {
-
-        CACHING_SERVER(server)->super_dispatch.glFinish (server);
-    }
-}
-
-static void
-caching_server_glFlush (server_t *server)
-{
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glFlush) &&
-        caching_server_glIsValidContext (server)) {
-
-        CACHING_SERVER(server)->super_dispatch.glFlush (server);
     }
 }
 
@@ -3175,20 +3055,6 @@ caching_server_glLineWidth (server_t *server, GLfloat width)
 }
 
 static void
-caching_server_glLinkProgram (server_t *server, GLuint program)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glLinkProgram) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glLinkProgram (server, program);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glPixelStorei (server_t *server, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
@@ -3257,49 +3123,6 @@ caching_server_glReadPixels (server_t *server, GLint x, GLint y,
         egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
 
         CACHING_SERVER(server)->super_dispatch.glReadPixels (server, x, y, width, height, format, type, data);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glCompileShader (server_t *server, GLuint shader)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCompileShader) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glCompileShader (server, shader);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glReleaseShaderCompiler (server_t *server)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glReleaseShaderCompiler) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glReleaseShaderCompiler (server);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glRenderbufferStorage (server_t *server, GLenum target, GLenum internalformat,
-                                      GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorage) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorage (server, target, internalformat, width, height);
         egl_state->state.need_get_error = true;
     }
 }
@@ -3787,122 +3610,7 @@ caching_server_glTexSubImage2D (server_t *server, GLenum target, GLint level,
         free ((void *)data);
 }
 
-static void
-caching_server_glUniform1f (server_t *server, GLint location, GLfloat v0)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform1f) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform1f (server, location, v0);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform2f (server_t *server, GLint location, GLfloat v0, GLfloat v1)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform2f) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform2f (server, location, v0, v1);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform3f (server_t *server, GLint location, GLfloat v0, GLfloat v1, 
-                           GLfloat v2)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform3f) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform3f (server, location, v0, v1, v2);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform4f (server_t *server, GLint location, GLfloat v0, GLfloat v1, 
-                           GLfloat v2, GLfloat v3)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform4f) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform4f (server, location, v0, v1, v2, v3);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform1i (server_t *server, GLint location, GLint v0)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform1i) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform1i (server, location, v0);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform2i (server_t *server, GLint location, GLint v0, GLint v1)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform2i) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform2i (server, location, v0, v1);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform3i (server_t *server, GLint location, GLint v0, GLint v1, GLint v2)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform3i) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform3i (server, location, v0, v1, v2);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glUniform4i (server_t *server, GLint location, GLint v0, GLint v1, 
-                           GLint v2, GLint v3)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glUniform4i) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glUniform4i (server, location, v0, v1, v2, v3);
-        egl_state->state.need_get_error = true;
-    }
-}
-
- void
+void
 caching_server_glUniformfv (server_t *server, int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
@@ -4143,20 +3851,6 @@ caching_server_glUseProgram (server_t *server, GLuint program)
         egl_state->state.current_program = program;
         /* FIXME: do we need to have this ? */
         // egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glValidateProgram (server_t *server, GLuint program)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glValidateProgram) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glValidateProgram (server, program);
-        egl_state->state.need_get_error = true;
     }
 }
 
@@ -4464,21 +4158,6 @@ caching_server_glEGLImageTargetTexture2DOES (server_t *server, GLenum target, GL
 }
 
 static void
-caching_server_glEGLImageTargetRenderbufferStorageOES (server_t *server, GLenum target, 
-                                               GLeglImageOES image)
-{
-    egl_state_t *egl_state;
-    
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glEGLImageTargetRenderbufferStorageOES) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glEGLImageTargetRenderbufferStorageOES (server, target, image);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glGetProgramBinaryOES (server_t *server, GLuint program, GLsizei bufSize, 
                             GLsizei *length, GLenum *binaryFormat, 
                             GLvoid *binary)
@@ -4622,26 +4301,6 @@ caching_server_glTexSubImage3DOES (server_t *server, GLenum target, GLint level,
     }
     if (data)
         free ((void *)data);
-}
-
-static void
-caching_server_glCopyTexSubImage3DOES (server_t *server, GLenum target, GLint level,
-                               GLint xoffset, GLint yoffset, GLint zoffset,
-                               GLint x, GLint y,
-                               GLint width, GLint height)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage3DOES) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-
-        CACHING_SERVER(server)->super_dispatch.glCopyTexSubImage3DOES (server, target, level,
-                                       xoffset, yoffset, zoffset,
-                                       x, y, width, height);
-
-        egl_state->state.need_get_error = true;
-    }
 }
 
 static void
@@ -4942,34 +4601,6 @@ caching_server_glSelectPerfMonitorCountersAMD (server_t *server, GLuint monitor,
 }
 
 static void
-caching_server_glBeginPerfMonitorAMD (server_t *server, GLuint monitor)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glBeginPerfMonitorAMD) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glBeginPerfMonitorAMD (server, monitor); 
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glEndPerfMonitorAMD (server_t *server, GLuint monitor)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glEndPerfMonitorAMD) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glEndPerfMonitorAMD (server, monitor); 
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glGetPerfMonitorCounterDataAMD (server_t *server, GLuint monitor, GLenum pname,
                                        GLsizei dataSize, GLuint *data,
                                        GLint *bytesWritten)
@@ -4982,76 +4613,6 @@ caching_server_glGetPerfMonitorCounterDataAMD (server_t *server, GLuint monitor,
         
         CACHING_SERVER(server)->super_dispatch.glGetPerfMonitorCounterDataAMD (server, monitor, pname, dataSize,
                                                data, bytesWritten); 
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glBlitFramebufferANGLE (server_t *server, GLint srcX0, GLint srcY0, 
-                            GLint srcX1, GLint srcY1,
-                            GLint dstX0, GLint dstY0, 
-                            GLint dstX1, GLint dstY1,
-                            GLbitfield mask, GLenum filter)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glBlitFramebufferANGLE) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glBlitFramebufferANGLE (server, srcX0, srcY0, srcX1, srcY1,
-                                       dstX0, dstY0, dstX1, dstY1,
-                                       mask, filter);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glRenderbufferStorageMultisampleANGLE (server_t *server, GLenum target, GLsizei samples,
-                                            GLenum internalformat,
-                                            GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleANGLE) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleANGLE (server, target, samples,
-                                                      internalformat,
-                                                      width, height);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glRenderbufferStorageMultisampleAPPLE (server_t *server, GLenum target, GLsizei samples,
-                                            GLenum internalformat, 
-                                            GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleAPPLE) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleAPPLE (server, target, samples,
-                                                      internalformat,
-                                                      width, height);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glResolveMultisampleFramebufferAPPLE (server_t *server)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glResolveMultisampleFramebufferAPPLE) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glResolveMultisampleFramebufferAPPLE (server);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5108,24 +4669,6 @@ caching_server_glMultiDrawElementsEXT (server_t *server, GLenum mode, const GLsi
 }
 
 static void
-caching_server_glRenderbufferStorageMultisampleEXT (server_t *server, GLenum target, GLsizei samples,
-                                          GLenum internalformat,
-                                          GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleEXT) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleEXT (server, target, samples, 
-                                                    internalformat, 
-                                                    width, height);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glFramebufferTexture2DMultisampleEXT (server_t *server, GLenum target, 
                                             GLenum attachment,
                                             GLenum textarget, 
@@ -5146,24 +4689,6 @@ caching_server_glFramebufferTexture2DMultisampleEXT (server_t *server, GLenum ta
         CACHING_SERVER(server)->super_dispatch.glFramebufferTexture2DMultisampleEXT (server, target, attachment, 
                                                      textarget, texture, 
                                                      level, samples);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glRenderbufferStorageMultisampleIMG (server_t *server, GLenum target, GLsizei samples,
-                                          GLenum internalformat,
-                                          GLsizei width, GLsizei height)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleIMG) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-        
-        CACHING_SERVER(server)->super_dispatch.glRenderbufferStorageMultisampleIMG (server, target, samples, 
-                                                    internalformat, 
-                                                    width, height);
         egl_state->state.need_get_error = true;
     }
 }
@@ -5281,21 +4806,6 @@ caching_server_glGetFenceivNV (server_t *server, GLuint fence, GLenum pname, int
 }
 
 static void
-caching_server_glFinishFenceNV (server_t *server,
-                                GLuint fence)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glFinishFenceNV) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glFinishFenceNV (server, fence);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glSetFenceNV (server_t *server, GLuint fence, GLenum condition)
 {
     egl_state_t *egl_state;
@@ -5366,34 +4876,6 @@ caching_server_glGetDriverControlStringQCOM (server_t *server, GLuint driverCont
 }
 
 static void
-caching_server_glEnableDriverControlQCOM (server_t *server, GLuint driverControl)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glEnableDriverControlQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glEnableDriverControlQCOM (server, driverControl);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glDisableDriverControlQCOM (server_t *server, GLuint driverControl)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDisableDriverControlQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glDisableDriverControlQCOM (server, driverControl);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_server_glExtGetTexturesQCOM (server_t *server, GLuint *textures, GLint maxTextures, 
                            GLint *numTextures)
 {
@@ -5453,21 +4935,6 @@ caching_server_glExtGetTexLevelParameterivQCOM (server_t *server, GLuint texture
     
         CACHING_SERVER(server)->super_dispatch.glExtGetTexLevelParameterivQCOM (server, texture, face, level,
                                                 pname, params);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glExtTexObjectStateOverrideiQCOM (server_t *server, GLenum target, GLenum pname, 
-                                         GLint param)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtTexObjectStateOverrideiQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glExtTexObjectStateOverrideiQCOM (server, target, pname, param);
         egl_state->state.need_get_error = true;
     }
 }
@@ -6482,10 +5949,58 @@ caching_server_eglGetImageAttribSEC (server_t *server,
     return result;
 }
 
+static void caching_server_command_post_hook(server_t *server, command_t *command)
+{
+
+    switch (command->type) {
+    case COMMAND_GLATTACHSHADER:
+    case COMMAND_GLCOMPILESHADER:
+    case COMMAND_GLCOPYTEXIMAGE2D:
+    case COMMAND_GLCOPYTEXSUBIMAGE2D:
+    case COMMAND_GLDELETEPROGRAM:
+    case COMMAND_GLDELETESHADER:
+    case COMMAND_GLDETACHSHADER:
+    case COMMAND_GLLINKPROGRAM:
+    case COMMAND_GLVALIDATEPROGRAM:
+    case COMMAND_GLRELEASESHADERCOMPILER:
+    case COMMAND_GLRENDERBUFFERSTORAGE:
+    case COMMAND_GLUNIFORM1F:
+    case COMMAND_GLUNIFORM1I:
+    case COMMAND_GLUNIFORM2F:
+    case COMMAND_GLUNIFORM2I:
+    case COMMAND_GLUNIFORM3F:
+    case COMMAND_GLUNIFORM3I:
+    case COMMAND_GLUNIFORM4F:
+    case COMMAND_GLUNIFORM4I:
+    case COMMAND_GLCOPYTEXSUBIMAGE3DOES:
+    case COMMAND_GLBEGINPERFMONITORAMD:
+    case COMMAND_GLENDPERFMONITORAMD:
+    case COMMAND_GLBLITFRAMEBUFFERANGLE:
+    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEANGLE:
+    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEAPPLE:
+    case COMMAND_GLRESOLVEMULTISAMPLEFRAMEBUFFERAPPLE:
+    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEEXT:
+    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEIMG:
+    case COMMAND_GLFINISHFENCENV:
+    case COMMAND_GLCOVERAGEMASKNV:
+    case COMMAND_GLGETDRIVERCONTROLSQCOM:
+    case COMMAND_GLENABLEDRIVERCONTROLQCOM:
+    case COMMAND_GLDISABLEDRIVERCONTROLQCOM:
+    case COMMAND_GLEXTTEXOBJECTSTATEOVERRIDEIQCOM: {
+        egl_state_t *egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
+        egl_state->state.need_get_error = true;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void
 caching_server_init (caching_server_t *server, buffer_t *buffer)
 {
     server_init (&server->super, buffer);
+    server->super.command_post_hook = caching_server_command_post_hook;
     server->super_dispatch = server->super.dispatch;
     server->active_state = NULL;
 

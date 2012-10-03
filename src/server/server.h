@@ -24,6 +24,7 @@ struct _server {
     buffer_t *buffer;
     thread_t thread;
     bool threaded;
+    void (*command_post_hook)(server_t *server, command_t *command);
 };
 
 private void
