@@ -63,14 +63,26 @@ _DEFAULT_RETURN_VALUES = {
 #                   it differs from the list of default return values above.
 
 _FUNCTION_INFO = {
-  'glPixelStorei' : {
-    'type': 'Manual',
-  },
   'glDrawArrays' : {
     'type': 'Synchronous',
   },
   'glDrawElements' : {
     'type': 'Synchronous',
+  },
+  'glMultiDrawArraysEXT' : {
+    'type': 'Synchronous',
+  },
+  'glMultiDrawElementsEXT' : {
+    'type': 'Synchronous',
+  },
+  'glTexImage3DOES' : {
+    'type': 'Synchronous',
+  },
+  'glTexSubImage3DOES' : {
+    'type': 'Synchronous',
+  },
+  'glPixelStorei' : {
+    'type': 'Manual',
   },
   'eglTerminate': {
     'type': 'Manual',
