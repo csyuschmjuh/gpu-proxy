@@ -1384,9 +1384,11 @@ class TypeHandler(object):
     if arg.type.find("char*") != -1:
       file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
 
-    elif arg.name in func.info.argument_has_size or \
-         arg.name in func.info.argument_element_size or \
-         arg.name in func.info.argument_size_from_function:
+    # We only need to copy arguments if the function is asynchronous.
+    elif not func.IsSynchronous() and \
+         (arg.name in func.info.argument_has_size or \
+          arg.name in func.info.argument_element_size or \
+          arg.name in func.info.argument_size_from_function):
 
       components = []
       if arg.name in func.info.argument_has_size:
@@ -2066,19 +2068,30 @@ class Function(object):
   def WriteEnumName(self, file):
     self.type_handler.WriteEnumName(self, file)
 
+  def KnowHowToPassArguments(self):
+    # Passing argument is quite easy for synchronous functions, because
+    # we can just pass the pointers without doing a copy.
+    if self.IsSynchronous():
+        return True
+
+    for arg in self.GetOriginalArgs():
+        if arg.IsDoublePointer() and not self.IsOutArgument(arg):
+            return False
+
+  def KnowHowToAssignDefaultReturnValue(self):
+    return not self.HasReturnValue() or \
+           self.return_type in _DEFAULT_RETURN_VALUES or \
+           self.info.default_return
+
   def CanAutogenerate(self):
     """Whether or not this function can be auto-generated at all."""
     if self.IsType('Manual'):
         return False
     if self.IsType('ManualInit'):
         return True
-    for arg in self.GetOriginalArgs():
-        if arg.IsDoublePointer() and not self.IsOutArgument(arg):
-            return False
-    return self.return_type == "void" or \
-           self.return_type in _DEFAULT_RETURN_VALUES or \
-           self.info.default_return
-
+    if not self.KnowHowToPassArguments():
+        return False
+    return self.KnowHowToAssignDefaultReturnValue()
 
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
@@ -2299,8 +2312,10 @@ class GLGenerator(object):
     # Manual init functions always allow generating the client-side entry point.
     if func.IsType("ManualInit"):
         return False
+    if func.IsSynchronous():
+        return False
 
-    for arg in func.GetInitArgs()[:-1]:
+    for arg in func.GetOriginalArgs():
         if arg.name in func.info.out_arguments:
             continue
         if arg.name in func.info.argument_has_size:

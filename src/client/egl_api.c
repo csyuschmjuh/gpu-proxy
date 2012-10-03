@@ -122,30 +122,3 @@ eglMakeCurrent (EGLDisplay dpy,
     }
     return result;
 }
-
-EGLSurface
-eglCreatePixmapSurfaceHI (EGLDisplay dpy,
-                          EGLConfig config,
-                          struct EGLClientPixmapHI *pixmap)
-{
-    EGLSurface result = EGL_NO_SURFACE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreatePixmapSurfaceHI and wait */
-    return result;
-}
-
-EGLBoolean
-eglExportDRMImageMESA (EGLDisplay dpy, EGLImageKHR image,
-                       EGLint *name, EGLint *handle, EGLint *stride)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglExportDRMImageMESA and wait */
-    return result;
-}
