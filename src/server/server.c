@@ -7,7 +7,7 @@
 #include "thread_private.h"
 #include <time.h>
 
-/* This method is auto-generated into server_autogen.c 
+/* This method is auto-generated into server_autogen.c
  * and included at the end of this file. */
 static void
 server_handle_command_autogen (server_t *server,
@@ -46,6 +46,9 @@ server_handle_command (server_t *server,
         default:
             server_handle_command_autogen (server, command);
         }
+
+    if (server->command_post_hook)
+        server->command_post_hook(server, command);
 }
 
 static inline void
@@ -94,6 +97,7 @@ server_init (server_t *server,
 {
     server->buffer = buffer;
     server->dispatch = *server_dispatch_table_get_base();
+    server->command_post_hook = NULL;
 }
 
 bool
