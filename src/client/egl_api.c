@@ -58,97 +58,6 @@ EGLBoolean eglTerminate (EGLDisplay dpy)
 }
 
 EGLBoolean
-eglChooseConfig (EGLDisplay dpy,
-                 const EGLint *attrib_list,
-                 EGLConfig *configs,
-                 EGLint config_size,
-                 EGLint *num_config)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglChooseConfig and wait */
-    return result;
-}
-
-EGLSurface
-eglCreateWindowSurface (EGLDisplay dpy,
-                        EGLConfig config,
-                        EGLNativeWindowType win,
-                        const EGLint *attrib_list)
-{
-    EGLSurface surface = EGL_NO_SURFACE;
-
-    if (! client_get_thread_local ())
-        return surface;
-
-    /* XXX: post eglCreateWindowSurface and wait */
-    return surface;
-}
-
-EGLSurface
-eglCreatePbufferSurface (EGLDisplay dpy,
-                         EGLConfig config,
-                         const EGLint *attrib_list)
-{
-    EGLSurface surface = EGL_NO_SURFACE;
-
-    if (! client_get_thread_local ())
-        return surface;
-
-    /* XXX: post eglCreatePbufferSurface and wait */
-    return surface;
-}
-
-EGLSurface
-eglCreatePixmapSurface (EGLDisplay dpy,
-                        EGLConfig config,
-                        EGLNativePixmapType pixmap,
-                        const EGLint *attrib_list)
-{
-    EGLSurface surface = EGL_NO_SURFACE;
-
-    if (! client_get_thread_local ())
-        return surface;
-
-    /* XXX: post eglCreatePixmapSurface and wait */
-    return surface;
-}
-
-EGLSurface
-eglCreatePbufferFromClientBuffer (EGLDisplay dpy,
-                                  EGLenum buftype,
-                                  EGLClientBuffer buffer,
-                                  EGLConfig config,
-                                  const EGLint *attrib_list)
-{
-    EGLSurface surface = EGL_NO_SURFACE;
-
-    if (! client_get_thread_local ())
-        return surface;
-
-    /* XXX: post eglCreatePbufferFromClientBuffer and wait */
-    return surface;
-}
-
-EGLContext
-eglCreateContext (EGLDisplay dpy,
-                  EGLConfig config,
-                  EGLContext share_context,
-                  const EGLint *attrib_list)
-{
-    EGLContext result = EGL_NO_CONTEXT;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreateContext and wait */
-    return result;
-}
-
-EGLBoolean
 eglSwapBuffers (EGLDisplay dpy,
                 EGLSurface surface)
 {
@@ -239,50 +148,6 @@ eglMakeCurrent (EGLDisplay dpy,
     return result;
 }
 
-EGLBoolean
-eglLockSurfaceKHR (EGLDisplay display,
-                   EGLSurface surface,
-                   const EGLint *attrib_list)
-{
-    EGLBoolean result = EGL_FALSE;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglLockSurfaceKHR and wait */
-    return result;
-}
-
-EGLImageKHR
-eglCreateImageKHR (EGLDisplay dpy,
-                   EGLContext ctx,
-                   EGLenum target,
-                   EGLClientBuffer buffer,
-                   const EGLint *attrib_list)
-{
-    EGLImageKHR result = EGL_NO_IMAGE_KHR;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreateImageKHR and wait */
-    return result;
-}
-
-EGLSyncKHR
-eglCreateSyncKHR (EGLDisplay dpy,
-                  EGLenum type,
-                  const EGLint *attrib_list)
-{
-    EGLSyncKHR result = EGL_NO_SYNC_KHR;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreateSyncKHR and wait */
-    return result;
-}
-
 EGLint
 eglClientWaitSyncKHR (EGLDisplay dpy,
                       EGLSyncKHR sync,
@@ -295,20 +160,6 @@ eglClientWaitSyncKHR (EGLDisplay dpy,
         return result;
 
     /* XXX: post eglClientWaitSyncKHR and wait */
-    return result;
-}
-
-EGLSyncNV
-eglCreateFenceSyncNV (EGLDisplay dpy,
-                      EGLenum condition,
-                      const EGLint *attrib_list)
-{
-    EGLSyncNV result = EGL_NO_SYNC_NV;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreateFenceSyncNV and wait */
     return result;
 }
 
@@ -346,18 +197,6 @@ eglCreatePixmapSurfaceHI (EGLDisplay dpy,
         return result;
 
     /* XXX: post eglCreatePixmapSurfaceHI and wait */
-    return result;
-}
-
-EGLImageKHR
-eglCreateDRMImageMESA (EGLDisplay dpy, const EGLint *attrib_list)
-{
-    EGLImageKHR result = EGL_NO_IMAGE_KHR;
-
-    if (! client_get_thread_local ())
-        return result;
-
-    /* XXX: post eglCreateDRMImageMESA and wait */
     return result;
 }
 

@@ -1,4 +1,5 @@
 #include "compiler_private.h"
+#include <EGL/egl.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -11,7 +12,7 @@ copy_rect_to_buffer (const void *pixels,
                      bool flip_y,
                      uint32_t buffer_padded_row_size);
 
-bool
+private bool
 compute_image_data_sizes (int width,
                           int height,
                           int format,
@@ -21,5 +22,10 @@ compute_image_data_sizes (int width,
                           uint32_t *ret_unpadded_row_size,
                           uint32_t *ret_padded_row_size);
 
-uint32_t compute_image_group_size (int format,
-                                   int type);
+private uint32_t
+compute_image_group_size (int format,
+                          int type);
+
+private size_t
+_get_egl_attrib_list_size (const EGLint *attrib_list);
+
