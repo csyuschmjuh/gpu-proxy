@@ -102,7 +102,10 @@ void glDrawArrays (GLenum mode, GLint first, GLsizei count)
         }
     }
 
-    /* post command and no wait */
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLDRAWARRAYS);
+    command_gldrawarrays_init (command, mode, first, count);
+    client_write_command (command);
 }
 
 void glDrawElements (GLenum mode, GLsizei count, GLenum type,
@@ -166,7 +169,10 @@ void glDrawElements (GLenum mode, GLsizei count, GLenum type,
         }
     }
 
-    /* post command and no wait */
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+    command_gldrawelements_init (command, mode, count, type, indices);
+    client_write_command (command);
 }
 
 void glPixelStorei (GLenum pname, GLint param)
@@ -174,7 +180,10 @@ void glPixelStorei (GLenum pname, GLint param)
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLPIXELSTOREI);
+    command_glpixelstorei_init (command, pname, param);
+    client_write_command (command);
     return;
 }
 
@@ -186,9 +195,11 @@ void glVertexAttribPointer (GLuint index, GLint size, GLenum type,
     if (_is_error_state ())
         return;
 
-    /* XXX: post command and no wait */
-    /* XXX: no need to copy data in pointer */
-    return;
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
+    command_glvertexattribpointer_init (command, index, size, type, normalized,
+                                        stride, pointer);
+    client_write_command (command);
 }
 
 static int
@@ -262,7 +273,14 @@ glTexImage3DOES (GLenum target, GLint level, GLenum internalformat,
             memcpy ((void *)pixels_copy, (const void *)pixels, sizeof (char) * image_size);
         }
     } 
-            
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLTEXIMAGE3DOES);
+    command_glteximage3does_init (command, target, level, internalformat,
+                                  width, height, depth, border, format,
+                                  type, pixels);
+    client_write_command (command);
+
     return;
 }
 
@@ -295,64 +313,33 @@ glTexSubImage3DOES (GLenum target, GLint level,
             memcpy ((void *)data_copy, (const void *)data, sizeof (char) * image_size);
         }
     } 
-    return;
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLTEXSUBIMAGE3DOES);
+    command_gltexsubimage3does_init (command, target, level, xoffset, yoffset,
+                                     zoffset, width, height, depth, format,
+                                     type, data);
+    client_write_command (command);
 }
 
 GL_APICALL void GL_APIENTRY
-glCompressedTexImage3DOES (GLenum target, GLint level,
-                           GLenum internalformat,
-                           GLsizei width, GLsizei height, GLsizei depth,
-                           GLint border, GLsizei imageSize,
-                           const GLvoid *data)
+glMultiDrawArraysEXT (GLenum mode, GLint *first, 
+                      GLsizei *count, GLsizei primcount)
 {
-    GLvoid *data_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && imageSize > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * imageSize);
-        memcpy (data_copy, data, sizeof (char) * imageSize);
-    }
-}
-
-/* total parameters 11 * sizeof (GLint) */
-GL_APICALL void GL_APIENTRY
-glCompressedTexSubImage3DOES (GLenum target, GLint level,
-                              GLint xoffset, GLint yoffset, GLint zoffset,
-                              GLsizei width, GLsizei height, GLsizei depth,
-                              GLenum format, GLsizei imageSize,
-                              const GLvoid *data)
-{
-    GLvoid *data_copy = NULL;
-
-    if (_is_error_state ())
-        return;
-
-    /* XXX: post command and no wait */
-    /* XXX: copy data in data */
-    if (data && imageSize > 0) {
-        data_copy = (GLvoid *) malloc (sizeof (char) * imageSize);
-        memcpy (data_copy, data, sizeof (char) * imageSize);
-    }
-        
-    return;
-}
-
-GL_APICALL void GL_APIENTRY
-glMultiDrawArraysEXT (GLenum mode, const GLint *first, 
-                      const GLsizei *count, GLsizei primcount)
-{
-    /* not implemented */
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLMULTIDRAWARRAYSEXT);
+    command_glmultidrawarraysext_init (command, mode, first, count, primcount);
+    client_write_command (command);
 }
 
 GL_APICALL void GL_APIENTRY
 glMultiDrawElementsEXT (GLenum mode, const GLsizei *count, GLenum type,
                         const GLvoid **indices, GLsizei primcount)
 {
-    /* not implemented */
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLMULTIDRAWELEMENTSEXT);
+    command_glmultidrawelementsext_init (command, mode, count, type, indices, primcount);
+    client_write_command (command);
 }
 
 void
@@ -360,6 +347,10 @@ glTexParameteriv (GLenum target,
                   GLenum pname,
                   const GLint *params)
 {
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLTEXPARAMETERIV);
+    command_gltexparameteriv_init (command, target, pname, params);
+    client_write_command (command);
 }
 
 void
@@ -367,4 +358,8 @@ glTexParameterfv (GLenum target,
                   GLenum pname,
                   const GLfloat *params)
 {
+    command_t *command =
+        client_get_space_for_command (COMMAND_GLTEXPARAMETERFV);
+    command_gltexparameterfv_init (command, target, pname, params);
+    client_write_command (command);
 }

@@ -110,6 +110,15 @@ _FUNCTION_INFO = {
   'glCompressedTexSubImage2D': {
     'argument_has_size': { 'data': 'imageSize' }
   },
+  'glCompressedTexImage3DOES': {
+    'argument_has_size': { 'data': 'imageSize' }
+  },
+  'glCompressedTexSubImage3DOES': {
+    'argument_has_size': { 'data': 'imageSize' }
+  },
+  'glCompressedTexSubImage2D': {
+    'argument_has_size': { 'data': 'imageSize' }
+  },
   'glDeleteBuffers': {
     'argument_has_size': { 'buffers': 'n' }
   },
@@ -2078,23 +2087,26 @@ class Function(object):
         return True
 
     for arg in self.GetOriginalArgs():
-        if arg.IsDoublePointer() and not self.IsOutArgument(arg):
+        if self.IsOutArgument(arg):
+            continue
+        if arg.name in self.info.out_arguments:
+            continue
+        if arg.name in self.info.argument_has_size:
+            continue
+        if arg.name in self.info.argument_element_size:
+            continue
+        if arg.name in self.info.argument_size_from_function:
+            continue
+        if arg.IsString():
+            continue
+        if arg.IsPointer():
             return False
+    return True
 
   def KnowHowToAssignDefaultReturnValue(self):
     return not self.HasReturnValue() or \
            self.return_type in _DEFAULT_RETURN_VALUES or \
            self.info.default_return
-
-  def CanAutogenerate(self):
-    """Whether or not this function can be auto-generated at all."""
-    if self.IsType('Manual'):
-        return False
-    if self.IsType('ManualInit'):
-        return True
-    if not self.KnowHowToPassArguments():
-        return False
-    return self.KnowHowToAssignDefaultReturnValue()
 
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
@@ -2198,9 +2210,6 @@ class GLGenerator(object):
       if 'type' in info:
         type = info['type']
       self._function_info[func_name] = FunctionInfo(info, self._empty_type_handler)
-
-  def AutogeneratableFunctions(self):
-    return [func for func in self.functions if func.CanAutogenerate()]
 
   def AddFunction(self, func):
     """Adds a function."""
@@ -2312,24 +2321,17 @@ class GLGenerator(object):
     self.ParseAPIFile("egl_functions.txt", self._egl_function_re)
 
   def HasCustomClientEntryPoint(self, func):
+    if func.IsType('Manual'):
+        return True
+
     # Manual init functions always allow generating the client-side entry point.
     if func.IsType("ManualInit"):
         return False
     if func.IsSynchronous():
         return False
-
-    for arg in func.GetOriginalArgs():
-        if arg.name in func.info.out_arguments:
-            continue
-        if arg.name in func.info.argument_has_size:
-            continue
-        if arg.name in func.info.argument_element_size:
-            continue
-        if arg.name in func.info.argument_size_from_function:
-            continue
-        if arg.IsPointer() and not arg.IsString():
-            return True
-    return False
+    if not func.KnowHowToPassArguments():
+        return True
+    return not func.KnowHowToAssignDefaultReturnValue()
 
   def GetClientEntryPointSignature(self, func):
     if self.HasCustomClientEntryPoint(func):
@@ -2346,7 +2348,7 @@ class GLGenerator(object):
     file = CWriter(filename)
     file.Write('#include "gles2_api_private.h"\n')
 
-    for func in self.AutogeneratableFunctions():
+    for func in self.functions:
         header = self.GetClientEntryPointSignature(func)
         if not header:
             continue
@@ -2401,11 +2403,11 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
-    for func in self.AutogeneratableFunctions():
+    for func in self.functions:
       func.WriteStruct(file)
     file.Write("\n")
 
-    for func in self.AutogeneratableFunctions():
+    for func in self.functions:
       if func.IsType("ManualInit"):
         continue
       file.Write("private ");
@@ -2422,12 +2424,12 @@ class GLGenerator(object):
     file.Write("#include <string.h>\n\n")
     file.Write('#include "gles2_utils.h"\n')
 
-    for func in self.AutogeneratableFunctions():
+    for func in self.functions:
       if func.IsType("ManualInit"):
         continue
       func.WriteCommandInit(file)
 
-    self.WriteGetSizeFunction(file, self.AutogeneratableFunctions())
+    self.WriteGetSizeFunction(file, self.functions)
 
     file.Write("\n")
     file.Close()
@@ -2459,7 +2461,7 @@ class GLGenerator(object):
     file.Write("{\n")
     file.Write("    switch (abstract_command->type) {\n")
 
-    for func in self.AutogeneratableFunctions():
+    for func in self.functions:
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
 
         if len(func.GetOriginalArgs()) or func.return_type != "void":
