@@ -2538,7 +2538,7 @@ class GLGenerator(object):
     file = CWriter(filename)
 
     for func in self.functions:
-        caching_func_name = "caching_server_%s" % func.name
+        caching_func_name = "caching_server_%s " % func.name
         if caching_server_text.find(caching_func_name) == -1:
             continue
         file.Write('    server->super.dispatch.%s = %s;\n' % (func.name, caching_func_name))
