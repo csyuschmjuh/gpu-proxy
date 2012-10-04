@@ -45,31 +45,35 @@ EGLBoolean eglTerminate (EGLDisplay dpy)
 }
 
 EGLBoolean
-eglSwapBuffers (EGLDisplay dpy,
+eglSwapBuffers (EGLDisplay display,
                 EGLSurface surface)
 {
-    EGLBoolean result = EGL_BAD_DISPLAY;
-    egl_state_t *egl_state;
+    if (client_active_egl_state_available ()) {
+        egl_state_t *egl_state = client_get_active_egl_state ();
 
-    if (! client_active_egl_state_available ())
-        return result;
+        if ((egl_state->display == EGL_NO_DISPLAY) ||
+            (egl_state->display != display) ||
+            (egl_state->readable != surface) ||
+            (egl_state->drawable != surface))
+            return EGL_BAD_DISPLAY;
 
-    egl_state = client_get_active_egl_state ();
-    if (egl_state->display == EGL_NO_DISPLAY)
-        return result;
+        command_t *command =
+            client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
+        command_eglswapbuffers_init (command, display, surface);
+        client_write_command (command);
 
-    if (egl_state->display != dpy)
-        goto FINISH;
-
-    if (egl_state->readable != surface || egl_state->drawable != surface) {
-        result = EGL_BAD_SURFACE;
-        goto FINISH;
+        return EGL_TRUE;
     }
 
-    /* XXX: post eglSwapBuffers, no wait */
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
+    command_eglswapbuffers_init (command, display, surface);
+    client_write_command (command);
 
-FINISH:
-    return result;
+    unsigned int token = client_insert_token();
+    client_wait_for_token (token);
+
+    return ((command_eglswapbuffers_t *)command)->result;
 }
 
 EGLBoolean
