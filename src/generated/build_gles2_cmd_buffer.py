@@ -1483,6 +1483,24 @@ class TypeHandler(object):
 
     file.Write("}\n\n")
 
+  def WriteCommandDestroy(self, func, file):
+    file.Write("void\n");
+    file.Write("command_%s_destroy_arguments (command_%s_t *command)\n" % \
+        (func.name.lower(), func.name.lower()))
+    file.Write("\n{\n")
+
+    # We don't need to do anything for synchronous commands, since their
+    # pointer members do not need to be freed.
+    if func.IsSynchronous():
+        file.Write("}\n")
+        return
+
+    # The only thing we do for the moment is free arguments.
+    arguments_to_free = [arg for arg in func.GetOriginalArgs() if arg.IsPointer()]
+    for arg in arguments_to_free:
+      file.Write("    free (command->%s);\n" % arg.name)
+    file.Write("}\n")
+
   def WriteInitSignature(self, func, file):
     """Writes the declaration of the init function for a given function."""
     file.Write("void\n") 
@@ -1493,7 +1511,7 @@ class TypeHandler(object):
 
     file.Write(func.MakeTypedOriginalArgString("", separator=",\n" + (" " * len(call)),
                                                add_separator = True))
-    file.Write(")\n")
+    file.Write(")")
 
   def WriteEnumName(self, func, file):
     """Writes an enum name that matches the name of a function."""
@@ -2114,6 +2132,9 @@ class Function(object):
   def WriteCommandInit(self, file):
     self.type_handler.WriteCommandInit(self, file)
 
+  def WriteCommandDestroy(self, file):
+    self.type_handler.WriteCommandDestroy(self, file)
+
   def WriteInitSignature(self, file):
     self.type_handler.WriteInitSignature(self, file)
 
@@ -2455,6 +2476,11 @@ class GLGenerator(object):
       file.Write("private ");
       func.WriteInitSignature(file)
       file.Write(";\n\n")
+
+      file.Write("private void\n");
+      file.Write("command_%s_destroy_arguments (command_%s_t *command);\n\n" % \
+        (func.name.lower(), func.name.lower()))
+
     file.Write("#endif /*COMMAND_AUTOGEN_H*/\n")
     file.Close()
 
@@ -2467,9 +2493,9 @@ class GLGenerator(object):
     file.Write('#include "gles2_utils.h"\n')
 
     for func in self.functions:
-      if func.IsType("ManualInit"):
-        continue
-      func.WriteCommandInit(file)
+      if not func.IsType("ManualInit"):
+        func.WriteCommandInit(file)
+      func.WriteCommandDestroy(file)
 
     self.WriteGetSizeFunction(file, self.functions)
 
@@ -2505,24 +2531,21 @@ class GLGenerator(object):
 
     for func in self.functions:
         file.Write("    case COMMAND_%s: {\n" % func.name.upper())
+        file.Write("        command_%s_t *command = \n" % func.name.lower())
+        file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
-        if len(func.GetOriginalArgs()) or func.return_type != "void":
-            file.Write("        command_%s_t *command = (command_%s_t *)abstract_command;\n" % (func.name.lower(), func.name.lower()))
-
-        if func.return_type != "void":
-          call = "        command->result = server->dispatch.%s (" % func.name
-        else:
-          call = "        server->dispatch.%s (" % func.name
-        file.Write(call)
-        file.Write("server")
-
+        file.Write("        ")
+        if func.HasReturnValue():
+          file.Write("command->result = ")
+        file.Write("server->dispatch.%s (server" % func.name)
         for arg in func.GetOriginalArgs():
-            cast = ""
+            file.Write(",")
             if arg.IsDoublePointer() and arg.type.find("const") != -1:
-                cast = "(%s) " % arg.type
-            file.Write(",%scommand->%s" % (cast, arg.name))
-
+                file.Write("(%s) " % arg.type)
+            file.Write("command->%s" % arg.name)
         file.Write(");\n")
+
+        file.Write("        command_%s_destroy_arguments (command);\n" % func.name.lower())
         file.Write("        break;\n")
         file.Write("    }\n")
 

@@ -25,7 +25,8 @@ server_handle_command (server_t *server,
                        command_t *command)
 {
     switch (command->type) {
-        case COMMAND_NO_OP: break;
+        case COMMAND_NO_OP:
+            break;
         case COMMAND_SET_TOKEN:
             server_handle_set_token (server, (command_set_token_t *)command);
             break;
@@ -64,7 +65,6 @@ server_start_work_loop (server_t *server)
         }
 
         server_handle_command (server, read_command);
-
         buffer_read_advance (server->buffer, read_command->size);
     }
 }
