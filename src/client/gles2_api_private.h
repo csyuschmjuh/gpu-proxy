@@ -7,7 +7,6 @@
 #include "command.h"
 #include "types_private.h"
 #include "thread_private.h"
-#include "egl_states.h"
 #include <string.h>
 #include <stdlib.h>
 

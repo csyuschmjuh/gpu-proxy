@@ -20,7 +20,6 @@ extern "C" {
  */
 typedef struct client {
     name_handler_t *name_handler;
-    link_list_t *active_egl_state;
 
     buffer_t buffer;
     unsigned int token;
@@ -34,15 +33,6 @@ client_get_thread_local ();
 
 private void
 client_destroy_thread_local ();
-
-private bool
-client_active_egl_state_available ();
-
-private egl_state_t *
-client_get_active_egl_state ();
-
-private void
-client_set_active_egl_state (link_list_t* active_egl_state);
 
 private int
 client_get_unpack_alignment ();
