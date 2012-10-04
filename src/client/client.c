@@ -55,7 +55,6 @@ client_new ()
     client_t *client = (client_t *)malloc (sizeof (client_t));
 
     client->name_handler = name_handler_create ();
-    client->active_egl_state = NULL;
     client->token = 0;
 
     buffer_create (&client->buffer);
@@ -94,24 +93,6 @@ client_destroy_thread_local ()
 
      client_destroy (thread_local_client);
      thread_local_client = NULL;
-}
-
-bool
-client_active_egl_state_available ()
-{
-    return client_get_thread_local ()->active_egl_state;
-}
-
-egl_state_t *
-client_get_active_egl_state ()
-{
-    return (egl_state_t *) (client_get_thread_local ())->active_egl_state->data;
-}
-
-void
-client_set_active_egl_state (link_list_t* active_egl_state)
-{
-    client_get_thread_local ()->active_egl_state = active_egl_state;
 }
 
 name_handler_t *

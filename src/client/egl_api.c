@@ -24,47 +24,31 @@
 #include <EGL/eglext.h>
 
 
-EGLBoolean eglTerminate (EGLDisplay dpy)
+EGLBoolean eglTerminate (EGLDisplay display)
 {
-    EGLBoolean result = EGL_FALSE;
+    if (! on_client_thread ())
+        server_dispatch_table_get_base ()->eglTerminate (NULL, display);
 
-    if (! client_get_thread_local ())
-        return result;
+    if (_is_error_state ())
+        return EGL_FALSE;
 
-    /* XXX: post eglTerminate and wait */
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLTERMINATE);
+    command_eglterminate_init (command, display);
+    client_write_command (command);
 
-    /* FIXME: only if we are in None Context, we will destroy the server
-     * according to egl spec.  What happens if we are in valid context
-     * and application exit?  Obviously, there are still valid context
-     * on the driver side, what about our server thread ?
-     */
-    if (! client_active_egl_state_available ())
-        client_destroy_thread_local ();
+    unsigned int token = client_insert_token();
+    client_wait_for_token (token);
 
-    return result;
+    client_destroy_thread_local ();
+
+    return EGL_TRUE;
 }
 
 EGLBoolean
 eglSwapBuffers (EGLDisplay display,
                 EGLSurface surface)
 {
-    if (client_active_egl_state_available ()) {
-        egl_state_t *egl_state = client_get_active_egl_state ();
-
-        if ((egl_state->display == EGL_NO_DISPLAY) ||
-            (egl_state->display != display) ||
-            (egl_state->readable != surface) ||
-            (egl_state->drawable != surface))
-            return EGL_BAD_DISPLAY;
-
-        command_t *command =
-            client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
-        command_eglswapbuffers_init (command, display, surface);
-        client_write_command (command);
-
-        return EGL_TRUE;
-    }
-
     command_t *command =
         client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
     command_eglswapbuffers_init (command, display, surface);
@@ -82,66 +66,22 @@ eglMakeCurrent (EGLDisplay display,
                 EGLSurface read,
                 EGLContext ctx)
 {
-    EGLBoolean result = EGL_FALSE;
-    egl_state_t *egl_state = NULL;
-
     if (! on_client_thread ())
         server_dispatch_table_get_base ()->eglMakeCurrent (NULL, display, draw, read, ctx);
 
     if (_is_error_state ())
         return EGL_FALSE;
 
-    /* XXX: we need to pass active_context in command buffer */
-    /* we are not in any valid context */
-    if (! client_active_egl_state_available ()) {
-        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
-            return EGL_TRUE;
-        }
-        else {
-            command_t *command =
-                client_get_space_for_command (COMMAND_EGLMAKECURRENT);
-            command_eglmakecurrent_init (command, display, draw, read, ctx);
-            client_write_command (command);
-            /* FIXME: update active_context */
-            goto WAIT;
-        }
-    } else {
-        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
-            command_t *command =
-                client_get_space_for_command (COMMAND_EGLMAKECURRENT);
-            command_eglmakecurrent_init (command, display, draw, read, ctx);
-            client_write_command (command);
-            /* FIXME: update active_context */
-            return EGL_TRUE;
-        }
-        else {
-            egl_state = client_get_active_egl_state ();
-            if (egl_state->display == display &&
-                egl_state->context == ctx &&
-                egl_state->drawable == draw &&
-                egl_state->readable == read) {
-                if (egl_state->destroy_dpy)
-                    return EGL_FALSE;
-                else
-                    return EGL_TRUE;
-            }
-            else {
-                command_t *command =
-                    client_get_space_for_command (COMMAND_EGLMAKECURRENT);
-                command_eglmakecurrent_init (command, display, draw, read, ctx);
-                client_write_command (command);
-                /* FIXME: update active_context */
-                goto WAIT;
-            }
-        }
-    }
-
-    return result;
-
-WAIT:
-    {
-        unsigned int token = client_insert_token();
-        client_wait_for_token (token);
+    if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
         return EGL_TRUE;
-    }
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLMAKECURRENT);
+    command_eglmakecurrent_init (command, display, draw, read, ctx);
+    client_write_command (command);
+
+    unsigned int token = client_insert_token();
+    client_wait_for_token (token);
+
+    return ((command_eglmakecurrent_t *)command)->result;
 }
