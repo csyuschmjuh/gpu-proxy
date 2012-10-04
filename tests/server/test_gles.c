@@ -378,7 +378,7 @@ GPUPROCESS_START_TEST
     // Use the program object
     server->dispatch.glUseProgram(server, vertexShader);
     get_error_result = server->dispatch.glGetError(server);
-    GPUPROCESS_FAIL_IF(get_error_result == GL_INVALID_OPERATION, "glGetError should return GL_INVALID_VALUE for GL_INVALID_OPERATION");
+    GPUPROCESS_FAIL_UNLESS(get_error_result == GL_INVALID_OPERATION, "glGetError should return GL_INVALID_VALUE for GL_INVALID_OPERATION");
 
     server->dispatch.glUseProgram(server,  userData->programObject );
 
