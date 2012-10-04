@@ -2452,8 +2452,6 @@ class GLGenerator(object):
     file.Write("\n")
 
     for func in self.functions:
-      if func.IsType("ManualInit"):
-        continue
       file.Write("private ");
       func.WriteInitSignature(file)
       file.Write(";\n\n")
