@@ -2426,11 +2426,13 @@ caching_server_glGetError (server_t *server)
         caching_server_glIsValidContext (server)) {
         egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
     
+#ifndef ENABLE_TESTING
         if (! egl_state->state.need_get_error) {
             error = egl_state->state.error;
             egl_state->state.error = GL_NO_ERROR;
             return error;
         }
+#endif
 
         error = CACHING_SERVER(server)->super_dispatch.glGetError (server);
 
