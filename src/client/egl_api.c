@@ -17,12 +17,12 @@
 
 #include "config.h"
 
-#include "client.h"
-#include "thread_private.h"
-#include "types_private.h"
+
+#include "command_autogen.h"
+#include "gles2_api_private.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include <stdlib.h>
+
 
 EGLBoolean eglTerminate (EGLDisplay dpy)
 {
@@ -73,7 +73,7 @@ FINISH:
 }
 
 EGLBoolean
-eglMakeCurrent (EGLDisplay dpy,
+eglMakeCurrent (EGLDisplay display,
                 EGLSurface draw,
                 EGLSurface read,
                 EGLContext ctx)
@@ -81,30 +81,38 @@ eglMakeCurrent (EGLDisplay dpy,
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state = NULL;
 
-    if (! client_get_thread_local ())
-        return result;
+    if (! on_client_thread ())
+        server_dispatch_table_get_base ()->eglMakeCurrent (NULL, display, draw, read, ctx);
+
+    if (_is_error_state ())
+        return EGL_FALSE;
 
     /* XXX: we need to pass active_context in command buffer */
     /* we are not in any valid context */
     if (! client_active_egl_state_available ()) {
-        if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
-            result = EGL_TRUE;
-            return result;
-            
+        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
+            return EGL_TRUE;
         }
         else {
-          /* XXX: post eglMakeCurrent and wait */
-          /* update active_context */
-          return EGL_TRUE;
+            command_t *command =
+                client_get_space_for_command (COMMAND_EGLMAKECURRENT);
+            command_eglmakecurrent_init (command, display, draw, read, ctx);
+            client_write_command (command);
+            /* FIXME: update active_context */
+            goto WAIT;
         }
     } else {
-        if (dpy == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
-            /* XXX: post eglMakeCurrent and no wait */
+        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
+            command_t *command =
+                client_get_space_for_command (COMMAND_EGLMAKECURRENT);
+            command_eglmakecurrent_init (command, display, draw, read, ctx);
+            client_write_command (command);
+            /* FIXME: update active_context */
             return EGL_TRUE;
         }
         else {
             egl_state = client_get_active_egl_state ();
-            if (egl_state->display == dpy &&
+            if (egl_state->display == display &&
                 egl_state->context == ctx &&
                 egl_state->drawable == draw &&
                 egl_state->readable == read) {
@@ -114,11 +122,22 @@ eglMakeCurrent (EGLDisplay dpy,
                     return EGL_TRUE;
             }
             else {
-                /* XXX: post eglMakeCurrent and wait */
-                /* update active_context */
-                return EGL_TRUE;
+                command_t *command =
+                    client_get_space_for_command (COMMAND_EGLMAKECURRENT);
+                command_eglmakecurrent_init (command, display, draw, read, ctx);
+                client_write_command (command);
+                /* FIXME: update active_context */
+                goto WAIT;
             }
         }
     }
+
     return result;
+
+WAIT:
+    {
+        unsigned int token = client_insert_token();
+        client_wait_for_token (token);
+        return EGL_TRUE;
+    }
 }

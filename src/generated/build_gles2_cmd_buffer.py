@@ -2439,7 +2439,9 @@ class GLGenerator(object):
     """Writes the command format"""
     file = CWriter(filename)
 
-    file.Write("#include \"compiler_private.h\"\n\n")
+    file.Write("#ifndef COMMAND_AUTOGEN_H\n")
+    file.Write("#define COMMAND_AUTOGEN_H\n\n")
+    file.Write("#include \"command.h\"\n\n")
     file.Write("#include <EGL/egl.h>\n")
     file.Write("#include <EGL/eglext.h>\n")
     file.Write("#include <GLES2/gl2.h>\n")
@@ -2455,7 +2457,7 @@ class GLGenerator(object):
       file.Write("private ");
       func.WriteInitSignature(file)
       file.Write(";\n\n")
-    file.Write("\n")
+    file.Write("#endif /*COMMAND_AUTOGEN_H*/\n")
     file.Close()
 
   def WriteCommandInitilizationAndSizeFunction(self, filename):
