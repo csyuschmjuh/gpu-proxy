@@ -169,9 +169,8 @@ client_wait_for_token (unsigned int token)
 {
     client_t *client = client_get_thread_local ();
 
-    while (client->buffer.last_token < token) {
-        /* FIXME: Do not wait forever and force flush. */
-    }
+    while (client->buffer.last_token < token)
+        sleep_nanoseconds (100);
 
     return true;
 }
