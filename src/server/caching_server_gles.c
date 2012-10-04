@@ -4849,218 +4849,7 @@ caching_server_glCoverageOperationNV (server_t *server, GLenum operation)
     }
 }
 
-static void
-caching_server_glGetDriverControlsQCOM (server_t *server, GLint *num, GLsizei size, 
-                              GLuint *driverControls)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGetDriverControlsQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glGetDriverControlsQCOM (server, num, size, driverControls);
-    }
-}
-
-static void
-caching_server_glGetDriverControlStringQCOM (server_t *server, GLuint driverControl, GLsizei bufSize,
-                                    GLsizei *length, 
-                                    GLchar *driverControlString)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGetDriverControlStringQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glGetDriverControlStringQCOM (server, driverControl, bufSize,
-                                             length, driverControlString);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glExtGetTexturesQCOM (server_t *server, GLuint *textures, GLint maxTextures, 
-                           GLint *numTextures)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexturesQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetTexturesQCOM (server, textures, maxTextures, numTextures);
-    }
-}
-
-static void
-caching_server_glExtGetBuffersQCOM (server_t *server, GLuint *buffers, GLint maxBuffers, 
-                          GLint *numBuffers) 
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetBuffersQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetBuffersQCOM (server, buffers, maxBuffers, numBuffers);
-    }
-}
-
-static void
-caching_server_glExtGetRenderbuffersQCOM (server_t *server, GLuint *renderbuffers, 
-                                GLint maxRenderbuffers,
-                                GLint *numRenderbuffers)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetRenderbuffersQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetRenderbuffersQCOM (server, renderbuffers, maxRenderbuffers,
-                                          numRenderbuffers);
-    }
-}
-
-static void
-caching_server_glExtGetFramebuffersQCOM (server_t *server, GLuint *framebuffers, GLint maxFramebuffers,
-                               GLint *numFramebuffers)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetFramebuffersQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetFramebuffersQCOM (server, framebuffers, maxFramebuffers,
-                                         numFramebuffers);
-    }
-}
-
-static void
-caching_server_glExtGetTexLevelParameterivQCOM (server_t *server, GLuint texture, GLenum face, 
-                                        GLint level, GLenum pname, 
-                                        GLint *params)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexLevelParameterivQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetTexLevelParameterivQCOM (server, texture, face, level,
-                                                pname, params);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glExtGetTexSubImageQCOM (server_t *server, GLenum target, GLint level,
-                                GLint xoffset, GLint yoffset, 
-                                GLint zoffset,
-                                GLsizei width, GLsizei height, 
-                                GLsizei depth,
-                                GLenum format, GLenum type, GLvoid *texels)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetTexSubImageQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetTexSubImageQCOM (server, target, level,
-                                        xoffset, yoffset, zoffset,
-                                        width, height, depth,
-                                        format, type, texels);
-    egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glExtGetBufferPointervQCOM (server_t *server, GLenum target, GLvoid **params)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetBufferPointervQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetBufferPointervQCOM (server, target, params);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glExtGetShadersQCOM (server_t *server, GLuint *shaders, GLint maxShaders, 
-                          GLint *numShaders)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetShadersQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetShadersQCOM (server, shaders, maxShaders, numShaders);
-    }
-}
-
-static void
-caching_server_glExtGetProgramsQCOM (server_t *server, GLuint *programs, GLint maxPrograms,
-                           GLint *numPrograms)
-{
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetProgramsQCOM) &&
-        caching_server_glIsValidContext (server)) {
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetProgramsQCOM (server, programs, maxPrograms, numPrograms);
-    }
-}
-
-static GLboolean
-caching_server_glExtIsProgramBinaryQCOM (server_t *server, GLuint program)
-{
-    egl_state_t *egl_state;
-    bool result = false;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtIsProgramBinaryQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        result = CACHING_SERVER(server)->super_dispatch.glExtIsProgramBinaryQCOM (server, program);
-        egl_state->state.need_get_error = true;
-    }
-    return result;
-}
-
-static void
-caching_server_glExtGetProgramBinarySourceQCOM (server_t *server, GLuint program, GLenum shadertype,
-                                        GLchar *source, GLint *length)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glExtGetProgramBinarySourceQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glExtGetProgramBinarySourceQCOM (server, program, shadertype,
-                                                source, length);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glStartTilingQCOM (server_t *server, GLuint x, GLuint y, GLuint width, GLuint height,
-                       GLbitfield preserveMask)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glStartTilingQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glStartTilingQCOM (server, x, y, width, height, preserveMask);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_server_glEndTilingQCOM (server_t *server, GLbitfield preserveMask)
-{
-    egl_state_t *egl_state;
-
-    if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glEndTilingQCOM) &&
-        caching_server_glIsValidContext (server)) {
-        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
-    
-        CACHING_SERVER(server)->super_dispatch.glEndTilingQCOM (server, preserveMask);
-        egl_state->state.need_get_error = true;
-    }
-}
-
- EGLint
+EGLint
 caching_server_eglGetError (server_t *server)
 {
     EGLint error = EGL_NOT_INITIALIZED;
@@ -5988,7 +5777,15 @@ static void caching_server_command_post_hook(server_t *server, command_t *comman
     case COMMAND_GLGETDRIVERCONTROLSQCOM:
     case COMMAND_GLENABLEDRIVERCONTROLQCOM:
     case COMMAND_GLDISABLEDRIVERCONTROLQCOM:
-    case COMMAND_GLEXTTEXOBJECTSTATEOVERRIDEIQCOM: {
+    case COMMAND_GLEXTTEXOBJECTSTATEOVERRIDEIQCOM:
+    case COMMAND_GLGETDRIVERCONTROLSTRINGQCOM:
+    case COMMAND_GLEXTGETTEXLEVELPARAMETERIVQCOM:
+    case COMMAND_GLEXTGETTEXSUBIMAGEQCOM:
+    case COMMAND_GLEXTGETBUFFERPOINTERVQCOM:
+    case COMMAND_GLEXTISPROGRAMBINARYQCOM:
+    case COMMAND_GLEXTGETPROGRAMBINARYSOURCEQCOM:
+    case COMMAND_GLSTARTTILINGQCOM:
+    case COMMAND_GLENDTILINGQCOM: {
         egl_state_t *egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
         egl_state->state.need_get_error = true;
         break;
