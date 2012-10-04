@@ -24,7 +24,6 @@ libGPUProcess_la_SOURCES = \
 	command.c \
 	command.h \
 	command_custom.c \
-	command_custom.h \
 	compiler_private.h \
 	gl_states.h \
 	name_handler.h \
