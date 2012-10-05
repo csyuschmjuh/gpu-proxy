@@ -1491,14 +1491,15 @@ class TypeHandler(object):
 
     # We don't need to do anything for synchronous commands, since their
     # pointer members do not need to be freed.
-    if func.IsSynchronous():
+    if func.IsSynchronous() or func.IsType('Passthrough'):
         file.Write("}\n")
         return
 
     # The only thing we do for the moment is free arguments.
     arguments_to_free = [arg for arg in func.GetOriginalArgs() if arg.IsPointer()]
     for arg in arguments_to_free:
-      file.Write("    free (command->%s);\n" % arg.name)
+      file.Write("    if (command->%s)\n" % arg.name)
+      file.Write("        free (command->%s);\n" % arg.name)
     file.Write("}\n")
 
   def WriteInitSignature(self, func, file):
