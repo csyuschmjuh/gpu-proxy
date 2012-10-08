@@ -690,14 +690,22 @@ caching_server_glBindFramebuffer (server_t *server, GLenum target, GLuint frameb
 static void
 caching_server_glBindRenderbuffer (server_t *server, GLenum target, GLuint renderbuffer)
 {
+    egl_state_t *egl_state;
+    
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glBindRenderbuffer) &&
         caching_server_glIsValidContext (server)) {
+        
+        egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
 
         if (target != GL_RENDERBUFFER) {
             caching_server_glSetError (server, GL_INVALID_ENUM);
         }
 
         CACHING_SERVER(server)->super_dispatch.glBindRenderbuffer (server, target, renderbuffer);
+        /* FIXME: should we save it, it will be invalid if the
+         * framebuffer is invalid 
+         */
+        egl_state->state.renderbuffer_binding = renderbuffer;
         egl_state->state.need_get_error = true;
     }
 }
