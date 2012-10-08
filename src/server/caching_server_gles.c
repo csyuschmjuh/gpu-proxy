@@ -2192,6 +2192,7 @@ caching_server_glGetIntegerv (server_t *server, GLenum pname, GLint *params)
             break;
         default:
             CACHING_SERVER(server)->super_dispatch.glGetIntegerv (server, pname, params);
+            egl_state->state.need_get_error = true;
             break;
         }
 
