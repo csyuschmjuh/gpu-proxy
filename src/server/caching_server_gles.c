@@ -683,7 +683,7 @@ caching_server_glBindFramebuffer (server_t *server, GLenum target, GLuint frameb
          */
         egl_state->state.framebuffer_binding = framebuffer;
 
-        /* egl_state->state.need_get_error = true; */
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -698,7 +698,7 @@ caching_server_glBindRenderbuffer (server_t *server, GLenum target, GLuint rende
         }
 
         CACHING_SERVER(server)->super_dispatch.glBindRenderbuffer (server, target, renderbuffer);
-        /* egl_state->state.need_get_error = true; */
+        egl_state->state.need_get_error = true;
     }
 }
 
@@ -739,7 +739,6 @@ caching_server_glBindTexture (server_t *server, GLenum target, GLuint texture)
         else
             egl_state->state.texture_binding_3d = texture;
 
-        /* egl_state->state.need_get_error = true; */
     }
 }
 
