@@ -20,5 +20,29 @@
 #define unlikely(expr) (expr)
 #endif
 
+#if ENABLE_PROFILING
+private unsigned long
+get_time_in_milliseconds ();
+
+typedef struct {
+    const char *function_name;
+    unsigned long start_time;
+} instrumentation_t;
+
+private void
+start_instrumentation ();
+
+private void
+print_instrumentation (instrumentation_t *instrumentation);
+
+#define INSTRUMENT() \
+    start_instrumentation (); \
+    instrumentation_t __instrumentation __attribute__((cleanup(print_instrumentation))); \
+    __instrumentation.function_name = __func__; \
+    __instrumentation.start_time = get_time_in_milliseconds (); \
+
+#else
+#define INSTRUMENT()
+#endif
 
 #endif

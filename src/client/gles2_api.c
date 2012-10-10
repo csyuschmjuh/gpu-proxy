@@ -39,6 +39,8 @@ _is_error_state (void)
 
 void glPixelStorei (GLenum pname, GLint param)
 {
+    INSTRUMENT();
+
     if (! on_client_thread ()) {
         server_dispatch_table_get_base ()->glPixelStorei (NULL, pname, param);
         return;

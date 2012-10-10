@@ -26,6 +26,11 @@ AC_ARG_ENABLE([opengl],
                               [Enable Desktop GL @<:@default=no@:>@])],
               [], [enable_opengl=no])
 
+AC_ARG_ENABLE([profiling],
+              [AS_HELP_STRING([--enable-profiling=@<:@yes/no@:>@],
+                              [Enable profiling output@<:@default=no@:>@])],
+              [], [enable_profiling=no])
+
 AS_IF([test "x$enable_opengl" = "xyes"],
       [enable_opengles=no;
       PKG_CHECK_MODULES(GL, gl)
@@ -37,8 +42,12 @@ AS_IF([test "x$enable_opengles" = "xyes"],
      AC_DEFINE(HAS_GLES2, 1, [Define to 1 if you have GLES2 available])
      GPUPROCESS_CFLAGS="$EGL_CFLAGS $GLES2_CFLAGS"])
 
+AS_IF([test "x$enable_profiling" = "xyes"],
+      [AC_DEFINE(ENABLE_PROFILING, 1, [Define to 1 to enable profiling output])])
+
 AM_CONDITIONAL(HAS_GL, test "x$enable_opengl" = "xyes")
 AM_CONDITIONAL(HAS_GLES2, test "x$enable_opengles" = "xyes")
+AM_CONDITIONAL(ENABLE_PROFILING, test "x$enable_profiling" = "xyes")
 
 AC_CONFIG_FILES([
 Makefile
