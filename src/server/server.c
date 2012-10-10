@@ -10,33 +10,7 @@
 /* This method is auto-generated into server_autogen.c
  * and included at the end of this file. */
 static void
-server_handle_command_autogen (server_t *server,
-                               command_t *command);
-
-static void
-server_handle_set_token (server_t *server,
-                         command_set_token_t *command)
-{
-    server->buffer->last_token = command->token;
-}
-
-static void
-server_handle_command (server_t *server,
-                       command_t *command)
-{
-    switch (command->type) {
-        case COMMAND_NO_OP:
-            break;
-        case COMMAND_SET_TOKEN:
-            server_handle_set_token (server, (command_set_token_t *)command);
-            break;
-        default:
-            server_handle_command_autogen (server, command);
-        }
-
-    if (server->command_post_hook)
-        server->command_post_hook(server, command);
-}
+server_fill_command_handler_table (server_t *server);
 
 static inline void
 sleep_nanoseconds (int num_nanoseconds)
@@ -64,7 +38,7 @@ server_start_work_loop (server_t *server)
                                                               &data_left_to_read);
         }
 
-        server_handle_command (server, read_command);
+        server->handler_table[read_command->type](server, read_command);
         buffer_read_advance (server->buffer, read_command->size);
     }
 }
@@ -77,6 +51,21 @@ server_new (buffer_t *buffer)
     return server;
 }
 
+static void
+server_handle_no_op (server_t *server,
+                     command_t *command)
+{
+    return;
+}
+
+static void
+server_handle_set_token (server_t *server,
+                         command_t *abstract_command)
+{
+    command_set_token_t *command = (command_set_token_t *) abstract_command;
+    server->buffer->last_token = command->token;
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -84,6 +73,10 @@ server_init (server_t *server,
     server->buffer = buffer;
     server->dispatch = *server_dispatch_table_get_base();
     server->command_post_hook = NULL;
+
+    server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
+    server->handler_table[COMMAND_SET_TOKEN] = server_handle_set_token;
+    server_fill_command_handler_table (server);
 }
 
 bool

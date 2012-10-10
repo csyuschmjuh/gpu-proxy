@@ -17,8 +17,13 @@ typedef struct _server server_t;
 extern "C" {
 #endif
 
+typedef void (*command_handler_t)(server_t *server, command_t *command);
+
 struct _server {
     server_dispatch_table_t dispatch;
+
+    /* This is an optimization to avoid a giant switch statement. */
+    command_handler_t handler_table[COMMAND_MAX_COMMAND];
 
     mutex_t thread_started_mutex;
     buffer_t *buffer;

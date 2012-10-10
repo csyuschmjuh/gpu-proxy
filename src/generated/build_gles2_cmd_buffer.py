@@ -1484,16 +1484,13 @@ class TypeHandler(object):
     file.Write("}\n\n")
 
   def WriteCommandDestroy(self, func, file):
+    if not func.NeedsDestructor():
+        return
+
     file.Write("void\n");
     file.Write("command_%s_destroy_arguments (command_%s_t *command)\n" % \
         (func.name.lower(), func.name.lower()))
     file.Write("\n{\n")
-
-    # We don't need to do anything for synchronous commands, since their
-    # pointer members do not need to be freed.
-    if func.IsSynchronous() or func.IsType('Passthrough'):
-        file.Write("}\n")
-        return
 
     # The only thing we do for the moment is free arguments.
     arguments_to_free = [arg for arg in func.GetOriginalArgs() if arg.IsPointer()]
@@ -2172,6 +2169,10 @@ class Function(object):
            self.return_type in _DEFAULT_RETURN_VALUES or \
            self.info.default_return
 
+  def NeedsDestructor(self):
+    return not self.IsSynchronous() and not self.IsType('Passthrough')
+
+
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
 
@@ -2484,9 +2485,10 @@ class GLGenerator(object):
       func.WriteInitSignature(file)
       file.Write(";\n\n")
 
-      file.Write("private void\n");
-      file.Write("command_%s_destroy_arguments (command_%s_t *command);\n\n" % \
-        (func.name.lower(), func.name.lower()))
+      if func.NeedsDestructor():
+        file.Write("private void\n");
+        file.Write("command_%s_destroy_arguments (command_%s_t *command);\n\n" % \
+          (func.name.lower(), func.name.lower()))
 
     file.Write("#endif /*COMMAND_AUTOGEN_H*/\n")
     file.Close()
@@ -2530,37 +2532,36 @@ class GLGenerator(object):
 
   def WriteBaseServer(self, filename):
     file = CWriter(filename)
-    file.Write("static void\n")
-    file.Write("server_handle_command_autogen (server_t* server,\n")
-    file.Write("                                           command_t* abstract_command)\n")
-    file.Write("{\n")
-    file.Write("    INSTRUMENT();\n")
-    file.Write("    switch (abstract_command->type) {\n")
 
     for func in self.functions:
-        file.Write("    case COMMAND_%s: {\n" % func.name.upper())
-        file.Write("        command_%s_t *command = \n" % func.name.lower())
+        file.Write("static void\n")
+        file.Write("server_handle_%s (server_t *server, command_t *abstract_command)\n" % func.name.lower())
+        file.Write("{\n")
+        file.Write("    INSTRUMENT ();\n")
+        file.Write("    command_%s_t *command = \n" % func.name.lower())
         file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
-        file.Write("        ")
         if func.HasReturnValue():
           file.Write("command->result = ")
         file.Write("server->dispatch.%s (server" % func.name)
+
         for arg in func.GetOriginalArgs():
-            file.Write(",")
+            file.Write(", ")
             if arg.IsDoublePointer() and arg.type.find("const") != -1:
                 file.Write("(%s) " % arg.type)
             file.Write("command->%s" % arg.name)
         file.Write(");\n")
 
-        file.Write("        command_%s_destroy_arguments (command);\n" % func.name.lower())
-        file.Write("        break;\n")
-        file.Write("    }\n")
+        if func.NeedsDestructor():
+            file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
+        file.Write("}\n")
 
-    file.Write("    default:\n")
-    file.Write("        assert (0); /* Should not be reached. */\n")
-    file.Write("        break;\n")
-    file.Write("    }\n")
+    file.Write("static void\n")
+    file.Write("server_fill_command_handler_table (server_t* server)\n")
+    file.Write("{\n")
+    for func in self.functions:
+      file.Write("    server->handler_table[COMMAND_%s] = \n" % func.name.upper())
+      file.Write("        server_handle_%s;\n" % func.name.lower())
     file.Write("}\n\n")
 
     file.Close()
@@ -2584,7 +2585,7 @@ class GLGenerator(object):
         file.Write(")\n")
         file.Write("{\n")
 
-        file.Write("    INSTRUMENT ();")
+        #file.Write("    INSTRUMENT ();")
 
         file.Write("    ")
         if func.return_type != "void":
