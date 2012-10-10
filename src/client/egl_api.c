@@ -26,8 +26,9 @@
 
 EGLBoolean eglTerminate (EGLDisplay display)
 {
-    if (! on_client_thread ())
-        server_dispatch_table_get_base ()->eglTerminate (NULL, display);
+    if (! on_client_thread ()) {
+        return server_dispatch_table_get_base ()->eglTerminate (NULL, display);
+    }
 
     if (_is_error_state ())
         return EGL_FALSE;
@@ -49,6 +50,10 @@ EGLBoolean
 eglSwapBuffers (EGLDisplay display,
                 EGLSurface surface)
 {
+    if (! on_client_thread ()) {
+        return server_dispatch_table_get_base ()->eglSwapBuffers (NULL, display, surface);
+    }
+
     command_t *command =
         client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
     command_eglswapbuffers_init (command, display, surface);
@@ -66,8 +71,9 @@ eglMakeCurrent (EGLDisplay display,
                 EGLSurface read,
                 EGLContext ctx)
 {
-    if (! on_client_thread ())
-        server_dispatch_table_get_base ()->eglMakeCurrent (NULL, display, draw, read, ctx);
+    if (! on_client_thread ()) {
+        return server_dispatch_table_get_base ()->eglMakeCurrent (NULL, display, draw, read, ctx);
+    }
 
     if (_is_error_state ())
         return EGL_FALSE;

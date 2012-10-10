@@ -2419,13 +2419,18 @@ class GLGenerator(object):
         file.Write(header + "\n")
         file.Write("{\n")
 
-        file.Write("    if (! on_client_thread ())\n")
+        file.Write("    if (! on_client_thread ()) {\n")
         file.Write("        ")
-        if func.return_type != "void":
+        if func.HasReturnValue():
             file.Write("return ")
         file.Write("server_dispatch_table_get_base ()->%s (NULL" % func.name)
+
         file.Write(func.MakeOriginalArgString("", add_separator=True))
         file.Write(");\n\n")
+
+        if not func.HasReturnValue():
+            file.Write("return;\n")
+        file.Write("}\n")
 
         file.Write("    if (_is_error_state ())\n")
         file.Write("        %s;\n" % func.MakeDefaultReturnStatement());
