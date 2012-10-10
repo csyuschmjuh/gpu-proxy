@@ -62,14 +62,14 @@ nodist_libGPUProcess_la_SOURCES = \
 	generated/gles2_api_autogen.c \
 	generated/command_autogen.c \
 	generated/command_autogen.h \
-	generated/command_type_autogen.h
+	generated/command_types_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
 
 generated/command_autogen.c: generated/command_autogen.h
-generated/command_autogen.h: generated/command_type_autogen.h
-generated/command_type_autogen.h: generated/gles2_api_autogen.c
+generated/command_autogen.h: generated/command_types_autogen.h
+generated/command_types_autogen.h: generated/gles2_api_autogen.c
 generated/gles2_api_autogen.c: generated/server_autogen.c
 generated/server_autogen.c: generated/server_dispatch_table_autogen.c
 generated/server_dispatch_table_autogen.c: generated/server_dispatch_table.h
