@@ -11,6 +11,7 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command_custom.c \
 	$(rootsrcdir)/src/command_custom.h \
+	$(rootsrcdir)/src/compiler.c \
 	$(rootsrcdir)/src/client/client.c \
 	$(rootsrcdir)/src/client/client.h \
 	$(rootsrcdir)/src/client/egl_api.c \

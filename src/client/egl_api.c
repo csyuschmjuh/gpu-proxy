@@ -26,6 +26,8 @@
 
 EGLBoolean eglTerminate (EGLDisplay display)
 {
+    INSTRUMENT();
+
     if (! on_client_thread ()) {
         return server_dispatch_table_get_base ()->eglTerminate (NULL, display);
     }
@@ -50,6 +52,8 @@ EGLBoolean
 eglSwapBuffers (EGLDisplay display,
                 EGLSurface surface)
 {
+    INSTRUMENT();
+
     if (! on_client_thread ()) {
         return server_dispatch_table_get_base ()->eglSwapBuffers (NULL, display, surface);
     }
@@ -71,6 +75,8 @@ eglMakeCurrent (EGLDisplay display,
                 EGLSurface read,
                 EGLContext ctx)
 {
+    INSTRUMENT();
+
     if (! on_client_thread ()) {
         return server_dispatch_table_get_base ()->eglMakeCurrent (NULL, display, draw, read, ctx);
     }

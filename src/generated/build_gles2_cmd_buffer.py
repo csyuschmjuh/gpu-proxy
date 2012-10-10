@@ -2419,6 +2419,7 @@ class GLGenerator(object):
         file.Write(header + "\n")
         file.Write("{\n")
 
+        file.Write("    INSTRUMENT();\n")
         file.Write("    if (! on_client_thread ()) {\n")
         file.Write("        ")
         if func.HasReturnValue():
@@ -2533,6 +2534,7 @@ class GLGenerator(object):
     file.Write("server_handle_command_autogen (server_t* server,\n")
     file.Write("                                           command_t* abstract_command)\n")
     file.Write("{\n")
+    file.Write("    INSTRUMENT();\n")
     file.Write("    switch (abstract_command->type) {\n")
 
     for func in self.functions:
@@ -2581,6 +2583,8 @@ class GLGenerator(object):
         file.Write(func.MakeTypedOriginalArgString(indent, separator = ",\n", add_separator = True), split=False)
         file.Write(")\n")
         file.Write("{\n")
+
+        file.Write("    INSTRUMENT ();")
 
         file.Write("    ")
         if func.return_type != "void":
