@@ -2421,18 +2421,19 @@ class GLGenerator(object):
         file.Write("{\n")
 
         file.Write("    INSTRUMENT();\n")
+
         file.Write("    if (! on_client_thread ()) {\n")
+
         file.Write("        ")
         if func.HasReturnValue():
             file.Write("return ")
         file.Write("server_dispatch_table_get_base ()->%s (NULL" % func.name)
-
         file.Write(func.MakeOriginalArgString("", add_separator=True))
-        file.Write(");\n\n")
+        file.Write(");\n")
 
         if not func.HasReturnValue():
-            file.Write("return;\n")
-        file.Write("}\n")
+            file.Write("        return;\n")
+        file.Write("    }\n")
 
         file.Write("    if (_is_error_state ())\n")
         file.Write("        %s;\n" % func.MakeDefaultReturnStatement());
@@ -2450,11 +2451,13 @@ class GLGenerator(object):
 
         file.Write(");\n")
 
+        if func.IsSynchronous():
+            file.Write("    unsigned int token = client_get_next_token ();\n")
+            file.Write("    command->token = token;\n")
+
         file.Write("    client_write_command (command);\n");
 
         if func.IsSynchronous():
-          file.Write("\n")
-          file.Write("    unsigned int token = client_insert_token();\n")
           file.Write("    client_wait_for_token (token);\n")
 
         if func.HasReturnValue():
@@ -2547,6 +2550,7 @@ class GLGenerator(object):
         file.Write("    command_%s_t *command = \n" % func.name.lower())
         file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
+        file.Write("    ")
         if func.HasReturnValue():
           file.Write("command->result = ")
         file.Write("server->dispatch.%s (server" % func.name)

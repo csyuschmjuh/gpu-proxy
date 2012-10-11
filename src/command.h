@@ -16,7 +16,6 @@ extern "C" {
 
 typedef enum command_type {
     COMMAND_NO_OP,
-    COMMAND_SET_TOKEN,
 
 #include "generated/command_types_autogen.h"
 
@@ -26,24 +25,16 @@ typedef enum command_type {
 typedef struct command {
     command_type_t type;
     size_t size;
-} command_t;
 
-/* SetToken command, it writes a token in the command buffer, allowing
-  the client to check when it is consumed in the server. */
-typedef struct command_set_token {
-    command_t header;
-    unsigned int token;
-} command_set_token_t;
+    /* The token is used for making synchronous calls. */
+    unsigned int token; 
+} command_t;
 
 private void
 command_initialize_sizes (size_t* sizes);
 
 private size_t
 command_get_size (command_type_t command_type);
-
-private void
-command_set_token_init (command_set_token_t *command,
-                        unsigned int token);
 
 #include "generated/command_autogen.h"
 

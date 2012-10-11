@@ -24,7 +24,6 @@ sleep_nanoseconds (int num_nanoseconds)
 void
 server_start_work_loop (server_t *server)
 {
-    /* FIXME: initialize GL state and start consuming commands in the loop. */
     /* FIXME: add exit condition of the loop. */
     while (true) {
         size_t data_left_to_read;
@@ -40,6 +39,9 @@ server_start_work_loop (server_t *server)
 
         server->handler_table[read_command->type](server, read_command);
         buffer_read_advance (server->buffer, read_command->size);
+
+        if (read_command->token)
+            server->buffer->last_token = read_command->token;
     }
 }
 
@@ -58,14 +60,6 @@ server_handle_no_op (server_t *server,
     return;
 }
 
-static void
-server_handle_set_token (server_t *server,
-                         command_t *abstract_command)
-{
-    command_set_token_t *command = (command_set_token_t *) abstract_command;
-    server->buffer->last_token = command->token;
-}
-
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -75,7 +69,6 @@ server_init (server_t *server,
     server->command_post_hook = NULL;
 
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
-    server->handler_table[COMMAND_SET_TOKEN] = server_handle_set_token;
     server_fill_command_handler_table (server);
 }
 
