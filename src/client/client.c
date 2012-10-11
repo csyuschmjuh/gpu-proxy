@@ -148,31 +148,24 @@ client_get_space_for_command (command_type_t command_type)
     return command;
 }
 
-unsigned int
-client_get_next_token ()
-{
-    unsigned int token = ++client_get_thread_local ()->token;
-    return token;
-}
-
-bool
-client_wait_for_token (unsigned int token)
+void
+client_run_command (command_t *command)
 {
     client_t *client = client_get_thread_local ();
+    unsigned int token = ++client->token;
+
+    command->token = token;
+    client_run_command_async (command);
 
     while (client->buffer.last_token < token)
         sleep_nanoseconds (100);
-
-    return true;
 }
 
-bool
-client_write_command (command_t *command)
+void
+client_run_command_async (command_t *command)
 {
     client_t *client = client_get_thread_local ();
     buffer_write_advance (&client->buffer, command->size);
-
-    return true;
 }
 
 bool

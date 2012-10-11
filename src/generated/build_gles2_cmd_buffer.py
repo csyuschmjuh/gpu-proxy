@@ -2444,21 +2444,15 @@ class GLGenerator(object):
         header = "    command_%s_init (" % func.name.lower()
         indent = " " * len(header)
         file.Write(header + "command")
-
         args = func.MakeOriginalArgString(indent, separator = ",\n", add_separator = True)
         if args:
             file.Write(args)
-
         file.Write(");\n")
 
         if func.IsSynchronous():
-            file.Write("    unsigned int token = client_get_next_token ();\n")
-            file.Write("    command->token = token;\n")
-
-        file.Write("    client_write_command (command);\n");
-
-        if func.IsSynchronous():
-          file.Write("    client_wait_for_token (token);\n")
+            file.Write("    client_run_command (command);\n");
+        else:
+            file.Write("    client_run_command_async (command);\n");
 
         if func.HasReturnValue():
           file.Write("\n")

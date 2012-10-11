@@ -52,6 +52,6 @@ void glPixelStorei (GLenum pname, GLint param)
     command_t *command =
         client_get_space_for_command (COMMAND_GLPIXELSTOREI);
     command_glpixelstorei_init (command, pname, param);
-    client_write_command (command);
+    client_run_command_async (command);
     return;
 }
