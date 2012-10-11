@@ -22,6 +22,7 @@
 #include "gles2_api_private.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <dlfcn.h>
 
 
 EGLBoolean eglTerminate (EGLDisplay display)
@@ -87,4 +88,19 @@ eglMakeCurrent (EGLDisplay display,
     client_run_command (command);
 
     return ((command_eglmakecurrent_t *)command)->result;
+}
+
+EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
+eglGetProcAddress (const char *procname)
+{
+    INSTRUMENT();
+
+    if (! on_client_thread ()) {
+        return server_dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
+    }
+
+    if (_is_error_state ())
+        return NULL;
+
+    return dlsym (NULL, procname);
 }

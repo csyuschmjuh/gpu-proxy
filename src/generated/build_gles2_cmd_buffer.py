@@ -87,6 +87,9 @@ _FUNCTION_INFO = {
   'eglTerminate': {
     'type': 'Manual',
   },
+  'eglGetProcAddress': {
+    'type': 'Manual',
+  },
   'eglSwapBuffers': {
     'type': 'Manual',
   },
