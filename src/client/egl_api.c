@@ -38,9 +38,10 @@ EGLBoolean eglTerminate (EGLDisplay display)
     command_t *command =
         client_get_space_for_command (COMMAND_EGLTERMINATE);
     command_eglterminate_init (command, display);
-    client_write_command (command);
 
-    unsigned int token = client_insert_token();
+    unsigned int token = client_get_next_token();
+    command->token = token;
+    client_write_command (command);
     client_wait_for_token (token);
 
     client_destroy_thread_local ();
@@ -61,9 +62,10 @@ eglSwapBuffers (EGLDisplay display,
     command_t *command =
         client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
     command_eglswapbuffers_init (command, display, surface);
-    client_write_command (command);
 
-    unsigned int token = client_insert_token();
+    unsigned int token = client_get_next_token();
+    command->token = token;
+    client_write_command (command);
     client_wait_for_token (token);
 
     return ((command_eglswapbuffers_t *)command)->result;
@@ -90,9 +92,10 @@ eglMakeCurrent (EGLDisplay display,
     command_t *command =
         client_get_space_for_command (COMMAND_EGLMAKECURRENT);
     command_eglmakecurrent_init (command, display, draw, read, ctx);
-    client_write_command (command);
 
-    unsigned int token = client_insert_token();
+    unsigned int token = client_get_next_token ();
+    command->token = token;
+    client_write_command (command);
     client_wait_for_token (token);
 
     return ((command_eglmakecurrent_t *)command)->result;

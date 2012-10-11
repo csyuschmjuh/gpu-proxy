@@ -47,7 +47,7 @@ private bool
 client_write_command (command_t *command);
 
 private unsigned int
-client_insert_token ();
+client_get_next_token ();
 
 private bool
 client_wait_for_token (unsigned int token);

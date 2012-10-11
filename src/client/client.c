@@ -149,18 +149,9 @@ client_get_space_for_command (command_type_t command_type)
 }
 
 unsigned int
-client_insert_token ()
+client_get_next_token ()
 {
-    command_t *set_token_command = client_get_space_for_command (COMMAND_SET_TOKEN);
-    /* FIXME: Check max size and wrap. */
     unsigned int token = ++client_get_thread_local ()->token;
-
-    assert (set_token_command != NULL);
-
-    command_set_token_init ((command_set_token_t *)set_token_command, token);
-
-    client_write_command (set_token_command);
-
     return token;
 }
 
