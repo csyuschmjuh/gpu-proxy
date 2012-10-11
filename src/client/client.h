@@ -43,14 +43,11 @@ client_get_name_handler ();
 private command_t *
 client_get_space_for_command (command_type_t command_type);
 
-private bool
-client_write_command (command_t *command);
+private void
+client_run_command_async (command_t *command);
 
-private unsigned int
-client_get_next_token ();
-
-private bool
-client_wait_for_token (unsigned int token);
+private void
+client_run_command (command_t *command);
 
 private bool
 client_flush (client_t *client);
