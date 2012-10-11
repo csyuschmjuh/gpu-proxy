@@ -55,14 +55,21 @@ server_dispatch_table_t *
 server_dispatch_table_get_base ()
 {
     static server_dispatch_table_t dispatch;
+    static bool table_initialized = false;
+    if (table_initialized)
+        return &dispatch;
 
     mutex_lock (dispatch_table_mutex);
-    static bool table_initialized = false;
 
-    if (!table_initialized) {
-        server_dispatch_table_fill_base(&dispatch);
-        table_initialized = true;
+    /* In case two threads got here at the same time, we want to return
+     * the dispatch table if another thread already initialized it */
+    if (table_initialized) {
+        mutex_unlock (dispatch_table_mutex);
+        return &dispatch;
     }
+
+    server_dispatch_table_fill_base(&dispatch);
+    table_initialized = true;
     mutex_unlock (dispatch_table_mutex);
 
     return &dispatch;
