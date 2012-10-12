@@ -112,8 +112,9 @@ command_glshadersource_init (command_t *abstract_command,
     unsigned i = 0;
     for (i = 0; i < count; i++) {
         size_t string_length = length ? length[i] : strlen (string[i]);
-        command->string[i] = malloc (string_length);
+        command->string[i] = malloc (string_length + 1);
         memcpy (command->string[i], string[i], string_length);
+        command->string[i][string_length] = 0;
     }
 }
 
