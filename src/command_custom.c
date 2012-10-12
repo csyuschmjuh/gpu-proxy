@@ -25,11 +25,16 @@ command_glteximage2d_init (command_t *abstract_command,
     command->border = (GLint) border;
     command->format = (GLenum) format;
     command->type = (GLenum) type;
+    command->pixels = NULL;
 
     static int unpack_alignment = 4;
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
+
+    if (! pixels)
+	return;
+
     if (!compute_image_data_sizes (width, height, format, type,
                                    unpack_alignment, &dest_size,
                                    &unpadded_row_size, &padded_row_size)) {
