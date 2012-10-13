@@ -1,5 +1,8 @@
 #include "config.h"
 #include "client.h"
+#include <sys/prctl.h>
+
+#define PR_SET_TIMERSLACK 29
 
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -33,6 +36,7 @@ start_server_thread_func (void *ptr)
     server_t *server = server_new (&client->buffer);
 
     mutex_unlock (client->server_started_mutex);
+    prctl (PR_SET_TIMERSLACK, 1);
     server_start_work_loop (server);
 
     /* TODO: Clean up the server here. */
@@ -52,6 +56,7 @@ client_start_server (client_t *client)
 static client_t *
 client_new ()
 {
+    prctl (PR_SET_TIMERSLACK, 1);
     client_t *client = (client_t *)malloc (sizeof (client_t));
 
     client->name_handler = name_handler_create ();
@@ -119,7 +124,7 @@ client_get_space_for_size (client_t *client,
                                                                     &available_space);
     while (! write_location || available_space < size) {
         /* FIXME: Should we avoid sleeping and ask for space. */
-        sleep_nanoseconds (100);
+        sleep_nanoseconds (500);
         write_location = (command_t *) buffer_write_address (&client->buffer,
                                                              &available_space);
     }
@@ -158,7 +163,7 @@ client_run_command (command_t *command)
     client_run_command_async (command);
 
     while (client->buffer.last_token < token)
-        sleep_nanoseconds (100);
+        sleep_nanoseconds (500);
 }
 
 void
