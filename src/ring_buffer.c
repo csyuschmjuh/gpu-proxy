@@ -22,7 +22,7 @@ buffer_create(buffer_t *buffer)
      * may be larger.
      */
     /* TODO: Make this configurable. */
-    static unsigned long default_buffer_size = 1024;
+    static unsigned long default_buffer_size = 1024 * 16;
 
     char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
