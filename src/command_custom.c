@@ -33,7 +33,7 @@ command_glteximage2d_init (command_t *abstract_command,
     uint32_t padded_row_size;
 
     if (! pixels)
-	return;
+        return;
 
     if (!compute_image_data_sizes (width, height, format, type,
                                    unpack_alignment, &dest_size,
@@ -121,6 +121,18 @@ command_glshadersource_init (command_t *abstract_command,
         memcpy (command->string[i], string[i], string_length);
         command->string[i][string_length] = 0;
     }
+}
+
+void
+command_glshadersource_destroy_arguments (command_glshadersource_t *command)
+{
+    if (command->count <= 0)
+        return;
+
+    unsigned i = 0;
+    for (i = 0; i < command->count; i++)
+        free (command->string[i]);
+    free (command->string);
 }
 
 void

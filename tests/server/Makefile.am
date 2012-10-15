@@ -19,8 +19,9 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/name_handler.h \
 	$(rootsrcdir)/src/name_handler.c \
-	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command.c \
+	$(rootsrcdir)/src/command.h \
+	$(rootsrcdir)/src/command_custom.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	gpuprocess_test.h \
 	gpuprocess_test.c \
