@@ -1434,14 +1434,20 @@ class TypeHandler(object):
     file.Write(");")
 
   def WriteCommandInitArgumentCopy(self, func, arg, file):
+    # FIXME: Handle constness more gracefully.
+    if func.IsSynchronous():
+      type = arg.type.replace("const", "")
+      file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
+      return
+
     if arg.type.find("char*") != -1:
       file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
+      return
 
     # We only need to copy arguments if the function is asynchronous.
-    elif not func.IsSynchronous() and \
-         (arg.name in func.info.argument_has_size or \
-          arg.name in func.info.argument_element_size or \
-          arg.name in func.info.argument_size_from_function):
+    if  (arg.name in func.info.argument_has_size or \
+         arg.name in func.info.argument_element_size or \
+         arg.name in func.info.argument_size_from_function):
 
       components = []
       if arg.name in func.info.argument_has_size:
@@ -1459,15 +1465,11 @@ class TypeHandler(object):
       file.Write("        memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
       file.Write("    } else\n")
       file.Write("        command->%s = 0;\n" % (arg.name))
+      return
 
-    else:
-      # FIXME: This is to get rid of the constness of the argument. This should
-      # be fixed in a more general way. When the function is synchronous and there's
-      # no copy, this should remain const. When we make a copy the struct member should
-      # no longer be const. We need this information anyway so that we can write proper
-      # cleanup functions for commands.
-      type = arg.type.replace("const", "")
-      file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
+    # FIXME: Handle constness more gracefully.
+    type = arg.type.replace("const", "")
+    file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
 
   def WriteCommandInit(self, func, file):
     self.WriteInitSignature(func, file)
