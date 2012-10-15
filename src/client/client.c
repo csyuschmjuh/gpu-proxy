@@ -158,6 +158,10 @@ client_run_command (command_t *command)
     client_t *client = client_get_thread_local ();
     unsigned int token = ++client->token;
 
+    /* Overflow case */
+    if (token == 0)
+	token = 1;
+    
     command->token = token;
     client_run_command_async (command);
 
