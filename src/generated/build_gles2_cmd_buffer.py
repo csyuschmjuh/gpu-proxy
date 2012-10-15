@@ -49,7 +49,10 @@ _DEFAULT_RETURN_VALUES = {
 #                   but the command struct and command init function are not.
 
 #                   ManualInit: The command ini function is custom, but
-#                   the command struct and command init function are not.
+#                   the command struct command init functions are not.
+#
+#                   ManualInitAndDestructor: Like ManualInit, but there is also a custom
+#                   destructor.
 #
 #                   Passthrough: Arguments that are pointers are passed to
 #                   the server thread without making a copy.
@@ -97,7 +100,7 @@ _FUNCTION_INFO = {
     'type': 'Manual'
   },
   'glShaderSource': {
-    'type': 'ManualInit',
+    'type': 'ManualInitAndDestructor',
   },
   'glTexSubImage2D': {
     'type': 'ManualInit',
@@ -1489,7 +1492,7 @@ class TypeHandler(object):
     file.Write("}\n\n")
 
   def WriteCommandDestroy(self, func, file):
-    if not func.NeedsDestructor():
+    if not func.NeedsDestructor() or func.NeedsManualDestructor():
         return
 
     file.Write("void\n");
@@ -2175,8 +2178,13 @@ class Function(object):
            self.info.default_return
 
   def NeedsDestructor(self):
-    return not self.IsSynchronous() and not self.IsType('Passthrough')
+    return self.NeedsManualDestructor() or (not self.IsSynchronous() and not self.IsType('Passthrough'))
 
+  def NeedsManualInit(self):
+    return self.IsType('ManualInit') or self.IsType('ManualInitAndDestructor')
+
+  def NeedsManualDestructor(self):
+    return self.IsType('ManualInitAndDestructor')
 
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
@@ -2395,7 +2403,7 @@ class GLGenerator(object):
         return True
 
     # Manual init functions always allow generating the client-side entry point.
-    if func.IsType("ManualInit"):
+    if func.NeedsManualInit():
         return False
     if func.IsSynchronous():
         return False
@@ -2504,7 +2512,7 @@ class GLGenerator(object):
     file.Write('#include "gles2_utils.h"\n')
 
     for func in self.functions:
-      if not func.IsType("ManualInit"):
+      if not func.NeedsManualInit():
         func.WriteCommandInit(file)
       func.WriteCommandDestroy(file)
 
