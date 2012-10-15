@@ -2,8 +2,6 @@
 #include "client.h"
 #include <sys/prctl.h>
 
-#define PR_SET_TIMERSLACK 29
-
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
