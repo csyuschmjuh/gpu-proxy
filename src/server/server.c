@@ -32,7 +32,7 @@ server_start_work_loop (server_t *server)
 
         /* The buffer is empty, so wait until there's something to read. */
         while (! read_command) {
-            sleep_nanoseconds (500);
+            sleep_nanoseconds (1000);
             read_command = (command_t *) buffer_read_address (server->buffer,
                                                               &data_left_to_read);
         }
