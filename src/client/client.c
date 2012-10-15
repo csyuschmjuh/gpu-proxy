@@ -150,6 +150,7 @@ client_get_space_for_command (command_type_t command_type)
                                          command_sizes[command_type]);
     command->type = command_type;
     command->size = command_sizes[command_type];
+    command->token = 0;
     return command;
 }
 
