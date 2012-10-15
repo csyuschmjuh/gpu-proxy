@@ -12,15 +12,6 @@
 static void
 server_fill_command_handler_table (server_t *server);
 
-static inline void
-sleep_nanoseconds (int num_nanoseconds)
-{
-    struct timespec spec;
-    spec.tv_sec = 0;
-    spec.tv_nsec = num_nanoseconds;
-    nanosleep (&spec, NULL);
-}
-
 void
 server_start_work_loop (server_t *server)
 {
@@ -32,7 +23,7 @@ server_start_work_loop (server_t *server)
 
         /* The buffer is empty, so wait until there's something to read. */
         while (! read_command) {
-            sleep_nanoseconds (1000);
+            sched_yield ();
             read_command = (command_t *) buffer_read_address (server->buffer,
                                                               &data_left_to_read);
         }
