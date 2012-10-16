@@ -1,5 +1,6 @@
 #include "config.h"
 #include "caching_client.h"
+#include "caching_client_private.h"
 
 __thread client_t* thread_local_caching_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -7,7 +8,27 @@ __thread client_t* thread_local_caching_client
 __thread bool caching_client_thread
     __attribute__(( tls_model ("initial-exec"))) = false;
 
+/* global variable */
+gl_states_t cached_gl_states;
+
 mutex_static_init (caching_client_thread_mutex);
+/* global variable */
+mutex_static_init (cached_gl_states_mutex);
+
+static void
+caching_client_init (caching_client_t *client)
+{
+    client->active_state = NULL;
+
+    mutex_lock (cached_gl_states_mutex);
+    if (cached_gl_states.initialized == false) {
+        cached_gl_states.num_contexts = 0;
+        cached_gl_states.states = NULL;
+        cached_gl_states.initialized = true;
+    }
+    mutex_unlock (cached_gl_states_mutex);
+}
+
 
 bool
 on_caching_client_thread ()
@@ -31,7 +52,8 @@ caching_client_new ()
 
     client->base.name_handler = name_handler_create ();
     client->base.token = 0;
-    client->active_state = NULL;
+    
+    caching_client_init (client);
 
     buffer_create (&client->base.buffer);
     client_start_server (&client->base);
@@ -101,3 +123,4 @@ caching_client_flush (client_t *client)
 {
     return true;
 }
+

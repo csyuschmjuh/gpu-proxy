@@ -23,6 +23,7 @@ libGPUProcess_la_SOURCES = \
 	client/client.h \
         client/caching_client.c \
         client/caching_client.h \
+        client/caching_client_private.h \
 	command.c \
 	command.h \
 	command_custom.c \
