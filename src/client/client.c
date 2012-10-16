@@ -26,7 +26,7 @@ on_client_thread ()
     return client_thread;
 }
 
-static void *
+void *
 start_server_thread_func (void *ptr)
 {
     client_t *client = (client_t *)ptr;
@@ -39,7 +39,7 @@ start_server_thread_func (void *ptr)
     return NULL;
 }
 
-static void
+void
 client_start_server (client_t *client)
 {
     mutex_init (client->server_started_mutex);
@@ -49,7 +49,7 @@ client_start_server (client_t *client)
     mutex_destroy (client->server_started_mutex);
 }
 
-static client_t *
+client_t *
 client_new ()
 {
     client_t *client = (client_t *)malloc (sizeof (client_t));

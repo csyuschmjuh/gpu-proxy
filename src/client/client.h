@@ -55,6 +55,15 @@ client_flush (client_t *client);
 private bool
 on_client_thread ();
 
+private void
+client_start_server (client_t *client);
+
+private void
+client_start_server (client_t *client);
+
+private client_t *
+client_new ();
+
 #ifdef __cplusplus
 }
 #endif

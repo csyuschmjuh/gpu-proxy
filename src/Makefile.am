@@ -21,6 +21,8 @@ libGPUProcess_la_LDFLAGS = \
 libGPUProcess_la_SOURCES = \
 	client/client.c \
 	client/client.h \
+        client/caching_client.c \
+        client/caching_client.h \
 	command.c \
 	command.h \
 	command_custom.c \
