@@ -6,20 +6,6 @@
 #include <stdlib.h>
 
 static void *
-find_gl_symbol (void *handle,
-                __eglMustCastToProperFunctionPointerType (*getProcAddress) (const char *procname),
-                const char *symbol_name)
-{
-    if (getProcAddress) {
-        void *symbol = getProcAddress (symbol_name);
-        if (symbol)
-            return symbol;
-    }
-
-    return dlsym (handle, symbol_name);
-}
-
-static void *
 libgl_handle ()
 {
     static void *handle = NULL;
