@@ -1178,6 +1178,29 @@ caching_client_glColorMask (client_t *client, GLboolean red, GLboolean green,
 }
 
 static GLuint
+caching_client_glCreateProgram (client_t *client)
+{
+    GLuint result = 0;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        command_t *command = client_get_space_for_command (COMMAND_GLCREATEPROGRAM);
+        command_glcreateprogram_init (command);
+        client_run_command (command);
+
+        result = ((command_glcreateprogram_t *)command)->result;
+
+        if (result == 0) {
+            egl_state_t *egl_state; egl_state = 
+                (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+            egl_state->state.need_get_error = true;
+        }
+    }
+    return result;
+}
+
+static GLuint
 caching_client_glCreateShader (client_t *client, GLenum shaderType)
 {
     GLuint result = 0;
@@ -2121,6 +2144,102 @@ caching_client_glGenerateMipmap (client_t *client, GLenum target)
     }
 }
 
+static void caching_client_glGetActiveAttrib (client_t *client, 
+                                              GLuint program,
+                                              GLuint index, 
+                                              GLsizei bufsize,
+                                              GLsizei *length, 
+                                              GLint *size, 
+                                              GLenum *type, 
+                                              GLchar *name)
+{
+    egl_state_t *egl_state;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+
+        command_t *command = client_get_space_for_command (COMMAND_GLGETACTIVEATTRIB);
+        command_glgetactiveattrib_init (command, program, index, bufsize,
+                                        length, size, type, name);
+        client_run_command_ (command);
+
+        if (*length == 0)
+            egl_state->state.need_get_error = true;
+    }
+}
+
+static void caching_client_glGetActiveUniform (client_t *client, 
+                                               GLuint program,
+                                               GLuint index, 
+                                               GLsizei bufsize,
+                                               GLsizei *length, 
+                                               GLint *size, 
+                                               GLenum *type, 
+                                               GLchar *name)
+{
+    egl_state_t *egl_state;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+
+        command_t *command = client_get_space_for_command (COMMAND_GLGETACTIVEUNIFORM);
+        command_glgetactiveuniform_init (command, program, index, bufsize,
+                                        length, size, type, name);
+        client_run_command_ (command);
+
+        if (*length == 0)
+            egl_state->state.need_get_error = true;
+    }
+}
+
+static GLint  
+caching_client_glGetAttribLocation (client_t *client, GLuint program,
+                                    const GLchar *name)
+{
+    GLint result = -1;
+    egl_state_t *egl_state;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+
+        command_t *command = client_get_space_for_command (COMMAND_GLGETATTRIBLOCATION);
+        command_glgetattriblocation_init (command, program, name);
+        client_run_command_ (command);
+        result = ((command_glgetattriblocation_t *)command)->result;
+
+        if (result == -1)
+            egl_state->state.need_get_error = true;
+    }
+}
+
+static GLint  
+caching_client_glGetUniformLocation (client_t *client, GLuint program,
+                                  const GLchar *name)
+{
+    GLint result = -1;
+    egl_state_t *egl_state;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+
+        command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMLOCATION);
+        command_glgetuniformlocation_init (command, program, name);
+        client_run_command_ (command);
+        result = ((command_glgetattriblocation_t *)command)->result;
+
+        if (result == -1)
+            egl_state->state.need_get_error = true;
+    }
+}
+
 static void
 caching_client_glGetBooleanv (client_t *client, GLenum pname, GLboolean *params)
 {
@@ -2485,6 +2604,7 @@ caching_client_glGetFramebufferAttachmentParameteriv (client_t *client, GLenum t
                                                         GLint *params)
 {
     egl_state_t *egl_state;
+    GLint original_params = params[0];
 
     INSTRUMENT();
     
@@ -2504,7 +2624,8 @@ caching_client_glGetFramebufferAttachmentParameteriv (client_t *client, GLenum t
                                                             params);
         client_run_command (command);
 
-        egl_state->state.need_get_error = true;
+        if (original_params == params[0])
+            egl_state->state.need_get_error = true;
     }
 }
 
@@ -2514,6 +2635,7 @@ caching_client_glGetRenderbufferParameteriv (client_t *client, GLenum target,
                                               GLint *params)
 {
     egl_state_t *egl_state;
+    GLint original_params = params[0];
 
     INSTRUMENT();
     
@@ -2532,7 +2654,8 @@ caching_client_glGetRenderbufferParameteriv (client_t *client, GLenum target,
                                                    params);
         client_run_command (command);
 
-        egl_state->state.need_get_error = true;
+        if (original_params == params[0])
+            egl_state->state.need_get_error = true;
     }
 }
 
@@ -3020,44 +3143,6 @@ caching_client_glScissor (client_t *client, GLint x, GLint y, GLsizei width, GLs
 }
 
 static void
-caching_client_glShaderBinary (client_t *client, GLsizei n, const GLuint *shaders,
-                               GLenum binaryformat, const void *binary,
-                               GLsizei length)
-{
-    egl_state_t *egl_state;
-
-    INSTRUMENT();
-    
-    if (caching_client_glIsValidContext (client)) {
-        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-
-        command_t *command = client_get_space_for_command (COMMAND_GLSHADERBINARY);
-        command_glshaderbinary_init (command, n, shaders, binaryformat, 
-                                     binary, length);
-        client_run_command_async (command);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
-caching_client_glShaderSource (client_t *client, GLuint shader, GLsizei count,
-                               const GLchar **string, const GLint *length)
-{
-    egl_state_t *egl_state;
-
-    INSTRUMENT();
-    
-    if (caching_client_glIsValidContext (client)) {
-        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-
-        command_t *command = client_get_space_for_command (COMMAND_GLSHADERSOURCE);
-        command_glshadersource_init (command, shader, count, string, length); 
-        client_run_command_async (command);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_client_glStencilFuncSeparate (client_t *client, GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
@@ -3304,29 +3389,6 @@ caching_client_glStencilOp (client_t *client, GLenum sfail, GLenum dpfail, GLenu
 }
 
 static void
-caching_client_glTexImage2D (client_t *client, GLenum target, GLint level, 
-                              GLint internalformat,
-                              GLsizei width, GLsizei height, GLint border,
-                              GLenum format, GLenum type, 
-                              const GLvoid *data)
-{
-    egl_state_t *egl_state;
-
-    INSTRUMENT();
-    
-    if (caching_client_glIsValidContext (client)) {
-        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-    
-        command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
-        command_glteximage2d_init (command, target, level, internalformat,
-                                   width, height, border, format, 
-                                   type, data); 
-        client_run_command_async (command);
-        egl_state->state.need_get_error = true;
-    }
-}
-
-static void
 caching_client_glTexParameteri (client_t *client, GLenum target, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
@@ -3444,30 +3506,6 @@ caching_client_glTexParameterf (client_t *client, GLenum target, GLenum pname, G
 
     INSTRUMENT();
     caching_client_glTexParameteri (client, target, pname, parami);
-}
-
-static void
-caching_client_glTexSubImage2D (client_t *client, GLenum target, GLint level,
-                                  GLint xoffset, GLint yoffset,
-                                  GLsizei width, GLsizei height,
-                                  GLenum format, GLenum type, 
-                                  const GLvoid *data)
-{
-    egl_state_t *egl_state;
-
-    INSTRUMENT();
-    
-    if (caching_client_glIsValidContext (client)) {
-        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-    
-        command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
-        command_glteximage2d_init (command, target, level,
-                                   xoffset, yoffset,
-                                   width, height,
-                                   format, type, data);
-        client_run_command_async (command);
-        egl_state->state.need_get_error = true;
-    }
 }
 
 void
@@ -4859,29 +4897,35 @@ caching_client_eglMakeCurrent (client_t *client,
 
 /* start of eglext.h */
 /* end of eglext.h */
+/* we specify those passthrough GL APIs that needs to set need_get_error */
 static void caching_client_command_post_hook(client_t *client, command_t *command)
 {
 
     switch (command->type) {
     case COMMAND_GLATTACHSHADER:
+    case COMMAND_GLBINDATTRIBLOCATION:
+    case COMMAND_GLBUFFERDATA:
+    case COMMAND_GLBUFFERSUBDATA:
     case COMMAND_GLCOMPILESHADER:
+    case COMMAND_GLCOMPRESSEDTEXIMAGE2D:
+    case COMMAND_GLCOMPRESSEDTEXSUBIMAGE2D:
     case COMMAND_GLCOPYTEXIMAGE2D:
     case COMMAND_GLCOPYTEXSUBIMAGE2D:
     case COMMAND_GLDELETEPROGRAM:
     case COMMAND_GLDELETESHADER:
     case COMMAND_GLDETACHSHADER:
-    //case COMMAND_GLGETSHADERINFOLOG:
-    //case COMMAND_GLGETSHADERPRECISIONFORMAT:
-    //case COMMAND_GLGETSHADERSOURCE:
-    //case COMMAND_GLGETSHADERIV:
+    case COMMAND_GLGETBUFFERPARAMETERIV:
+    case COMMAND_GLGETPROGRAMINFOLOG:
+    case COMMAND_GLGETSHADERIV:
+    case COMMAND_GLGETSHADERPRECISIONFORMAT:
+    case COMMAND_GLGETSHADERINFOLOG:
+    case COMMAND_GLGETSHADERSOURCE:
+    case COMMAND_GLGETUNIFORMFV:
+    case COMMAND_GLGETUNIFORMIV:
     case COMMAND_GLLINKPROGRAM:
     case COMMAND_GLVALIDATEPROGRAM:
     //case COMMAND_GLGETPROGRAMINFOLOG:
     //case COMMAND_GLGETPROGRAMIV:
-    case COMMAND_GLRELEASESHADERCOMPILER:
-    case COMMAND_GLRENDERBUFFERSTORAGE:
-    case COMMAND_GLCOMPRESSEDTEXIMAGE2D:
-    case COMMAND_GLCOMPRESSEDTEXSUBIMAGE2D:
     //case COMMAND_GLUNIFORM1F:
     //case COMMAND_GLUNIFORM1I:
     //case COMMAND_GLUNIFORM2F:
@@ -4892,14 +4936,13 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
     //case COMMAND_GLUNIFORM4I:
     //case COMMAND_GLGETUNIFORMIV:
     //case COMMAND_GLGETUNIFORMFV:
-    //case COMMAND_GLGETUNIFORMLOCATION:
-    //case COMMAND_GLGETACTIVEATTRIB:
-    //case COMMAND_GLGETATTACHEDSHADERS:
-    //case COMMAND_GLGETATTRIBLOCATION:
-    //case COMMAND_GLBINDATTRIBLOCATION:
-    //case COMMAND_GLGETBUFFERPARAMETERIV:
-    //case COMMAND_GLGETACTIVEUNIFORM:
     case COMMAND_GLREADPIXELS:
+    case COMMAND_GLRELEASESHADERCOMPILER:
+    case COMMAND_GLRENDERBUFFERSTORAGE:
+    case COMMAND_GLSHADERBINARY:
+    case COMMAND_GLSHADERSOURCE:
+    case COMMAND_GLTEXIMAGE2D:
+    case COMMAND_GLTEXSUBIMAGE2D:
     //case COMMAND_GLGETPROGRAMBINARYOES:
     case COMMAND_GLPROGRAMBINARYOES:
     case COMMAND_GLTEXIMAGE3DOES:
@@ -4946,6 +4989,3 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
         break;
     }
 }
-
-void avoid_compiler_error ()
-{ }
