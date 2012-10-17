@@ -1860,14 +1860,24 @@ caching_client_glDrawElements (client_t *client, GLenum mode, GLsizei count, GLe
             goto FINISH;
 
         if (state->vertex_array_binding) {
-            indices_copy = caching_client_glCreateIndicesArray (mode, 
-                                                                type, 
-                                                                count,
-                                                                (char *)indices);
-            if (indices_copy) {
+            if (!element_binding) {
+                indices_copy = caching_client_glCreateIndicesArray (mode, 
+                                                                    type, 
+                                                                    count,
+                                                                    (char *)indices);
+                if (indices_copy) {
+                    command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+                    command_gldrawelements_init (command, mode, count, 
+                                             type, indices_copy);
+                    client_run_command_async (command);
+                    //state->need_get_error = true;
+                    goto FINISH;
+                }
+            }
+            else {
                 command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
                 command_gldrawelements_init (command, mode, count, 
-                                             type, indices_copy);
+                                             type, indices);
                 client_run_command_async (command);
                 //state->need_get_error = true;
                 goto FINISH;
@@ -1897,14 +1907,22 @@ caching_client_glDrawElements (client_t *client, GLenum mode, GLsizei count, GLe
         }
 
         if (needs_call) {
-            indices_copy = caching_client_glCreateIndicesArray (mode, 
-                                                                type, 
-                                                                count,
-                                                                (char *)indices);
-            if (indices_copy) {
+            if (! element_binding ) {
+                indices_copy = caching_client_glCreateIndicesArray (mode, 
+                                                                    type, 
+                                                                    count,
+                                                                    (char *)indices);
+                if (indices_copy) {
+                    command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+                    command_gldrawelements_init (command, mode, count, 
+                                                 type, indices_copy);
+                    client_run_command_async (command);
+                }
+            }
+            else {
                 command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
                 command_gldrawelements_init (command, mode, count, 
-                                             type, indices_copy);
+                                             type, indices);
                 client_run_command_async (command);
             }
         }
