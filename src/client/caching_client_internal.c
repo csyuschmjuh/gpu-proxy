@@ -2754,6 +2754,46 @@ caching_client_glGetTexParameterfv (client_t *client, GLenum target, GLenum pnam
 }
 
 static void
+caching_client_glGetUniformfv (client_t *client, GLuint program,
+                               GLint location,  GLfloat *params)
+{
+    egl_state_t *egl_state;
+    GLfloat original_params = *params;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+        command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMFV);
+        command_glgetuniformfv_init (command, program, location, params);
+        client_run_command (command);
+
+        if (original_params == *params)
+            egl_state->state.need_get_error = true;
+    }
+}
+
+static void
+caching_client_glGetUniformriv (client_t *client, GLuint program,
+                               GLint location,  GLint *params)
+{
+    egl_state_t *egl_state;
+    GLint original_params = *params;
+
+    INSTRUMENT();
+    
+    if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+        command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMIV);
+        command_glgetuniformiv_init (command, program, location, params);
+        client_run_command (command);
+
+        if (original_params == *params)
+            egl_state->state.need_get_error = true;
+    }
+}
+
+static void
 caching_client_glGetVertexAttribfv (client_t *client, GLuint index, GLenum pname, 
                                      GLfloat *params)
 {
@@ -4549,14 +4589,19 @@ static GLboolean
 caching_client_glTestFenceNV (client_t *client, GLuint fence)
 {
     GLboolean result = GL_FALSE;
+    egl_state_t *egl_state;
 
     INSTRUMENT();
 
     if (caching_client_glIsValidContext (client)) {
+        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
         command_t *command = client_get_space_for_command (COMMAND_GLTESTFENCENV);
         command_gltestfencenv_init (command, fence);
         client_run_command (command);
         result = ((command_gltestfencenv_t *)command)->result;
+
+       if (result == GL_FALSE)
+            egl_state->state.need_get_error = true;
     }
     return result;
 }
@@ -4565,6 +4610,7 @@ static void
 caching_client_glGetFenceivNV (client_t *client, GLuint fence, GLenum pname, int *params)
 {
     egl_state_t *egl_state;
+    int original_params = *params;
 
     INSTRUMENT();
 
@@ -4574,24 +4620,9 @@ caching_client_glGetFenceivNV (client_t *client, GLuint fence, GLenum pname, int
         command_t *command = client_get_space_for_command (COMMAND_GLGETFENCEIVNV);
         command_glgetfenceivnv_init (command, fence, pname, params);
         client_run_command (command);
-        egl_state->state.need_get_error = true;
-    }
-}
 
-static void
-caching_client_glSetFenceNV (client_t *client, GLuint fence, GLenum condition)
-{
-    egl_state_t *egl_state;
-
-    INSTRUMENT();
-
-    if (caching_client_glIsValidContext (client)) {
-        egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-    
-        command_t *command = client_get_space_for_command (COMMAND_GLSETFENCENV);
-        command_glsetfencenv_init (command, fence, condition);
-        client_run_command_async (command);
-        egl_state->state.need_get_error = true;
+        if (original_params == *params)
+            egl_state->state.need_get_error = true;
     }
 }
 
@@ -4943,13 +4974,17 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
     case COMMAND_GLSHADERSOURCE:
     case COMMAND_GLTEXIMAGE2D:
     case COMMAND_GLTEXSUBIMAGE2D:
-    //case COMMAND_GLGETPROGRAMBINARYOES:
+
+    case COMMAND_GLEGLIMAGETARGETRENDERBUFFERSTORAGEOES:
+    case COMMAND_GLGETPROGRAMBINARYOES:
     case COMMAND_GLPROGRAMBINARYOES:
+    case COMMAND_GLGETBUFFERPOINTERVOES:
     case COMMAND_GLTEXIMAGE3DOES:
     case COMMAND_GLTEXSUBIMAGE3DOES:
     case COMMAND_GLCOPYTEXSUBIMAGE3DOES:
     case COMMAND_GLCOMPRESSEDTEXIMAGE3DOES:
     case COMMAND_GLCOMPRESSEDTEXSUBIMAGE3DOES:
+    case COMMAND_GLFRAMEBUFFERTEXTURE3DOES:
     case COMMAND_GLBEGINPERFMONITORAMD:
     case COMMAND_GLGETPERFMONITORGROUPSAMD:
     case COMMAND_GLGETPERFMONITORCOUNTERSAMD:
@@ -4967,6 +5002,7 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
     case COMMAND_GLRESOLVEMULTISAMPLEFRAMEBUFFERAPPLE:
     case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEEXT:
     case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEIMG:
+    case COMMAND_GLSETFENCENV:
     case COMMAND_GLFINISHFENCENV:
     case COMMAND_GLCOVERAGEMASKNV:
     case COMMAND_GLGETDRIVERCONTROLSQCOM:
