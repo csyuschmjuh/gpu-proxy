@@ -6,7 +6,6 @@ libGPUProcess_la_CFLAGS = \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
 	-Wall \
-	-Werror \
 	-Igenerated \
 	-Iclient \
 	-Iserver
@@ -21,9 +20,6 @@ libGPUProcess_la_LDFLAGS = \
 libGPUProcess_la_SOURCES = \
 	client/client.c \
 	client/client.h \
-        client/caching_client.c \
-        client/caching_client.h \
-        client/caching_client_private.h \
 	command.c \
 	command.h \
 	command_custom.c \
@@ -53,6 +49,10 @@ libGPUProcess_la_SOURCES += \
 	client/egl_api.c \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
+        client/caching_client.c \
+        client/caching_client.h \
+        client/caching_client_private.h \
+        client/caching_client_internal.c \
 	egl_states.h \
 	gles2_states.h \
 	gles2_utils.c \
