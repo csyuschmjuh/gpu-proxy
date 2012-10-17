@@ -2186,6 +2186,24 @@ class Function(object):
   def NeedsManualDestructor(self):
     return self.IsType('ManualInitAndDestructor')
 
+  def IsExtensionFunction(self):
+    return self.name.endswith("OES") or \
+           self.name.endswith("QCOM") or \
+           self.name.endswith("APPLE") or \
+           self.name.endswith("ANGLE") or \
+           self.name.endswith("NV") or \
+           self.name.endswith("IMG") or \
+           self.name.endswith("EXT") or \
+           self.name.endswith("ARB") or \
+           self.name.endswith("AMD") or \
+           self.name.endswith("MESA") or \
+           self.name.endswith("SEC") or \
+           self.name.endswith("KHR") or \
+           self.name.endswith("HI")
+
+  def ShouldHideEntryPoint(self):
+    return self.IsExtensionFunction() and not self.name.startswith("egl")
+
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
 
@@ -2419,7 +2437,11 @@ class GLGenerator(object):
     if not args:
         args = "void"
 
-    return "%s %s (%s)" % (func.return_type, func.name, args)
+    name = func.name
+    if func.ShouldHideEntryPoint():
+        name = "__hidden_gpuproxy_" + name
+
+    return "%s %s (%s)" % (func.return_type, name, args)
 
   def WriteClientEntryPoints(self, filename):
     """Writes the command buffer format"""
