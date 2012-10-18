@@ -2600,7 +2600,6 @@ class GLGenerator(object):
     file.Write("#include <EGL/eglext.h>\n")
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
-    file.Write("typedef void (*FunctionPointerType)(void);\n")
     file.Write("typedef struct _client_dispatch_table {\n")
     for func in self.functions:
         file.Write("%s (*%s) (client_t *client" % (func.return_type, func.name))
