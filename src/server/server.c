@@ -6,15 +6,26 @@
 #include "server_dispatch_table.h"
 #include "thread_private.h"
 #include <time.h>
+#include <sys/prctl.h>
 
 /* This method is auto-generated into server_autogen.c
  * and included at the end of this file. */
 static void
 server_fill_command_handler_table (server_t *server);
 
+static inline void
+sleep_nanoseconds (int num_nanoseconds)
+{
+    struct timespec spec;
+    spec.tv_sec = 0;
+    spec.tv_nsec = num_nanoseconds;
+    nanosleep (&spec, NULL);
+}
+
 void
 server_start_work_loop (server_t *server)
 {
+    prctl (PR_SET_TIMERSLACK, 1);
     /* FIXME: add exit condition of the loop. */
     while (true) {
         size_t data_left_to_read;
@@ -23,7 +34,8 @@ server_start_work_loop (server_t *server)
 
         /* The buffer is empty, so wait until there's something to read. */
         while (! read_command) {
-            sched_yield ();
+            sleep_nanoseconds (500);
+            //sched_yield ();
             read_command = (command_t *) buffer_read_address (server->buffer,
                                                               &data_left_to_read);
         }

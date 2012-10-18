@@ -1691,7 +1691,7 @@ _create_data_array (vertex_attrib_t *attrib, int count)
     data = (char *)malloc (size * count * attrib->size);
 
     for (i = 0; i < count; i++)
-        memcpy (data + i * attrib->size, attrib->pointer + attrib->stride * i, attrib->size * size);
+        memcpy (data + i * attrib->size * size, attrib->pointer + attrib->stride * i, attrib->size * size);
  
     return data;
 }
@@ -2660,7 +2660,8 @@ caching_client_glGetString (client_t *client, GLenum name)
         if (! (name == GL_VENDOR                   || 
                name == GL_RENDERER                 ||
                name == GL_SHADING_LANGUAGE_VERSION ||
-               name == GL_EXTENSIONS)) {
+               name == GL_EXTENSIONS               ||
+               name == GL_VERSION)) {
             caching_client_glSetError (client, GL_INVALID_ENUM);
             return NULL;
         }
