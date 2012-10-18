@@ -662,7 +662,7 @@ caching_client_glBindBuffer (client_t *client, GLenum target, GLuint buffer)
                     client_get_space_for_command (COMMAND_GLBINDBUFFER);
                 command_glbindbuffer_init (command, target, buffer);
                 client_run_command_async (command);
-                egl_state->state.need_get_error = true;
+                //egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
                egl_state->state.element_array_buffer_binding = buffer;
@@ -700,7 +700,7 @@ caching_client_glBindFramebuffer (client_t *client, GLenum target, GLuint frameb
          */
         egl_state->state.framebuffer_binding = framebuffer;
 
-        egl_state->state.need_get_error = true;
+        //egl_state->state.need_get_error = true;
     }
 }
 
@@ -726,7 +726,7 @@ caching_client_glBindRenderbuffer (client_t *client, GLenum target, GLuint rende
          * renderbuffer is invalid 
          */
         egl_state->state.renderbuffer_binding = renderbuffer;
-        egl_state->state.need_get_error = true;
+        //egl_state->state.need_get_error = true;
     }
 }
 
@@ -761,7 +761,7 @@ caching_client_glBindTexture (client_t *client, GLenum target, GLuint texture)
         command_glbindtexture_init (command, target, texture);
         client_run_command_async (command);
 
-        egl_state->state.need_get_error = true;
+        //egl_state->state.need_get_error = true;
 
         /* FIXME: do we need to save them ? */
         if (target == GL_TEXTURE_2D)
@@ -3850,7 +3850,7 @@ caching_client_glUseProgram (client_t *client, GLuint program)
          * object, we save here to save time in glGetError() */
         egl_state->state.current_program = program;
         /* FIXME: do we need to have this ? */
-        egl_state->state.need_get_error = true;
+        //egl_state->state.need_get_error = true;
     }
 }
 
