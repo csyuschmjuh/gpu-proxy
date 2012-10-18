@@ -36,22 +36,3 @@ _is_error_state (void)
 {
     return !client_get_thread_local();
 }
-
-void glPixelStorei (GLenum pname, GLint param)
-{
-    INSTRUMENT();
-
-    if (! on_client_thread ()) {
-        server_dispatch_table_get_base ()->glPixelStorei (NULL, pname, param);
-        return;
-    }
-
-    if (_is_error_state ())
-        return;
-
-    command_t *command =
-        client_get_space_for_command (COMMAND_GLPIXELSTOREI);
-    command_glpixelstorei_init (command, pname, param);
-    client_run_command_async (command);
-    return;
-}

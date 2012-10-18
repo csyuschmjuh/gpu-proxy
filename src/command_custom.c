@@ -12,7 +12,8 @@ command_glteximage2d_init (command_t *abstract_command,
                            GLint border,
                            GLenum format,
                            GLenum type,
-                           const void* pixels)
+                           const void* pixels,
+                           int unpack_alignment)
 
 {
     command_glteximage2d_t *command =
@@ -27,7 +28,6 @@ command_glteximage2d_init (command_t *abstract_command,
     command->type = (GLenum) type;
     command->pixels = NULL;
 
-    static int unpack_alignment = 4;
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
@@ -58,7 +58,8 @@ command_gltexsubimage2d_init (command_t *abstract_command,
                               GLsizei height,
                               GLenum format,
                               GLenum type,
-                              const void* pixels)
+                              const void* pixels,
+                              int unpack_alignment)
 {
     command_gltexsubimage2d_t *command =
         (command_gltexsubimage2d_t *) abstract_command;
@@ -71,7 +72,6 @@ command_gltexsubimage2d_init (command_t *abstract_command,
     command->format = (GLenum) format;
     command->type = (GLenum) type;
 
-    static int unpack_alignment = 4;
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
