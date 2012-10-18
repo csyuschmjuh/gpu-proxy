@@ -42,7 +42,7 @@ _has_extension (const char* extension_name)
 
 #define RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES(symbol_name) \
 if (!strcmp (#symbol_name, procname)) \
-    return dlsym (NULL, "__hidden_gpuproxy"#symbol_name);
+    return dlsym (NULL, "__hidden_gpuproxy_"#symbol_name);
 
 EGLAPI __eglMustCastToProperFunctionPointerType EGLAPIENTRY
 eglGetProcAddress (const char *procname)
@@ -51,6 +51,22 @@ eglGetProcAddress (const char *procname)
 
     if (! on_client_thread ()) {
         return server_dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
+    }
+
+    if (_has_extension ("GL_OES_EGL_image")) {
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glEGLImageTargetTexture2DOES);
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glEGLImageTargetRenderbufferStorageOES);
+    }
+
+    if (_has_extension ("GL_OES_get_program_binary")) {
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glGetProgramBinaryOES);
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glProgramBinaryOES);
+    }
+    
+    if (_has_extension ("GL_OES_mapbuffer")) {
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glMapBufferOES);
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glUnmapBufferOES);
+         RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glGetBufferPointervOES);
     }
 
     if (_has_extension ("GL_OES_texture_3D")) {

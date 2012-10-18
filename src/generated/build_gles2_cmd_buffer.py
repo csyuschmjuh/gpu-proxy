@@ -2640,7 +2640,9 @@ class GLGenerator(object):
         if func.name.startswith("egl"):
             continue
         file.Write('    temp = (FunctionPointerType *) &real_%s;\n' % func.name)
-        file.Write('    *temp = dlsym (libgl_handle (), "%s");\n' % func.name)
+        file.Write('    *temp = find_gl_symbol (libgl_handle (), \n')
+        file.Write('                            real_eglGetProcAddress,\n')
+        file.Write('                            "%s");\n' % func.name)
 
     for func in self.functions:
         file.Write('    dispatch->%s = passthrough_%s;\n' % (func.name, func.name))
