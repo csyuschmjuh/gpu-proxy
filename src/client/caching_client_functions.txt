@@ -71,6 +71,8 @@ glTexParameterf
 glTexParameterfv
 glTexParameteriv
 glTexParameteri
+glTexImage2D
+glTexSubImage2D
 glUniform1f
 glUniform1fv
 glUniform1i
