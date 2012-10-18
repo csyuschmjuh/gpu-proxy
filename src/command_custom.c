@@ -1,4 +1,5 @@
 #include "command.h"
+#include "command_custom.h"
 #include <string.h>
 #include "gles2_utils.h"
 
@@ -12,8 +13,25 @@ command_glteximage2d_init (command_t *abstract_command,
                            GLint border,
                            GLenum format,
                            GLenum type,
-                           const void* pixels,
-                           int unpack_alignment)
+                           const void* pixels)
+{
+    static int unpack_alignment = 4;
+    command_glteximage2d_init_custom (abstract_command, target, level, internalformat,
+                                      width, height, border, format, type, pixels, unpack_alignment);
+}
+
+void
+command_glteximage2d_init_custom (command_t *abstract_command,
+                                  GLenum target,
+                                  GLint level,
+                                  GLint internalformat,
+                                  GLsizei width,
+                                  GLsizei height,
+                                  GLint border,
+                                  GLenum format,
+                                  GLenum type,
+                                  const void* pixels,
+                                  int unpack_alignment)
 
 {
     command_glteximage2d_t *command =
@@ -58,8 +76,26 @@ command_gltexsubimage2d_init (command_t *abstract_command,
                               GLsizei height,
                               GLenum format,
                               GLenum type,
-                              const void* pixels,
-                              int unpack_alignment)
+                              const void* pixels)
+{
+    static int unpack_alignment = 4;
+    command_gltexsubimage2d_init_custom (abstract_command, target, level, xoffset, yoffset,
+                                         width, height, format, type, pixels, unpack_alignment);
+}
+
+
+void
+command_gltexsubimage2d_init_custom (command_t *abstract_command,
+                                     GLenum target,
+                                     GLint level,
+                                     GLint xoffset,
+                                     GLint yoffset,
+                                     GLsizei width,
+                                     GLsizei height,
+                                     GLenum format,
+                                     GLenum type,
+                                     const void* pixels,
+                                     int unpack_alignment)
 {
     command_gltexsubimage2d_t *command =
         (command_gltexsubimage2d_t *) abstract_command;

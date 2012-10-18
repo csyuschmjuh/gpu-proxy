@@ -3551,9 +3551,9 @@ caching_client_glTexImage2D (client_t *client, GLenum target, GLint level,
     }
  
     command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
-    command_glteximage2d_init (command, target, level, internalformat,
-                               width, height, border, format, type,
-                               pixels, egl_state->state.unpack_alignment);
+    command_glteximage2d_init_custom (command, target, level, internalformat,
+                                      width, height, format, type,
+                                      pixels, egl_state->state.unpack_alignment);
     client_run_command_async (command);
     egl_state->state.need_get_error = true;
 }
@@ -3579,9 +3579,9 @@ caching_client_glTexSubImage2D (client_t *client, GLenum target,
     }
  
     command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
-    command_gltexsubimage2d_init (command, target, leve, xoffset, yoffset,
-                                  width, height, border, type,
-                                  pixels, egl_state->state.unpack_alignment);
+    command_gltexsubimage2d_init_custom (command, target, level, xoffset, yoffset,
+                                         width, height, format, type,
+                                         pixels, egl_state->state.unpack_alignment);
     client_run_command_async (command);
     egl_state->state.need_get_error = true;
 }
