@@ -49,6 +49,7 @@ command_glteximage2d_init_custom (command_t *abstract_command,
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
+    uint32_t unpack_alignment = 4;
 
     if (! pixels)
         return;
@@ -111,6 +112,8 @@ command_gltexsubimage2d_init_custom (command_t *abstract_command,
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
+    uint32_t unpack_alignment = 4;
+
     if (! compute_image_data_sizes (width, height, format,
                                     type, unpack_alignment,
                                     &dest_size, &unpadded_row_size,
