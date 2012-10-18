@@ -52,22 +52,19 @@ libGPUProcess_la_SOURCES += \
 	client/caching_client.c \
 	client/caching_client.h \
 	client/caching_client_private.h \
-        client/client_dispatch_table.c \
-        client/client_dispatch_table.h \
+	dispatch_table.c \
+	dispatch_table.h \
 	egl_states.h \
 	gles2_states.h \
 	gles2_utils.c \
 	gles2_utils.h \
-	server/caching_server_gles.c \
-	server/server_dispatch_table.c \
-	server/server_dispatch_table.h
+	server/caching_server_gles.c
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/gles2_api_autogen.c \
 	generated/command_autogen.c \
 	generated/command_autogen.h \
 	generated/command_types_autogen.h
-	generated/client_dispatch_table_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)
@@ -76,9 +73,9 @@ generated/command_autogen.c: generated/command_autogen.h
 generated/command_autogen.h: generated/command_types_autogen.h
 generated/command_types_autogen.h: generated/gles2_api_autogen.c
 generated/gles2_api_autogen.c: generated/server_autogen.c
-generated/server_autogen.c: generated/server_dispatch_table_autogen.c
-generated/server_dispatch_table_autogen.c: generated/server_dispatch_table.h
-generated/server_dispatch_table.h: generated/build_gles2_cmd_buffer.py \
+generated/server_autogen.c: generated/dispatch_table_autogen.c
+generated/dispatch_table_autogen.c: generated/dispatch_table.h
+generated/dispatch_table.h: generated/build_gles2_cmd_buffer.py \
 								   generated/egl_functions.txt \
 								   generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py

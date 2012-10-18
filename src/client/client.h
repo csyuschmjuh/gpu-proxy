@@ -3,7 +3,7 @@
 
 typedef struct _client client_t;
 
-#include "client_dispatch_table.h"
+#include "dispatch_table.h"
 #include "egl_states.h"
 #include "name_handler.h"
 #include "ring_buffer.h"
@@ -14,6 +14,8 @@ typedef struct _client client_t;
 extern "C" {
 #endif
 
+#define CLIENT(object) ((client_t *) (object))
+
 /* Initialize the commands in the buffer using the following sequence
  * of calls:
  *   COMMAND_NAME_t *command =
@@ -22,7 +24,7 @@ extern "C" {
  *   client_write_command (command);
  */
 struct _client {
-    client_dispatch_table_t dispatch;
+    dispatch_table_t dispatch;
 
     name_handler_t *name_handler;
 

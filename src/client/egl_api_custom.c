@@ -28,7 +28,7 @@ static bool
 _has_extension (const char* extension_name)
 {
     const char* extensions =
-        (const char*) server_dispatch_table_get_base ()->glGetString (NULL, GL_EXTENSIONS);
+        (const char*) dispatch_table_get_base ()->glGetString (NULL, GL_EXTENSIONS);
 
     size_t extension_name_length = strlen (extension_name);
     char* found = strstr (extensions, extension_name);
@@ -50,7 +50,7 @@ eglGetProcAddress (const char *procname)
     INSTRUMENT();
 
     if (! on_client_thread ()) {
-        return server_dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
+        return dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
     }
 
     if (_has_extension ("GL_OES_EGL_image")) {
@@ -62,7 +62,7 @@ eglGetProcAddress (const char *procname)
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glGetProgramBinaryOES);
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glProgramBinaryOES);
     }
-    
+
     if (_has_extension ("GL_OES_mapbuffer")) {
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glMapBufferOES);
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glUnmapBufferOES);

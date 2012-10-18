@@ -8,7 +8,7 @@ typedef struct _server server_t;
 #include "compiler_private.h"
 #include "egl_states.h"
 #include "ring_buffer.h"
-#include "server_dispatch_table.h"
+#include "dispatch_table.h"
 #include "thread_private.h"
 #include "types_private.h"
 #include <pthread.h>
@@ -20,7 +20,7 @@ extern "C" {
 typedef void (*command_handler_t)(server_t *server, command_t *command);
 
 struct _server {
-    server_dispatch_table_t dispatch;
+    dispatch_table_t dispatch;
 
     /* This is an optimization to avoid a giant switch statement. */
     command_handler_t handler_table[COMMAND_MAX_COMMAND];

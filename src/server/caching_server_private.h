@@ -20,7 +20,7 @@ typedef struct _caching_server {
     /* We maintain a copy of the superclass' dispatch table here, so
      * that we can chain up to the superclass. The process of subclassing
      * overrides the original dispatch table. */
-    server_dispatch_table_t super_dispatch;
+    dispatch_table_t super_dispatch;
 
     /* The state of the active GL context. */
     link_list_t *active_state;
