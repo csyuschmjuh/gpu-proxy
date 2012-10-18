@@ -16,7 +16,6 @@ extern "C" {
  */
 typedef struct caching_client {
     client_t base;
-    link_list_t *active_state;
 } caching_client_t;
 
 private client_t *

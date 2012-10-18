@@ -29,6 +29,8 @@ struct _client {
     buffer_t buffer;
     unsigned int token;
 
+    link_list_t *active_state;
+
     mutex_t server_started_mutex;
     thread_t server_thread;
 };
