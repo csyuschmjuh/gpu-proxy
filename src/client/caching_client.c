@@ -587,7 +587,8 @@ caching_client_glSetError (client_t *client, GLenum error)
 
 /* GLES2 core profile API */
 static void
-caching_client_glActiveTexture (client_t *client, GLenum texture)
+caching_client_glActiveTexture (client_t *client,
+                                GLenum texture)
 {
     egl_state_t *egl_state;
 
@@ -2195,12 +2196,13 @@ caching_client_glGetAttribLocation (client_t *client, GLuint program,
 
         command_t *command = client_get_space_for_command (COMMAND_GLGETATTRIBLOCATION);
         command_glgetattriblocation_init (command, program, name);
-        client_run_command_async (command);
+        client_run_command (command);
         result = ((command_glgetattriblocation_t *)command)->result;
 
         if (result == -1)
             egl_state->state.need_get_error = true;
     }
+
     return result;
 }
 
@@ -2218,7 +2220,7 @@ caching_client_glGetUniformLocation (client_t *client, GLuint program,
 
         command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMLOCATION);
         command_glgetuniformlocation_init (command, program, name);
-        client_run_command_async (command);
+        client_run_command (command);
         result = ((command_glgetattriblocation_t *)command)->result;
 
         if (result == -1)
@@ -3562,12 +3564,16 @@ caching_client_glTexImage2D (client_t *client, GLenum target, GLint level,
 }
 
 static void
-caching_client_glTexSubImage2D (client_t *client, GLenum target, 
-                                GLint level, 
-                                GLint xoffset, GLint yoffset,
-                                GLsizei width, GLsizei height, 
+caching_client_glTexSubImage2D (client_t *client,
+                                GLenum target,
+                                GLint level,
+                                GLint xoffset,
+                                GLint yoffset,
+                                GLsizei width,
+                                GLsizei height,
                                 GLenum format,
-                                GLenum type, const void *pixels)
+                                GLenum type,
+                                const void *pixels)
 {
     egl_state_t *egl_state;
 
@@ -3593,7 +3599,6 @@ static void
 caching_client_glUniformfv (client_t *client, int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
-    egl_state_t *egl_state;
     command_t *command = NULL;
 
     if (! caching_client_glIsValidContext (client))
@@ -3620,10 +3625,6 @@ caching_client_glUniformfv (client_t *client, int i, GLint location,
 
     if (command)
         client_run_command_async (command);
-
-    egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-    /* XXX: should we set this? */
-    //egl_state->state.need_get_error = true;
 }
 
 static void
@@ -3665,7 +3666,6 @@ caching_client_glUniformiv (client_t *client,
                 GLsizei count,
                 const GLint *value)
 {
-    egl_state_t *egl_state;
     command_t *command = NULL;
 
     if (! caching_client_glIsValidContext (client))
@@ -3692,10 +3692,6 @@ caching_client_glUniformiv (client_t *client,
     
     if (command)
         client_run_command_async (command);
-
-    egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
-    /* XXX: should we set this? */
-    //egl_state->state.need_get_error = true;
 }
 
 static void
