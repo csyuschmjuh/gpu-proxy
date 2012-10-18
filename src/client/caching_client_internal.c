@@ -3548,7 +3548,61 @@ caching_client_glTexParameterf (client_t *client, GLenum target, GLenum pname, G
     caching_client_glTexParameteri (client, target, pname, parami);
 }
 
-void
+static void
+caching_client_glTexImage2D (client_t *client, GLenum target, GLint level,
+                             GLint internalformat, GLsizei width,
+                             GLsizei height, GLint border, GLenum format,
+                             GLenum type, const void *pixels)
+{
+    egl_state_t *egl_state;
+
+    if (! caching_client_glIsValidContext (client))
+        return;
+
+    egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+ 
+    if (level < 0 || width < 0 || height < 0) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    }
+ 
+    command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
+    command_glteximage2d_init (command, target, level, internalformat,
+                               width, height, border, format, type,
+                               pixels, egl_state->state.unpack_alignment);
+    client_run_command_async (command);
+    egl_state->state.need_get_error = true;
+}
+
+static void
+caching_client_glTexSubImage2D (client_t *client, GLenum target, 
+                                GLint level, 
+                                GLint xoffset, GLint yoffset,
+                                GLsizei width, GLsizei height, 
+                                GLenum format,
+                                GLenum type, const void *pixels)
+{
+    egl_state_t *egl_state;
+
+    if (! caching_client_glIsValidContext (client))
+        return;
+
+    egl_state = (egl_state_t *) CACHING_CLIENT(client)->active_state->data;
+ 
+    if (level < 0 || width < 0 || height < 0) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    }
+ 
+    command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
+    command_gltexsubimage2d_init (command, target, leve, xoffset, yoffset,
+                                  width, height, border, type,
+                                  pixels, egl_state->state.unpack_alignment);
+    client_run_command_async (command);
+    egl_state->state.need_get_error = true;
+}
+
+static void
 caching_client_glUniformfv (client_t *client, int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
@@ -4972,8 +5026,6 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
     case COMMAND_GLRENDERBUFFERSTORAGE:
     case COMMAND_GLSHADERBINARY:
     case COMMAND_GLSHADERSOURCE:
-    case COMMAND_GLTEXIMAGE2D:
-    case COMMAND_GLTEXSUBIMAGE2D:
 
     case COMMAND_GLEGLIMAGETARGETRENDERBUFFERSTORAGEOES:
     case COMMAND_GLGETPROGRAMBINARYOES:
