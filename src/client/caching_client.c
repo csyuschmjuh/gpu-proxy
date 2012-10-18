@@ -1782,8 +1782,9 @@ FINISH:
 /* FIXME: we should use pre-allocated buffer if possible */
 
 static char *
-caching_client_glCreateIndicesArray (GLenum mode, 
-                                     GLenum type, int count,
+caching_client_glCreateIndicesArray (GLenum mode,
+                                     GLenum type,
+                                     int count,
                                      char *indices)
 {
     char *data = NULL;
@@ -1798,26 +1799,34 @@ caching_client_glCreateIndicesArray (GLenum mode,
     if (size == 0)
          return NULL;
 
-    if(mode == GL_POINTS) {
+    switch (mode) {
+    case GL_POINTS:
         length = size * count;
-    }
-    else if (mode == GL_LINE_STRIP) {
+        break;
+    case GL_LINE_STRIP:
         length = size * (count + 1);
-    }
-    else if (mode == GL_LINE_LOOP) {
+        break;
+    case GL_LINE_LOOP:
         length = size * count;
-    }
-    else if (mode == GL_LINES) {
+        break;
+    case GL_LINES:
         length = size * count * 2;
-    }
-    else if (mode == GL_TRIANGLE_STRIP || mode == GL_TRIANGLE_FAN) {
+        break;
+    case GL_TRIANGLE_STRIP:
+    case GL_TRIANGLE_FAN:
         length = size * (count + 2);
-    }
-    else if (mode == GL_TRIANGLES) {
+        break;
+    case GL_TRIANGLES:
         length = sizeof (char) * (count * 3);
+        break;
+    default:
+        length = 0;
     }
 
-    data = (char *)malloc (length);
+    if (length == 0)
+        return NULL;
+
+    data = (char *) malloc (length);
     memcpy (data, indices, length);
 
     return data;
@@ -4966,7 +4975,10 @@ caching_client_eglMakeCurrent (void* client,
 /* start of eglext.h */
 /* end of eglext.h */
 /* we specify those passthrough GL APIs that needs to set need_get_error */
-static void caching_client_command_post_hook(client_t *client, command_t *command)
+#if 0
+static void
+caching_client_command_post_hook(client_t *client,
+                                 command_t *command)
 {
 
     switch (command->type) {
@@ -5060,6 +5072,7 @@ static void caching_client_command_post_hook(client_t *client, command_t *comman
         break;
     }
 }
+#endif
 
 static void
 caching_client_init (caching_client_t *client)

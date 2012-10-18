@@ -51,4 +51,5 @@ client_test_CFLAGS = \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
 	-I$(rootsrcdir)/tests/server \
-	-Wall
+	-Wall \
+	-Werror
