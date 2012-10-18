@@ -53,14 +53,20 @@ client_t *
 client_new ()
 {
     client_t *client = (client_t *)malloc (sizeof (client_t));
+    buffer_create (&client->buffer);
+
+    return client;
+}
+
+void
+client_init (client_t *client)
+{
+    client->dispatch = *client_dispatch_table ();
 
     client->name_handler = name_handler_create ();
     client->token = 0;
 
-    buffer_create (&client->buffer);
     client_start_server (client);
-
-    return client;
 }
 
 static bool
@@ -80,8 +86,10 @@ client_destroy (client_t *client)
 client_t *
 client_get_thread_local ()
 {
-    if (unlikely (! thread_local_client))
+    if (unlikely (! thread_local_client)) {
         thread_local_client = client_new ();
+        client_init (thread_local_client);
+    }
     return thread_local_client;
 }
 

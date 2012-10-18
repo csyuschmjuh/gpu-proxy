@@ -49,10 +49,11 @@ libGPUProcess_la_SOURCES += \
 	client/egl_api_custom.c \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
-        client/caching_client.c \
-        client/caching_client.h \
-        client/caching_client_private.h \
-        client/caching_client_internal.c \
+	client/caching_client.c \
+	client/caching_client.h \
+	client/caching_client_private.h \
+        client/client_dispatch_table.c \
+        client/client_dispatch_table.h \
 	egl_states.h \
 	gles2_states.h \
 	gles2_utils.c \
@@ -66,6 +67,7 @@ nodist_libGPUProcess_la_SOURCES = \
 	generated/command_autogen.c \
 	generated/command_autogen.h \
 	generated/command_types_autogen.h
+	generated/client_dispatch_table_autogen.h
 
 BUILT_SOURCES += \
 	$(nodist_libGPUProcess_la_SOURCES)

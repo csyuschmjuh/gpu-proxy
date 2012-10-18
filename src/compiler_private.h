@@ -20,6 +20,8 @@
 #define unlikely(expr) (expr)
 #endif
 
+#define UNUSED_PARAM(var) (void)var
+
 #if ENABLE_PROFILING
 private unsigned long
 get_time_in_milliseconds ();

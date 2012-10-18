@@ -4,6 +4,7 @@
 #include "config.h"
 
 #include "client.h"
+#include "caching_client.h"
 #include "command.h"
 #include "types_private.h"
 #include "thread_private.h"
