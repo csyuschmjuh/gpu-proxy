@@ -2442,7 +2442,7 @@ class GLGenerator(object):
         header = self.GetClientEntryPointSignature(func)
         if not header:
             continue
-        
+
         file.Write(header + "\n")
         file.Write("{\n")
         file.Write("    INSTRUMENT();\n")
@@ -2452,7 +2452,7 @@ class GLGenerator(object):
         file.Write("        ")
         if func.HasReturnValue():
             file.Write("return ")
-        file.Write("server_dispatch_table_get_base ()->%s (NULL" % func.name)
+        file.Write("dispatch_table_get_base ()->%s (NULL" % func.name)
         file.Write(func.MakeOriginalArgString("", add_separator=True))
         file.Write(");\n")
 
@@ -2548,6 +2548,13 @@ class GLGenerator(object):
     file.Write("#endif /*COMMAND_AUTOGEN_H*/\n")
     file.Close()
 
+  def WriteGLHeaders(self, file):
+    # TODO: Eventually this should write either the EGL/GLES headers or those for GLX.
+    file.Write("#include <EGL/egl.h>\n")
+    file.Write("#include <EGL/eglext.h>\n")
+    file.Write("#include <GLES2/gl2.h>\n")
+    file.Write("#include <GLES2/gl2ext.h>\n\n")
+
   def WriteCommandInitilizationAndSizeFunction(self, filename):
     """Writes the command implementation for the client-side"""
     file = CWriter(filename)
@@ -2572,42 +2579,22 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
-  def WriteServerDispatchTable(self, filename):
+  def WriteDispatchTable(self, filename):
     """Writes the dispatch struct for the server-side"""
     file = CHeaderWriter(filename)
+
     file.Write("#include \"config.h\"\n")
     file.Write("#include \"compiler_private.h\"\n")
-    file.Write("#include <EGL/egl.h>\n")
-    file.Write("#include <EGL/eglext.h>\n")
-    file.Write("#include <GLES2/gl2.h>\n")
-    file.Write("#include <GLES2/gl2ext.h>\n\n")
+    self.WriteGLHeaders(file)
+
     file.Write("typedef void (*FunctionPointerType)(void);\n")
-    file.Write("typedef struct _server_dispatch_table {\n")
+    file.Write("typedef struct _dispatch_table {\n")
     for func in self.functions:
-        file.Write("    %s (*%s) (server_t* server" % (func.return_type, func.name))
+        file.Write("    %s (*%s) (void *object" % (func.return_type, func.name))
         file.Write(func.MakeTypedOriginalArgString("", add_separator = True), split=False)
         file.Write(");\n")
-    file.Write("} server_dispatch_table_t;")
+    file.Write("} dispatch_table_t;")
     file.Write("\n")
-    file.Close()
-
-  def WriteClientDispatchTable(self, filename):
-    """Writes the dispatch struct for the client-side"""
-    file = CHeaderWriter(filename)
-    file.Write("#include \"config.h\"\n")
-    file.Write("#include \"compiler_private.h\"\n")
-    file.Write("#include <EGL/egl.h>\n")
-    file.Write("#include <EGL/eglext.h>\n")
-    file.Write("#include <GLES2/gl2.h>\n")
-    file.Write("#include <GLES2/gl2ext.h>\n\n")
-    file.Write("typedef struct _client_dispatch_table {\n")
-    for func in self.functions:
-        file.Write("%s (*%s) (client_t *client" % (func.return_type, func.name))
-        file.Write(func.MakeTypedOriginalArgString("", add_separator = True), split=False)
-        file.Write(");\n")
-
-    file.Write("} client_dispatch_table_t;")
-    file.Write("\n\n")
     file.Close()
 
   def WriteBaseServer(self, filename):
@@ -2647,9 +2634,12 @@ class GLGenerator(object):
 
     file.Close()
 
-  def WriteBaseServerDispatchTableImplementation(self, filename):
-    """Writes the pass-through dispatch table implementation for the server-side"""
+  def WritePassthroughDispatchTableImplementation(self, filename):
+    """Writes the pass-through dispatch table implementation."""
     file = CWriter(filename)
+
+    self.WriteGLHeaders(file)
+    file.Write("\n")
 
     for func in self.functions:
         file.Write("static %s (*real_%s) (" % (func.return_type, func.name))
@@ -2661,7 +2651,7 @@ class GLGenerator(object):
 
         func_name = "passthrough_%s (" % func.name
         indent = " " * len(func_name)
-        file.Write("%sserver_t* server" % func_name)
+        file.Write("%svoid* object" % func_name)
         file.Write(func.MakeTypedOriginalArgString(indent, separator = ",\n", add_separator = True), split=False)
         file.Write(")\n")
         file.Write("{\n")
@@ -2677,7 +2667,7 @@ class GLGenerator(object):
         file.Write("}\n\n")
 
     file.Write("void\n")
-    file.Write("server_dispatch_table_fill_base (server_dispatch_table_t *dispatch)\n")
+    file.Write("dispatch_table_fill_base (dispatch_table_t *dispatch)\n")
     file.Write("{\n")
     file.Write("    FunctionPointerType *temp = NULL;\n")
 
@@ -2761,12 +2751,12 @@ def main(argv):
     os.chdir(options.output_dir)
 
   # Shared between the client and the server.
-  gen.WriteServerDispatchTable("server_dispatch_table_autogen.h")
+  gen.WriteDispatchTable("dispatch_table_autogen.h")
+  gen.WritePassthroughDispatchTableImplementation("dispatch_table_autogen.c")
 
   # These are used on the client-side.
   gen.WriteCachingClientDispatchTableImplementation("caching_client_dispatch_autogen.c")
   gen.WriteGLES2API("gles2_api_autogen.c")
-  gen.WriteClientDispatchTable("client_dispatch_table_autogen.h")
   gen.WriteClientEntryPoints("gles2_api_dispatch_autogen.c")
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_types_autogen.h")
@@ -2774,7 +2764,6 @@ def main(argv):
 
   # These are used on the server-side.
   gen.WriteBaseServer("server_autogen.c")
-  gen.WriteBaseServerDispatchTableImplementation("server_dispatch_table_autogen.c")
   gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:

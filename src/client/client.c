@@ -61,7 +61,7 @@ client_new ()
 void
 client_init (client_t *client)
 {
-    client->dispatch = *client_dispatch_table ();
+    client->dispatch = *dispatch_table_get_base ();
 
     client->name_handler = name_handler_create ();
     client->token = 0;

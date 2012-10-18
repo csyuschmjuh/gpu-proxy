@@ -12,22 +12,20 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/command_custom.c \
 	$(rootsrcdir)/src/command_custom.h \
 	$(rootsrcdir)/src/compiler.c \
+	$(rootsrcdir)/src/dispatch_table.c \
+	$(rootsrcdir)/src/dispatch_table.h \
 	$(rootsrcdir)/src/client/client.c \
 	$(rootsrcdir)/src/client/client.h \
 	$(rootsrcdir)/src/client/caching_client.c \
 	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
 	$(rootsrcdir)/src/client/gles2_api.c \
-	$(rootsrcdir)/src/client/client_dispatch_table.h \
-	$(rootsrcdir)/src/client/client_dispatch_table.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	$(rootsrcdir)/src/generated/gles2_api_autogen.c \
 	$(rootsrcdir)/src/gles2_utils.c \
 	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
-	$(rootsrcdir)/src/server/server_dispatch_table.c \
-	$(rootsrcdir)/src/server/server_dispatch_table.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/tests/server/gpuprocess_test.c \

@@ -8,13 +8,13 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/compiler.c \
 	$(rootsrcdir)/src/client/client.c \
 	$(rootsrcdir)/src/client/client.h \
-        $(rootsrcdir)/src/client/caching_client_private.h \
-        $(rootsrcdir)/src/client/client_dispatch_table.h \
-        $(rootsrcdir)/src/client/caching_client.c \
-        $(rootsrcdir)/src/client/client_dispatch_table.c \
-        $(rootsrcdir)/src/client/caching_client.h \
-        $(rootsrcdir)/src/client/egl_api_custom.c \
-        $(rootsrcdir)/src/client/gles2_api.c \
+	$(rootsrcdir)/src/client/caching_client_private.h \
+	$(rootsrcdir)/src/client/caching_client.c \
+	$(rootsrcdir)/src/client/caching_client.h \
+	$(rootsrcdir)/src/client/egl_api_custom.c \
+	$(rootsrcdir)/src/client/gles2_api.c \
+	$(rootsrcdir)/src/dispatch_table.c \
+	$(rootsrcdir)/src/dispatch_table.h \
 	$(rootsrcdir)/src/gles2_utils.c \
 	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \
@@ -22,8 +22,6 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
 	$(rootsrcdir)/src/server/caching_server_gles_private.h \
 	$(rootsrcdir)/src/server/caching_server_gles.c \
-	$(rootsrcdir)/src/server/server_dispatch_table.c \
-	$(rootsrcdir)/src/server/server_dispatch_table.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/name_handler.h \

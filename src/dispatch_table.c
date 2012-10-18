@@ -1,5 +1,6 @@
 #include "config.h"
-#include "server.h"
+#include "dispatch_table.h"
+
 #include "types_private.h"
 #include "thread_private.h"
 #include <dlfcn.h>
@@ -46,14 +47,14 @@ libegl_handle ()
     return handle;
 }
 
-#include "server_dispatch_table_autogen.c"
+#include "dispatch_table_autogen.c"
 
 mutex_static_init (dispatch_table_mutex);
 
-server_dispatch_table_t *
-server_dispatch_table_get_base ()
+dispatch_table_t *
+dispatch_table_get_base ()
 {
-    static server_dispatch_table_t dispatch;
+    static dispatch_table_t dispatch;
     static bool table_initialized = false;
     if (table_initialized)
         return &dispatch;
@@ -67,7 +68,7 @@ server_dispatch_table_get_base ()
         return &dispatch;
     }
 
-    server_dispatch_table_fill_base(&dispatch);
+    dispatch_table_fill_base(&dispatch);
     table_initialized = true;
     mutex_unlock (dispatch_table_mutex);
 

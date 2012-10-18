@@ -26,7 +26,7 @@
 #include "config.h"
 #include "caching_server_private.h"
 
-#include "server_dispatch_table.h"
+#include "dispatch_table.h"
 #include "egl_states.h"
 #include "server.h"
 #include "types_private.h"
@@ -549,7 +549,7 @@ _server_initialize (EGLDisplay display)
 }
 
 static bool
-caching_server_glIsValidFunc (server_t *server, 
+caching_server_glIsValidFunc (void* server, 
                               void *func)
 {
     egl_state_t *egl_state;
@@ -570,7 +570,7 @@ caching_server_glIsValidFunc (server_t *server,
 }
 
 static bool
-caching_server_glIsValidContext (server_t *server)
+caching_server_glIsValidContext (void* server)
 {
     egl_state_t *egl_state;
 
@@ -585,7 +585,7 @@ caching_server_glIsValidContext (server_t *server)
 }
 
 static void
-caching_server_glSetError (server_t *server, GLenum error)
+caching_server_glSetError (void* server, GLenum error)
 {
     egl_state_t *egl_state;
 
@@ -599,7 +599,7 @@ caching_server_glSetError (server_t *server, GLenum error)
 
 /* GLES2 core profile API */
 static void
-caching_server_glActiveTexture (server_t *server, GLenum texture)
+caching_server_glActiveTexture (void* server, GLenum texture)
 {
     egl_state_t *egl_state;
 
@@ -624,7 +624,7 @@ caching_server_glActiveTexture (server_t *server, GLenum texture)
 }
 
 static void
-caching_server_glBindBuffer (server_t *server, GLenum target, GLuint buffer)
+caching_server_glBindBuffer (void* server, GLenum target, GLuint buffer)
 {
     egl_state_t *egl_state;
 
@@ -661,7 +661,7 @@ caching_server_glBindBuffer (server_t *server, GLenum target, GLuint buffer)
 }
 
 static void
-caching_server_glBindFramebuffer (server_t *server, GLenum target, GLuint framebuffer)
+caching_server_glBindFramebuffer (void* server, GLenum target, GLuint framebuffer)
 {
     egl_state_t *egl_state;
     
@@ -688,7 +688,7 @@ caching_server_glBindFramebuffer (server_t *server, GLenum target, GLuint frameb
 }
 
 static void
-caching_server_glBindRenderbuffer (server_t *server, GLenum target, GLuint renderbuffer)
+caching_server_glBindRenderbuffer (void* server, GLenum target, GLuint renderbuffer)
 {
     egl_state_t *egl_state;
     
@@ -711,7 +711,7 @@ caching_server_glBindRenderbuffer (server_t *server, GLenum target, GLuint rende
 }
 
 static void
-caching_server_glBindTexture (server_t *server, GLenum target, GLuint texture)
+caching_server_glBindTexture (void* server, GLenum target, GLuint texture)
 {
     egl_state_t *egl_state;
     
@@ -751,7 +751,7 @@ caching_server_glBindTexture (server_t *server, GLenum target, GLuint texture)
 }
 
 static void
-caching_server_glBlendColor (server_t *server, GLclampf red, GLclampf green,
+caching_server_glBlendColor (void* server, GLclampf red, GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -778,7 +778,7 @@ caching_server_glBlendColor (server_t *server, GLclampf red, GLclampf green,
 }
 
 static void
-caching_server_glBlendEquation (server_t *server, GLenum mode)
+caching_server_glBlendEquation (void* server, GLenum mode)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -807,7 +807,7 @@ caching_server_glBlendEquation (server_t *server, GLenum mode)
 }
 
 static void
-caching_server_glBlendEquationSeparate (server_t *server, GLenum modeRGB, GLenum modeAlpha)
+caching_server_glBlendEquationSeparate (void* server, GLenum modeRGB, GLenum modeAlpha)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -839,7 +839,7 @@ caching_server_glBlendEquationSeparate (server_t *server, GLenum modeRGB, GLenum
 }
 
 static void
-caching_server_glBlendFunc (server_t *server, GLenum sfactor, GLenum dfactor)
+caching_server_glBlendFunc (void* server, GLenum sfactor, GLenum dfactor)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -897,7 +897,7 @@ caching_server_glBlendFunc (server_t *server, GLenum sfactor, GLenum dfactor)
 }
 
 static void
-caching_server_glBlendFuncSeparate (server_t *server, GLenum srcRGB, GLenum dstRGB,
+caching_server_glBlendFuncSeparate (void* server, GLenum srcRGB, GLenum dstRGB,
                                     GLenum srcAlpha, GLenum dstAlpha)
 {
     egl_state_t *egl_state;
@@ -988,7 +988,7 @@ caching_server_glBlendFuncSeparate (server_t *server, GLenum srcRGB, GLenum dstR
 }
 
 static GLenum
-caching_server_glCheckFramebufferStatus (server_t *server, GLenum target)
+caching_server_glCheckFramebufferStatus (void* server, GLenum target)
 {
     GLenum result = GL_INVALID_ENUM;
     
@@ -1007,7 +1007,7 @@ caching_server_glCheckFramebufferStatus (server_t *server, GLenum target)
 }
 
 static void
-caching_server_glClear (server_t *server, GLbitfield mask)
+caching_server_glClear (void* server, GLbitfield mask)
 {
     
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glClear) &&
@@ -1025,7 +1025,7 @@ caching_server_glClear (server_t *server, GLbitfield mask)
 }
 
 static void
-caching_server_glClearColor (server_t *server, GLclampf red, GLclampf green,
+caching_server_glClearColor (void* server, GLclampf red, GLclampf green,
                  GLclampf blue, GLclampf alpha)
 {
     egl_state_t *egl_state;
@@ -1052,7 +1052,7 @@ caching_server_glClearColor (server_t *server, GLclampf red, GLclampf green,
 }
 
 static void
-caching_server_glClearDepthf (server_t *server, GLclampf depth)
+caching_server_glClearDepthf (void* server, GLclampf depth)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1072,7 +1072,7 @@ caching_server_glClearDepthf (server_t *server, GLclampf depth)
 }
 
 static void
-caching_server_glClearStencil (server_t *server, GLint s)
+caching_server_glClearStencil (void* server, GLint s)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1092,7 +1092,7 @@ caching_server_glClearStencil (server_t *server, GLint s)
 }
 
 static void
-caching_server_glColorMask (server_t *server, GLboolean red, GLboolean green,
+caching_server_glColorMask (void* server, GLboolean red, GLboolean green,
                 GLboolean blue, GLboolean alpha)
 {
     egl_state_t *egl_state;
@@ -1119,7 +1119,7 @@ caching_server_glColorMask (server_t *server, GLboolean red, GLboolean green,
 }
 
 static GLuint
-caching_server_glCreateShader (server_t *server, GLenum shaderType)
+caching_server_glCreateShader (void* server, GLenum shaderType)
 {
     GLuint result = 0;
     
@@ -1139,7 +1139,7 @@ caching_server_glCreateShader (server_t *server, GLenum shaderType)
 }
 
 static void
-caching_server_glCullFace (server_t *server, GLenum mode)
+caching_server_glCullFace (void* server, GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -1164,7 +1164,7 @@ caching_server_glCullFace (server_t *server, GLenum mode)
 }
 
 static void
-caching_server_glDeleteBuffers (server_t *server, GLsizei n, const GLuint *buffers)
+caching_server_glDeleteBuffers (void* server, GLsizei n, const GLuint *buffers)
 {
     egl_state_t *egl_state;
     int count;
@@ -1212,7 +1212,7 @@ FINISH:
 }
 
 static void
-caching_server_glDeleteFramebuffers (server_t *server, GLsizei n, const GLuint *framebuffers)
+caching_server_glDeleteFramebuffers (void* server, GLsizei n, const GLuint *framebuffers)
 {
     egl_state_t *egl_state;
     int i;
@@ -1242,7 +1242,7 @@ FINISH:
 }
 
 static void
-caching_server_glDeleteRenderbuffers (server_t *server, GLsizei n, const GLuint *renderbuffers)
+caching_server_glDeleteRenderbuffers (void* server, GLsizei n, const GLuint *renderbuffers)
 {
     
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDeleteRenderbuffers) &&
@@ -1262,7 +1262,7 @@ FINISH:
 }
 
 static void
-caching_server_glDeleteTextures (server_t *server, GLsizei n, const GLuint *textures)
+caching_server_glDeleteTextures (void* server, GLsizei n, const GLuint *textures)
 {
     
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glDeleteTextures) &&
@@ -1282,7 +1282,7 @@ FINISH:
 }
 
 static void
-caching_server_glDepthFunc (server_t *server, GLenum func)
+caching_server_glDepthFunc (void* server, GLenum func)
 {
     egl_state_t *egl_state;
     
@@ -1312,7 +1312,7 @@ caching_server_glDepthFunc (server_t *server, GLenum func)
 }
 
 static void
-caching_server_glDepthMask (server_t *server, GLboolean flag)
+caching_server_glDepthMask (void* server, GLboolean flag)
 {
     egl_state_t *egl_state;
     
@@ -1330,7 +1330,7 @@ caching_server_glDepthMask (server_t *server, GLboolean flag)
 }
 
 static void
-caching_server_glDepthRangef (server_t *server, GLclampf nearVal, GLclampf farVal)
+caching_server_glDepthRangef (void* server, GLclampf nearVal, GLclampf farVal)
 {
     egl_state_t *egl_state;
     
@@ -1350,7 +1350,7 @@ caching_server_glDepthRangef (server_t *server, GLclampf nearVal, GLclampf farVa
 }
 
 void
-caching_server_glSetCap (server_t *server, GLenum cap, GLboolean enable)
+caching_server_glSetCap (void* server, GLenum cap, GLboolean enable)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1434,19 +1434,19 @@ caching_server_glSetCap (server_t *server, GLenum cap, GLboolean enable)
 }
 
 static void
-caching_server_glDisable (server_t *server, GLenum cap)
+caching_server_glDisable (void* server, GLenum cap)
 {
     caching_server_glSetCap (server, cap, GL_FALSE);
 }
 
 static void
-caching_server_glEnable (server_t *server, GLenum cap)
+caching_server_glEnable (void* server, GLenum cap)
 {
     caching_server_glSetCap (server, cap, GL_TRUE);
 }
 
  bool
-caching_server_glIndexIsTooLarge (server_t *server, gles2_state_t *state, GLuint index)
+caching_server_glIndexIsTooLarge (void* server, gles2_state_t *state, GLuint index)
 {
     if (index > state->max_vertex_attribs) {
         if (! state->max_vertex_attribs_queried) {
@@ -1465,7 +1465,7 @@ caching_server_glIndexIsTooLarge (server_t *server, gles2_state_t *state, GLuint
 }
 
  void 
-caching_server_glSetVertexAttribArray (server_t *server, GLuint index, gles2_state_t *state, 
+caching_server_glSetVertexAttribArray (void* server, GLuint index, gles2_state_t *state, 
                              GLboolean enable)
 {
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
@@ -1541,7 +1541,7 @@ caching_server_glSetVertexAttribArray (server_t *server, GLuint index, gles2_sta
 }   
 
 static void
-caching_server_glDisableVertexAttribArray (server_t *server, GLuint index)
+caching_server_glDisableVertexAttribArray (void* server, GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1556,7 +1556,7 @@ caching_server_glDisableVertexAttribArray (server_t *server, GLuint index)
 }
 
 static void
-caching_server_glEnableVertexAttribArray (server_t *server, GLuint index)
+caching_server_glEnableVertexAttribArray (void* server, GLuint index)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -1571,7 +1571,7 @@ caching_server_glEnableVertexAttribArray (server_t *server, GLuint index)
 }
 
 static void
-caching_server_glDrawArrays (server_t *server, GLenum mode, GLint first, GLsizei count)
+caching_server_glDrawArrays (void* server, GLenum mode, GLint first, GLsizei count)
 {
     gles2_state_t *state;
     egl_state_t *egl_state;
@@ -1644,7 +1644,7 @@ FINISH:
 /* FIXME: we should use pre-allocated buffer if possible */
 /*
 static char *
-caching_server_glCreateIndicesArray (server_t *server, GLenum mode, GLenum type, int count,
+caching_server_glCreateIndicesArray (void* server, GLenum mode, GLenum type, int count,
                           char *indices)
 {
     char *data = NULL;
@@ -1685,7 +1685,7 @@ caching_server_glCreateIndicesArray (server_t *server, GLenum mode, GLenum type,
 }*/
 
 static void
-caching_server_glDrawElements (server_t *server, GLenum mode, GLsizei count, GLenum type,
+caching_server_glDrawElements (void* server, GLenum mode, GLsizei count, GLenum type,
                                const GLvoid *indices)
 {
     egl_state_t *egl_state;
@@ -1767,7 +1767,7 @@ FINISH:
 }
 
 static void
-caching_server_glFramebufferRenderbuffer (server_t *server, GLenum target, GLenum attachment,
+caching_server_glFramebufferRenderbuffer (void* server, GLenum target, GLenum attachment,
                                           GLenum renderbuffertarget,
                                           GLenum renderbuffer)
 {
@@ -1795,7 +1795,7 @@ caching_server_glFramebufferRenderbuffer (server_t *server, GLenum target, GLenu
 }
 
 static void
-caching_server_glFramebufferTexture2D (server_t *server, GLenum target, GLenum attachment,
+caching_server_glFramebufferTexture2D (void* server, GLenum target, GLenum attachment,
                             GLenum textarget, GLuint texture, 
                             GLint level)
 {
@@ -1817,7 +1817,7 @@ caching_server_glFramebufferTexture2D (server_t *server, GLenum target, GLenum a
 }
 
 static void
-caching_server_glFrontFace (server_t *server, GLenum mode)
+caching_server_glFrontFace (void* server, GLenum mode)
 {
     egl_state_t *egl_state;
     
@@ -1839,7 +1839,7 @@ caching_server_glFrontFace (server_t *server, GLenum mode)
 }
 
 static void
-caching_server_glGenBuffers (server_t *server, GLsizei n, GLuint *buffers)
+caching_server_glGenBuffers (void* server, GLsizei n, GLuint *buffers)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenBuffers) &&
         caching_server_glIsValidContext (server)) {
@@ -1854,7 +1854,7 @@ caching_server_glGenBuffers (server_t *server, GLsizei n, GLuint *buffers)
 }
 
 static void
-caching_server_glGenFramebuffers (server_t *server, GLsizei n, GLuint *framebuffers)
+caching_server_glGenFramebuffers (void* server, GLsizei n, GLuint *framebuffers)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenFramebuffers) &&
         caching_server_glIsValidContext (server)) {
@@ -1869,7 +1869,7 @@ caching_server_glGenFramebuffers (server_t *server, GLsizei n, GLuint *framebuff
 }
 
 static void
-caching_server_glGenRenderbuffers (server_t *server, GLsizei n, GLuint *renderbuffers)
+caching_server_glGenRenderbuffers (void* server, GLsizei n, GLuint *renderbuffers)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenRenderbuffers) &&
         caching_server_glIsValidContext (server)) {
@@ -1884,7 +1884,7 @@ caching_server_glGenRenderbuffers (server_t *server, GLsizei n, GLuint *renderbu
 }
 
 static void
-caching_server_glGenTextures (server_t *server, GLsizei n, GLuint *textures)
+caching_server_glGenTextures (void* server, GLsizei n, GLuint *textures)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenTextures) &&
         caching_server_glIsValidContext (server)) {
@@ -1899,7 +1899,7 @@ caching_server_glGenTextures (server_t *server, GLsizei n, GLuint *textures)
 }
 
 static void
-caching_server_glGenerateMipmap (server_t *server, GLenum target)
+caching_server_glGenerateMipmap (void* server, GLenum target)
 {
     egl_state_t *egl_state;
     
@@ -1922,7 +1922,7 @@ caching_server_glGenerateMipmap (server_t *server, GLenum target)
 }
 
 static void
-caching_server_glGetBooleanv (server_t *server, GLenum pname, GLboolean *params)
+caching_server_glGetBooleanv (void* server, GLenum pname, GLboolean *params)
 {
     egl_state_t *egl_state;
     
@@ -1975,7 +1975,7 @@ caching_server_glGetBooleanv (server_t *server, GLenum pname, GLboolean *params)
 }
 
 static void
-caching_server_glGetFloatv (server_t *server, GLenum pname, GLfloat *params)
+caching_server_glGetFloatv (void* server, GLenum pname, GLfloat *params)
 {
     egl_state_t *egl_state;
     
@@ -2028,7 +2028,7 @@ caching_server_glGetFloatv (server_t *server, GLenum pname, GLfloat *params)
 }
 
 static void
-caching_server_glGetIntegerv (server_t *server, GLenum pname, GLint *params)
+caching_server_glGetIntegerv (void* server, GLenum pname, GLint *params)
 {
     egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
@@ -2218,7 +2218,7 @@ caching_server_glGetIntegerv (server_t *server, GLenum pname, GLint *params)
 }
 
 static GLenum
-caching_server_glGetError (server_t *server)
+caching_server_glGetError (void* server)
 {
     GLenum error = GL_INVALID_OPERATION;
     egl_state_t *egl_state;
@@ -2243,7 +2243,7 @@ caching_server_glGetError (server_t *server)
 }
 
 static void
-caching_server_glGetFramebufferAttachmentParameteriv (server_t *server, GLenum target,
+caching_server_glGetFramebufferAttachmentParameteriv (void* server, GLenum target,
                                                         GLenum attachment,
                                                         GLenum pname,
                                                         GLint *params)
@@ -2266,7 +2266,7 @@ caching_server_glGetFramebufferAttachmentParameteriv (server_t *server, GLenum t
 }
 
 static void
-caching_server_glGetRenderbufferParameteriv (server_t *server, GLenum target,
+caching_server_glGetRenderbufferParameteriv (void* server, GLenum target,
                                               GLenum pname,
                                               GLint *params)
 {
@@ -2288,7 +2288,7 @@ caching_server_glGetRenderbufferParameteriv (server_t *server, GLenum target,
 }
 
 static const GLubyte *
-caching_server_glGetString (server_t *server, GLenum name)
+caching_server_glGetString (void* server, GLenum name)
 {
     GLubyte *result = NULL;
     egl_state_t *egl_state;
@@ -2313,7 +2313,7 @@ caching_server_glGetString (server_t *server, GLenum name)
 }
 
 static void
-caching_server_glGetTexParameteriv (server_t *server, GLenum target, GLenum pname, 
+caching_server_glGetTexParameteriv (void* server, GLenum target, GLenum pname, 
                                      GLint *params)
 {
     egl_state_t *egl_state;
@@ -2366,7 +2366,7 @@ caching_server_glGetTexParameteriv (server_t *server, GLenum target, GLenum pnam
 }
 
 static void
-caching_server_glGetTexParameterfv (server_t *server, GLenum target, GLenum pname, GLfloat *params)
+caching_server_glGetTexParameterfv (void* server, GLenum target, GLenum pname, GLfloat *params)
 {
     GLint paramsi;
 
@@ -2375,7 +2375,7 @@ caching_server_glGetTexParameterfv (server_t *server, GLenum target, GLenum pnam
 }
 
 static void
-caching_server_glGetVertexAttribfv (server_t *server, GLuint index, GLenum pname, 
+caching_server_glGetVertexAttribfv (void* server, GLuint index, GLenum pname, 
                                      GLfloat *params)
 {
     egl_state_t *egl_state;
@@ -2472,7 +2472,7 @@ caching_server_glGetVertexAttribfv (server_t *server, GLuint index, GLenum pname
 }
 
 static void
-caching_server_glGetVertexAttribiv (server_t *server, GLuint index, GLenum pname, GLint *params)
+caching_server_glGetVertexAttribiv (void* server, GLuint index, GLenum pname, GLint *params)
 {
     GLfloat paramsf[4];
     int i;
@@ -2487,7 +2487,7 @@ caching_server_glGetVertexAttribiv (server_t *server, GLuint index, GLenum pname
 }
 
 static void
-caching_server_glGetVertexAttribPointerv (server_t *server, GLuint index, GLenum pname, 
+caching_server_glGetVertexAttribPointerv (void* server, GLuint index, GLenum pname, 
                                             GLvoid **pointer)
 {
     egl_state_t *egl_state;
@@ -2534,7 +2534,7 @@ caching_server_glGetVertexAttribPointerv (server_t *server, GLuint index, GLenum
 }
 
 static void
-caching_server_glHint (server_t *server, GLenum target, GLenum mode)
+caching_server_glHint (void* server, GLenum target, GLenum mode)
 {
     egl_state_t *egl_state;
 
@@ -2564,7 +2564,7 @@ caching_server_glHint (server_t *server, GLenum target, GLenum mode)
 }
 
 static GLboolean
-caching_server_glIsEnabled (server_t *server, GLenum cap)
+caching_server_glIsEnabled (void* server, GLenum cap)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -2610,7 +2610,7 @@ caching_server_glIsEnabled (server_t *server, GLenum cap)
 }
 
 static void
-caching_server_glLineWidth (server_t *server, GLfloat width)
+caching_server_glLineWidth (void* server, GLfloat width)
 {
     egl_state_t *egl_state;
 
@@ -2632,7 +2632,7 @@ caching_server_glLineWidth (server_t *server, GLfloat width)
 }
 
 static void
-caching_server_glPixelStorei (server_t *server, GLenum pname, GLint param)
+caching_server_glPixelStorei (void* server, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
 
@@ -2669,7 +2669,7 @@ caching_server_glPixelStorei (server_t *server, GLenum pname, GLint param)
 }
 
 static void
-caching_server_glPolygonOffset (server_t *server, GLfloat factor, GLfloat units)
+caching_server_glPolygonOffset (void* server, GLfloat factor, GLfloat units)
 {
     egl_state_t *egl_state;
     
@@ -2689,7 +2689,7 @@ caching_server_glPolygonOffset (server_t *server, GLfloat factor, GLfloat units)
 }
 
 static void
-caching_server_glSampleCoverage (server_t *server, GLclampf value, GLboolean invert)
+caching_server_glSampleCoverage (void* server, GLclampf value, GLboolean invert)
 {
     egl_state_t *egl_state;
     
@@ -2709,7 +2709,7 @@ caching_server_glSampleCoverage (server_t *server, GLclampf value, GLboolean inv
 }
 
 static void
-caching_server_glScissor (server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
+caching_server_glScissor (void* server, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
@@ -2738,7 +2738,7 @@ caching_server_glScissor (server_t *server, GLint x, GLint y, GLsizei width, GLs
 }
 
 static void
-caching_server_glShaderBinary (server_t *server, GLsizei n, const GLuint *shaders,
+caching_server_glShaderBinary (void* server, GLsizei n, const GLuint *shaders,
                                GLenum binaryformat, const void *binary,
                                GLsizei length)
 {
@@ -2756,7 +2756,7 @@ caching_server_glShaderBinary (server_t *server, GLsizei n, const GLuint *shader
 }
 
 static void
-caching_server_glShaderSource (server_t *server, GLuint shader, GLsizei count,
+caching_server_glShaderSource (void* server, GLuint shader, GLsizei count,
                                const GLchar **string, const GLint *length)
 {
     egl_state_t *egl_state;
@@ -2784,7 +2784,7 @@ caching_server_glShaderSource (server_t *server, GLuint shader, GLsizei count,
 }
 
 static void
-caching_server_glStencilFuncSeparate (server_t *server, GLenum face, GLenum func,
+caching_server_glStencilFuncSeparate (void* server, GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
     egl_state_t *egl_state;
@@ -2857,13 +2857,13 @@ caching_server_glStencilFuncSeparate (server_t *server, GLenum face, GLenum func
 }
 
 static void
-caching_server_glStencilFunc (server_t *server, GLenum func, GLint ref, GLuint mask)
+caching_server_glStencilFunc (void* server, GLenum func, GLint ref, GLuint mask)
 {
     caching_server_glStencilFuncSeparate (server, GL_FRONT_AND_BACK, func, ref, mask);
 }
 
 static void
-caching_server_glStencilMaskSeparate (server_t *server, GLenum face, GLuint mask)
+caching_server_glStencilMaskSeparate (void* server, GLenum face, GLuint mask)
 {
     egl_state_t *egl_state;
     bool needs_call = false;
@@ -2907,13 +2907,13 @@ caching_server_glStencilMaskSeparate (server_t *server, GLenum face, GLuint mask
 }
 
 static void
-caching_server_glStencilMask (server_t *server, GLuint mask)
+caching_server_glStencilMask (void* server, GLuint mask)
 {
     caching_server_glStencilMaskSeparate (server, GL_FRONT_AND_BACK, mask);
 }
 
 static void
-caching_server_glStencilOpSeparate (server_t *server, GLenum face, GLenum sfail, 
+caching_server_glStencilOpSeparate (void* server, GLenum face, GLenum sfail, 
                                      GLenum dpfail, GLenum dppass)
 {
     egl_state_t *egl_state;
@@ -3008,13 +3008,13 @@ caching_server_glStencilOpSeparate (server_t *server, GLenum face, GLenum sfail,
 }
 
 static void
-caching_server_glStencilOp (server_t *server, GLenum sfail, GLenum dpfail, GLenum dppass)
+caching_server_glStencilOp (void* server, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     caching_server_glStencilOpSeparate (server, GL_FRONT_AND_BACK, sfail, dpfail, dppass);
 }
 
 static void
-caching_server_glTexImage2D (server_t *server, GLenum target, GLint level, 
+caching_server_glTexImage2D (void* server, GLenum target, GLint level, 
                               GLint internalformat,
                               GLsizei width, GLsizei height, GLint border,
                               GLenum format, GLenum type, 
@@ -3035,7 +3035,7 @@ caching_server_glTexImage2D (server_t *server, GLenum target, GLint level,
 }
 
 static void
-caching_server_glTexParameteri (server_t *server, GLenum target, GLenum pname, GLint param)
+caching_server_glTexParameteri (void* server, GLenum target, GLenum pname, GLint param)
 {
     egl_state_t *egl_state;
     gles2_state_t *state;
@@ -3144,14 +3144,14 @@ caching_server_glTexParameteri (server_t *server, GLenum target, GLenum pname, G
 }
 
 static void
-caching_server_glTexParameterf (server_t *server, GLenum target, GLenum pname, GLfloat param)
+caching_server_glTexParameterf (void* server, GLenum target, GLenum pname, GLfloat param)
 {
     GLint parami = param;
     caching_server_glTexParameteri (server, target, pname, parami);
 }
 
 static void
-caching_server_glTexSubImage2D (server_t *server, GLenum target, GLint level,
+caching_server_glTexSubImage2D (void* server, GLenum target, GLint level,
                                   GLint xoffset, GLint yoffset,
                                   GLsizei width, GLsizei height,
                                   GLenum format, GLenum type, 
@@ -3172,7 +3172,7 @@ caching_server_glTexSubImage2D (server_t *server, GLenum target, GLint level,
 }
 
 void
-caching_server_glUniformfv (server_t *server, int i, GLint location,
+caching_server_glUniformfv (void* server, int i, GLint location,
                 GLsizei count, const GLfloat *value)
 {
     egl_state_t *egl_state;
@@ -3212,35 +3212,35 @@ FINISH:
 }
 
 static void
-caching_server_glUniform1fv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform1fv (void* server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     caching_server_glUniformfv (server, 1, location, count, value);
 }
 
 static void
-caching_server_glUniform2fv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform2fv (void* server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     caching_server_glUniformfv (server, 2, location, count, value);
 }
 
 static void
-caching_server_glUniform3fv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform3fv (void* server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     caching_server_glUniformfv (server, 3, location, count, value);
 }
 
 static void
-caching_server_glUniform4fv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform4fv (void* server, GLint location, GLsizei count, 
                             const GLfloat *value)
 {
     caching_server_glUniformfv (server, 4, location, count, value);
 }
 
  void
-caching_server_glUniformiv (server_t *server,
+caching_server_glUniformiv (void* server,
                 int i,
                 GLint location,
                 GLsizei count,
@@ -3283,35 +3283,35 @@ FINISH:
 }
 
 static void
-caching_server_glUniform1iv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform1iv (void* server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     caching_server_glUniformiv (server, 1, location, count, value);
 }
 
 static void
-caching_server_glUniform2iv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform2iv (void* server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     caching_server_glUniformiv (server, 2, location, count, value);
 }
 
 static void
-caching_server_glUniform3iv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform3iv (void* server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     caching_server_glUniformiv (server, 3, location, count, value);
 }
 
 static void
-caching_server_glUniform4iv (server_t *server, GLint location, GLsizei count, 
+caching_server_glUniform4iv (void* server, GLint location, GLsizei count, 
                             const GLint *value)
 {
     caching_server_glUniformiv (server, 4, location, count, value);
 }
 
 static void
-caching_server_glUniformMatrix2fv (server_t *server, GLint location,
+caching_server_glUniformMatrix2fv (void* server, GLint location,
 				   GLsizei count, GLboolean transpose,
 				   const GLfloat *value)
 {
@@ -3339,7 +3339,7 @@ FINISH:
 }
 
 static void
-caching_server_glUniformMatrix3fv (server_t *server, GLint location,
+caching_server_glUniformMatrix3fv (void* server, GLint location,
 				   GLsizei count, GLboolean transpose,
 				   const GLfloat *value)
 {
@@ -3367,7 +3367,7 @@ FINISH:
 }
 
 static void
-caching_server_glUniformMatrix4fv (server_t *server, GLint location,
+caching_server_glUniformMatrix4fv (void* server, GLint location,
 				   GLsizei count, GLboolean transpose,
 				   const GLfloat *value)
 {
@@ -3395,7 +3395,7 @@ FINISH:
 }
 
 static void
-caching_server_glUseProgram (server_t *server, GLuint program)
+caching_server_glUseProgram (void* server, GLuint program)
 {
     egl_state_t *egl_state;
 
@@ -3416,7 +3416,7 @@ caching_server_glUseProgram (server_t *server, GLuint program)
 }
 
 static void
-caching_server_glVertexAttrib1f (server_t *server, GLuint index, GLfloat v0)
+caching_server_glVertexAttrib1f (void* server, GLuint index, GLfloat v0)
 {
     egl_state_t *egl_state;
 
@@ -3433,7 +3433,7 @@ caching_server_glVertexAttrib1f (server_t *server, GLuint index, GLfloat v0)
 }
 
 static void
-caching_server_glVertexAttrib2f (server_t *server, GLuint index, GLfloat v0, GLfloat v1)
+caching_server_glVertexAttrib2f (void* server, GLuint index, GLfloat v0, GLfloat v1)
 {
     egl_state_t *egl_state;
     
@@ -3450,7 +3450,7 @@ caching_server_glVertexAttrib2f (server_t *server, GLuint index, GLfloat v0, GLf
 }
 
 static void
-caching_server_glVertexAttrib3f (server_t *server, GLuint index, GLfloat v0, 
+caching_server_glVertexAttrib3f (void* server, GLuint index, GLfloat v0, 
                                  GLfloat v1, GLfloat v2)
 {
     egl_state_t *egl_state;
@@ -3468,7 +3468,7 @@ caching_server_glVertexAttrib3f (server_t *server, GLuint index, GLfloat v0,
 }
 
 static void
-caching_server_glVertexAttrib4f (server_t *server, GLuint index, GLfloat v0, GLfloat v1, 
+caching_server_glVertexAttrib4f (void* server, GLuint index, GLfloat v0, GLfloat v1, 
                                  GLfloat v2, GLfloat v3)
 {
     egl_state_t *egl_state;
@@ -3485,7 +3485,7 @@ caching_server_glVertexAttrib4f (server_t *server, GLuint index, GLfloat v0, GLf
 }
 
  void
-caching_server_glVertexAttribfv (server_t *server, int i, GLuint index, const GLfloat *v)
+caching_server_glVertexAttribfv (void* server, int i, GLuint index, const GLfloat *v)
 {
     egl_state_t *egl_state;
     
@@ -3526,31 +3526,31 @@ FINISH:
 }
 
 static void
-caching_server_glVertexAttrib1fv (server_t *server, GLuint index, const GLfloat *v)
+caching_server_glVertexAttrib1fv (void* server, GLuint index, const GLfloat *v)
 {
     caching_server_glVertexAttribfv (server, 1, index, v);
 }
 
 static void
-caching_server_glVertexAttrib2fv (server_t *server, GLuint index, const GLfloat *v)
+caching_server_glVertexAttrib2fv (void* server, GLuint index, const GLfloat *v)
 {
     caching_server_glVertexAttribfv (server, 2, index, v);
 }
 
 static void
-caching_server_glVertexAttrib3fv (server_t *server, GLuint index, const GLfloat *v)
+caching_server_glVertexAttrib3fv (void* server, GLuint index, const GLfloat *v)
 {
     caching_server_glVertexAttribfv (server, 3, index, v);
 }
 
 static void
-caching_server_glVertexAttrib4fv (server_t *server, GLuint index, const GLfloat *v)
+caching_server_glVertexAttrib4fv (void* server, GLuint index, const GLfloat *v)
 {
     caching_server_glVertexAttribfv (server, 4, index, v);
 }
 
 static void
-caching_server_glVertexAttribPointer (server_t *server, GLuint index, GLint size,
+caching_server_glVertexAttribPointer (void* server, GLuint index, GLint size,
                                       GLenum type, GLboolean normalized,
                                       GLsizei stride, const GLvoid *pointer)
 {
@@ -3670,7 +3670,7 @@ caching_server_glVertexAttribPointer (server_t *server, GLuint index, GLint size
 }
 
 static void
-caching_server_glViewport (server_t *server, GLint x, GLint y, GLsizei width, GLsizei height)
+caching_server_glViewport (void* server, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     egl_state_t *egl_state;
     
@@ -3700,7 +3700,7 @@ caching_server_glViewport (server_t *server, GLint x, GLint y, GLsizei width, GL
 /* end of GLES2 core profile */
 
 static void
-caching_server_glEGLImageTargetTexture2DOES (server_t *server, GLenum target, GLeglImageOES image)
+caching_server_glEGLImageTargetTexture2DOES (void* server, GLenum target, GLeglImageOES image)
 {
     egl_state_t *egl_state;
     
@@ -3719,7 +3719,7 @@ caching_server_glEGLImageTargetTexture2DOES (server_t *server, GLenum target, GL
 }
 
 static void* 
-caching_server_glMapBufferOES (server_t *server, GLenum target, GLenum access)
+caching_server_glMapBufferOES (void* server, GLenum target, GLenum access)
 {
     egl_state_t *egl_state;
     void *result = NULL;
@@ -3745,7 +3745,7 @@ caching_server_glMapBufferOES (server_t *server, GLenum target, GLenum access)
 }
 
 static GLboolean
-caching_server_glUnmapBufferOES (server_t *server, GLenum target)
+caching_server_glUnmapBufferOES (void* server, GLenum target)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -3767,7 +3767,7 @@ caching_server_glUnmapBufferOES (server_t *server, GLenum target)
 }
 
 static void
-caching_server_glGetBufferPointervOES (server_t *server, GLenum target, GLenum pname, GLvoid **params)
+caching_server_glGetBufferPointervOES (void* server, GLenum target, GLenum pname, GLvoid **params)
 {
     egl_state_t *egl_state;
 
@@ -3787,7 +3787,7 @@ caching_server_glGetBufferPointervOES (server_t *server, GLenum target, GLenum p
 }
 
 static void
-caching_server_glFramebufferTexture3DOES (server_t *server, GLenum target, GLenum attachment,
+caching_server_glFramebufferTexture3DOES (void* server, GLenum target, GLenum attachment,
                                 GLenum textarget, GLuint texture,
                                 GLint level, GLint zoffset)
 {
@@ -3819,7 +3819,7 @@ caching_server_glFramebufferTexture3DOES (server_t *server, GLenum target, GLenu
  * we pass them to server.
  */
 static void
-caching_server_glBindVertexArrayOES (server_t *server, GLuint array)
+caching_server_glBindVertexArrayOES (void* server, GLuint array)
 {
     egl_state_t *egl_state;
 
@@ -3838,7 +3838,7 @@ caching_server_glBindVertexArrayOES (server_t *server, GLuint array)
 }
 
 static void
-caching_server_glDeleteVertexArraysOES (server_t *server, GLsizei n, const GLuint *arrays)
+caching_server_glDeleteVertexArraysOES (void* server, GLsizei n, const GLuint *arrays)
 {
     egl_state_t *egl_state;
     int i;
@@ -3869,7 +3869,7 @@ FINISH:
 }
 
 static void
-caching_server_glGenVertexArraysOES (server_t *server, GLsizei n, GLuint *arrays)
+caching_server_glGenVertexArraysOES (void* server, GLsizei n, GLuint *arrays)
 {
 
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenVertexArraysOES) &&
@@ -3884,7 +3884,7 @@ caching_server_glGenVertexArraysOES (server_t *server, GLsizei n, GLuint *arrays
 }
 
 static GLboolean
-caching_server_glIsVertexArrayOES (server_t *server, GLuint array)
+caching_server_glIsVertexArrayOES (void* server, GLuint array)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -3903,7 +3903,7 @@ caching_server_glIsVertexArrayOES (server_t *server, GLuint array)
 }
 
 static void
-caching_server_glDiscardFramebufferEXT (server_t *server,
+caching_server_glDiscardFramebufferEXT (void* server,
                              GLenum target, GLsizei numAttachments,
                              const GLenum *attachments)
 {
@@ -3937,7 +3937,7 @@ FINISH:
 }
 
 static void
-caching_server_glMultiDrawArraysEXT (server_t *server,
+caching_server_glMultiDrawArraysEXT (void* server,
                                      GLenum mode,
                                      GLint *first,
                                      GLsizei *count,
@@ -3947,14 +3947,14 @@ caching_server_glMultiDrawArraysEXT (server_t *server,
 }
 
 void 
-caching_server_glMultiDrawElementsEXT (server_t *server, GLenum mode, const GLsizei *count, GLenum type,
+caching_server_glMultiDrawElementsEXT (void* server, GLenum mode, const GLsizei *count, GLenum type,
                              const GLvoid **indices, GLsizei primcount)
 {
     /* not implemented */
 }
 
 static void
-caching_server_glFramebufferTexture2DMultisampleEXT (server_t *server, GLenum target, 
+caching_server_glFramebufferTexture2DMultisampleEXT (void* server, GLenum target, 
                                             GLenum attachment,
                                             GLenum textarget, 
                                             GLuint texture,
@@ -3979,7 +3979,7 @@ caching_server_glFramebufferTexture2DMultisampleEXT (server_t *server, GLenum ta
 }
 
 static void
-caching_server_glFramebufferTexture2DMultisampleIMG (server_t *server, GLenum target, 
+caching_server_glFramebufferTexture2DMultisampleIMG (void* server, GLenum target, 
                                                      GLenum attachment,
                                                      GLenum textarget, 
                                                      GLuint texture,
@@ -4004,7 +4004,7 @@ caching_server_glFramebufferTexture2DMultisampleIMG (server_t *server, GLenum ta
 }
 
 static void
-caching_server_glDeleteFencesNV (server_t *server, GLsizei n, const GLuint *fences)
+caching_server_glDeleteFencesNV (void* server, GLsizei n, const GLuint *fences)
 {
     egl_state_t *egl_state;
 
@@ -4026,7 +4026,7 @@ FINISH:
 }
 
 static void
-caching_server_glGenFencesNV (server_t *server, GLsizei n, GLuint *fences)
+caching_server_glGenFencesNV (void* server, GLsizei n, GLuint *fences)
 {
     egl_state_t *egl_state;
 
@@ -4045,7 +4045,7 @@ caching_server_glGenFencesNV (server_t *server, GLsizei n, GLuint *fences)
 }
 
 static GLboolean
-caching_server_glIsFenceNV (server_t *server, GLuint fence)
+caching_server_glIsFenceNV (void* server, GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4061,7 +4061,7 @@ caching_server_glIsFenceNV (server_t *server, GLuint fence)
 }
 
 static GLboolean
-caching_server_glTestFenceNV (server_t *server, GLuint fence)
+caching_server_glTestFenceNV (void* server, GLuint fence)
 {
     egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
@@ -4077,7 +4077,7 @@ caching_server_glTestFenceNV (server_t *server, GLuint fence)
 }
 
 static void 
-caching_server_glGetFenceivNV (server_t *server, GLuint fence, GLenum pname, int *params)
+caching_server_glGetFenceivNV (void* server, GLuint fence, GLenum pname, int *params)
 {
     egl_state_t *egl_state;
 
@@ -4091,7 +4091,7 @@ caching_server_glGetFenceivNV (server_t *server, GLuint fence, GLenum pname, int
 }
 
 static void
-caching_server_glSetFenceNV (server_t *server, GLuint fence, GLenum condition)
+caching_server_glSetFenceNV (void* server, GLuint fence, GLenum condition)
 {
     egl_state_t *egl_state;
 
@@ -4105,7 +4105,7 @@ caching_server_glSetFenceNV (server_t *server, GLuint fence, GLenum condition)
 }
 
 static void
-caching_server_glCoverageMaskNV (server_t *server, GLboolean mask)
+caching_server_glCoverageMaskNV (void* server, GLboolean mask)
 {
 
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCoverageMaskNV) &&
@@ -4116,7 +4116,7 @@ caching_server_glCoverageMaskNV (server_t *server, GLboolean mask)
 }
 
 static void
-caching_server_glCoverageOperationNV (server_t *server, GLenum operation)
+caching_server_glCoverageOperationNV (void* server, GLenum operation)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glCoverageOperationNV) &&
         caching_server_glIsValidContext (server)) {
@@ -4133,7 +4133,7 @@ caching_server_glCoverageOperationNV (server_t *server, GLenum operation)
 }
 
 EGLint
-caching_server_eglGetError (server_t *server)
+caching_server_eglGetError (void* server)
 {
     EGLint error = EGL_NOT_INITIALIZED;
 
@@ -4146,7 +4146,7 @@ caching_server_eglGetError (server_t *server)
 }
 
 static EGLDisplay
-caching_server_eglGetDisplay (server_t *server,
+caching_server_eglGetDisplay (void* server,
                   EGLNativeDisplayType display_id)
 {
     EGLDisplay display = EGL_NO_DISPLAY;
@@ -4157,7 +4157,7 @@ caching_server_eglGetDisplay (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglInitialize (server_t *server,
+caching_server_eglInitialize (void* server,
                  EGLDisplay display,
                  EGLint *major,
                  EGLint *minor)
@@ -4174,7 +4174,7 @@ caching_server_eglInitialize (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglTerminate (server_t *server,
+caching_server_eglTerminate (void* server,
                 EGLDisplay display)
 {
     EGLBoolean result = EGL_FALSE;
@@ -4192,7 +4192,7 @@ caching_server_eglTerminate (server_t *server,
 }
 
 static const char *
-caching_server_eglQueryString (server_t *server,
+caching_server_eglQueryString (void* server,
                    EGLDisplay display,
                    EGLint name)
 {
@@ -4205,7 +4205,7 @@ caching_server_eglQueryString (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglGetConfigs (server_t *server,
+caching_server_eglGetConfigs (void* server,
                   EGLDisplay display,
                   EGLConfig *configs,
                   EGLint config_size,
@@ -4220,7 +4220,7 @@ caching_server_eglGetConfigs (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglChooseConfig (server_t *server,
+caching_server_eglChooseConfig (void* server,
                     EGLDisplay display,
                     const EGLint *attrib_list,
                     EGLConfig *configs,
@@ -4237,7 +4237,7 @@ caching_server_eglChooseConfig (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglGetConfigAttrib (server_t *server,
+caching_server_eglGetConfigAttrib (void* server,
                         EGLDisplay display,
                         EGLConfig config,
                         EGLint attribute,
@@ -4252,7 +4252,7 @@ caching_server_eglGetConfigAttrib (server_t *server,
 }
 
 static EGLSurface
-caching_server_eglCreateWindowSurface (server_t *server,
+caching_server_eglCreateWindowSurface (void* server,
                             EGLDisplay display,
                             EGLConfig config,
                             EGLNativeWindowType win,
@@ -4268,7 +4268,7 @@ caching_server_eglCreateWindowSurface (server_t *server,
 }
 
 static EGLSurface
-caching_server_eglCreatePbufferSurface (server_t *server,
+caching_server_eglCreatePbufferSurface (void* server,
                              EGLDisplay display,
                              EGLConfig config,
                              const EGLint *attrib_list)
@@ -4282,7 +4282,7 @@ caching_server_eglCreatePbufferSurface (server_t *server,
 }
 
 static EGLSurface
-caching_server_eglCreatePixmapSurface (server_t *server,
+caching_server_eglCreatePixmapSurface (void* server,
                             EGLDisplay display,
                             EGLConfig config,
                             EGLNativePixmapType pixmap, 
@@ -4298,7 +4298,7 @@ caching_server_eglCreatePixmapSurface (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglDestroySurface (server_t *server,
+caching_server_eglDestroySurface (void* server,
                                   EGLDisplay display,
                                   EGLSurface surface)
 {
@@ -4320,7 +4320,7 @@ caching_server_eglDestroySurface (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglQuerySurface (server_t *server,
+caching_server_eglQuerySurface (void* server,
                     EGLDisplay display,
                     EGLSurface surface,
                     EGLint attribute,
@@ -4335,7 +4335,7 @@ caching_server_eglQuerySurface (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglBindAPI (server_t *server,
+caching_server_eglBindAPI (void* server,
                EGLenum api)
 {
     EGLBoolean result = EGL_FALSE;
@@ -4347,7 +4347,7 @@ caching_server_eglBindAPI (server_t *server,
 }
 
 static EGLenum 
-caching_server_eglQueryAPI (server_t *server)
+caching_server_eglQueryAPI (void* server)
 {
     EGLenum result = EGL_NONE;
 
@@ -4358,7 +4358,7 @@ caching_server_eglQueryAPI (server_t *server)
 }
 
 static EGLBoolean
-caching_server_eglWaitClient (server_t *server)
+caching_server_eglWaitClient (void* server)
 {
     EGLBoolean result = EGL_FALSE;
 
@@ -4369,7 +4369,7 @@ caching_server_eglWaitClient (server_t *server)
 }
 
 static EGLBoolean
-caching_server_eglReleaseThread (server_t *server)
+caching_server_eglReleaseThread (void* server)
 {
     EGLBoolean result = EGL_FALSE;
     egl_state_t *egl_state;
@@ -4395,7 +4395,7 @@ caching_server_eglReleaseThread (server_t *server)
 }
 
 static EGLSurface
-caching_server_eglCreatePbufferFromClientBuffer (server_t *server,
+caching_server_eglCreatePbufferFromClientBuffer (void* server,
                                         EGLDisplay display,
                                         EGLenum buftype,
                                         EGLClientBuffer buffer,
@@ -4413,7 +4413,7 @@ caching_server_eglCreatePbufferFromClientBuffer (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglSurfaceAttrib (server_t *server,
+caching_server_eglSurfaceAttrib (void* server,
                      EGLDisplay display,
                      EGLSurface surface, 
                      EGLint attribute,
@@ -4428,7 +4428,7 @@ caching_server_eglSurfaceAttrib (server_t *server,
 }
     
 static EGLBoolean
-caching_server_eglBindTexImage (server_t *server,
+caching_server_eglBindTexImage (void* server,
                      EGLDisplay display,
                      EGLSurface surface,
                      EGLint buffer)
@@ -4442,7 +4442,7 @@ caching_server_eglBindTexImage (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglReleaseTexImage (server_t *server,
+caching_server_eglReleaseTexImage (void* server,
                         EGLDisplay display,
                         EGLSurface surface,
                         EGLint buffer)
@@ -4456,7 +4456,7 @@ caching_server_eglReleaseTexImage (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglSwapInterval (server_t *server,
+caching_server_eglSwapInterval (void* server,
                     EGLDisplay display,
                     EGLint interval)
 {
@@ -4469,7 +4469,7 @@ caching_server_eglSwapInterval (server_t *server,
 }
 
 static EGLContext
-caching_server_eglCreateContext (server_t *server,
+caching_server_eglCreateContext (void* server,
                      EGLDisplay display,
                      EGLConfig config,
                      EGLContext share_context,
@@ -4485,7 +4485,7 @@ caching_server_eglCreateContext (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglDestroyContext (server_t *server,
+caching_server_eglDestroyContext (void* server,
                       EGLDisplay dpy,
                       EGLContext ctx)
 {
@@ -4503,7 +4503,7 @@ caching_server_eglDestroyContext (server_t *server,
 }
 
 static EGLContext
-caching_server_eglGetCurrentContext (server_t *server)
+caching_server_eglGetCurrentContext (void* server)
 {
     return CACHING_SERVER(server)->super_dispatch.eglGetCurrentContext (server);
     egl_state_t *state;
@@ -4516,7 +4516,7 @@ caching_server_eglGetCurrentContext (server_t *server)
 }
 
 static EGLDisplay
-caching_server_eglGetCurrentDisplay (server_t *server)
+caching_server_eglGetCurrentDisplay (void* server)
 {
     return CACHING_SERVER(server)->super_dispatch.eglGetCurrentDisplay (server);
     egl_state_t *state;
@@ -4529,7 +4529,7 @@ caching_server_eglGetCurrentDisplay (server_t *server)
 }
 
 static EGLSurface
-caching_server_eglGetCurrentSurface (server_t *server,
+caching_server_eglGetCurrentSurface (void* server,
                           EGLint readdraw)
 {
     return CACHING_SERVER(server)->super_dispatch.eglGetCurrentSurface (server, readdraw);
@@ -4554,7 +4554,7 @@ caching_server_eglGetCurrentSurface (server_t *server,
 
 
 static EGLBoolean
-caching_server_eglQueryContext (server_t *server,
+caching_server_eglQueryContext (void* server,
                     EGLDisplay display,
                     EGLContext ctx,
                     EGLint attribute,
@@ -4571,7 +4571,7 @@ caching_server_eglQueryContext (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglWaitGL (server_t *server)
+caching_server_eglWaitGL (void* server)
 {
     EGLBoolean result = EGL_FALSE;
     
@@ -4584,7 +4584,7 @@ caching_server_eglWaitGL (server_t *server)
 }
 
 static EGLBoolean
-caching_server_eglWaitNative (server_t *server,
+caching_server_eglWaitNative (void* server,
                   EGLint engine)
 {
     EGLBoolean result = EGL_FALSE;
@@ -4598,7 +4598,7 @@ caching_server_eglWaitNative (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglSwapBuffers (server_t *server,
+caching_server_eglSwapBuffers (void* server,
                    EGLDisplay display,
                    EGLSurface surface)
 {
@@ -4610,7 +4610,7 @@ caching_server_eglSwapBuffers (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglCopyBuffers (server_t *server,
+caching_server_eglCopyBuffers (void* server,
                    EGLDisplay display,
                    EGLSurface surface,
                    EGLNativePixmapType target)
@@ -4626,14 +4626,14 @@ caching_server_eglCopyBuffers (server_t *server,
 }
 
 static __eglMustCastToProperFunctionPointerType
-caching_server_eglGetProcAddress (server_t *server,
+caching_server_eglGetProcAddress (void* server,
                        const char *procname)
 {
     return CACHING_SERVER(server)->super_dispatch.eglGetProcAddress (server, procname);
 }
 
 static EGLBoolean 
-caching_server_eglMakeCurrent (server_t *server,
+caching_server_eglMakeCurrent (void* server,
                    EGLDisplay display,
                    EGLSurface draw,
                    EGLSurface read,
@@ -4668,7 +4668,7 @@ caching_server_eglMakeCurrent (server_t *server,
 
 /* start of eglext.h */
 static EGLBoolean
-caching_server_eglLockSurfaceKHR (server_t *server,
+caching_server_eglLockSurfaceKHR (void* server,
                        EGLDisplay display,
                        EGLSurface surface,
                        const EGLint *attrib_list)
@@ -4684,7 +4684,7 @@ caching_server_eglLockSurfaceKHR (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglUnlockSurfaceKHR (server_t *server,
+caching_server_eglUnlockSurfaceKHR (void* server,
                          EGLDisplay display,
                          EGLSurface surface)
 {
@@ -4699,7 +4699,7 @@ caching_server_eglUnlockSurfaceKHR (server_t *server,
 }
 
 static EGLImageKHR
-caching_server_eglCreateImageKHR (server_t *server,
+caching_server_eglCreateImageKHR (void* server,
                        EGLDisplay display,
                        EGLContext ctx,
                        EGLenum target,
@@ -4721,7 +4721,7 @@ caching_server_eglCreateImageKHR (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglDestroyImageKHR (server_t *server,
+caching_server_eglDestroyImageKHR (void* server,
                         EGLDisplay display,
                         EGLImageKHR image)
 {
@@ -4736,7 +4736,7 @@ caching_server_eglDestroyImageKHR (server_t *server,
 }
 
 static EGLSyncKHR
-caching_server_eglCreateSyncKHR (server_t *server,
+caching_server_eglCreateSyncKHR (void* server,
                       EGLDisplay display,
                       EGLenum type,
                       const EGLint *attrib_list)
@@ -4752,7 +4752,7 @@ caching_server_eglCreateSyncKHR (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglDestroySyncKHR (server_t *server,
+caching_server_eglDestroySyncKHR (void* server,
                        EGLDisplay display,
                        EGLSyncKHR sync)
 {
@@ -4767,7 +4767,7 @@ caching_server_eglDestroySyncKHR (server_t *server,
 }
 
 static EGLint
-caching_server_eglClientWaitSyncKHR (server_t *server,
+caching_server_eglClientWaitSyncKHR (void* server,
                            EGLDisplay display,
                            EGLSyncKHR sync,
                            EGLint flags,
@@ -4784,7 +4784,7 @@ caching_server_eglClientWaitSyncKHR (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglSignalSyncKHR (server_t *server,
+caching_server_eglSignalSyncKHR (void* server,
                       EGLDisplay display,
                       EGLSyncKHR sync,
                       EGLenum mode)
@@ -4800,7 +4800,7 @@ caching_server_eglSignalSyncKHR (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglGetSyncAttribKHR (server_t *server,
+caching_server_eglGetSyncAttribKHR (void* server,
                           EGLDisplay display,
                           EGLSyncKHR sync,
                           EGLint attribute,
@@ -4817,7 +4817,7 @@ caching_server_eglGetSyncAttribKHR (server_t *server,
 }
 
 static EGLSyncNV 
-caching_server_eglCreateFenceSyncNV (server_t *server,
+caching_server_eglCreateFenceSyncNV (void* server,
                                      EGLDisplay display,
                                      EGLenum condition,
                                      const EGLint *attrib_list)
@@ -4833,7 +4833,7 @@ caching_server_eglCreateFenceSyncNV (server_t *server,
 }
 
 static EGLBoolean 
-caching_server_eglDestroySyncNV (server_t *server,
+caching_server_eglDestroySyncNV (void* server,
                       EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
@@ -4847,7 +4847,7 @@ caching_server_eglDestroySyncNV (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglFenceNV (server_t *server,
+caching_server_eglFenceNV (void* server,
                EGLSyncNV sync)
 {
     EGLBoolean result = EGL_FALSE;
@@ -4861,7 +4861,7 @@ caching_server_eglFenceNV (server_t *server,
 }
 
 static EGLint
-caching_server_eglClientWaitSyncNV (server_t *server,
+caching_server_eglClientWaitSyncNV (void* server,
                           EGLSyncNV sync,
                           EGLint flags,
                           EGLTimeNV timeout)
@@ -4878,7 +4878,7 @@ caching_server_eglClientWaitSyncNV (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglSignalSyncNV (server_t *server,
+caching_server_eglSignalSyncNV (void* server,
                      EGLSyncNV sync,
                      EGLenum mode)
 {
@@ -4893,7 +4893,7 @@ caching_server_eglSignalSyncNV (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglGetSyncAttribNV (server_t *server,
+caching_server_eglGetSyncAttribNV (void* server,
                          EGLSyncNV sync,
                          EGLint attribute,
                          EGLint *value)
@@ -4909,7 +4909,7 @@ caching_server_eglGetSyncAttribNV (server_t *server,
 }
 
 static EGLSurface
-caching_server_eglCreatePixmapSurfaceHI (server_t *server,
+caching_server_eglCreatePixmapSurfaceHI (void* server,
                                          EGLDisplay display,
                                          EGLConfig config,
                                          struct EGLClientPixmapHI *pixmap)
@@ -4925,7 +4925,7 @@ caching_server_eglCreatePixmapSurfaceHI (server_t *server,
 }
 
 static EGLImageKHR
-caching_server_eglCreateDRMImageMESA (server_t *server,
+caching_server_eglCreateDRMImageMESA (void* server,
                                       EGLDisplay display,
                                       const EGLint *attrib_list)
 {
@@ -4940,7 +4940,7 @@ caching_server_eglCreateDRMImageMESA (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglExportDRMImageMESA (server_t *server,
+caching_server_eglExportDRMImageMESA (void* server,
                                       EGLDisplay display,
                                       EGLImageKHR image,
                                       EGLint *name,
@@ -4958,7 +4958,7 @@ caching_server_eglExportDRMImageMESA (server_t *server,
 }
 
 static EGLBoolean 
-caching_server_eglPostSubBufferNV (server_t *server,
+caching_server_eglPostSubBufferNV (void* server,
                                    EGLDisplay display,
                                    EGLSurface surface, 
                                    EGLint x,
@@ -4977,7 +4977,7 @@ caching_server_eglPostSubBufferNV (server_t *server,
 }
 
 static void *
-caching_server_eglMapImageSEC (server_t *server,
+caching_server_eglMapImageSEC (void* server,
                                EGLDisplay display,
                                EGLImageKHR image)
 {
@@ -4992,7 +4992,7 @@ caching_server_eglMapImageSEC (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglUnmapImageSEC (server_t *server,
+caching_server_eglUnmapImageSEC (void* server,
                                  EGLDisplay display,
                                  EGLImageKHR image)
 {
@@ -5007,7 +5007,7 @@ caching_server_eglUnmapImageSEC (server_t *server,
 }
 
 static EGLBoolean
-caching_server_eglGetImageAttribSEC (server_t *server,
+caching_server_eglGetImageAttribSEC (void* server,
                                      EGLDisplay display,
                                      EGLImageKHR image,
                                      EGLint attribute,

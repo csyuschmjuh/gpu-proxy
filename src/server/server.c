@@ -3,7 +3,7 @@
 
 #include "caching_server_private.h"
 #include "ring_buffer.h"
-#include "server_dispatch_table.h"
+#include "dispatch_table.h"
 #include "thread_private.h"
 #include <time.h>
 #include <sys/prctl.h>
@@ -68,7 +68,7 @@ server_init (server_t *server,
              buffer_t *buffer)
 {
     server->buffer = buffer;
-    server->dispatch = *server_dispatch_table_get_base();
+    server->dispatch = *dispatch_table_get_base();
     server->command_post_hook = NULL;
 
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
