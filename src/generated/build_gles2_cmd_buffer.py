@@ -87,17 +87,8 @@ _FUNCTION_INFO = {
   'glPixelStorei' : {
     'type': 'Manual',
   },
-  'eglTerminate': {
-    'type': 'Manual',
-  },
   'eglGetProcAddress': {
     'type': 'Manual',
-  },
-  'eglSwapBuffers': {
-    'type': 'Manual',
-  },
-  'eglMakeCurrent': {
-    'type': 'Manual'
   },
   'glShaderSource': {
     'type': 'ManualInitAndDestructor',

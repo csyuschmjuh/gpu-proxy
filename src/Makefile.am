@@ -46,7 +46,7 @@ endif
 
 if HAS_GLES2
 libGPUProcess_la_SOURCES += \
-	client/egl_api.c \
+	client/egl_api_custom.c \
 	client/gles2_api.c \
 	client/gles2_api_private.h \
         client/caching_client.c \
