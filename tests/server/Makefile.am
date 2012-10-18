@@ -6,6 +6,8 @@ rootsrcdir=../..
 
 server_test_SOURCES = \
 	$(rootsrcdir)/src/compiler.c \
+	$(rootsrcdir)/src/client/client.c \
+	$(rootsrcdir)/src/client/client.h \
 	$(rootsrcdir)/src/gles2_utils.c \
 	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \

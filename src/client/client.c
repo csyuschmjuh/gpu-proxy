@@ -155,8 +155,8 @@ client_run_command (command_t *command)
 
     /* Overflow case */
     if (token == 0)
-	token = 1;
-    
+        token = 1;
+
     command->token = token;
     client_run_command_async (command);
 
@@ -176,3 +176,15 @@ client_flush (client_t *client)
 {
     return true;
 }
+
+private int
+client_get_unpack_alignment ()
+{
+    client_t *client = client_get_thread_local ();
+    if (!client->active_state)
+        return 4;
+
+    egl_state_t *egl_state = (egl_state_t *)client->active_state->data;
+    return egl_state->state.unpack_alignment;
+}
+
