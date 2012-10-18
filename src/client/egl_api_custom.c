@@ -30,6 +30,9 @@ _has_extension (const char* extension_name)
     const char* extensions =
         (const char*) dispatch_table_get_base ()->glGetString (NULL, GL_EXTENSIONS);
 
+    if (! extensions)
+        return false;
+
     size_t extension_name_length = strlen (extension_name);
     char* found = strstr (extensions, extension_name);
     while (found) {
