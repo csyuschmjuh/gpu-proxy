@@ -14,8 +14,12 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/compiler.c \
 	$(rootsrcdir)/src/client/client.c \
 	$(rootsrcdir)/src/client/client.h \
+	$(rootsrcdir)/src/client/caching_client.c \
+	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
 	$(rootsrcdir)/src/client/gles2_api.c \
+	$(rootsrcdir)/src/client/client_dispatch_table.h \
+	$(rootsrcdir)/src/client/client_dispatch_table.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	$(rootsrcdir)/src/generated/gles2_api_autogen.c \
 	$(rootsrcdir)/src/gles2_utils.c \
@@ -49,5 +53,4 @@ client_test_CFLAGS = \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
 	-I$(rootsrcdir)/tests/server \
-	-Wall \
-	-Werror
+	-Wall

@@ -1,6 +1,9 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
+typedef struct _client client_t;
+
+#include "client_dispatch_table.h"
 #include "egl_states.h"
 #include "name_handler.h"
 #include "ring_buffer.h"
@@ -18,7 +21,9 @@ extern "C" {
  *   COMMAND_NAME_initialize (command, parameter1, parameter2, ...);
  *   client_write_command (command);
  */
-typedef struct client {
+struct _client {
+    client_dispatch_table_t dispatch;
+
     name_handler_t *name_handler;
 
     buffer_t buffer;
@@ -26,7 +31,7 @@ typedef struct client {
 
     mutex_t server_started_mutex;
     thread_t server_thread;
-} client_t;
+};
 
 private client_t *
 client_get_thread_local ();
@@ -63,6 +68,9 @@ client_start_server (client_t *client);
 
 private client_t *
 client_new ();
+
+private void
+client_init (client_t *);
 
 #ifdef __cplusplus
 }
