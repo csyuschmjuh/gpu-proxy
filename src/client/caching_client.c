@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "command.h"
+#include "command_custom.h"
 
 
 __thread client_t* thread_local_caching_client
@@ -2200,6 +2201,7 @@ caching_client_glGetAttribLocation (client_t *client, GLuint program,
         if (result == -1)
             egl_state->state.need_get_error = true;
     }
+    return result;
 }
 
 static GLint  
@@ -2222,6 +2224,7 @@ caching_client_glGetUniformLocation (client_t *client, GLuint program,
         if (result == -1)
             egl_state->state.need_get_error = true;
     }
+    return result;
 }
 
 static void
@@ -2758,7 +2761,7 @@ caching_client_glGetUniformfv (client_t *client, GLuint program,
 }
 
 static void
-caching_client_glGetUniformriv (client_t *client, GLuint program,
+caching_client_glGetUniformiv (client_t *client, GLuint program,
                                GLint location,  GLint *params)
 {
     egl_state_t *egl_state;
@@ -3552,7 +3555,7 @@ caching_client_glTexImage2D (client_t *client, GLenum target, GLint level,
  
     command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
     command_glteximage2d_init_custom (command, target, level, internalformat,
-                                      width, height, format, type,
+                                      width, height, border, format, type,
                                       pixels, egl_state->state.unpack_alignment);
     client_run_command_async (command);
     egl_state->state.need_get_error = true;
