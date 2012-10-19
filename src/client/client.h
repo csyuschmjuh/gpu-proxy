@@ -35,6 +35,7 @@ struct _client {
 
     mutex_t server_started_mutex;
     thread_t server_thread;
+    bool initializing;
 };
 
 private client_t *
@@ -62,7 +63,7 @@ private bool
 client_flush (client_t *client);
 
 private bool
-on_client_thread ();
+should_use_base_dispatch ();
 
 private void
 client_start_server (client_t *client);
