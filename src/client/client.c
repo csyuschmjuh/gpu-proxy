@@ -116,7 +116,7 @@ client_t *
 client_get_thread_local ()
 {
     if (unlikely (! thread_local_client)) {
-        thread_local_client = caching_client_new ();
+        thread_local_client = CLIENT (caching_client_new ());
     }
     return thread_local_client;
 }

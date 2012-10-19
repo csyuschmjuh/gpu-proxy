@@ -15,10 +15,15 @@ extern "C" {
  *   client_write_command (command);
  */
 typedef struct caching_client {
-    client_t base;
+    client_t super;
+
+    /* We maintain a copy of the superclass' dispatch table here, so
+     * that we can chain up to the superclass. The process of subclassing
+     * overrides the original dispatch table. */
+    dispatch_table_t super_dispatch;
 } caching_client_t;
 
-private client_t *
+private caching_client_t *
 caching_client_new ();
 
 #ifdef __cplusplus
