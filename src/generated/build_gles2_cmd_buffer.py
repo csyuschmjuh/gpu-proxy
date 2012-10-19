@@ -2461,7 +2461,7 @@ class GLGenerator(object):
 
         file.Write("    }\n")
 
-        file.Write("    client_t *client = caching_client_get_thread_local ();\n");
+        file.Write("    client_t *client = client_get_thread_local ();\n");
 
         file.Write("    ")
         if func.HasReturnValue():

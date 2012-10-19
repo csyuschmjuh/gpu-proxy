@@ -19,24 +19,6 @@ typedef struct caching_client {
 } caching_client_t;
 
 private client_t *
-caching_client_get_thread_local ();
-
-private void
-caching_client_destroy_thread_local ();
-
-private void
-caching_client_run_command (command_t *command);
-
-private void
-caching_client_run_command_async (command_t *command);
-
-private bool
-caching_client_flush (client_t *client);
-
-private bool
-on_caching_client_thread ();
-
-private client_t *
 caching_client_new ();
 
 #ifdef __cplusplus
