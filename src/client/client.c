@@ -1,6 +1,7 @@
 #include "config.h"
 #include "client.h"
 
+#include "caching_client.h"
 #include "command.h"
 
 __thread client_t* thread_local_client
@@ -59,6 +60,7 @@ client_new ()
 {
     client_t *client = (client_t *)malloc (sizeof (client_t));
     buffer_create (&client->buffer);
+    client_init (client);
 
     return client;
 }
@@ -92,8 +94,7 @@ client_t *
 client_get_thread_local ()
 {
     if (unlikely (! thread_local_client)) {
-        thread_local_client = client_new ();
-        client_init (thread_local_client);
+        thread_local_client = caching_client_new ();
     }
     return thread_local_client;
 }
