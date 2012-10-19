@@ -4523,7 +4523,6 @@ caching_client_t *
 caching_client_new ()
 {
     caching_client_t *client = (caching_client_t *)malloc (sizeof (caching_client_t));
-    buffer_create (&client->super.buffer);
     caching_client_init (client);
     return client;
 }

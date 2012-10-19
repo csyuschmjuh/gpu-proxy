@@ -73,7 +73,6 @@ client_t *
 client_new ()
 {
     client_t *client = (client_t *)malloc (sizeof (client_t));
-    buffer_create (&client->buffer);
     client_init (client);
 
     return client;
@@ -83,6 +82,8 @@ void
 client_init (client_t *client)
 {
     initializing_client = true;
+
+    buffer_create (&client->buffer);
 
     // We initialize the base dispatch table synchronously here, so that we
     // don't have to worry about the server thread trying to initialize it
