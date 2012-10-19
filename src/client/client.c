@@ -1,6 +1,8 @@
 #include "config.h"
 #include "client.h"
 
+#include "command.h"
+
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
@@ -8,6 +10,9 @@ __thread bool client_thread
     __attribute__(( tls_model ("initial-exec"))) = false;
 
 mutex_static_init (client_thread_mutex);
+
+static void
+client_fill_dispatch_table (dispatch_table_t *client);
 
 bool
 on_client_thread ()
@@ -61,7 +66,7 @@ client_new ()
 void
 client_init (client_t *client)
 {
-    client->dispatch = *dispatch_table_get_base ();
+    client_fill_dispatch_table (&client->dispatch);
 
     client->name_handler = name_handler_create ();
     client->token = 0;
@@ -188,3 +193,4 @@ client_get_unpack_alignment ()
     return egl_state->state.unpack_alignment;
 }
 
+#include "client_autogen.c"

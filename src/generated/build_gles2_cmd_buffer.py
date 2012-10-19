@@ -2431,9 +2431,10 @@ class GLGenerator(object):
 
     return "%s %s (%s)" % (func.return_type, name, args)
 
-  def WriteGLES2API(self, filename):
+  def WriteClientEntryPoints(self, filename):
     file = CWriter(filename)
-    file.Write('#include "gles2_api_private.h"\n')
+    file.Write('#include "caching_client.h"\n')
+    self.WriteGLHeaders(file)
 
     for func in self.functions:
         if func.name.find("eglGetProcAddress") != -1:
@@ -2455,40 +2456,37 @@ class GLGenerator(object):
         file.Write("dispatch_table_get_base ()->%s (NULL" % func.name)
         file.Write(func.MakeOriginalArgString("", add_separator=True))
         file.Write(");\n")
-
         if not func.HasReturnValue():
             file.Write("        return;\n")
+
         file.Write("    }\n")
 
         file.Write("    client_t *client = caching_client_get_thread_local ();\n");
 
-        func_arguments = func.MakeOriginalArgString("", separator=",", add_separator = True)
+        file.Write("    ")
         if func.HasReturnValue():
-            file.Write("    return ")
+            file.Write("return ")
+        file.Write("client->dispatch.%s (client" % func.name)
+        file.Write(func.MakeOriginalArgString("", separator=", ", add_separator=True))
+        file.Write(");\n")
 
-        file.Write("    client->dispatch.%s(client %s);\n" %(func.name, func_arguments))
         file.Write("}\n\n")
+
     file.Close()
 
-  def WriteClientEntryPoints(self, filename):
-    """Writes the command buffer format"""
+  def WriteBaseClient(self, filename):
+    """Writes the base server implementation, which just places the commands on the command buffer and runs them."""
     file = CWriter(filename)
-    file.Write('#include "gles2_api_private.h"\n')
+    self.WriteGLHeaders(file)
 
     for func in self.functions:
-        func_signature = func.return_type + " API_" + func.name + " (client_t *client"
-        func_signature += func.MakeTypedOriginalArgString("", separator=",", add_separator = True)
-        func_signature += ")"
-        file.Write(func_signature + "\n")
+        file.Write("static %s\n" % func.return_type)
+        file.Write("client_dispatch_%s (void* object" % func.name.lower())
+        file.Write(func.MakeTypedOriginalArgString("", separator=",\n    ", add_separator=True))
+        file.Write(")\n")
 
         file.Write("{\n")
-        file.Write("    UNUSED_PARAM(client);\n")
-
-        file.Write("    if (_is_error_state ())\n")
-        file.Write("        %s;\n" % func.MakeDefaultReturnStatement());
-
-        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" %
-                   func.name.upper())
+        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
 
         header = "    command_%s_init (" % func.name.lower()
         indent = " " * len(header)
@@ -2496,7 +2494,7 @@ class GLGenerator(object):
         args = func.MakeOriginalArgString(indent, separator = ",\n", add_separator = True)
         if args:
             file.Write(args)
-        file.Write(");\n")
+        file.Write(");\n\n")
 
         if func.IsSynchronous():
             file.Write("    client_run_command (command);\n");
@@ -2510,13 +2508,11 @@ class GLGenerator(object):
         file.Write("}\n\n")
 
     file.Write("void\n")
-    file.Write("client_dispatch_table_fill_base (client_dispatch_table_t *dispatch)\n")
+    file.Write("client_fill_dispatch_table (dispatch_table_t *dispatch)\n")
     file.Write("{\n")
     for func in self.functions:
-        file.Write('    dispatch->%s = API_%s;\n' % (func.name, func.name))
+        file.Write('    dispatch->%s = client_dispatch_%s;\n' % (func.name, func.name.lower()))
     file.Write("}\n")
-    file.Close()
-
     file.Close()
 
   def WriteCommandHeader(self, filename):
@@ -2753,14 +2749,14 @@ def main(argv):
   # Shared between the client and the server.
   gen.WriteDispatchTable("dispatch_table_autogen.h")
   gen.WritePassthroughDispatchTableImplementation("dispatch_table_autogen.c")
-
-  # These are used on the client-side.
-  gen.WriteCachingClientDispatchTableImplementation("caching_client_dispatch_autogen.c")
-  gen.WriteGLES2API("gles2_api_autogen.c")
-  gen.WriteClientEntryPoints("gles2_api_dispatch_autogen.c")
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_types_autogen.h")
+
+  # These are used on the client-side.
   gen.WriteCommandInitilizationAndSizeFunction("command_autogen.c")
+  gen.WriteClientEntryPoints("client_entry_points.c")
+  gen.WriteBaseClient("client_autogen.c")
+  gen.WriteCachingClientDispatchTableImplementation("caching_client_dispatch_autogen.c")
 
   # These are used on the server-side.
   gen.WriteBaseServer("server_autogen.c")
