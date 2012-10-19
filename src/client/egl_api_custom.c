@@ -54,7 +54,7 @@ eglGetProcAddress (const char *procname)
 {
     INSTRUMENT();
 
-    if (! on_client_thread ()) {
+    if (should_use_base_dispatch ()) {
         return dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
     }
 

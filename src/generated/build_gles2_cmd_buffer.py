@@ -2448,7 +2448,7 @@ class GLGenerator(object):
         file.Write("{\n")
         file.Write("    INSTRUMENT();\n")
 
-        file.Write("    if (! on_client_thread ()) {\n")
+        file.Write("    if (should_use_base_dispatch ()) {\n")
 
         file.Write("        ")
         if func.HasReturnValue():
@@ -2668,6 +2668,9 @@ class GLGenerator(object):
     file.Write("    FunctionPointerType *temp = NULL;\n")
 
     for func in self.functions:
+        file.Write('    dispatch->%s = passthrough_%s;\n' % (func.name, func.name))
+
+    for func in self.functions:
         if not func.name.startswith("egl"):
             continue
         file.Write('    temp = (FunctionPointerType *) &real_%s;\n' % func.name)
@@ -2680,9 +2683,6 @@ class GLGenerator(object):
         file.Write('    *temp = find_gl_symbol (libgl_handle (), \n')
         file.Write('                            real_eglGetProcAddress,\n')
         file.Write('                            "%s");\n' % func.name)
-
-    for func in self.functions:
-        file.Write('    dispatch->%s = passthrough_%s;\n' % (func.name, func.name))
 
     file.Write("}\n")
     file.Close()

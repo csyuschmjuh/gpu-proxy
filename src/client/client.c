@@ -10,12 +10,15 @@ __thread client_t* thread_local_client
 __thread bool client_thread
     __attribute__(( tls_model ("initial-exec"))) = false;
 
+__thread bool initializing_client
+    __attribute__(( tls_model ("initial-exec"))) = false;
+
 mutex_static_init (client_thread_mutex);
 
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
 
-bool
+static bool
 on_client_thread ()
 {
     static bool initialized = false;
@@ -32,9 +35,20 @@ on_client_thread ()
     return client_thread;
 }
 
+bool
+should_use_base_dispatch ()
+{
+    if (! on_client_thread ())
+        return true;
+    if (initializing_client)
+        return true;
+    return false;
+}
+
 void *
 start_server_thread_func (void *ptr)
 {
+
     client_t *client = (client_t *)ptr;
     server_t *server = server_new (&client->buffer);
 
@@ -68,12 +82,20 @@ client_new ()
 void
 client_init (client_t *client)
 {
+    initializing_client = true;
+
+    // We initialize the base dispatch table synchronously here, so that we
+    // don't have to worry about the server thread trying to initialize it
+    // at the same time.
+    dispatch_table_get_base ();
+
     client_fill_dispatch_table (&client->dispatch);
 
     client->name_handler = name_handler_create ();
     client->token = 0;
 
     client_start_server (client);
+    initializing_client = false;
 }
 
 static bool

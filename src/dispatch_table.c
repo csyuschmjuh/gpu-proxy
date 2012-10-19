@@ -12,10 +12,8 @@ find_gl_symbol (void *handle,
                 const char *symbol_name)
 {
     void *symbol = dlsym (handle, symbol_name);
-
     if (symbol == NULL)
         symbol = getProcAddress (symbol_name);
-    
     return symbol;
 }
 
@@ -49,28 +47,29 @@ libegl_handle ()
 
 #include "dispatch_table_autogen.c"
 
-mutex_static_init (dispatch_table_mutex);
-
 dispatch_table_t *
 dispatch_table_get_base ()
 {
     static dispatch_table_t dispatch;
     static bool table_initialized = false;
+    static bool initializing_table = false;
     if (table_initialized)
         return &dispatch;
 
-    mutex_lock (dispatch_table_mutex);
+    if (initializing_table) {
+        return &dispatch;
+    }
 
     /* In case two threads got here at the same time, we want to return
      * the dispatch table if another thread already initialized it */
     if (table_initialized) {
-        mutex_unlock (dispatch_table_mutex);
         return &dispatch;
     }
 
-    dispatch_table_fill_base(&dispatch);
+    initializing_table = true;
+    dispatch_table_fill_base (&dispatch);
+    initializing_table = false;
     table_initialized = true;
-    mutex_unlock (dispatch_table_mutex);
 
     return &dispatch;
 }
