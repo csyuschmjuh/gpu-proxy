@@ -2707,7 +2707,7 @@ class GLGenerator(object):
         caching_func_name = "caching_client_%s " % func.name
         if caching_client_text.find(caching_func_name) == -1:
             continue
-        file.Write('    client->base.dispatch.%s = %s;\n' % (func.name, caching_func_name))
+        file.Write('    client->super.dispatch.%s = %s;\n' % (func.name, caching_func_name))
     file.Close()
 
 

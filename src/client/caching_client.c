@@ -5076,7 +5076,10 @@ caching_client_command_post_hook(client_t *client,
 static void
 caching_client_init (caching_client_t *client)
 {
-    client->base.active_state = NULL;
+    client_init (&client->super);
+    client->super_dispatch = client->super.dispatch;
+
+    client->super.active_state = NULL;
 
     mutex_lock (cached_gl_states_mutex);
     if (cached_gl_states.initialized == false) {
@@ -5085,20 +5088,14 @@ caching_client_init (caching_client_t *client)
         cached_gl_states.initialized = true;
     }
     mutex_unlock (cached_gl_states_mutex);
+
+    #include "caching_client_dispatch_autogen.c"
 }
 
-client_t *
+caching_client_t *
 caching_client_new ()
 {
     caching_client_t *client = (caching_client_t *)malloc (sizeof (caching_client_t));
-
-    buffer_create (&client->base.buffer);
-
-    // FIXME: It should be initialized after the base class
     caching_client_init (client);
-    client_init (&client->base);
-
-    #include "caching_client_dispatch_autogen.c"
-
-    return &client->base;
+    return client;
 }
