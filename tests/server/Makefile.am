@@ -12,7 +12,6 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/client/caching_client.c \
 	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
-	$(rootsrcdir)/src/client/gles2_api.c \
 	$(rootsrcdir)/src/dispatch_table.c \
 	$(rootsrcdir)/src/dispatch_table.h \
 	$(rootsrcdir)/src/gles2_utils.c \

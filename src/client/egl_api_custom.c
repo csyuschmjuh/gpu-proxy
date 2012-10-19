@@ -17,12 +17,14 @@
 
 #include "config.h"
 
-
+#include "client.h"
+#include "dispatch_table.h"
 #include "command_autogen.h"
-#include "gles2_api_private.h"
+#include "types_private.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <dlfcn.h>
+#include <string.h>
 
 static bool
 _has_extension (const char* extension_name)
@@ -180,7 +182,7 @@ eglGetProcAddress (const char *procname)
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glEndTilingQCOM);
     }
 
-    if (_is_error_state ())
+    if (! client_get_thread_local ())
         return NULL;
 
     return dlsym (NULL, procname);

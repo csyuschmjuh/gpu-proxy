@@ -19,9 +19,8 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/client/caching_client.c \
 	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
-	$(rootsrcdir)/src/client/gles2_api.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
-	$(rootsrcdir)/src/generated/gles2_api_autogen.c \
+	$(rootsrcdir)/src/generated/client_entry_points.c \
 	$(rootsrcdir)/src/gles2_utils.c \
 	$(rootsrcdir)/src/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \

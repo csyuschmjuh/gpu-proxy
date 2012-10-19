@@ -48,8 +48,6 @@ endif
 if HAS_GLES2
 libGPUProcess_la_SOURCES += \
 	client/egl_api_custom.c \
-	client/gles2_api.c \
-	client/gles2_api_private.h \
 	client/caching_client.c \
 	client/caching_client.h \
 	client/caching_client_private.h \
@@ -62,7 +60,7 @@ libGPUProcess_la_SOURCES += \
 	server/caching_server_gles.c
 
 nodist_libGPUProcess_la_SOURCES = \
-	generated/gles2_api_autogen.c \
+	generated/client_entry_points.c \
 	generated/command_autogen.c \
 	generated/command_autogen.h \
 	generated/command_types_autogen.h
@@ -72,8 +70,9 @@ BUILT_SOURCES += \
 
 generated/command_autogen.c: generated/command_autogen.h
 generated/command_autogen.h: generated/command_types_autogen.h
-generated/command_types_autogen.h: generated/gles2_api_autogen.c
-generated/gles2_api_autogen.c: generated/server_autogen.c
+generated/command_types_autogen.h: generated/client_entry_points.c
+generated/client_entry_points.c: generated/client_autogen.c
+generated/client_autogen.c: generated/server_autogen.c
 generated/server_autogen.c: generated/dispatch_table_autogen.c
 generated/dispatch_table_autogen.c: generated/dispatch_table.h
 generated/dispatch_table.h: generated/build_gles2_cmd_buffer.py \
