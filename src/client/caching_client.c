@@ -1727,32 +1727,7 @@ caching_client_glCreateIndicesArray (GLenum mode,
     if (size == 0)
          return NULL;
 
-    switch (mode) {
-    case GL_POINTS:
-        length = size * count;
-        break;
-    case GL_LINE_STRIP:
-        length = size * (count + 1);
-        break;
-    case GL_LINE_LOOP:
-        length = size * count;
-        break;
-    case GL_LINES:
-        length = size * count * 2;
-        break;
-    case GL_TRIANGLE_STRIP:
-    case GL_TRIANGLE_FAN:
-        length = size * (count + 2);
-        break;
-    case GL_TRIANGLES:
-        length = sizeof (char) * (count * 3);
-        break;
-    default:
-        length = 0;
-    }
-
-    if (length == 0)
-        return NULL;
+    length = size * count;
 
     data = (char *) malloc (length);
     memcpy (data, indices, length);
