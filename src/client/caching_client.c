@@ -339,17 +339,22 @@ _caching_client_make_current (client_t *client,
         }
         
         egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-        egl_state->active = false;
+        if (! (display == egl_state->display ||
+               context == egl_state->context))
+            egl_state->active = false;
         
-        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
+        if (! egl_state->active && 
+            (egl_state->destroy_dpy || egl_state->destroy_ctx))
             _caching_client_remove_state (&CLIENT(client)->active_state);
         
         if (CLIENT(client)->active_state) {
-            if (egl_state->destroy_read)
-                _caching_client_remove_surface (CLIENT(client)->active_state, true);
+            if (! egl_state->active) {
+                if (egl_state->destroy_read)
+                    _caching_client_remove_surface (CLIENT(client)->active_state, true);
 
-            if (egl_state->destroy_draw)
-                _caching_client_remove_surface (CLIENT(client)->active_state, false);
+                if (egl_state->destroy_draw)
+                    _caching_client_remove_surface (CLIENT(client)->active_state, false);
+            }
         }
 
         CLIENT(client)->active_state = NULL;
@@ -4334,6 +4339,7 @@ caching_client_eglMakeCurrent (void* client,
 {
     link_list_t *exist = NULL;
     bool found = false;
+    bool same_context = false;
 
     INSTRUMENT();
 
@@ -4363,6 +4369,7 @@ caching_client_eglMakeCurrent (void* client,
                 return EGL_TRUE;
             else {
                 found = true;
+                same_context = true;
                 exist = CLIENT(client)->active_state;
             }
         }
@@ -4375,7 +4382,8 @@ caching_client_eglMakeCurrent (void* client,
         /* set active to exist, tell client about it */
         if (CLIENT(client)->active_state) {
             egl_state_t *egl_state = (egl_state_t *)CLIENT(client)->active_state->data;
-            egl_state->active = false;
+            if (! same_context)
+                egl_state->active = false;
         }
         CLIENT(client)->active_state = exist;
 
