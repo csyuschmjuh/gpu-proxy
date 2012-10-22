@@ -4299,7 +4299,6 @@ caching_client_eglSwapBuffers (void* client,
                                EGLDisplay display,
                                EGLSurface surface)
 {
-    EGLBoolean result = EGL_TRUE;
     egl_state_t *state;
 
     INSTRUMENT();
