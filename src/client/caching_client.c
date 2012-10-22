@@ -4316,7 +4316,8 @@ caching_client_eglSwapBuffers (void* client,
     /* XXX: optimization - we don't wait for it to return */
     command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
     command_eglswapbuffers_init (command, display, surface);
-    client_run_command_async (command);
+    //client_run_command_async (command);
+    client_run_command (command);
 
     return result;
 }
