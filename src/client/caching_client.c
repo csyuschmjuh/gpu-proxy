@@ -4319,7 +4319,7 @@ caching_client_eglSwapBuffers (void* client,
     //client_run_command_async (command);
     client_run_command (command);
 
-    return result;
+    return ((command_eglswapbuffers_t *)command)->result;
 }
 
 
