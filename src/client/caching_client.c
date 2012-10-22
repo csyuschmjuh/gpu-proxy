@@ -593,6 +593,7 @@ caching_client_glActiveTexture (void* client,
                                 GLenum texture)
 {
     egl_state_t *egl_state;
+    int texture_offset = texture - GL_TEXTURE0;
 
     INSTRUMENT();
 
@@ -614,6 +615,20 @@ caching_client_glActiveTexture (void* client,
             egl_state->state.texture_binding[0] = -1;
             egl_state->state.texture_binding[1] = -1;
             egl_state->state.texture_binding_3d = -1;
+            
+            egl_state->state.texture_mag_filter[texture_offset][0] = -1;
+            egl_state->state.texture_mag_filter[texture_offset][1] = -1;
+            egl_state->state.texture_mag_filter[texture_offset][2] = -1;
+            egl_state->state.texture_min_filter[texture_offset][0] = -1;
+            egl_state->state.texture_min_filter[texture_offset][1] = -1;
+            egl_state->state.texture_min_filter[texture_offset][2] = -1;
+            egl_state->state.texture_wrap_s[texture_offset][0] = -1;
+            egl_state->state.texture_wrap_s[texture_offset][1] = -1;
+            egl_state->state.texture_wrap_s[texture_offset][2] = -1;
+            egl_state->state.texture_wrap_t[texture_offset][0] = -1;
+            egl_state->state.texture_wrap_t[texture_offset][1] = -1;
+            egl_state->state.texture_wrap_t[texture_offset][2] = -1;
+            egl_state->state.texture_3d_wrap_r[texture_offset] = -1;
         }
     }
 }
