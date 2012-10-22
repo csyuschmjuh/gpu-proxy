@@ -6,7 +6,6 @@
 #include "dispatch_table.h"
 #include "thread_private.h"
 #include <time.h>
-#include <sys/prctl.h>
 
 /* This method is auto-generated into server_autogen.c
  * and included at the end of this file. */
@@ -25,7 +24,6 @@ sleep_nanoseconds (int num_nanoseconds)
 void
 server_start_work_loop (server_t *server)
 {
-    prctl (PR_SET_TIMERSLACK, 1);
     /* FIXME: add exit condition of the loop. */
     while (true) {
         size_t data_left_to_read;

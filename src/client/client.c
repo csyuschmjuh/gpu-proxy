@@ -4,6 +4,8 @@
 #include "caching_client.h"
 #include "command.h"
 
+#include <sys/prctl.h>
+
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
@@ -17,6 +19,15 @@ mutex_static_init (client_thread_mutex);
 
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
+
+static inline void
+sleep_nanoseconds (int num_nanoseconds)
+{
+    struct timespec spec;
+    spec.tv_sec = 0;
+    spec.tv_nsec = num_nanoseconds;
+    nanosleep (&spec, NULL);
+}
 
 static bool
 on_client_thread ()
@@ -53,6 +64,7 @@ start_server_thread_func (void *ptr)
     server_t *server = server_new (&client->buffer);
 
     mutex_unlock (client->server_started_mutex);
+    prctl (PR_SET_TIMERSLACK, 1);
     server_start_work_loop (server);
 
     /* TODO: Clean up the server here. */
@@ -81,6 +93,7 @@ client_new ()
 void
 client_init (client_t *client)
 {
+    prctl (PR_SET_TIMERSLACK, 1);
     initializing_client = true;
 
     buffer_create (&client->buffer);
@@ -146,7 +159,7 @@ client_get_space_for_size (client_t *client,
     command_t *write_location = (command_t *) buffer_write_address (&client->buffer,
                                                                     &available_space);
     while (! write_location || available_space < size) {
-        sched_yield ();
+        sleep_nanoseconds (500);
         write_location = (command_t *) buffer_write_address (&client->buffer,
                                                              &available_space);
     }
@@ -190,7 +203,7 @@ client_run_command (command_t *command)
     client_run_command_async (command);
 
     while (client->buffer.last_token < token)
-        sched_yield ();
+        sleep_nanoseconds (500);
 }
 
 void

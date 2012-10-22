@@ -611,6 +611,9 @@ caching_client_glActiveTexture (void* client,
              * invalid object, we save here to save time in glGetError() 
              */
             egl_state->state.active_texture = texture;
+            egl_state->state.texture_binding[0] = -1;
+            egl_state->state.texture_binding[1] = -1;
+            egl_state->state.texture_binding_3d = -1;
         }
     }
 }
@@ -1511,7 +1514,7 @@ caching_client_glSetVertexAttribArray (void* client, GLuint index, gles2_state_t
             }
         }
     }
-        
+
     /* gles2 spec says at least 8 */
     if (caching_client_glIndexIsTooLarge (client, state, index)) {
         return;
@@ -1755,7 +1758,6 @@ caching_client_glDrawElements (void* client, GLenum mode, GLsizei count, GLenum 
         attrib_list = &state->vertex_attribs;
         attribs = attrib_list->attribs;
         element_binding = state->element_array_buffer_binding == 0 ? false : true;
-        
         if (! (mode == GL_POINTS         || 
                mode == GL_LINE_STRIP     ||
                mode == GL_LINE_LOOP      || 
