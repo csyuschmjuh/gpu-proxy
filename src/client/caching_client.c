@@ -4299,28 +4299,18 @@ caching_client_eglSwapBuffers (void* client,
                                EGLDisplay display,
                                EGLSurface surface)
 {
-    egl_state_t *state;
-
     INSTRUMENT();
 
     if (!CLIENT(client)->active_state)
         return EGL_FALSE;
     
-    state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    egl_state_t *state = (egl_state_t *) CLIENT(client)->active_state->data;
     if (! (state->display == display &&
            state->drawable == surface)) 
         return EGL_FALSE;
     
-    /* XXX: optimization - we don't wait for it to return */
-    command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
-    command_eglswapbuffers_init (command, display, surface);
-    //client_run_command_async (command);
-    client_run_command (command);
-
-    return ((command_eglswapbuffers_t *)command)->result;
+    return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
 }
-
 
 static EGLBoolean 
 caching_client_eglMakeCurrent (void* client,
