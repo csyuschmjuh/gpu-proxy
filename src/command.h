@@ -7,6 +7,7 @@
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>
 
