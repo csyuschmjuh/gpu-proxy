@@ -4369,12 +4369,10 @@ caching_client_eglMakeCurrent (void* client,
 /* start of eglext.h */
 /* end of eglext.h */
 /* we specify those passthrough GL APIs that needs to set need_get_error */
-#if 0
 static void
-caching_client_command_post_hook(client_t *client,
-                                 command_t *command)
+caching_client_post_hook(client_t *client,
+                         command_t *command)
 {
-
     switch (command->type) {
     case COMMAND_GLATTACHSHADER:
     case COMMAND_GLBINDATTRIBLOCATION:
@@ -4466,7 +4464,6 @@ caching_client_command_post_hook(client_t *client,
         break;
     }
 }
-#endif
 
 static void
 caching_client_init (caching_client_t *client)
@@ -4483,6 +4480,8 @@ caching_client_init (caching_client_t *client)
         cached_gl_states.initialized = true;
     }
     mutex_unlock (cached_gl_states_mutex);
+
+    client->super.post_hook = caching_client_post_hook;
 
     #include "caching_client_dispatch_autogen.c"
 }

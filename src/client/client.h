@@ -28,6 +28,8 @@ struct _client {
 
     name_handler_t *name_handler;
 
+    void (*post_hook)(client_t *client, command_t *command);
+
     buffer_t buffer;
     unsigned int token;
 
