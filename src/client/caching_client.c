@@ -1807,28 +1807,12 @@ caching_client_glDrawElements (void* client, GLenum mode, GLsizei count, GLenum 
             goto FINISH;
 
         if (state->vertex_array_binding) {
-            if (!element_binding) {
-                indices_copy = caching_client_glCreateIndicesArray (mode, 
-                                                                    type, 
-                                                                    count,
-                                                                    (char *)indices);
-                if (indices_copy) {
-                    command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-                    command_gldrawelements_init (command, mode, count, 
-                                             type, indices_copy);
-                    client_run_command_async (command);
-                    //state->need_get_error = true;
-                    goto FINISH;
-                }
-            }
-            else {
-                command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-                command_gldrawelements_init (command, mode, count, 
-                                             type, indices);
-                client_run_command_async (command);
-                //state->need_get_error = true;
-                goto FINISH;
-            }
+            command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+            command_gldrawelements_init (command, mode, count, 
+                                         type, indices);
+            client_run_command_async (command);
+            //state->need_get_error = true;
+            goto FINISH;
         }
 
         for (i = 0; i < attrib_list->count; i++) {
