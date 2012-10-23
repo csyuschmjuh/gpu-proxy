@@ -1516,7 +1516,17 @@ caching_client_glSetVertexAttribArray (void* client, GLuint index, gles2_state_t
     int i, found_index = -1;
 
     GLint bound_buffer = 0;
-    
+
+    /* if vertex_array_binding, we don't do on client */
+    if ((state->vertex_array_binding)) {
+        if (enable)
+           CACHING_CLIENT(client)->super_dispatch.glEnableVertexAttribArray (client, index);
+        else
+           CACHING_CLIENT(client)->super_dispatch.glDisableVertexAttribArray (client, index);
+        state->need_get_error = true;
+        return;
+    }
+ 
     /* look into client state */
     for (i = 0; i < count; i++) {
         if (attribs[i].index == index) {
@@ -1703,9 +1713,10 @@ caching_client_glDrawArrays (void* client, GLenum mode, GLint first, GLsizei cou
                                                     0,
                                                     (const void *)attribs[i].data);
                 client_run_command_async (command);
-                if (! needs_call)
-                    needs_call = true;
+                needs_call = true;
             }
+            else
+                needs_call = true;
         }
 
         /* we need call DrawArrays */
@@ -1837,9 +1848,10 @@ caching_client_glDrawElements (void* client, GLenum mode, GLsizei count, GLenum 
                                                     0,
                                                     (const void *)attribs[i].data);
                 client_run_command_async (command);
-                if (! needs_call)
-                    needs_call = true;
+                needs_call = true;
             }
+            else
+                needs_call = true;
         }
 
         if (needs_call) {
@@ -3674,10 +3686,10 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
             if (attribs[i].index == index) {
                 if (attribs[i].size == size &&
                     attribs[i].type == type &&
-                    attribs[i].stride == stride) {
-                    attribs[i].array_normalized = normalized;
-                    attribs[i].pointer = (GLvoid *)pointer;
-                    attribs[i].array_buffer_binding = bound_buffer;
+                    attribs[i].stride == stride &&
+                    attribs[i].array_buffer_binding == bound_buffer &&
+                    attribs[i].array_normalized == normalized &&
+                    attribs[i].pointer == pointer) {
                     return;
                 }
                 else {
