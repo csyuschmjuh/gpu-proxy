@@ -47,12 +47,6 @@ _DEFAULT_RETURN_VALUES = {
 
 #                   Manual: The entry point into the client is custom,
 #                   but the command struct and command init function are not.
-
-#                   ManualInit: The command ini function is custom, but
-#                   the command struct command init functions are not.
-#
-#                   ManualInitAndDestructor: Like ManualInit, but there is also a custom
-#                   destructor.
 #
 #                   Passthrough: Arguments that are pointers are passed to
 #                   the server thread without making a copy.
@@ -86,21 +80,6 @@ _FUNCTION_INFO = {
   },
   'eglGetProcAddress': {
     'type': 'Manual',
-  },
-  'glShaderSource': {
-    'type': 'ManualInitAndDestructor',
-  },
-  'glTexSubImage2D': {
-    'type': 'ManualInit',
-  },
-  'glTexImage2D': {
-    'type': 'ManualInit',
-  },
-  'glTexParameteriv': {
-    'type': 'ManualInit',
-  },
-  'glTexParameterfv': {
-    'type': 'ManualInit',
   },
   # This pointer should be valid until glDrawElements or glDrawArray is
   # called so we can just pass them through without copying. A more advanced
@@ -1480,9 +1459,6 @@ class TypeHandler(object):
     file.Write("}\n\n")
 
   def WriteCommandDestroy(self, func, file):
-    if not func.NeedsDestructor() or func.NeedsManualDestructor():
-        return
-
     file.Write("void\n");
     file.Write("command_%s_destroy_arguments (command_%s_t *command)\n" % \
         (func.name.lower(), func.name.lower()))
@@ -2166,13 +2142,7 @@ class Function(object):
            self.info.default_return
 
   def NeedsDestructor(self):
-    return self.NeedsManualDestructor() or (not self.IsSynchronous() and not self.IsType('Passthrough'))
-
-  def NeedsManualInit(self):
-    return self.IsType('ManualInit') or self.IsType('ManualInitAndDestructor')
-
-  def NeedsManualDestructor(self):
-    return self.IsType('ManualInitAndDestructor')
+    return not self.IsSynchronous() and not self.IsType('Passthrough')
 
   def IsExtensionFunction(self):
     return self.name.endswith("OES") or \
@@ -2287,6 +2257,7 @@ class GLGenerator(object):
     self._empty_function_info = FunctionInfo({}, self._empty_type_handler)
     self.pepper_interfaces = []
     self.interface_info = {}
+    self.command_custom_text = None
 
     for func_name in _FUNCTION_INFO:
       info = _FUNCTION_INFO[func_name]
@@ -2409,7 +2380,7 @@ class GLGenerator(object):
         return True
 
     # Manual init functions always allow generating the client-side entry point.
-    if func.NeedsManualInit():
+    if self.HasCustomInit(func):
         return False
     if func.IsSynchronous():
         return False
@@ -2536,7 +2507,7 @@ class GLGenerator(object):
       func.WriteInitSignature(file)
       file.Write(";\n\n")
 
-      if func.NeedsDestructor():
+      if func.NeedsDestructor() or self.HasCustomDestroyArguments(func):
         file.Write("private void\n");
         file.Write("command_%s_destroy_arguments (command_%s_t *command);\n\n" % \
           (func.name.lower(), func.name.lower()))
@@ -2551,6 +2522,19 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2.h>\n")
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
+  def CommandCustomText(self):
+    if not self.command_custom_text:
+        self.command_custom_text = open(os.path.join('..', 'command_custom.c')).read()
+    return self.command_custom_text
+
+  def HasCustomInit(self, func):
+    init_name = "\ncommand_%s_init " % func.name.lower()
+    return self.CommandCustomText().find(init_name) != -1
+
+  def HasCustomDestroyArguments(self, func):
+    init_name = "\ncommand_%s_destroy_arguments " % func.name.lower()
+    return self.CommandCustomText().find(init_name) != -1
+
   def WriteCommandInitilizationAndSizeFunction(self, filename):
     """Writes the command implementation for the client-side"""
     file = CWriter(filename)
@@ -2560,9 +2544,10 @@ class GLGenerator(object):
     file.Write('#include "gles2_utils.h"\n')
 
     for func in self.functions:
-      if not func.NeedsManualInit():
+      if not self.HasCustomInit(func):
         func.WriteCommandInit(file)
-      func.WriteCommandDestroy(file)
+      if not self.HasCustomDestroyArguments(func):
+        func.WriteCommandDestroy(file)
 
     file.Write("void\n")
     file.Write("command_initialize_sizes (size_t *sizes)\n")
@@ -2616,7 +2601,7 @@ class GLGenerator(object):
             file.Write("command->%s" % arg.name)
         file.Write(");\n")
 
-        if func.NeedsDestructor():
+        if func.NeedsDestructor() or self.HasCustomDestroyArguments(func):
             file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
         file.Write("}\n")
 
