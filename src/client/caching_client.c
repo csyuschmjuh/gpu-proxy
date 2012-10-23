@@ -1663,19 +1663,24 @@ caching_client_clear_attribute_list_data (client_t *client)
         attrib_list->attribs[i].data = NULL;
 }
 
-static void
+static bool
 caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                                          size_t count)
 {
     int i = 0;
+    bool needs_call = false;
 
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
     for (i = 0; i < attrib_list->count; i++) {
-        if (! attribs[i].array_enabled || attribs[i].array_buffer_binding)
+        if (! attribs[i].array_enabled)
             continue;
+        else if (attribs[i].array_buffer_binding) {
+            needs_call = true;
+            continue;
+        }
 
         /* We need to create a separate buffer for it. */
         attribs[i].data = _create_data_array (&attribs[i], count);
@@ -1691,7 +1696,9 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                              0,
                                              (const void *)attribs[i].data);
          client_run_command_async (command);
+         needs_call = true;
     }
+    return needs_call;
 }
 
 static void
@@ -1700,6 +1707,8 @@ caching_client_glDrawArrays (void* client,
                              GLint first,
                              GLsizei count)
 {
+    bool needs_call = false;
+
     INSTRUMENT();
 
     if (! caching_client_glIsValidContext (client))
@@ -1732,12 +1741,14 @@ caching_client_glDrawArrays (void* client,
      * don't need to do anything. */
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     gles2_state_t *state = &egl_state->state;
-    if (state->vertex_array_binding)
-        caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client), count);
+    if (! state->vertex_array_binding)
+        needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client), count);
 
-    command_t *command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
-    command_gldrawarrays_init (command, mode, first, count);
-    client_run_command_async (command);
+    if (state->vertex_array_binding || needs_call) {
+        command_t *command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
+        command_gldrawarrays_init (command, mode, first, count);
+        client_run_command_async (command);
+    }
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
@@ -1776,11 +1787,16 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
+    bool needs_call = false;
+    const char* indices_to_pass = indices;
+    bool copy_indices;
+
     if (!caching_client_glIsValidContext (client))
         return;
 
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     gles2_state_t *state = &egl_state->state;
+    copy_indices = state->element_array_buffer_binding == 0;
 
     if (! (mode == GL_POINTS         ||
            mode == GL_LINE_STRIP     ||
@@ -1810,20 +1826,27 @@ caching_client_glDrawElements (void* client,
         return;
     }
 
-    if (state->vertex_array_binding)
-        caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT (client), count);
+    if (state->vertex_array_binding) {
+        command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+        command_gldrawelements_init (command, mode, count, type, indices);
+        ((command_gldrawelements_t *) command)->need_to_free_indices = false;
+        client_run_command_async (command);
+        goto FINISH;
+    }
 
-    const char* indices_to_pass = indices;
-    bool copy_indices = !state->array_buffer_binding && state->element_array_buffer_binding == 0;
+    needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT (client), count);
+
     if (!copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (mode, type,
                                                                count, (char *)indices);
-    if (indices_to_pass) {
+    if (needs_call && indices_to_pass ) {
         command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
         command_gldrawelements_init (command, mode, count, type, indices_to_pass);
         ((command_gldrawelements_t *) command)->need_to_free_indices = copy_indices;
         client_run_command_async (command);
     }
+
+FINISH:
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
