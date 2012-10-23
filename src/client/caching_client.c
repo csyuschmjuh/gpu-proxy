@@ -1814,12 +1814,14 @@ caching_client_glDrawElements (void* client,
         caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT (client), count);
 
     const char* indices_to_pass = indices;
-    if (!state->array_buffer_binding && state->element_array_buffer_binding == 0)
+    bool copy_indices = !state->array_buffer_binding && state->element_array_buffer_binding == 0;
+    if (!copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (mode, type,
                                                                count, (char *)indices);
     if (indices_to_pass) {
         command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
         command_gldrawelements_init (command, mode, count, type, indices_to_pass);
+        ((command_gldrawelements_t *) command)->need_to_free_indices = copy_indices;
         client_run_command_async (command);
     }
     caching_client_clear_attribute_list_data (CLIENT(client));

@@ -167,3 +167,10 @@ command_gltexparameterfv_init (command_t *abstract_command,
     command->params = malloc (params_size);
     memcpy (command->params, params, params_size);
 }
+
+void
+command_gldrawelements_destroy_arguments (command_gldrawelements_t *command)
+{
+    if (command->need_to_free_indices)
+        free (command->indices);
+}
