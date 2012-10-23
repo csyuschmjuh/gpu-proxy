@@ -5,7 +5,7 @@ libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
-        -Werror \
+	-Werror \
 	-Wall \
 	-Igenerated \
 	-Iclient \
@@ -24,6 +24,7 @@ libGPUProcess_la_SOURCES = \
 	command.c \
 	command.h \
 	command_custom.c \
+	command_custom.h \
 	compiler_private.h \
 	compiler.c \
 	gl_states.h \

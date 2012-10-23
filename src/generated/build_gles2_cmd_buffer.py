@@ -2258,6 +2258,7 @@ class GLGenerator(object):
     self.pepper_interfaces = []
     self.interface_info = {}
     self.command_custom_text = None
+    self.command_custom_header_text = None
 
     for func_name in _FUNCTION_INFO:
       info = _FUNCTION_INFO[func_name]
@@ -2499,7 +2500,10 @@ class GLGenerator(object):
     file.Write("#include <GLES2/gl2ext.h>\n\n")
 
     for func in self.functions:
+      if self.HasCustomStruct(func):
+        continue
       func.WriteStruct(file)
+
     file.Write("\n")
 
     for func in self.functions:
@@ -2527,13 +2531,22 @@ class GLGenerator(object):
         self.command_custom_text = open(os.path.join('..', 'command_custom.c')).read()
     return self.command_custom_text
 
+  def CommandCustomHeaderText(self):
+    if not self.command_custom_header_text:
+        self.command_custom_header_text = open(os.path.join('..', 'command_custom.h')).read()
+    return self.command_custom_header_text
+
   def HasCustomInit(self, func):
-    init_name = "\ncommand_%s_init " % func.name.lower()
+    init_name = "command_%s_init " % func.name.lower()
     return self.CommandCustomText().find(init_name) != -1
 
   def HasCustomDestroyArguments(self, func):
-    init_name = "\ncommand_%s_destroy_arguments " % func.name.lower()
+    init_name = "command_%s_destroy_arguments " % func.name.lower()
     return self.CommandCustomText().find(init_name) != -1
+
+  def HasCustomStruct(self, func):
+    struct_declaration = "typedef struct _command_%s " % func.name.lower()
+    return self.CommandCustomHeaderText().find(struct_declaration) != -1
 
   def WriteCommandInitilizationAndSizeFunction(self, filename):
     """Writes the command implementation for the client-side"""

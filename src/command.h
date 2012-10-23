@@ -36,6 +36,7 @@ command_initialize_sizes (size_t* sizes);
 private size_t
 command_get_size (command_type_t command_type);
 
+#include "command_custom.h"
 #include "generated/command_autogen.h"
 
 #ifdef __cplusplus
