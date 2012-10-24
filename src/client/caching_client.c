@@ -607,9 +607,7 @@ caching_client_glActiveTexture (void* client,
             return;
 
         } else {
-             command_t *command = client_get_space_for_command (COMMAND_GLACTIVETEXTURE);
-             command_glactivetexture_init (command, texture);
-             client_run_command_async (command);
+            CACHING_CLIENT(client)->super_dispatch.glActiveTexture (client, texture);
             /* FIXME: this maybe not right because this texture may be 
              * invalid object, we save here to save time in glGetError() 
              */
@@ -649,10 +647,8 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
             if (egl_state->state.array_buffer_binding == buffer)
                 return;
             else {
-                command_t *command = client_get_space_for_command (COMMAND_GLBINDBUFFER);
-                command_glbindbuffer_init (command, target, buffer);
-                client_run_command_async (command);
-                //egl_state->state.need_get_error = true;
+                CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
+                egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
                egl_state->state.array_buffer_binding = buffer;
@@ -662,9 +658,7 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
             if (egl_state->state.element_array_buffer_binding == buffer)
                 return;
             else {
-                command_t *command = client_get_space_for_command (COMMAND_GLBINDBUFFER);
-                command_glbindbuffer_init (command, target, buffer);
-                client_run_command_async (command);
+                CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
                 //egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -695,9 +689,7 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
             caching_client_glSetError (client, GL_INVALID_ENUM);
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBINDFRAMEBUFFER);
-        command_glbindframebuffer_init (command, target, framebuffer);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBindFramebuffer (client, target, framebuffer);
         /* FIXME: should we save it, it will be invalid if the
          * framebuffer is invalid 
          */
@@ -722,9 +714,7 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
             caching_client_glSetError (client, GL_INVALID_ENUM);
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBINDRENDERBUFFER);
-        command_glbindrenderbuffer_init (command, target, renderbuffer);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBindRenderbuffer (client, target, renderbuffer);
         /* FIXME: should we save it, it will be invalid if the
          * renderbuffer is invalid 
          */
@@ -760,9 +750,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLBINDTEXTURE);
-        command_glbindtexture_init (command, target, texture);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
 
         //egl_state->state.need_get_error = true;
 
@@ -802,9 +790,7 @@ caching_client_glBlendColor (void* client, GLclampf red,
         state->blend_color[2] = blue;
         state->blend_color[3] = alpha;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBLENDCOLOR);
-        command_glblendcolor_init (command, red, green, blue, alpha);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBlendColor (client, red, green, blue, alpha);
     }
 }
 
@@ -834,9 +820,7 @@ caching_client_glBlendEquation (void* client, GLenum mode)
         state->blend_equation[0] = mode;
         state->blend_equation[1] = mode;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBLENDEQUATION);
-        command_glblendequation_init (command, mode);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBlendEquation (client, mode);
     }
 }
 
@@ -869,9 +853,7 @@ caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum mod
         state->blend_equation[0] = modeRGB;
         state->blend_equation[1] = modeAlpha;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBLENDEQUATIONSEPARATE);
-        command_glblendequationseparate_init (command, modeRGB, modeAlpha);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBlendEquationSeparate (client, modeRGB, modeAlpha);
     }
 }
 
@@ -930,9 +912,7 @@ caching_client_glBlendFunc (void* client, GLenum sfactor, GLenum dfactor)
         state->blend_src[0] = state->blend_src[1] = sfactor;
         state->blend_dst[0] = state->blend_dst[1] = dfactor;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBLENDFUNC);
-        command_glblendfunc_init (command, sfactor, dfactor);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBlendFunc (client, sfactor, dfactor);
     }
 }
 
@@ -1024,9 +1004,7 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
         state->blend_dst[0] = dstRGB;
         state->blend_dst[0] = dstAlpha;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBLENDFUNCSEPARATE);
-        command_glblendfuncseparate_init (command, srcRGB, dstRGB, srcAlpha, dstAlpha);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBlendFuncSeparate (client, srcRGB, dstRGB, srcAlpha, dstAlpha);
     }
 }
 
@@ -1064,9 +1042,7 @@ caching_client_glClear (void* client, GLbitfield mask)
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLCLEAR);
-        command_glclear_init (command, mask);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glClear (client, mask);
     }
 }
 
@@ -1094,9 +1070,7 @@ caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
         state->color_clear_value[2] = blue;
         state->color_clear_value[3] = alpha;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLCLEARCOLOR);
-        command_glclearcolor_init (command, red, green, blue, alpha);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glClearColor (client, red, green, blue, alpha);
     }
 }
 
@@ -1117,9 +1091,7 @@ caching_client_glClearDepthf (void* client, GLclampf depth)
 
         state->depth_clear_value = depth;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLCLEARDEPTHF);
-        command_glcleardepthf_init (command, depth);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glClearDepthf (client, depth);
     }
 }
 
@@ -1140,9 +1112,7 @@ caching_client_glClearStencil (void* client, GLint s)
 
         state->stencil_clear_value = s;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLCLEARSTENCIL);
-        command_glclearstencil_init (command, s);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glClearStencil (client, s);
     }
 }
 
@@ -1170,9 +1140,7 @@ caching_client_glColorMask (void* client, GLboolean red, GLboolean green,
         state->color_writemask[2] = blue;
         state->color_writemask[3] = alpha;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLCOLORMASK);
-        command_glcolormask_init (command, red, green, blue, alpha);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glColorMask (client, red, green, blue, alpha);
     }
 }
 
@@ -1243,9 +1211,7 @@ caching_client_glCullFace (void* client, GLenum mode)
         }
 
         egl_state->state.cull_face_mode = mode;
-        command_t *command = client_get_space_for_command (COMMAND_GLCULLFACE);
-        command_glcullface_init (command, mode);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glCullFace (client, mode);
     }
 }
 
@@ -1269,9 +1235,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETEBUFFERS);
-        command_gldeletebuffers_init (command, n, buffers);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDeleteBuffers (client, n, buffers);
 
         /* check array_buffer_binding and element_array_buffer_binding */
         for (i = 0; i < n; i++) {
@@ -1313,9 +1277,7 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETEFRAMEBUFFERS);
-        command_gldeleteframebuffers_init (command, n, framebuffers);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
         for (i = 0; i < n; i++) {
             if (egl_state->state.framebuffer_binding == framebuffers[i]) {
@@ -1337,9 +1299,7 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETERENDERBUFFERS);
-        command_gldeleterenderbuffers_init (command, n, renderbuffers);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
     }
 }
 
@@ -1355,9 +1315,7 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETETEXTURES);
-        command_gldeletetextures_init (command, n, textures);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
     }
 }
 
@@ -1388,9 +1346,7 @@ caching_client_glDepthFunc (void* client, GLenum func)
 
         egl_state->state.depth_func = func;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDEPTHFUNC);
-        command_gldepthfunc_init (command, func);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDepthFunc (client, func);
     }
 }
 
@@ -1409,9 +1365,7 @@ caching_client_glDepthMask (void* client, GLboolean flag)
 
         egl_state->state.depth_writemask = flag;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDEPTHMASK);
-        command_gldepthmask_init (command, flag);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDepthMask (client, flag);
     }
 }
 
@@ -1432,9 +1386,7 @@ caching_client_glDepthRangef (void* client, GLclampf nearVal, GLclampf farVal)
         egl_state->state.depth_range[0] = nearVal;
         egl_state->state.depth_range[1] = farVal;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDEPTHRANGEF);
-        command_gldepthrangef_init (command, nearVal, farVal);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDepthRangef (client, nearVal, farVal);
     }
 }
 
@@ -1515,13 +1467,9 @@ caching_client_glSetCap (void* client, GLenum cap, GLboolean enable)
 
         if (needs_call) {
             if (enable) {
-                command_t *command = client_get_space_for_command (COMMAND_GLENABLE);
-                command_glenable_init (command, cap);
-                client_run_command_async (command);
+                CACHING_CLIENT(client)->super_dispatch.glEnable (client, cap);
             } else {
-                command_t *command = client_get_space_for_command (COMMAND_GLDISABLE);
-                command_gldisable_init (command, cap);
-                client_run_command_async (command);
+                CACHING_CLIENT(client)->super_dispatch.glDisable (client, cap);
             }
         }
     }
@@ -1571,16 +1519,10 @@ caching_client_glSetVertexAttribArray (void* client, GLuint index, gles2_state_t
 
     /* if vertex_array_binding, we don't do on client */
     if ((state->vertex_array_binding)) {
-        if (enable) {
-            command_t *command = client_get_space_for_command (COMMAND_GLENABLEVERTEXATTRIBARRAY);
-            command_glenablevertexattribarray_init (command, index);
-            client_run_command_async (command);
-        }
-        else {
-            command_t *command = client_get_space_for_command (COMMAND_GLDISABLEVERTEXATTRIBARRAY);
-            command_gldisablevertexattribarray_init (command, index);
-            client_run_command_async (command);
-        }
+        if (enable)
+           CACHING_CLIENT(client)->super_dispatch.glEnableVertexAttribArray (client, index);
+        else
+           CACHING_CLIENT(client)->super_dispatch.glDisableVertexAttribArray (client, index);
         state->need_get_error = true;
         return;
     }
@@ -1604,13 +1546,9 @@ caching_client_glSetVertexAttribArray (void* client, GLuint index, gles2_state_t
     }
 
     if (enable == GL_FALSE) {
-        command_t *command = client_get_space_for_command (COMMAND_GLDISABLEVERTEXATTRIBARRAY);
-        command_gldisablevertexattribarray_init (command, index);
-        client_run_command_async (command);
+       CACHING_CLIENT(client)->super_dispatch.glDisableVertexAttribArray (client, index);
     } else {
-        command_t *command = client_get_space_for_command (COMMAND_GLENABLEVERTEXATTRIBARRAY);
-        command_glenablevertexattribarray_init (command, index);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glEnableVertexAttribArray (client, index);
     }
 
     bound_buffer = state->array_buffer_binding;
@@ -1934,9 +1872,7 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLFRAMEBUFFERRENDERBUFFER);
-        command_glframebufferrenderbuffer_init (command, target, attachment, renderbuffertarget, renderbuffer);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glFramebufferRenderbuffer (client, target, attachment, renderbuffertarget, renderbuffer);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1961,10 +1897,8 @@ caching_client_glFramebufferTexture2D (void* client,
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLFRAMEBUFFERTEXTURE2D);
-        command_glframebuffertexture2d_init (command, target, attachment,
-                                             textarget, texture, level);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2D (client, target, attachment,
+                                                                       textarget, texture, level);
         egl_state->state.need_get_error = true;
     }
 }
@@ -1988,9 +1922,7 @@ caching_client_glFrontFace (void* client, GLenum mode)
         }
 
         egl_state->state.front_face = mode;
-        command_t *command = client_get_space_for_command (COMMAND_GLFRONTFACE);
-        command_glfrontface_init (command, mode);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glFrontFace (client, mode);
     }
 }
 
@@ -2077,9 +2009,7 @@ caching_client_glGenerateMipmap (void* client, GLenum target)
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLGENERATEMIPMAP);
-        command_glgeneratemipmap_init (command, target);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glGenerateMipmap (client, target);
 
         egl_state->state.need_get_error = true;
     }
@@ -2865,9 +2795,7 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
         if (target == GL_GENERATE_MIPMAP_HINT)
             egl_state->state.generate_mipmap_hint = mode;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLHINT);
-        command_glhint_init (command, target, mode);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glHint (client, target, mode);
 
         if (target != GL_GENERATE_MIPMAP_HINT)
             egl_state->state.need_get_error = true;
@@ -2940,9 +2868,7 @@ caching_client_glLineWidth (void* client, GLfloat width)
         }
 
         egl_state->state.line_width = width;
-        command_t *command = client_get_space_for_command (COMMAND_GLLINEWIDTH);
-        command_gllinewidth_init (command, width);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glLineWidth (client, width);
     }
 }
 
@@ -2980,9 +2906,7 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
         else
            egl_state->state.unpack_alignment = param;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLPIXELSTOREI);
-        command_glpixelstorei_init (command, pname, param);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glPixelStorei (client, pname, param);
     }
 }
 
@@ -3003,9 +2927,7 @@ caching_client_glPolygonOffset (void* client, GLfloat factor, GLfloat units)
         egl_state->state.polygon_offset_factor = factor;
         egl_state->state.polygon_offset_units = units;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLPOLYGONOFFSET);
-        command_glpolygonoffset_init (command, factor, units);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glPolygonOffset (client, factor, units);
     }
 }
 
@@ -3026,9 +2948,7 @@ caching_client_glSampleCoverage (void* client, GLclampf value, GLboolean invert)
         egl_state->state.sample_coverage_invert = invert;
         egl_state->state.sample_coverage_value = value;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLSAMPLECOVERAGE);
-        command_glsamplecoverage_init (command, value, invert);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glSampleCoverage (client, value, invert);
     }
 }
 
@@ -3058,9 +2978,7 @@ caching_client_glScissor (void* client, GLint x, GLint y, GLsizei width, GLsizei
         egl_state->state.scissor_box[2] = width;
         egl_state->state.scissor_box[3] = height;
         
-        command_t *command = client_get_space_for_command (COMMAND_GLSCISSOR);
-        command_glscissor_init (command, x, y, width, height);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glScissor (client, x, y, width, height);
     }
 }
 
@@ -3134,11 +3052,8 @@ caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
         }
     }
 
-    if (needs_call) {
-        command_t *command = client_get_space_for_command (COMMAND_GLSTENCILFUNCSEPARATE);
-        command_glstencilfuncseparate_init (command, face, func, ref, mask);
-        client_run_command_async (command);
-    }
+    if (needs_call)
+        CACHING_CLIENT(client)->super_dispatch.glStencilFuncSeparate (client, face, func, ref, mask);
 }
 
 static void
@@ -3190,11 +3105,8 @@ caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
         }
     }
 
-    if (needs_call) {
-        command_t *command = client_get_space_for_command (COMMAND_GLSTENCILMASKSEPARATE);
-        command_glstencilmaskseparate_init (command, face, mask);
-        client_run_command_async (command);
-    }
+    if (needs_call)
+        CACHING_CLIENT(client)->super_dispatch.glStencilMaskSeparate (client, face, mask);
 }
 
 static void
@@ -3296,11 +3208,8 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
         }
     }
 
-    if (needs_call) {
-        command_t *command = client_get_space_for_command (COMMAND_GLSTENCILOPSEPARATE);
-        command_glstencilopseparate_init (command, face, sfail, dpfail, dppass);
-        client_run_command_async (command);
-    }
+    if (needs_call)
+        CACHING_CLIENT(client)->super_dispatch.glStencilOpSeparate (client, face, sfail, dpfail, dppass);
 }
 
 static void
@@ -3416,9 +3325,7 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
             caching_client_glSetError (client, GL_INVALID_ENUM);
             return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLTEXPARAMETERI);
-        command_gltexparameteri_init (command, target, pname, param);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
     }
 }
 
@@ -3448,12 +3355,9 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLTEXIMAGE2D);
-    command_glteximage2d_init (command, target, level, internalformat,
-                               width, height, border, format, 
-                               type, pixels);
-    client_run_command_async (command);
 
+    CACHING_CLIENT(client)->super_dispatch.glTexImage2D (client, target, level, internalformat,
+                                                         width, height, border, format, type, pixels);
     egl_state->state.need_get_error = true;
 }
 
@@ -3481,11 +3385,8 @@ caching_client_glTexSubImage2D (void* client,
         return;
     }
 
-    command_t *command = client_get_space_for_command (COMMAND_GLTEXSUBIMAGE2D);
-    command_gltexsubimage2d_init (command, target, level, xoffset, yoffset,
-                               width, height, format, 
-                               type, pixels);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
+                                                            width, height, format, type, pixels);
     egl_state->state.need_get_error = true;
 }
 
@@ -3505,10 +3406,8 @@ caching_client_glUniformMatrix2fv (void* client,
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLUNIFORMMATRIX2FV);
-    command_gluniformmatrix2fv_init (command, location, count, transpose, value);
-    client_run_command_async (command);
 
+    CACHING_CLIENT(client)->super_dispatch.glUniformMatrix2fv (client, location, count, transpose, value);
 }
 
 static void
@@ -3527,9 +3426,7 @@ caching_client_glUniformMatrix3fv (void* client,
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLUNIFORMMATRIX3FV);
-    command_gluniformmatrix3fv_init (command, location, count, transpose, value);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glUniformMatrix3fv (client, location, count, transpose, value);
 }
 
 static void
@@ -3548,9 +3445,7 @@ caching_client_glUniformMatrix4fv (void* client,
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return; 
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLUNIFORMMATRIX4FV);
-    command_gluniformmatrix4fv_init (command, location, count, transpose, value);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glUniformMatrix4fv (client, location, count, transpose, value);
 }
 
 static void
@@ -3570,9 +3465,7 @@ caching_client_glUseProgram (void* client, GLuint program)
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLUSEPROGRAM);
-        command_gluseprogram_init (command, program);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program);
 
         /* FIXME: this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
@@ -3597,9 +3490,7 @@ caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB1F);
-        command_glvertexattrib1f_init (command, index, v0);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glVertexAttrib1f (client, index, v0);
     }
 }
 
@@ -3618,9 +3509,7 @@ caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat
             return;
         }
         
-        command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB2F);
-        command_glvertexattrib2f_init (command, index, v0, v1);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2f (client, index, v0, v1);
     }
 }
 
@@ -3640,9 +3529,7 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB3F);
-        command_glvertexattrib3f_init (command, index, v0, v1, v2);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3f (client, index, v0, v1, v2);
     }
 }
 
@@ -3659,9 +3546,7 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB4F);
-        command_glvertexattrib4f_init (command, index, v0, v1, v2, v3);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4f (client, index, v0, v1, v2, v3);
     }
 }
 
@@ -3675,9 +3560,7 @@ caching_client_glVertexAttrib1fv (void* client, GLuint index, const GLfloat *v)
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB1FV);
-    command_glvertexattrib1fv_init (command, index, v);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib1fv (client, index, v);
 }
 
 static void
@@ -3689,9 +3572,7 @@ caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB2FV);
-    command_glvertexattrib2fv_init (command, index, v);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2fv (client, index, v);
 }
 
 static void
@@ -3703,9 +3584,7 @@ caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB3FV);
-    command_glvertexattrib3fv_init (command, index, v);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3fv (client, index, v);
 }
 
 static void
@@ -3717,9 +3596,7 @@ caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIB4FV);
-    command_glvertexattrib4fv_init (command, index, v);
-    client_run_command_async (command);
+    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4fv (client, index, v);
 }
 
 static void
@@ -3763,10 +3640,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         }
         
         if (egl_state->state.vertex_array_binding) {
-            command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
-            command_glvertexattribpointer_init (command, index, size, type,
-                                                normalized, stride, pointer);
-            client_run_command_async (command);
+            CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
+                                                                          type, normalized, stride, pointer);
             /* FIXME: Do we need set this flag? */
             //egl_state->state.need_get_error = true;
             return;
@@ -3792,10 +3667,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
 
         /* use array_buffer? */
         if (bound_buffer) {
-            command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
-            command_glvertexattribpointer_init (command, index, size, type,
-                                                normalized, stride, pointer);
-            client_run_command_async (command);
+            CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
+                                                                          type, normalized, stride, pointer);
             /* FIXME: Do we need set this flag? */
             egl_state->state.need_get_error = true;
         }
@@ -3874,9 +3747,7 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
         egl_state->state.viewport[2] = width;
         egl_state->state.viewport[3] = height;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLVIEWPORT);
-        command_glviewport_init (command, x, y, width, height);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glViewport (client, x, y, width, height);
     }
 }
 /* end of GLES2 core profile */
@@ -3895,10 +3766,8 @@ caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglI
             caching_client_glSetError (client, GL_INVALID_ENUM);
             return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLEGLIMAGETARGETTEXTURE2DOES);
-        command_gleglimagetargettexture2does_init (command, target, image);
-        client_run_command_async (command);
         
+        CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4023,9 +3892,7 @@ caching_client_glBindVertexArrayOES (void* client, GLuint array)
         if (egl_state->state.vertex_array_binding == array)
             return;
 
-        command_t *command = client_get_space_for_command (COMMAND_GLBINDVERTEXARRAYOES);
-        command_glbindvertexarrayoes_init (command, array);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glBindVertexArrayOES (client, array);
         egl_state->state.need_get_error = true;
         /* FIXME: should we save this ? */
         egl_state->state.vertex_array_binding = array;
@@ -4048,9 +3915,7 @@ caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *a
             return;
         }
 
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETEVERTEXARRAYSOES);
-        command_gldeletevertexarraysoes_init (command, n, arrays);
-        client_run_command_async (command);
+        CACHING_CLIENT(client)->super_dispatch.glDeleteVertexArraysOES (client, n, arrays);
 
         /* matching vertex_array_binding ? */
         for (i = 0; i < n; i++) {
@@ -4123,10 +3988,8 @@ caching_client_glDiscardFramebufferEXT (void* client,
                 return;
             }
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLDISCARDFRAMEBUFFEREXT);
-        command_gldiscardframebufferext_init (command, target, numAttachments, attachments);
-        client_run_command_async (command);
 
+        CACHING_CLIENT(client)->super_dispatch.glDiscardFramebufferEXT (client, target, numAttachments, attachments);
     }
 }
 
@@ -4177,14 +4040,9 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
            caching_client_glSetError (client, GL_INVALID_ENUM);
            return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXT);
-        command_glframebuffertexture2dmultisampleext_init (command, target,
-                                                           attachment,
-                                                           textarget, 
-                                                           texture, level,
-                                                           samples);
-        client_run_command_async (command);
         
+        CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleEXT (
+            client, target, attachment, textarget, texture, level, samples);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4207,14 +4065,9 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
            caching_client_glSetError (client, GL_INVALID_ENUM);
            return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLFRAMEBUFFERTEXTURE2DMULTISAMPLEIMG);
-        command_glframebuffertexture2dmultisampleimg_init (command, target,
-                                                           attachment,
-                                                           textarget, 
-                                                           texture, level,
-                                                           samples);
-        client_run_command_async (command);
 
+        CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleIMG (
+            client, target, attachment, textarget, texture, level, samples);
         egl_state->state.need_get_error = true;
     }
 }
@@ -4229,9 +4082,8 @@ caching_client_glDeleteFencesNV (void* client, GLsizei n, const GLuint *fences)
             caching_client_glSetError (client, GL_INVALID_VALUE);
             return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLDELETEFENCESNV);
-        command_gldeletefencesnv_init (command, n, fences);
-        client_run_command_async (command);
+    
+        CACHING_CLIENT(client)->super_dispatch.glDeleteFencesNV (client, n, fences);
     }
 }
 
@@ -4294,8 +4146,7 @@ caching_client_glCoverageOperationNV (void* client, GLenum operation)
             caching_client_glSetError (client, GL_INVALID_ENUM);
             return;
         }
-        command_t *command = client_get_space_for_command (COMMAND_GLCOVERAGEOPERATIONNV);
-        command_glcoverageoperationnv_init (command, operation);
+        CACHING_CLIENT(client)->super_dispatch.glCoverageOperationNV (client, operation);
     }
 }
 
@@ -4436,11 +4287,7 @@ caching_client_eglSwapBuffers (void* client,
            state->drawable == surface)) 
         return EGL_FALSE;
     
-            command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
-            command_eglswapbuffers_init (command, display, surface);
-            client_run_command_async (command);
-    return EGL_TRUE;
-    //return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
+    return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
 }
 
 static EGLBoolean 
