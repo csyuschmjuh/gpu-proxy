@@ -1836,7 +1836,7 @@ caching_client_glDrawElements (void* client,
 
     needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT (client), count);
 
-    if (!copy_indices)
+    if (copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (mode, type,
                                                                count, (char *)indices);
     if (needs_call && indices_to_pass ) {
@@ -4287,7 +4287,10 @@ caching_client_eglSwapBuffers (void* client,
            state->drawable == surface)) 
         return EGL_FALSE;
     
-    return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
+    command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
+    command_eglswapbuffers_init (command, display, surface);
+    client_run_command_async (command);
+    return EGL_TRUE;
 }
 
 static EGLBoolean 
