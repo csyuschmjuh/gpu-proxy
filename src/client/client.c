@@ -233,7 +233,7 @@ client_flush (client_t *client)
     return true;
 }
 
-private int
+int
 client_get_unpack_alignment ()
 {
     client_t *client = client_get_thread_local ();
@@ -242,6 +242,13 @@ client_get_unpack_alignment ()
 
     egl_state_t *egl_state = (egl_state_t *)client->active_state->data;
     return egl_state->state.unpack_alignment;
+}
+
+bool
+client_has_valid_state (client_t *client)
+{
+    return client->active_state &&
+           ((egl_state_t *) client->active_state->data)->active;
 }
 
 #include "client_autogen.c"
