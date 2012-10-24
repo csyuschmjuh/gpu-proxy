@@ -81,6 +81,12 @@ _FUNCTION_INFO = {
   'eglGetProcAddress': {
     'type': 'Manual',
   },
+  'glFlush' : {
+    'type': 'Synchronous',
+  },
+  'glFinish' : {
+    'type': 'Synchronous',
+  },
   # This pointer should be valid until glDrawElements or glDrawArray is
   # called so we can just pass them through without copying. A more advanced
   # implementation would wait until glDrawElements/glDrawArray is called
@@ -2608,8 +2614,11 @@ class GLGenerator(object):
         file.Write("server_handle_%s (server_t *server, command_t *abstract_command)\n" % func.name.lower())
         file.Write("{\n")
         file.Write("    INSTRUMENT ();\n")
-        file.Write("    command_%s_t *command = \n" % func.name.lower())
-        file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
+
+        need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
+        if  need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
+          file.Write("    command_%s_t *command = \n" % func.name.lower())
+          file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
         file.Write("    ")
         if func.HasReturnValue():
@@ -2617,14 +2626,14 @@ class GLGenerator(object):
         file.Write("server->dispatch.%s (server" % func.name)
 
         for arg in func.GetOriginalArgs():
-            file.Write(", ")
-            if arg.IsDoublePointer() and arg.type.find("const") != -1:
-                file.Write("(%s) " % arg.type)
-            file.Write("command->%s" % arg.name)
+          file.Write(", ")
+          if arg.IsDoublePointer() and arg.type.find("const") != -1:
+            file.Write("(%s) " % arg.type)
+          file.Write("command->%s" % arg.name)
         file.Write(");\n")
 
-        if func.NeedsDestructor() or self.HasCustomDestroyArguments(func):
-            file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
+        if need_destructor_call:
+          file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
         file.Write("}\n")
 
     file.Write("static void\n")
