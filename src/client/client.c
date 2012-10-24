@@ -67,7 +67,7 @@ start_server_thread_func (void *ptr)
     prctl (PR_SET_TIMERSLACK, 1);
     server_start_work_loop (server);
 
-    /* TODO: Clean up the server here. */
+    server_destroy(server);
     return NULL;
 }
 
@@ -114,11 +114,19 @@ client_init (client_t *client)
     initializing_client = false;
 }
 
+static void
+client_shutdown_server (client_t *client)
+{
+    command_t *command = client_get_space_for_command (COMMAND_SHUTDOWN);
+    command->type = COMMAND_SHUTDOWN;
+    client_run_command (command);
+}
+
+
 static bool
 client_destroy (client_t *client)
 {
-    /* TODO: Send a message to the server to signal a stop. */
-    pthread_join (client->server_thread, NULL);
+    client_shutdown_server (client);
 
     buffer_free (&client->buffer);
 

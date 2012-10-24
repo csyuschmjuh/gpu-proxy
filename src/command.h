@@ -17,6 +17,7 @@ extern "C" {
 
 typedef enum command_type {
     COMMAND_NO_OP,
+    COMMAND_SHUTDOWN,
 
 #include "generated/command_types_autogen.h"
 
