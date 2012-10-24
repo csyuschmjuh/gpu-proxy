@@ -1663,9 +1663,27 @@ caching_client_clear_attribute_list_data (client_t *client)
         attrib_list->attribs[i].data = NULL;
 }
 
+static void
+prepend_element_to_list (link_list_t **list,
+                         void *element)
+{
+    link_list_t *new_list = (link_list_t *) malloc (sizeof (link_list_t));
+    new_list->data = element;
+    if (*list) {
+        new_list->next = *list;
+        new_list->prev = (*list)->prev;
+        (*list)->prev = new_list;
+    } else {
+        new_list->next = new_list;
+        new_list->prev = new_list;
+    }
+    *list = new_list;
+}
+
 static bool
 caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
-                                                         size_t count)
+                                                         size_t count,
+                                                         link_list_t **allocated_data_arrays)
 {
     int i = 0;
     bool needs_call = false;
@@ -1687,16 +1705,17 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
         if (! attribs[i].data)
             continue;
 
-         command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
-         command_glvertexattribpointer_init (command, 
-                                             attribs[i].index,
-                                             attribs[i].size,
-                                             attribs[i].type,
-                                             attribs[i].array_normalized,
-                                             0,
-                                             (const void *)attribs[i].data);
-         client_run_command_async (command);
-         needs_call = true;
+        prepend_element_to_list (allocated_data_arrays, attribs[i].data);
+        command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
+        command_glvertexattribpointer_init (command, 
+                                            attribs[i].index,
+                                            attribs[i].size,
+                                            attribs[i].type,
+                                            attribs[i].array_normalized,
+                                            0,
+                                            (const void *)attribs[i].data);
+        client_run_command_async (command);
+        needs_call = true;
     }
     return needs_call;
 }
@@ -1741,12 +1760,16 @@ caching_client_glDrawArrays (void* client,
      * don't need to do anything. */
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     gles2_state_t *state = &egl_state->state;
+    link_list_t *arrays_to_free = NULL;
     if (! state->vertex_array_binding)
-        needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client), count);
+        needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client),
+                                                                              count,
+                                                                              &arrays_to_free);
 
     if (state->vertex_array_binding || needs_call) {
         command_t *command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
         command_gldrawarrays_init (command, mode, first, count);
+        ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
         client_run_command_async (command);
     }
     caching_client_clear_attribute_list_data (CLIENT(client));
@@ -1787,16 +1810,11 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
-    bool needs_call = false;
-    const char* indices_to_pass = indices;
-    bool copy_indices;
-
     if (!caching_client_glIsValidContext (client))
         return;
 
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     gles2_state_t *state = &egl_state->state;
-    copy_indices = state->element_array_buffer_binding == 0;
 
     if (! (mode == GL_POINTS         ||
            mode == GL_LINE_STRIP     ||
@@ -1826,27 +1844,29 @@ caching_client_glDrawElements (void* client,
         return;
     }
 
-    if (state->vertex_array_binding) {
-        command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-        command_gldrawelements_init (command, mode, count, type, indices);
-        ((command_gldrawelements_t *) command)->need_to_free_indices = false;
-        client_run_command_async (command);
-        goto FINISH;
+    link_list_t *arrays_to_free = NULL;
+    bool needs_call = state->vertex_array_binding ||
+         caching_client_setup_vertex_attrib_pointer_if_necessary (
+            CLIENT (client), count, &arrays_to_free);
+
+    if (!needs_call) {
+        caching_client_clear_attribute_list_data (CLIENT(client));
+        return;
     }
 
-    needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT (client), count);
-
+    const char* indices_to_pass = indices;
+    bool copy_indices = !state->vertex_array_binding && state->element_array_buffer_binding == 0;
     if (copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (mode, type,
                                                                count, (char *)indices);
-    if (needs_call && indices_to_pass ) {
+    if (indices_to_pass) {
         command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
         command_gldrawelements_init (command, mode, count, type, indices_to_pass);
         ((command_gldrawelements_t *) command)->need_to_free_indices = copy_indices;
+        ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
         client_run_command_async (command);
     }
 
-FINISH:
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 

@@ -168,9 +168,30 @@ command_gltexparameterfv_init (command_t *abstract_command,
     memcpy (command->params, params, params_size);
 }
 
+static void free_array (link_list_t* array)
+{
+    if (!array)
+        return;
+
+    array->prev->next = NULL;
+    while (array) {
+        link_list_t *current = array;
+        array = array->next;
+        free (current->data);
+        free (current);
+    }
+}
+
 void
 command_gldrawelements_destroy_arguments (command_gldrawelements_t *command)
 {
     if (command->need_to_free_indices)
         free (command->indices);
+    free_array (command->arrays_to_free);
+}
+
+void
+command_gldrawarrays_destroy_arguments (command_gldrawarrays_t *command)
+{
+    free_array (command->arrays_to_free);
 }
