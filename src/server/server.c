@@ -24,7 +24,6 @@ sleep_nanoseconds (int num_nanoseconds)
 void
 server_start_work_loop (server_t *server)
 {
-    /* FIXME: add exit condition of the loop. */
     while (true) {
         size_t data_left_to_read;
         command_t *read_command = (command_t *) buffer_read_address (server->buffer,
@@ -37,6 +36,9 @@ server_start_work_loop (server_t *server)
             read_command = (command_t *) buffer_read_address (server->buffer,
                                                               &data_left_to_read);
         }
+
+        if (read_command->type == COMMAND_SHUTDOWN)
+            break;
 
         server->handler_table[read_command->type](server, read_command);
         buffer_read_advance (server->buffer, read_command->size);
