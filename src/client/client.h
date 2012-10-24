@@ -79,6 +79,9 @@ client_new ();
 private void
 client_init (client_t *);
 
+private bool
+client_has_valid_state (client_t *client);
+
 #ifdef __cplusplus
 }
 #endif

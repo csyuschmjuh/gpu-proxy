@@ -2435,6 +2435,11 @@ class GLGenerator(object):
 
         file.Write("    client_t *client = client_get_thread_local ();\n");
 
+        # For EGL functions we don't need to have valid GL state in place to use them.
+        if not func.name.startswith("egl"):
+          file.Write("    if (! client || ! client_has_valid_state (client))\n")
+          file.Write("        %s;" % func.MakeDefaultReturnStatement())
+
         file.Write("    ")
         if func.HasReturnValue():
             file.Write("return ")
