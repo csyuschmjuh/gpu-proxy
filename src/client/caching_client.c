@@ -12,12 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-__thread client_t* thread_local_caching_client
-    __attribute__(( tls_model ("initial-exec"))) = NULL;
-
-__thread bool caching_client_thread
-    __attribute__(( tls_model ("initial-exec"))) = false;
-
 /* global variable */
 gl_states_t cached_gl_states;
 
@@ -504,61 +498,6 @@ _match (EGLDisplay display,
     mutex_unlock (cached_gl_states_mutex);
     return false;
 }
-/* the client first calls eglInitialize (),
- * then look over the cached states
- */
-/*
-static void 
-_caching_client_initialize (EGLDisplay display) 
-{
-    link_list_t *head = cached_gl_states.states;
-    link_list_t *list = head;
-
-    egl_state_t *egl_state;
-
-    mutex_lock (cached_gl_states_mutex);
-
-    if (cached_gl_states.initialized == false ||
-        cached_gl_states.num_contexts == 0 || (! cached_gl_states.states)) {
-        mutex_unlock (cached_gl_states_mutex);
-        return;
-    }
-    
-    while (list != NULL) {
-        egl_state = (egl_state_t *) list->data;
-        list = list->next;
-
-        if (egl_state->display == display) {
-            if (egl_state->destroy_dpy)
-                egl_state->destroy_dpy = false;
-        }
-    }
-    mutex_unlock (cached_gl_states_mutex);
-}*/
-/*
-static bool
-caching_client_glIsValidFunc (void* client, 
-                              void *func)
-{
-    egl_state_t *egl_state;
-
-    if (func)
-        return true;
-
-    if (CLIENT(client)->active_state) {
-        egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    
-        if (egl_state->active == true &&
-            egl_state->state.error == GL_NO_ERROR) {
-            // FIXME: why?
-            // egl_state->state.error = GL_INVALID_OPERATION;
-            return true;
-        }
-    }
-    return false;
-}
-*/
-
 static bool
 caching_client_glIsValidContext (void* client)
 {
@@ -4386,8 +4325,6 @@ caching_client_eglMakeCurrent (void* client,
     return result;
 }
 
-/* start of eglext.h */
-/* end of eglext.h */
 /* we specify those passthrough GL APIs that needs to set need_get_error */
 static void
 caching_client_post_hook(client_t *client,
@@ -4412,28 +4349,13 @@ caching_client_post_hook(client_t *client,
     case COMMAND_GLGETSHADERPRECISIONFORMAT:
     case COMMAND_GLGETSHADERINFOLOG:
     case COMMAND_GLGETSHADERSOURCE:
-    //case COMMAND_GLGETUNIFORMFV:
-    //case COMMAND_GLGETUNIFORMIV:
     case COMMAND_GLLINKPROGRAM:
     case COMMAND_GLVALIDATEPROGRAM:
-    //case COMMAND_GLGETPROGRAMINFOLOG:
-    //case COMMAND_GLGETPROGRAMIV:
-    //case COMMAND_GLUNIFORM1F:
-    //case COMMAND_GLUNIFORM1I:
-    //case COMMAND_GLUNIFORM2F:
-    //case COMMAND_GLUNIFORM2I:
-    //case COMMAND_GLUNIFORM3F:
-    //case COMMAND_GLUNIFORM3I:
-    //case COMMAND_GLUNIFORM4F:
-    //case COMMAND_GLUNIFORM4I:
-    //case COMMAND_GLGETUNIFORMIV:
-    //case COMMAND_GLGETUNIFORMFV:
     case COMMAND_GLREADPIXELS:
     case COMMAND_GLRELEASESHADERCOMPILER:
     case COMMAND_GLRENDERBUFFERSTORAGE:
     case COMMAND_GLSHADERBINARY:
     case COMMAND_GLSHADERSOURCE:
-
     case COMMAND_GLEGLIMAGETARGETRENDERBUFFERSTORAGEOES:
     case COMMAND_GLGETPROGRAMBINARYOES:
     case COMMAND_GLPROGRAMBINARYOES:
