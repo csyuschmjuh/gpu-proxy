@@ -22,6 +22,8 @@ libGPUProcess_la_LDFLAGS = \
 libGPUProcess_la_SOURCES = \
 	client/client.c \
 	client/client.h \
+	client/name_handler.h \
+	client/name_handler.c \
 	command.c \
 	command.h \
 	command_custom.c \
@@ -29,8 +31,6 @@ libGPUProcess_la_SOURCES = \
 	compiler_private.h \
 	compiler.c \
 	gl_states.h \
-	name_handler.h \
-	name_handler.c \
 	ring_buffer.h \
 	ring_buffer.c \
 	server/caching_server_private.h \
