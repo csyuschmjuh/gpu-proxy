@@ -161,6 +161,34 @@ _caching_client_init_gles2_states (egl_state_t *egl_state)
     /* XXX: initialize a thread */
 }
 
+static bool
+caching_client_does_index_overflow (void* client,
+                                    GLuint index)
+{
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (index <= state->max_vertex_attribs)
+        return false;
+
+    if (! state->max_vertex_attribs_queried) {
+        CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
+                                                              &state->max_vertex_attribs);
+        state->max_vertex_attribs_queried = true;
+    }
+
+    if (index <= state->max_vertex_attribs)
+        return false;
+    if (state->error == GL_NO_ERROR)
+        state->error = GL_INVALID_VALUE;
+    return true;
+}
+
+static void
+caching_client_set_needs_get_error (client_t *client,
+                                    bool needs_get_error)
+{
+    client_get_current_gl_state (CLIENT (client))->need_get_error = needs_get_error;
+}
+
 static void
 _caching_client_set_egl_states (egl_state_t *egl_state, 
                                 EGLDisplay  display,
@@ -602,7 +630,7 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
             return;
         else {
             CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
-            state->need_get_error = true;
+            caching_client_set_needs_get_error (CLIENT (client), true);
 
            /* FIXME: we don't know whether it succeeds or not */
            state->array_buffer_binding = buffer;
@@ -1026,10 +1054,8 @@ caching_client_glCreateProgram (void* client)
     /* FIXME: client side create program */
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
-    if (result == 0) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (result == 0)
+        caching_client_set_needs_get_error (CLIENT (client), true);
 
     if (program_list) {
         while (program_list->next)
@@ -1116,11 +1142,8 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateShader (client, shaderType);
 
-    if (result == 0) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
-
+    if (result == 0)
+        caching_client_set_needs_get_error (CLIENT (client), true);
     return result;
 }
 
@@ -1382,27 +1405,6 @@ caching_client_glEnable (void* client, GLenum cap)
     caching_client_glSetCap (client, cap, GL_TRUE);
 }
 
-static bool
-caching_client_does_index_overflow (void* client,
-                                    GLuint index)
-{
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (index <= state->max_vertex_attribs)
-        return false;
-
-    if (! state->max_vertex_attribs_queried) {
-        CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
-                                                              &state->max_vertex_attribs);
-        state->max_vertex_attribs_queried = true;
-    }
-
-    if (index <= state->max_vertex_attribs)
-        return false;
-    if (state->error == GL_NO_ERROR)
-        state->error = GL_INVALID_VALUE;
-    return true;
-}
-
 static void
 caching_client_glSetVertexAttribArray (void* client,
                                        GLuint index,
@@ -1422,7 +1424,7 @@ caching_client_glSetVertexAttribArray (void* client,
            CACHING_CLIENT(client)->super_dispatch.glEnableVertexAttribArray (client, index);
         else
            CACHING_CLIENT(client)->super_dispatch.glDisableVertexAttribArray (client, index);
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
         return;
     }
  
@@ -1937,9 +1939,7 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
     }
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferRenderbuffer (client, target, attachment, renderbuffertarget, renderbuffer);
-
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -1959,8 +1959,7 @@ caching_client_glFramebufferTexture2D (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2D (client, target, attachment,
                                                                    textarget, texture, level);
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -2096,8 +2095,7 @@ caching_client_glGenerateMipmap (void* client, GLenum target)
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGenerateMipmap (client, target);
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void caching_client_glGetActiveAttrib (void *client,
@@ -2114,10 +2112,8 @@ static void caching_client_glGetActiveAttrib (void *client,
     CACHING_CLIENT(client)->super_dispatch.glGetActiveAttrib (client, program, index, bufsize,
                                                               length, size, type, name);
 
-    if (*length == 0) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (*length == 0)
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void caching_client_glGetActiveUniform (void *client,
@@ -2133,10 +2129,8 @@ static void caching_client_glGetActiveUniform (void *client,
 
     CACHING_CLIENT(client)->super_dispatch.glGetActiveUniform (client, program, index, bufsize,
                                                                length, size, type, name);
-    if (*length == 0) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (*length == 0)
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static GLint
@@ -2164,7 +2158,7 @@ caching_client_glGetAttribLocation (void* client, GLuint program,
             result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
 
             if (result == -1) {
-                state->need_get_error = true;
+                caching_client_set_needs_get_error (CLIENT (client), true);
                 return -1;
             }
 
@@ -2229,7 +2223,7 @@ caching_client_glGetUniformLocation (void* client, GLuint program,
             result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
 
             if (result == -1) {
-                state->need_get_error = true;
+                caching_client_set_needs_get_error (CLIENT (client), true);
                 return -1;
             }
 
@@ -2516,7 +2510,7 @@ caching_client_glGetIntegerv (void* client,
         break;
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
         break;
     }
 
@@ -2549,7 +2543,7 @@ caching_client_glGetError (void* client)
 
     error = CACHING_CLIENT(client)->super_dispatch.glGetError (client);
 
-    state->need_get_error = false;
+    caching_client_set_needs_get_error (CLIENT (client), false);
     state->error = GL_NO_ERROR;
 
     return error;
@@ -2574,10 +2568,8 @@ caching_client_glGetFramebufferAttachmentParameteriv (void* client,
     CACHING_CLIENT(client)->super_dispatch.glGetFramebufferAttachmentParameteriv (client, target,
                                                                                   attachment, pname,
                                                                                   params);
-    if (original_params == params[0]) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (original_params == params[0])
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -2595,10 +2587,8 @@ caching_client_glGetRenderbufferParameteriv (void* client, GLenum target,
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGetRenderbufferParameteriv (client, target, pname, params);
-    if (original_params == params[0]) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (original_params == params[0])
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static const GLubyte *
@@ -2619,10 +2609,8 @@ caching_client_glGetString (void* client, GLenum name)
 
     result = CACHING_CLIENT(client)->super_dispatch.glGetString (client, name);
 
-    if (result == 0) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-        state->need_get_error = true;
-    }
+    if (result == 0)
+        caching_client_set_needs_get_error (CLIENT (client), true);
 
     return result;
 }
@@ -2694,9 +2682,8 @@ caching_client_glGetUniformfv (void* client, GLuint program,
     command_glgetuniformfv_init (command, program, location, params);
     client_run_command (command);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -2709,9 +2696,8 @@ caching_client_glGetUniformiv (void* client, GLuint program,
 
     CACHING_CLIENT(client)->super_dispatch.glGetUniformiv (client, program, location, params);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -2855,7 +2841,7 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
     if (state->vertex_array_binding) {
         CACHING_CLIENT(client)->super_dispatch.glGetVertexAttribPointerv (client, index, pname, pointer);
         if (*pointer == NULL)
-            state->need_get_error = true;
+            caching_client_set_needs_get_error (CLIENT (client), true);
         return;
     }
 
@@ -2891,7 +2877,7 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
     CACHING_CLIENT(client)->super_dispatch.glHint (client, target, mode);
 
     if (target != GL_GENERATE_MIPMAP_HINT)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static GLboolean
@@ -3453,7 +3439,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
 
     tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
     if (! tex)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
     else {
         tex->internal_format = internalformat;
         tex->width = width;
@@ -3518,7 +3504,7 @@ caching_client_glTexSubImage2D (void* client,
 
     tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
     if (! tex)
-        state->need_get_error = true;
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
     else {
         if (tex->internal_format != format) {
             caching_client_glSetError (client, GL_INVALID_OPERATION);
@@ -3535,7 +3521,6 @@ caching_client_glTexSubImage2D (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
                                                             width, height, format, type, pixels);
-
 }
 
 static void
@@ -3826,7 +3811,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
                                                                       type, normalized, stride, pointer);
         /* FIXME: Do we need set this flag? */
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
     }
 
     if (found_index != -1) {
@@ -3915,9 +3900,7 @@ caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglI
     }
 
     CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
-
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void* 
@@ -3938,10 +3921,8 @@ caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
 
     result = CACHING_CLIENT(client)->super_dispatch.glMapBufferOES (client, target, access);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result == NULL)
-        state->need_get_error = true;
-
+        caching_client_set_needs_get_error (CLIENT (client), true);
     return result;
 }
 
@@ -3960,9 +3941,8 @@ caching_client_glUnmapBufferOES (void* client, GLenum target)
 
     result = CACHING_CLIENT(client)->super_dispatch.glUnmapBufferOES (client, target);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result != GL_TRUE)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
     return result;
 }
 
@@ -3978,9 +3958,7 @@ caching_client_glGetBufferPointervOES (void* client, GLenum target, GLenum pname
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGetBufferPointervOES (client, target, pname, params);
-
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -4001,8 +3979,7 @@ caching_client_glFramebufferTexture3DOES (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture3DOES (client, target, attachment,
                                                                       textarget, texture, level, zoffset);
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 /* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
@@ -4025,7 +4002,8 @@ caching_client_glBindVertexArrayOES (void* client, GLuint array)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glBindVertexArrayOES (client, array);
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
+
     /* FIXME: should we save this ? */
     state->vertex_array_binding = array;
 }
@@ -4152,9 +4130,7 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleEXT (
         client, target, attachment, textarget, texture, level, samples);
-
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -4173,9 +4149,7 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleIMG (
         client, target, attachment, textarget, texture, level, samples);
-
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -4211,10 +4185,8 @@ caching_client_glTestFenceNV (void* client, GLuint fence)
 
     GLboolean result = CACHING_CLIENT(client)->super_dispatch.glTestFenceNV (client, fence);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result == GL_FALSE)
-        state->need_get_error = true;
-
+        caching_client_set_needs_get_error (CLIENT (client), true);
     return result;
 }
 
@@ -4227,9 +4199,8 @@ caching_client_glGetFenceivNV (void* client, GLuint fence, GLenum pname, int *pa
 
     CACHING_CLIENT(client)->super_dispatch.glGetFenceivNV (client, fence, pname, params);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        state->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
 }
 
 static void
@@ -4537,7 +4508,7 @@ caching_client_post_hook(client_t *client,
     case COMMAND_GLEXTGETPROGRAMBINARYSOURCEQCOM:
     case COMMAND_GLSTARTTILINGQCOM:
     case COMMAND_GLENDTILINGQCOM:
-        client_get_current_gl_state (CLIENT (client))->need_get_error = true;
+        caching_client_set_needs_get_error (CLIENT (client), true);
         break;
     default:
         break;
