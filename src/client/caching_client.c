@@ -1800,6 +1800,7 @@ static void
 caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 {
     GLuint *server_buffers;
+    int i;
 
     INSTRUMENT();
 
@@ -1813,6 +1814,9 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
                               n, buffers);
 
     server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
+    for (i=0; i<n; i++)
+        server_buffers[i] = buffers [i];
+
     CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, server_buffers);
 }
 
