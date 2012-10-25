@@ -4,10 +4,6 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum v_light_source {
 #ifdef GL_VERSION_1_1
     V_AMBIENT = 0,
@@ -2369,8 +2365,5 @@ typedef struct gl_state {
 #endif
 
 } gl_state_t;
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_GL_STATE_H */

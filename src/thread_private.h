@@ -3,10 +3,6 @@
 
 #include <pthread.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* mutex definition */
 typedef pthread_mutex_t                 mutex_t;
 
@@ -31,10 +27,5 @@ typedef pthread_t                       thread_t;
 
 #define signal_static_init(name) \
     static signal_t name = PTHREAD_COND_INITIALIZER
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_THREAD_H */

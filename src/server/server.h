@@ -13,10 +13,6 @@ typedef struct _server server_t;
 #include "types_private.h"
 #include <pthread.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef void (*command_handler_t)(server_t *server, command_t *command);
 
 struct _server {
@@ -44,10 +40,6 @@ server_destroy (server_t *server);
 
 private void
 server_start_work_loop (server_t *server);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_SERVER_H */
 

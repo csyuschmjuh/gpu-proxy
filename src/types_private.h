@@ -3,10 +3,6 @@
 
 #include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct link_list
 {
     void *data;
@@ -17,9 +13,5 @@ typedef struct link_list
 #define v_ref_count_t unsigned int
 
 #define v_client_id_t pid_t
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_TYPES_PRIVATE_H */

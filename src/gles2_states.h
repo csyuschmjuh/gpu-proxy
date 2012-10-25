@@ -6,10 +6,6 @@
 #include <GLES2/gl2ext.h>
 #include "types_private.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define NUM_EMBEDDED 32
 
 /* these are client state */
@@ -277,8 +273,5 @@ typedef struct gl_state {
     GLint        texture_max_level;
 
 } gles2_state_t;
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_GLES2_STATE_H */

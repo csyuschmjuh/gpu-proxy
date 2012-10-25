@@ -10,10 +10,6 @@ typedef struct _client client_t;
 #include "server.h"
 #include "types_private.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define CLIENT(object) ((client_t *) (object))
 
 /* Initialize the commands in the buffer using the following sequence
@@ -81,9 +77,5 @@ client_init (client_t *);
 
 private bool
 client_has_valid_state (client_t *client);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CLIENT_H */

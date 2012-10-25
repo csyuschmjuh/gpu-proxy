@@ -5,11 +5,6 @@
 #include <GL/glxext.h>
 #include "gl_states.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 typedef struct glx_state {
     GLXContext                context;        /* active context, initial NULL */
     Display                *display;        /* active display, initial NULL */
@@ -20,9 +15,5 @@ typedef struct glx_state {
     GLXDrawable                readable;        /* active read drawable, initial None */
 
 } glx_state_t;
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_GLX_STATE_H */
