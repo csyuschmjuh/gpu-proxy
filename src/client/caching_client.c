@@ -1489,6 +1489,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     bool one_array = false;
     unsigned int array_size = 0;
     int data_size;
+    char *one_array_data = NULL;
 
     INSTRUMENT();
 
@@ -1516,9 +1517,12 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
     /* we can memcpy one array */
     if (one_array) {
-        memcpy (attrib_list->prealloc_attribs_region,
+        one_array_data = (char *)malloc (array_size);
+        
+        memcpy (one_array_data,
                 attrib_list->first_index_pointer,
                 array_size);
+        prepend_element_to_list (allocated_data_arrays, one_array_data);
     }
 
     for (i = 0; i < attrib_list->count; i++) {
@@ -1531,7 +1535,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
         /* We need to create a separate buffer for it. */
         if (one_array) {
-            attribs[i].data = (char *)attribs[i].pointer - attrib_list->first_index_pointer + attrib_list->prealloc_attribs_region;
+            attribs[i].data = (char *)attribs[i].pointer - attrib_list->first_index_pointer + one_array_data;
         }
         else {
             attribs[i].data = _create_data_array (&attribs[i], count);
