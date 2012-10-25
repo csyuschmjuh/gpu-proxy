@@ -23,11 +23,16 @@ typedef struct vertex_attrib
     char          *data;
 } vertex_attrib_t;
 
+#define ATTRIB_BUFFER_SIZE (1024 * 512)
+
 typedef struct vertex_attrib_list
 {
     int                 count;          /* initial 0 */
     vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
     vertex_attrib_t     *attribs;
+    char                *first_index_pointer;
+    char                *last_index_pointer;
+    char                prealloc_attribs_region[ATTRIB_BUFFER_SIZE];
 } vertex_attrib_list_t;
 
 typedef struct v_program_status {
