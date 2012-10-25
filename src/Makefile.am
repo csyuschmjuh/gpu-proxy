@@ -9,7 +9,8 @@ libGPUProcess_la_CFLAGS = \
 	-Wall \
 	-Igenerated \
 	-Iclient \
-	-Iserver
+	-Iserver \
+	-Iutil
 
 libGPUProcess_la_LDFLAGS = \
 	-version-info 0:0:0 \
@@ -58,9 +59,10 @@ libGPUProcess_la_SOURCES += \
 	dispatch_table.h \
 	egl_states.h \
 	gles2_states.h \
-	gles2_utils.c \
-	gles2_utils.h \
-	server/caching_server_gles.c
+	server/caching_server_gles.c \
+	util/gles2_utils.c \
+	util/gles2_utils.h
+
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/client_entry_points.c \
