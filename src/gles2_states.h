@@ -32,7 +32,6 @@ typedef struct vertex_attrib_list
     vertex_attrib_t     *attribs;
     char                *first_index_pointer;
     char                *last_index_pointer;
-    char                prealloc_attribs_region[ATTRIB_BUFFER_SIZE];
 } vertex_attrib_list_t;
 
 typedef struct v_program_status {
