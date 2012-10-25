@@ -37,7 +37,9 @@ libGPUProcess_la_SOURCES = \
 	server/server.h \
 	server/server.c \
 	thread_private.h \
-	types_private.h
+	types_private.h \
+	util/hash.h \
+	util/hash.c
 
 if HAS_GL
 libGPUProcess_la_SOURCES += \
