@@ -1481,6 +1481,8 @@ _create_data_array (vertex_attrib_t *attrib, int count)
     char *data = NULL;
     int size = 0;
 
+    INSTRUMENT();
+
     if (attrib->type == GL_BYTE || attrib->type == GL_UNSIGNED_BYTE)
         size = sizeof (char);
     else if (attrib->type == GL_SHORT || attrib->type == GL_UNSIGNED_SHORT)
@@ -1495,8 +1497,12 @@ _create_data_array (vertex_attrib_t *attrib, int count)
 
     data = (char *)malloc (size * count * attrib->size);
 
-    for (i = 0; i < count; i++)
-        memcpy (data + i * attrib->size * size, attrib->pointer + attrib->stride * i, attrib->size * size);
+    if (attrib->size * size == attrib->stride || attrib->stride == 0)
+        memcpy (data, attrib->pointer, attrib->size * size * count);
+    else {
+        for (i = 0; i < count; i++)
+            memcpy (data + i * attrib->size * size, attrib->pointer + attrib->stride * i, attrib->size * size);
+    }
  
     return data;
 }
@@ -1536,6 +1542,8 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 {
     int i = 0;
     bool needs_call = false;
+
+    INSTRUMENT();
 
     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
@@ -1632,6 +1640,8 @@ caching_client_glCreateIndicesArray (GLenum mode,
     char *data = NULL;
     int length;
     int size = 0;
+
+    INSTRUMENT();
 
     if (type == GL_UNSIGNED_BYTE)
         size = sizeof (char);
