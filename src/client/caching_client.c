@@ -216,7 +216,7 @@ _caching_client_get_state (EGLDisplay dpy,
                            EGLContext ctx)
 {
     link_list_t *new_list;
-    egl_state_t   *new_state;
+    egl_state_t *new_state;
     link_list_t *list = cached_gl_states.states;
 
     if (cached_gl_states.num_contexts == 0 || ! cached_gl_states.states) {
@@ -231,7 +231,7 @@ _caching_client_get_state (EGLDisplay dpy,
         _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
         cached_gl_states.states->data = new_state;
         new_state->active = true;
-	return cached_gl_states.states;
+        return cached_gl_states.states;
     }
 
     /* look for matching context in existing states */
@@ -503,14 +503,9 @@ _match (EGLDisplay display,
 static void
 caching_client_glSetError (void* client, GLenum error)
 {
-    egl_state_t *egl_state;
-
-    if (CLIENT(client)->active_state) {
-        egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
- 
-        if (egl_state->active && egl_state->state.error == GL_NO_ERROR)
-            egl_state->state.error = error;
-    }
+    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
+    if (egl_state->active && egl_state->state.error == GL_NO_ERROR)
+        egl_state->state.error = error;
 }
 
 /* GLES2 core profile API */
@@ -518,14 +513,12 @@ static void
 caching_client_glActiveTexture (void* client,
                                 GLenum texture)
 {
-    egl_state_t *egl_state;
     int texture_offset = texture - GL_TEXTURE0;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.active_texture == texture)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->active_texture == texture)
         return;
     else if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -536,56 +529,53 @@ caching_client_glActiveTexture (void* client,
         /* FIXME: this maybe not right because this texture may be 
          * invalid object, we save here to save time in glGetError() 
          */
-        egl_state->state.active_texture = texture;
-        egl_state->state.texture_binding[0] = -1;
-        egl_state->state.texture_binding[1] = -1;
-        egl_state->state.texture_binding_3d = -1;
-        
-        egl_state->state.texture_mag_filter[texture_offset][0] = -1;
-        egl_state->state.texture_mag_filter[texture_offset][1] = -1;
-        egl_state->state.texture_mag_filter[texture_offset][2] = -1;
-        egl_state->state.texture_min_filter[texture_offset][0] = -1;
-        egl_state->state.texture_min_filter[texture_offset][1] = -1;
-        egl_state->state.texture_min_filter[texture_offset][2] = -1;
-        egl_state->state.texture_wrap_s[texture_offset][0] = -1;
-        egl_state->state.texture_wrap_s[texture_offset][1] = -1;
-        egl_state->state.texture_wrap_s[texture_offset][2] = -1;
-        egl_state->state.texture_wrap_t[texture_offset][0] = -1;
-        egl_state->state.texture_wrap_t[texture_offset][1] = -1;
-        egl_state->state.texture_wrap_t[texture_offset][2] = -1;
-        egl_state->state.texture_3d_wrap_r[texture_offset] = -1;
+        state->active_texture = texture;
+        state->texture_binding[0] = -1;
+        state->texture_binding[1] = -1;
+        state->texture_binding_3d = -1;
+
+        state->texture_mag_filter[texture_offset][0] = -1;
+        state->texture_mag_filter[texture_offset][1] = -1;
+        state->texture_mag_filter[texture_offset][2] = -1;
+        state->texture_min_filter[texture_offset][0] = -1;
+        state->texture_min_filter[texture_offset][1] = -1;
+        state->texture_min_filter[texture_offset][2] = -1;
+        state->texture_wrap_s[texture_offset][0] = -1;
+        state->texture_wrap_s[texture_offset][1] = -1;
+        state->texture_wrap_s[texture_offset][2] = -1;
+        state->texture_wrap_t[texture_offset][0] = -1;
+        state->texture_wrap_t[texture_offset][1] = -1;
+        state->texture_wrap_t[texture_offset][2] = -1;
+        state->texture_3d_wrap_r[texture_offset] = -1;
     }
 }
 
 static void
 caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (target == GL_ARRAY_BUFFER) {
-        if (egl_state->state.array_buffer_binding == buffer)
+        if (state->array_buffer_binding == buffer)
             return;
         else {
             CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
-            egl_state->state.need_get_error = true;
+            state->need_get_error = true;
 
            /* FIXME: we don't know whether it succeeds or not */
-           egl_state->state.array_buffer_binding = buffer;
+           state->array_buffer_binding = buffer;
         }
     }
     else if (target == GL_ELEMENT_ARRAY_BUFFER) {
-        if (egl_state->state.element_array_buffer_binding == buffer)
+        if (state->element_array_buffer_binding == buffer)
             return;
         else {
             CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
-            //egl_state->state.need_get_error = true;
+            //state->need_get_error = true;
 
            /* FIXME: we don't know whether it succeeds or not */
-           egl_state->state.element_array_buffer_binding = buffer;
+           state->element_array_buffer_binding = buffer;
         }
     }
     else {
@@ -596,14 +586,12 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
 static void
 caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffer)
 {
-    egl_state_t *egl_state;
 
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (target == GL_FRAMEBUFFER &&
-        egl_state->state.framebuffer_binding == framebuffer)
+        state->framebuffer_binding == framebuffer)
             return;
 
     if (target != GL_FRAMEBUFFER) {
@@ -614,18 +602,15 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
     /* FIXME: should we save it, it will be invalid if the
      * framebuffer is invalid 
      */
-    egl_state->state.framebuffer_binding = framebuffer;
+    state->framebuffer_binding = framebuffer;
 
-    //egl_state->state.need_get_error = true;
+    //state->need_get_error = true;
 }
 
 static void
 caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuffer)
 {
-    egl_state_t *egl_state;
- 
     INSTRUMENT();
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -635,47 +620,42 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
     /* FIXME: should we save it, it will be invalid if the
      * renderbuffer is invalid 
      */
-    egl_state->state.renderbuffer_binding = renderbuffer;
-    //egl_state->state.need_get_error = true;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->renderbuffer_binding = renderbuffer;
 }
 
 static void
 caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (target == GL_TEXTURE_2D &&
-        egl_state->state.texture_binding[0] == texture)
+        state->texture_binding[0] == texture)
         return;
     else if (target == GL_TEXTURE_CUBE_MAP &&
-             egl_state->state.texture_binding[1] == texture)
+             state->texture_binding[1] == texture)
         return;
     else if (target == GL_TEXTURE_3D_OES &&
-             egl_state->state.texture_binding_3d == texture)
+             state->texture_binding_3d == texture)
         return;
 
-    if (! (target == GL_TEXTURE_2D || target == GL_TEXTURE_CUBE_MAP
-       || target == GL_TEXTURE_3D_OES
-      )) {
+    if (! (target == GL_TEXTURE_2D ||
+           target == GL_TEXTURE_CUBE_MAP ||
+           target == GL_TEXTURE_3D_OES)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
-    
-    CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
 
-    //egl_state->state.need_get_error = true;
+    CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
 
     /* FIXME: do we need to save them ? */
     if (target == GL_TEXTURE_2D)
-        egl_state->state.texture_binding[0] = texture;
+        state->texture_binding[0] = texture;
     else if (target == GL_TEXTURE_CUBE_MAP)
-        egl_state->state.texture_binding[1] = texture;
+        state->texture_binding[1] = texture;
     else
-        egl_state->state.texture_binding_3d = texture;
+        state->texture_binding_3d = texture;
 }
 
 static void
@@ -683,14 +663,9 @@ caching_client_glBlendColor (void* client, GLclampf red,
                              GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->blend_color[0] == red &&
         state->blend_color[1] == green &&
         state->blend_color[2] == blue &&
@@ -708,14 +683,9 @@ caching_client_glBlendColor (void* client, GLclampf red,
 static void
 caching_client_glBlendEquation (void* client, GLenum mode)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->blend_equation[0] == mode &&
         state->blend_equation[1] == mode)
         return;
@@ -736,14 +706,9 @@ caching_client_glBlendEquation (void* client, GLenum mode)
 static void
 caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum modeAlpha)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->blend_equation[0] == modeRGB &&
         state->blend_equation[1] == modeAlpha)
         return;
@@ -767,14 +732,9 @@ caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum mod
 static void
 caching_client_glBlendFunc (void* client, GLenum sfactor, GLenum dfactor)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->blend_src[0] == sfactor &&
         state->blend_src[1] == sfactor &&
         state->blend_dst[0] == dfactor &&
@@ -825,14 +785,9 @@ static void
 caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
                                     GLenum srcAlpha, GLenum dstAlpha)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->blend_src[0] == srcRGB &&
         state->blend_src[1] == srcAlpha &&
         state->blend_dst[0] == dstRGB &&
@@ -943,14 +898,9 @@ static void
 caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
                  GLclampf blue, GLclampf alpha)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->color_clear_value[0] == red &&
         state->color_clear_value[1] == green &&
         state->color_clear_value[2] == blue &&
@@ -968,14 +918,9 @@ caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
 static void
 caching_client_glClearDepthf (void* client, GLclampf depth)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->depth_clear_value == depth)
         return;
 
@@ -987,14 +932,9 @@ caching_client_glClearDepthf (void* client, GLclampf depth)
 static void
 caching_client_glClearStencil (void* client, GLint s)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->stencil_clear_value == s)
         return;
 
@@ -1006,14 +946,9 @@ static void
 caching_client_glColorMask (void* client, GLboolean red, GLboolean green,
                 GLboolean blue, GLboolean alpha)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (state->color_writemask[0] == red &&
         state->color_writemask[1] == green &&
         state->color_writemask[2] == blue &&
@@ -1035,9 +970,8 @@ caching_client_glCreateProgram (void* client)
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
     if (result == 0) {
-        egl_state_t *egl_state; egl_state = 
-            (egl_state_t *) CLIENT(client)->active_state->data;
-        egl_state->state.need_get_error = true;
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
     }
     return result;
 }
@@ -1056,9 +990,8 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateShader (client, shaderType);
 
     if (result == 0) {
-        egl_state_t *egl_state; egl_state = 
-            (egl_state_t *) CLIENT(client)->active_state->data;
-        egl_state->state.need_get_error = true;
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
     }
 
     return result;
@@ -1067,13 +1000,10 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
 static void
 caching_client_glCullFace (void* client, GLenum mode)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.cull_face_mode == mode)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->cull_face_mode == mode)
         return;
 
     if (! (mode == GL_FRONT ||
@@ -1083,21 +1013,20 @@ caching_client_glCullFace (void* client, GLenum mode)
         return;
     }
 
-    egl_state->state.cull_face_mode = mode;
+    state->cull_face_mode = mode;
     CACHING_CLIENT(client)->super_dispatch.glCullFace (client, mode);
 }
 
 static void
 caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 {
-    egl_state_t *egl_state;
     int count;
     int i, j;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
     count = attrib_list->count;
 
@@ -1110,10 +1039,10 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     /* check array_buffer_binding and element_array_buffer_binding */
     for (i = 0; i < n; i++) {
-        if (buffers[i] == egl_state->state.array_buffer_binding)
-            egl_state->state.array_buffer_binding = 0;
-        else if (buffers[i] == egl_state->state.element_array_buffer_binding)
-            egl_state->state.element_array_buffer_binding = 0;
+        if (buffers[i] == state->array_buffer_binding)
+            state->array_buffer_binding = 0;
+        else if (buffers[i] == state->element_array_buffer_binding)
+            state->element_array_buffer_binding = 0;
     }
     
     /* update client state */
@@ -1135,12 +1064,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 static void
 caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *framebuffers)
 {
-    egl_state_t *egl_state;
-    int i;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1149,9 +1073,11 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
+    int i;
     for (i = 0; i < n; i++) {
-        if (egl_state->state.framebuffer_binding == framebuffers[i]) {
-            egl_state->state.framebuffer_binding = 0;
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        if (state->framebuffer_binding == framebuffers[i]) {
+            state->framebuffer_binding = 0;
             break;
         }
     }
@@ -1186,13 +1112,10 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 static void
 caching_client_glDepthFunc (void* client, GLenum func)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.depth_func == func)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->depth_func == func)
         return;
 
     if (! (func == GL_NEVER ||
@@ -1207,42 +1130,35 @@ caching_client_glDepthFunc (void* client, GLenum func)
         return;
     }
 
-    egl_state->state.depth_func = func;
+    state->depth_func = func;
     CACHING_CLIENT(client)->super_dispatch.glDepthFunc (client, func);
 }
 
 static void
 caching_client_glDepthMask (void* client, GLboolean flag)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.depth_writemask == flag)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->depth_writemask == flag)
         return;
 
-    egl_state->state.depth_writemask = flag;
-
+    state->depth_writemask = flag;
     CACHING_CLIENT(client)->super_dispatch.glDepthMask (client, flag);
 }
 
 static void
 caching_client_glDepthRangef (void* client, GLclampf nearVal, GLclampf farVal)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.depth_range[0] == nearVal &&
-        egl_state->state.depth_range[1] == farVal)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->depth_range[0] == nearVal &&
+        state->depth_range[1] == farVal)
         return;
 
-    egl_state->state.depth_range[0] = nearVal;
-    egl_state->state.depth_range[1] = farVal;
+    state->depth_range[0] = nearVal;
+    state->depth_range[1] = farVal;
 
     CACHING_CLIENT(client)->super_dispatch.glDepthRangef (client, nearVal, farVal);
 }
@@ -1250,16 +1166,11 @@ caching_client_glDepthRangef (void* client, GLclampf nearVal, GLclampf farVal)
 void
 caching_client_glSetCap (void* client, GLenum cap, GLboolean enable)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
     bool needs_call = false;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (cap) {
     case GL_BLEND:
         if (state->blend != enable) {
@@ -1453,27 +1364,16 @@ caching_client_glSetVertexAttribArray (void* client,
 static void
 caching_client_glDisableVertexAttribArray (void* client, GLuint index)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     caching_client_glSetVertexAttribArray (client, index, state, GL_FALSE);
 }
 
 static void
 caching_client_glEnableVertexAttribArray (void* client, GLuint index)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     caching_client_glSetVertexAttribArray (client, index, state, GL_TRUE);
 }
 
@@ -1513,8 +1413,8 @@ _create_data_array (vertex_attrib_t *attrib, int count)
 static void
 caching_client_clear_attribute_list_data (client_t *client)
 {
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
 
     int i = -1;
     for (i = 0; i < attrib_list->count; i++)
@@ -1548,8 +1448,8 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
     INSTRUMENT();
 
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
     for (i = 0; i < attrib_list->count; i++) {
@@ -1615,8 +1515,7 @@ caching_client_glDrawArrays (void* client,
 
     /* If vertex array binding is 0 and we have not bound a vertex attrib pointer, we
      * don't need to do anything. */
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    gles2_state_t *state = &egl_state->state;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     link_list_t *arrays_to_free = NULL;
     if (! state->vertex_array_binding)
         needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client),
@@ -1669,9 +1568,6 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    gles2_state_t *state = &egl_state->state;
-
     if (! (mode == GL_POINTS         ||
            mode == GL_LINE_STRIP     ||
            mode == GL_LINE_LOOP      ||
@@ -1701,6 +1597,7 @@ caching_client_glDrawElements (void* client,
     }
 
     link_list_t *arrays_to_free = NULL;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     bool needs_call = state->vertex_array_binding ||
          caching_client_setup_vertex_attrib_pointer_if_necessary (
             CLIENT (client), count, &arrays_to_free);
@@ -1731,24 +1628,20 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
                                           GLenum renderbuffertarget,
                                           GLenum renderbuffer)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
-    }
-    else if (renderbuffertarget != GL_RENDERBUFFER &&
-             renderbuffer != 0) {
+    } else if (renderbuffertarget != GL_RENDERBUFFER && renderbuffer != 0) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferRenderbuffer (client, target, attachment, renderbuffertarget, renderbuffer);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
@@ -1759,32 +1652,26 @@ caching_client_glFramebufferTexture2D (void* client,
                                        GLuint texture,
                                        GLint level)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
-    
+
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2D (client, target, attachment,
                                                                    textarget, texture, level);
-    egl_state->state.need_get_error = true;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
 caching_client_glFrontFace (void* client, GLenum mode)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
-    if (egl_state->state.front_face == mode)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->front_face == mode)
         return;
 
     if (! (mode == GL_CCW || mode == GL_CW)) {
@@ -1792,7 +1679,7 @@ caching_client_glFrontFace (void* client, GLenum mode)
         return;
     }
 
-    egl_state->state.front_face = mode;
+    state->front_face = mode;
     CACHING_CLIENT(client)->super_dispatch.glFrontFace (client, mode);
 }
 
@@ -1862,11 +1749,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 static void
 caching_client_glGenerateMipmap (void* client, GLenum target)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (target == GL_TEXTURE_2D       || 
            target == GL_TEXTURE_CUBE_MAP
@@ -1878,7 +1761,8 @@ caching_client_glGenerateMipmap (void* client, GLenum target)
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGenerateMipmap (client, target);
-    egl_state->state.need_get_error = true;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void caching_client_glGetActiveAttrib (void *client,
@@ -1890,17 +1774,15 @@ static void caching_client_glGetActiveAttrib (void *client,
                                               GLenum *type,
                                               GLchar *name)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     CACHING_CLIENT(client)->super_dispatch.glGetActiveAttrib (client, program, index, bufsize,
                                                               length, size, type, name);
 
-    if (*length == 0)
-        egl_state->state.need_get_error = true;
+    if (*length == 0) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 }
 
 static void caching_client_glGetActiveUniform (void *client,
@@ -1912,32 +1794,28 @@ static void caching_client_glGetActiveUniform (void *client,
                                                GLenum *type,
                                                GLchar *name)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     CACHING_CLIENT(client)->super_dispatch.glGetActiveUniform (client, program, index, bufsize,
                                                                length, size, type, name);
-    if (*length == 0)
-        egl_state->state.need_get_error = true;
+    if (*length == 0) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 }
 
 static GLint
 caching_client_glGetAttribLocation (void* client, GLuint program,
                                     const GLchar *name)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     GLint result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
 
-    if (result == -1)
-        egl_state->state.need_get_error = true;
+    if (result == -1) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 
     return result;
 }
@@ -1946,63 +1824,58 @@ static GLint
 caching_client_glGetUniformLocation (void* client, GLuint program,
                                   const GLchar *name)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     GLint result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
-    if (result == -1)
-        egl_state->state.need_get_error = true;
+    if (result == -1) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
     return result;
 }
 
 static void
 caching_client_glGetBooleanv (void* client, GLenum pname, GLboolean *params)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (pname) {
     case GL_BLEND:
-        *params = egl_state->state.blend;
+        *params = state->blend;
         break;
     case GL_COLOR_WRITEMASK:
-        memcpy (params, egl_state->state.color_writemask, sizeof (GLboolean) * 4);
+        memcpy (params, state->color_writemask, sizeof (GLboolean) * 4);
         break;
     case GL_CULL_FACE:
-        *params = egl_state->state.cull_face;
+        *params = state->cull_face;
         break;
     case GL_DEPTH_TEST:
-        *params = egl_state->state.depth_test;
+        *params = state->depth_test;
         break;
     case GL_DEPTH_WRITEMASK:
-        *params = egl_state->state.depth_writemask;
+        *params = state->depth_writemask;
         break;
     case GL_DITHER:
-        *params = egl_state->state.dither;
+        *params = state->dither;
         break;
     case GL_POLYGON_OFFSET_FILL:
-        *params = egl_state->state.polygon_offset_fill;
+        *params = state->polygon_offset_fill;
         break;
     case GL_SAMPLE_ALPHA_TO_COVERAGE:
-        *params = egl_state->state.sample_alpha_to_coverage;
+        *params = state->sample_alpha_to_coverage;
         break;
     case GL_SAMPLE_COVERAGE:
-        *params = egl_state->state.sample_coverage;
+        *params = state->sample_coverage;
         break;
     case GL_SCISSOR_TEST:
-        *params = egl_state->state.scissor_test;
+        *params = state->scissor_test;
         break;
     case GL_SHADER_COMPILER:
-        *params = egl_state->state.shader_compiler;
+        *params = state->shader_compiler;
         break;
     case GL_STENCIL_TEST:
-        *params = egl_state->state.stencil_test;
+        *params = state->stencil_test;
         break;
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetBooleanv (client, pname, params);
@@ -2013,48 +1886,45 @@ caching_client_glGetBooleanv (void* client, GLenum pname, GLboolean *params)
 static void
 caching_client_glGetFloatv (void* client, GLenum pname, GLfloat *params)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (pname) {
     case GL_BLEND_COLOR:
-        memcpy (params, egl_state->state.blend_color, sizeof (GLfloat) * 4);
+        memcpy (params, state->blend_color, sizeof (GLfloat) * 4);
         break;
     case GL_BLEND_DST_ALPHA:
-        *params = egl_state->state.blend_dst[1];
+        *params = state->blend_dst[1];
         break;
     case GL_BLEND_DST_RGB:
-        *params = egl_state->state.blend_dst[0];
+        *params = state->blend_dst[0];
         break;
     case GL_BLEND_EQUATION_ALPHA:
-        *params = egl_state->state.blend_equation[1];
+        *params = state->blend_equation[1];
         break;
     case GL_BLEND_EQUATION_RGB:
-        *params = egl_state->state.blend_equation[0];
+        *params = state->blend_equation[0];
         break;
     case GL_BLEND_SRC_ALPHA:
-        *params = egl_state->state.blend_src[1];
+        *params = state->blend_src[1];
         break;
     case GL_BLEND_SRC_RGB:
-        *params = egl_state->state.blend_src[0];
+        *params = state->blend_src[0];
         break;
     case GL_COLOR_CLEAR_VALUE:
-        memcpy (params, egl_state->state.color_clear_value, sizeof (GLfloat) * 4);
+        memcpy (params, state->color_clear_value, sizeof (GLfloat) * 4);
         break;
     case GL_DEPTH_CLEAR_VALUE:
-        *params = egl_state->state.depth_clear_value;
+        *params = state->depth_clear_value;
         break;
     case GL_DEPTH_RANGE:
-        memcpy (params, egl_state->state.depth_range, sizeof (GLfloat) * 2);
+        memcpy (params, state->depth_range, sizeof (GLfloat) * 2);
         break;
     case GL_LINE_WIDTH:
-        *params = egl_state->state.line_width;
+        *params = state->line_width;
         break;
     case GL_POLYGON_OFFSET_FACTOR:
-        *params = egl_state->state.polygon_offset_factor;
+        *params = state->polygon_offset_factor;
         break; 
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetFloatv (client, pname, params);
@@ -2067,7 +1937,6 @@ caching_client_glGetIntegerv (void* client,
                               GLenum pname,
                               GLint *params)
 {
-    egl_state_t *egl_state;
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int count;
@@ -2075,205 +1944,203 @@ caching_client_glGetIntegerv (void* client,
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
 
     switch (pname) {
     case GL_ACTIVE_TEXTURE:
-        *params = egl_state->state.active_texture;
+        *params = state->active_texture;
         break;
     case GL_CURRENT_PROGRAM:
-        *params = egl_state->state.current_program;
+        *params = state->current_program;
         break;
     case GL_DEPTH_CLEAR_VALUE:
-        *params = egl_state->state.depth_clear_value;
+        *params = state->depth_clear_value;
         break;
     case GL_DEPTH_FUNC:
-        *params = egl_state->state.depth_func;
+        *params = state->depth_func;
         break;
     case GL_DEPTH_RANGE:
-        params[0] = egl_state->state.depth_range[0];
-        params[1] = egl_state->state.depth_range[1];
+        params[0] = state->depth_range[0];
+        params[1] = state->depth_range[1];
         break;
     case GL_GENERATE_MIPMAP_HINT:
-        *params = egl_state->state.generate_mipmap_hint;
+        *params = state->generate_mipmap_hint;
         break;
     case GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS:
-        if (! egl_state->state.max_combined_texture_image_units_queried) {
+        if (! state->max_combined_texture_image_units_queried) {
 
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_combined_texture_image_units_queried = true;
-            egl_state->state.max_combined_texture_image_units = *params;
+            state->max_combined_texture_image_units_queried = true;
+            state->max_combined_texture_image_units = *params;
         } else
-            *params = egl_state->state.max_combined_texture_image_units;
+            *params = state->max_combined_texture_image_units;
         break;
     case GL_MAX_CUBE_MAP_TEXTURE_SIZE:
-        if (! egl_state->state.max_cube_map_texture_size_queried) {
+        if (! state->max_cube_map_texture_size_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_cube_map_texture_size = *params;
-            egl_state->state.max_cube_map_texture_size_queried = true;
+            state->max_cube_map_texture_size = *params;
+            state->max_cube_map_texture_size_queried = true;
         } else
-            *params = egl_state->state.max_cube_map_texture_size;
+            *params = state->max_cube_map_texture_size;
     break;
     case GL_MAX_FRAGMENT_UNIFORM_VECTORS:
-        if (! egl_state->state.max_fragment_uniform_vectors_queried) {
+        if (! state->max_fragment_uniform_vectors_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_fragment_uniform_vectors = *params;
-            egl_state->state.max_fragment_uniform_vectors_queried = true;
+            state->max_fragment_uniform_vectors = *params;
+            state->max_fragment_uniform_vectors_queried = true;
         } else
-            *params = egl_state->state.max_fragment_uniform_vectors;
+            *params = state->max_fragment_uniform_vectors;
         break;
     case GL_MAX_RENDERBUFFER_SIZE:
-        if (! egl_state->state.max_renderbuffer_size_queried) {
+        if (! state->max_renderbuffer_size_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_renderbuffer_size = *params;
-            egl_state->state.max_renderbuffer_size_queried = true;
+            state->max_renderbuffer_size = *params;
+            state->max_renderbuffer_size_queried = true;
         } else
-            *params = egl_state->state.max_renderbuffer_size;
+            *params = state->max_renderbuffer_size;
         break;
     case GL_MAX_TEXTURE_IMAGE_UNITS:
-        if (! egl_state->state.max_texture_image_units_queried) {
+        if (! state->max_texture_image_units_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_texture_image_units = *params;
-            egl_state->state.max_texture_image_units_queried = true;
+            state->max_texture_image_units = *params;
+            state->max_texture_image_units_queried = true;
         } else
-            *params = egl_state->state.max_texture_image_units;
+            *params = state->max_texture_image_units;
         break;
     case GL_MAX_VARYING_VECTORS:
-        if (! egl_state->state.max_varying_vectors_queried) {
+        if (! state->max_varying_vectors_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_varying_vectors = *params;
-            egl_state->state.max_varying_vectors_queried = true;
+            state->max_varying_vectors = *params;
+            state->max_varying_vectors_queried = true;
         } else
-            *params = egl_state->state.max_varying_vectors;
+            *params = state->max_varying_vectors;
         break;
     case GL_MAX_TEXTURE_SIZE:
-        if (! egl_state->state.max_texture_size_queried) {
+        if (! state->max_texture_size_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_texture_size = *params;
-            egl_state->state.max_texture_size_queried = true;
+            state->max_texture_size = *params;
+            state->max_texture_size_queried = true;
         } else
-            *params = egl_state->state.max_texture_size;
+            *params = state->max_texture_size;
         break;
     case GL_MAX_VERTEX_ATTRIBS:
-        if (! egl_state->state.max_vertex_attribs_queried) {
+        if (! state->max_vertex_attribs_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_vertex_attribs = *params;
-            egl_state->state.max_vertex_attribs_queried = true;
+            state->max_vertex_attribs = *params;
+            state->max_vertex_attribs_queried = true;
         } else
-            *params = egl_state->state.max_vertex_attribs;
+            *params = state->max_vertex_attribs;
         break;
     case GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS:
-        if (! egl_state->state.max_vertex_texture_image_units_queried) {
+        if (! state->max_vertex_texture_image_units_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_vertex_texture_image_units = *params;
-            egl_state->state.max_vertex_texture_image_units_queried = true;
+            state->max_vertex_texture_image_units = *params;
+            state->max_vertex_texture_image_units_queried = true;
         } else
-            *params = egl_state->state.max_vertex_texture_image_units;
+            *params = state->max_vertex_texture_image_units;
         break;
     case GL_MAX_VERTEX_UNIFORM_VECTORS:
-        if (! egl_state->state.max_vertex_uniform_vectors_queried) {
+        if (! state->max_vertex_uniform_vectors_queried) {
             CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-            egl_state->state.max_vertex_uniform_vectors = *params;
-            egl_state->state.max_vertex_uniform_vectors_queried = true;
+            state->max_vertex_uniform_vectors = *params;
+            state->max_vertex_uniform_vectors_queried = true;
         } else
-            *params = egl_state->state.max_vertex_uniform_vectors;
+            *params = state->max_vertex_uniform_vectors;
         break;
     case GL_POLYGON_OFFSET_UNITS:
-        *params = egl_state->state.polygon_offset_units;
+        *params = state->polygon_offset_units;
         break;
     case GL_SCISSOR_BOX:
-        memcpy (params, egl_state->state.scissor_box, sizeof (GLint) * 4);
+        memcpy (params, state->scissor_box, sizeof (GLint) * 4);
         break;
     case GL_STENCIL_BACK_FAIL:
-        *params = egl_state->state.stencil_back_fail;
+        *params = state->stencil_back_fail;
         break;
     case GL_STENCIL_BACK_FUNC:
-        *params = egl_state->state.stencil_back_func;
+        *params = state->stencil_back_func;
         break;
     case GL_STENCIL_BACK_PASS_DEPTH_FAIL:
-        *params = egl_state->state.stencil_back_pass_depth_fail;
+        *params = state->stencil_back_pass_depth_fail;
         break;
     case GL_STENCIL_BACK_PASS_DEPTH_PASS:
-        *params = egl_state->state.stencil_back_pass_depth_pass;
+        *params = state->stencil_back_pass_depth_pass;
         break;
     case GL_STENCIL_BACK_REF:
-        *params = egl_state->state.stencil_ref;
+        *params = state->stencil_ref;
         break;
     case GL_STENCIL_BACK_VALUE_MASK:
-        *params = egl_state->state.stencil_value_mask;
+        *params = state->stencil_value_mask;
         break;
     case GL_STENCIL_CLEAR_VALUE:
-        *params = egl_state->state.stencil_clear_value;
+        *params = state->stencil_clear_value;
         break;
     case GL_STENCIL_FAIL:
-        *params = egl_state->state.stencil_fail;
+        *params = state->stencil_fail;
         break;
     case GL_STENCIL_FUNC:
-        *params = egl_state->state.stencil_func;
+        *params = state->stencil_func;
         break;
     case GL_STENCIL_PASS_DEPTH_FAIL:
-        *params = egl_state->state.stencil_pass_depth_fail;
+        *params = state->stencil_pass_depth_fail;
         break;
     case GL_STENCIL_PASS_DEPTH_PASS:
-        *params = egl_state->state.stencil_pass_depth_pass;
+        *params = state->stencil_pass_depth_pass;
         break;
     case GL_STENCIL_REF:
-        *params = egl_state->state.stencil_ref;
+        *params = state->stencil_ref;
         break;
     case GL_STENCIL_VALUE_MASK:
-        *params = egl_state->state.stencil_value_mask;
+        *params = state->stencil_value_mask;
         break;
     case GL_STENCIL_WRITEMASK:
-        *params = egl_state->state.stencil_writemask;
+        *params = state->stencil_writemask;
         break;
     case GL_STENCIL_BACK_WRITEMASK:
-        *params = egl_state->state.stencil_back_writemask;
+        *params = state->stencil_back_writemask;
         break;
     case GL_VIEWPORT:
-        memcpy (params, egl_state->state.viewport, sizeof (GLint) * 4);
+        memcpy (params, state->viewport, sizeof (GLint) * 4);
         break;
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
         break;
     }
 
     if (pname == GL_ARRAY_BUFFER_BINDING) {
-        egl_state->state.array_buffer_binding = *params;
+        state->array_buffer_binding = *params;
         /* update client state */
         for (i = 0; i < count; i++) {
             attribs[i].array_buffer_binding = *params;
         }
     }
     else if (pname == GL_ELEMENT_ARRAY_BUFFER_BINDING)
-        egl_state->state.array_buffer_binding = *params;
+        state->array_buffer_binding = *params;
     else if (pname == GL_VERTEX_ARRAY_BINDING_OES)
-        egl_state->state.vertex_array_binding = *params;
+        state->vertex_array_binding = *params;
 }
 
 static GLenum
 caching_client_glGetError (void* client)
 {
     GLenum error = GL_INVALID_OPERATION;
-    egl_state_t *egl_state;
 
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
-    if (! egl_state->state.need_get_error) {
-        error = egl_state->state.error;
-        egl_state->state.error = GL_NO_ERROR;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (! state->need_get_error) {
+        error = state->error;
+        state->error = GL_NO_ERROR;
         return error;
     }
 
     error = CACHING_CLIENT(client)->super_dispatch.glGetError (client);
 
-    egl_state->state.need_get_error = false;
-    egl_state->state.error = GL_NO_ERROR;
+    state->need_get_error = false;
+    state->error = GL_NO_ERROR;
 
     return error;
 }
@@ -2285,12 +2152,9 @@ caching_client_glGetFramebufferAttachmentParameteriv (void* client,
                                                       GLenum pname,
                                                       GLint *params)
 {
-    egl_state_t *egl_state;
     GLint original_params = params[0];
 
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2300,8 +2164,10 @@ caching_client_glGetFramebufferAttachmentParameteriv (void* client,
     CACHING_CLIENT(client)->super_dispatch.glGetFramebufferAttachmentParameteriv (client, target,
                                                                                   attachment, pname,
                                                                                   params);
-    if (original_params == params[0])
-        egl_state->state.need_get_error = true;
+    if (original_params == params[0]) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 }
 
 static void
@@ -2309,32 +2175,28 @@ caching_client_glGetRenderbufferParameteriv (void* client, GLenum target,
                                               GLenum pname,
                                               GLint *params)
 {
-    egl_state_t *egl_state;
     GLint original_params = params[0];
 
     INSTRUMENT();
     
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGetRenderbufferParameteriv (client, target, pname, params);
-    if (original_params == params[0])
-        egl_state->state.need_get_error = true;
+    if (original_params == params[0]) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 }
 
 static const GLubyte *
 caching_client_glGetString (void* client, GLenum name)
 {
     const GLubyte *result = NULL;
-    egl_state_t *egl_state;
 
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (name == GL_VENDOR                   || 
            name == GL_RENDERER                 ||
@@ -2347,8 +2209,10 @@ caching_client_glGetString (void* client, GLenum name)
 
     result = CACHING_CLIENT(client)->super_dispatch.glGetString (client, name);
 
-    if (result == 0)
-        egl_state->state.need_get_error = true;
+    if (result == 0) {
+        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        state->need_get_error = true;
+    }
 
     return result;
 }
@@ -2357,19 +2221,14 @@ static void
 caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname, 
                                      GLint *params)
 {
-    egl_state_t *egl_state;
     int active_texture_index;
     int target_index;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (! (target == GL_TEXTURE_2D       || 
-           target == GL_TEXTURE_CUBE_MAP
-                                         || 
-           target == GL_TEXTURE_3D_OES
-                                      )) {
+    if (! (target == GL_TEXTURE_2D       ||
+           target == GL_TEXTURE_CUBE_MAP ||
+           target == GL_TEXTURE_3D_OES)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2377,15 +2236,14 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
     if (! (pname == GL_TEXTURE_MAG_FILTER ||
            pname == GL_TEXTURE_MIN_FILTER ||
            pname == GL_TEXTURE_WRAP_S     ||
-           pname == GL_TEXTURE_WRAP_T
-                                          || 
-           pname == GL_TEXTURE_WRAP_R_OES
-                                         )) {
+           pname == GL_TEXTURE_WRAP_T     ||
+           pname == GL_TEXTURE_WRAP_R_OES)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
-    active_texture_index = egl_state->state.active_texture - GL_TEXTURE0;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    active_texture_index = state->active_texture - GL_TEXTURE0;
     if (target == GL_TEXTURE_2D)
         target_index = 0;
     else if (target == GL_TEXTURE_CUBE_MAP)
@@ -2394,15 +2252,15 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         target_index = 2;
 
     if (pname == GL_TEXTURE_MAG_FILTER)
-        *params = egl_state->state.texture_mag_filter[active_texture_index][target_index];
+        *params = state->texture_mag_filter[active_texture_index][target_index];
     else if (pname == GL_TEXTURE_MIN_FILTER)
-        *params = egl_state->state.texture_min_filter[active_texture_index][target_index];
+        *params = state->texture_min_filter[active_texture_index][target_index];
     else if (pname == GL_TEXTURE_WRAP_S)
-        *params = egl_state->state.texture_wrap_s[active_texture_index][target_index];
+        *params = state->texture_wrap_s[active_texture_index][target_index];
     else if (pname == GL_TEXTURE_WRAP_T)
-        *params = egl_state->state.texture_wrap_t[active_texture_index][target_index];
+        *params = state->texture_wrap_t[active_texture_index][target_index];
     else if (pname == GL_TEXTURE_WRAP_R_OES)
-        *params = egl_state->state.texture_3d_wrap_r[active_texture_index];
+        *params = state->texture_3d_wrap_r[active_texture_index];
 }
 
 static void
@@ -2418,41 +2276,38 @@ static void
 caching_client_glGetUniformfv (void* client, GLuint program,
                                GLint location,  GLfloat *params)
 {
-    egl_state_t *egl_state;
     GLfloat original_params = *params;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMFV);
     command_glgetuniformfv_init (command, program, location, params);
     client_run_command (command);
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
 }
 
 static void
 caching_client_glGetUniformiv (void* client, GLuint program,
                                GLint location,  GLint *params)
 {
-    egl_state_t *egl_state;
     GLint original_params = *params;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
     CACHING_CLIENT(client)->super_dispatch.glGetUniformiv (client, program, location, params);
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
 }
 
 static void
 caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname, 
                                      GLfloat *params)
 {
-    egl_state_t *egl_state;
-
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int count;
@@ -2460,8 +2315,8 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
 
@@ -2477,12 +2332,12 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     }
 
     /* check index is too large */
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         return;
     }
 
     /* we cannot use client state */
-    if (egl_state->state.vertex_array_binding) {
+    if (state->vertex_array_binding) {
         CACHING_CLIENT(client)->super_dispatch.glGetVertexAttribfv (client, index, pname, params);
         return;
     }
@@ -2520,7 +2375,7 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     /* we did not find anyting, return default */
     switch (pname) {
     case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-        *params = egl_state->state.array_buffer_binding;
+        *params = state->array_buffer_binding;
         break;
     case GL_VERTEX_ATTRIB_ARRAY_ENABLED:
         *params = false;
@@ -2562,19 +2417,17 @@ static void
 caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pname, 
                                             GLvoid **pointer)
 {
-    egl_state_t *egl_state;
-
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int count;
     int i;
 
     INSTRUMENT();
-    
+
     *pointer = 0;
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    attrib_list = &egl_state->state.vertex_attribs;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
 
@@ -2584,15 +2437,15 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
     }
 
     /* XXX: check index validity */
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         return;
     }
 
     /* we cannot use client state */
-    if (egl_state->state.vertex_array_binding) {
+    if (state->vertex_array_binding) {
         CACHING_CLIENT(client)->super_dispatch.glGetVertexAttribPointerv (client, index, pname, pointer);
         if (*pointer == NULL)
-            egl_state->state.need_get_error = true;
+            state->need_get_error = true;
         return;
     }
 
@@ -2608,14 +2461,11 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
 static void
 caching_client_glHint (void* client, GLenum target, GLenum mode)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (target == GL_GENERATE_MIPMAP_HINT &&
-        egl_state->state.generate_mipmap_hint == mode)
+        state->generate_mipmap_hint == mode)
         return;
 
     if ( !(mode == GL_FASTEST ||
@@ -2626,51 +2476,49 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
     }
 
     if (target == GL_GENERATE_MIPMAP_HINT)
-        egl_state->state.generate_mipmap_hint = mode;
+        state->generate_mipmap_hint = mode;
 
     CACHING_CLIENT(client)->super_dispatch.glHint (client, target, mode);
 
     if (target != GL_GENERATE_MIPMAP_HINT)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
 }
 
 static GLboolean
 caching_client_glIsEnabled (void* client, GLenum cap)
 {
-    egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (cap) {
     case GL_BLEND:
-        result = egl_state->state.blend;
+        result = state->blend;
         break;
     case GL_CULL_FACE:
-        result = egl_state->state.cull_face;
+        result = state->cull_face;
         break;
     case GL_DEPTH_TEST:
-        result = egl_state->state.depth_test;
+        result = state->depth_test;
         break;
     case GL_DITHER:
-        result = egl_state->state.dither;
+        result = state->dither;
         break;
     case GL_POLYGON_OFFSET_FILL:
-        result = egl_state->state.polygon_offset_fill;
+        result = state->polygon_offset_fill;
         break;
     case GL_SAMPLE_ALPHA_TO_COVERAGE:
-        result = egl_state->state.sample_alpha_to_coverage;
+        result = state->sample_alpha_to_coverage;
         break;
     case GL_SAMPLE_COVERAGE:
-        result = egl_state->state.sample_coverage;
+        result = state->sample_coverage;
         break;
     case GL_SCISSOR_TEST:
-        result = egl_state->state.scissor_test;
+        result = state->scissor_test;
         break;
     case GL_STENCIL_TEST:
-        result = egl_state->state.stencil_test;
+        result = state->stencil_test;
         break;
     default:
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2682,13 +2530,10 @@ caching_client_glIsEnabled (void* client, GLenum cap)
 static void
 caching_client_glLineWidth (void* client, GLfloat width)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.line_width == width)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->line_width == width)
         return;
 
     if (width < 0) {
@@ -2696,23 +2541,20 @@ caching_client_glLineWidth (void* client, GLfloat width)
         return;
     }
 
-    egl_state->state.line_width = width;
+    state->line_width = width;
     CACHING_CLIENT(client)->super_dispatch.glLineWidth (client, width);
 }
 
 static void
 caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if ((pname == GL_PACK_ALIGNMENT                &&
-         egl_state->state.pack_alignment == param) ||
+         state->pack_alignment == param) ||
         (pname == GL_UNPACK_ALIGNMENT              &&
-         egl_state->state.unpack_alignment == param))
+         state->unpack_alignment == param))
         return;
 
     if (! (param == 1 ||
@@ -2729,9 +2571,9 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
     }
 
     if (pname == GL_PACK_ALIGNMENT)
-       egl_state->state.pack_alignment = param;
+       state->pack_alignment = param;
     else
-       egl_state->state.unpack_alignment = param;
+       state->unpack_alignment = param;
 
     CACHING_CLIENT(client)->super_dispatch.glPixelStorei (client, pname, param);
 }
@@ -2739,18 +2581,15 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
 static void
 caching_client_glPolygonOffset (void* client, GLfloat factor, GLfloat units)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.polygon_offset_factor == factor &&
-        egl_state->state.polygon_offset_units == units)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->polygon_offset_factor == factor &&
+        state->polygon_offset_units == units)
         return;
 
-    egl_state->state.polygon_offset_factor = factor;
-    egl_state->state.polygon_offset_units = units;
+    state->polygon_offset_factor = factor;
+    state->polygon_offset_units = units;
 
     CACHING_CLIENT(client)->super_dispatch.glPolygonOffset (client, factor, units);
 }
@@ -2758,18 +2597,15 @@ caching_client_glPolygonOffset (void* client, GLfloat factor, GLfloat units)
 static void
 caching_client_glSampleCoverage (void* client, GLclampf value, GLboolean invert)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
-    if (value == egl_state->state.sample_coverage_value &&
-        invert == egl_state->state.sample_coverage_invert)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (value == state->sample_coverage_value &&
+        invert == state->sample_coverage_invert)
         return;
 
-    egl_state->state.sample_coverage_invert = invert;
-    egl_state->state.sample_coverage_value = value;
+    state->sample_coverage_invert = invert;
+    state->sample_coverage_value = value;
 
     CACHING_CLIENT(client)->super_dispatch.glSampleCoverage (client, value, invert);
 }
@@ -2777,16 +2613,13 @@ caching_client_glSampleCoverage (void* client, GLclampf value, GLboolean invert)
 static void
 caching_client_glScissor (void* client, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (x == egl_state->state.scissor_box[0]     &&
-        y == egl_state->state.scissor_box[1]     &&
-        width == egl_state->state.scissor_box[2] &&
-        height == egl_state->state.scissor_box[3])
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (x == state->scissor_box[0]     &&
+        y == state->scissor_box[1]     &&
+        width == state->scissor_box[2] &&
+        height == state->scissor_box[3])
         return;
 
     if (width < 0 || height < 0) {
@@ -2794,10 +2627,10 @@ caching_client_glScissor (void* client, GLint x, GLint y, GLsizei width, GLsizei
         return;
     }
 
-    egl_state->state.scissor_box[0] = x;
-    egl_state->state.scissor_box[1] = y;
-    egl_state->state.scissor_box[2] = width;
-    egl_state->state.scissor_box[3] = height;
+    state->scissor_box[0] = x;
+    state->scissor_box[1] = y;
+    state->scissor_box[2] = width;
+    state->scissor_box[3] = height;
 
     CACHING_CLIENT(client)->super_dispatch.glScissor (client, x, y, width, height);
 }
@@ -2806,13 +2639,11 @@ static void
 caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
                                        GLint ref, GLuint mask)
 {
-    egl_state_t *egl_state;
     bool needs_call = false;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (! (face == GL_FRONT ||
            face == GL_BACK ||
            face == GL_FRONT_AND_BACK)) {
@@ -2834,38 +2665,38 @@ caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
 
     switch (face) {
     case GL_FRONT:
-        if (func != egl_state->state.stencil_func ||
-            ref != egl_state->state.stencil_ref   ||
-            mask != egl_state->state.stencil_value_mask) {
-            egl_state->state.stencil_func = func;
-            egl_state->state.stencil_ref = ref;
-            egl_state->state.stencil_value_mask = mask;
+        if (func != state->stencil_func ||
+            ref != state->stencil_ref   ||
+            mask != state->stencil_value_mask) {
+            state->stencil_func = func;
+            state->stencil_ref = ref;
+            state->stencil_value_mask = mask;
             needs_call = true;
         }
         break;
     case GL_BACK:
-        if (func != egl_state->state.stencil_back_func ||
-            ref != egl_state->state.stencil_back_ref   ||
-            mask != egl_state->state.stencil_back_value_mask) {
-            egl_state->state.stencil_back_func = func;
-            egl_state->state.stencil_back_ref = ref;
-            egl_state->state.stencil_back_value_mask = mask;
+        if (func != state->stencil_back_func ||
+            ref != state->stencil_back_ref   ||
+            mask != state->stencil_back_value_mask) {
+            state->stencil_back_func = func;
+            state->stencil_back_ref = ref;
+            state->stencil_back_value_mask = mask;
             needs_call = true;
         }
         break;
     default:
-        if (func != egl_state->state.stencil_back_func       ||
-            func != egl_state->state.stencil_func            ||
-            ref != egl_state->state.stencil_back_ref         ||
-            ref != egl_state->state.stencil_ref              ||
-            mask != egl_state->state.stencil_back_value_mask ||
-            mask != egl_state->state.stencil_value_mask) {
-            egl_state->state.stencil_back_func = func;
-            egl_state->state.stencil_func = func;
-            egl_state->state.stencil_back_ref = ref;
-            egl_state->state.stencil_ref = ref;
-            egl_state->state.stencil_back_value_mask = mask;
-            egl_state->state.stencil_value_mask = mask;
+        if (func != state->stencil_back_func       ||
+            func != state->stencil_func            ||
+            ref != state->stencil_back_ref         ||
+            ref != state->stencil_ref              ||
+            mask != state->stencil_back_value_mask ||
+            mask != state->stencil_value_mask) {
+            state->stencil_back_func = func;
+            state->stencil_func = func;
+            state->stencil_back_ref = ref;
+            state->stencil_ref = ref;
+            state->stencil_back_value_mask = mask;
+            state->stencil_value_mask = mask;
             needs_call = true;
         }
         break;
@@ -2885,12 +2716,9 @@ caching_client_glStencilFunc (void* client, GLenum func, GLint ref, GLuint mask)
 static void
 caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
 {
-    egl_state_t *egl_state;
     bool needs_call = false;
 
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (face == GL_FRONT         ||
            face == GL_BACK          ||
@@ -2899,24 +2727,25 @@ caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
         return;
     }
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (face) {
     case GL_FRONT:
-        if (mask != egl_state->state.stencil_writemask) {
-            egl_state->state.stencil_writemask = mask;
+        if (mask != state->stencil_writemask) {
+            state->stencil_writemask = mask;
             needs_call = true;
         }
         break;
     case GL_BACK:
-        if (mask != egl_state->state.stencil_back_writemask) {
-            egl_state->state.stencil_back_writemask = mask;
+        if (mask != state->stencil_back_writemask) {
+            state->stencil_back_writemask = mask;
             needs_call = true;
         }
         break;
     default:
-        if (mask != egl_state->state.stencil_back_writemask ||
-            mask != egl_state->state.stencil_writemask) {
-            egl_state->state.stencil_back_writemask = mask;
-            egl_state->state.stencil_writemask = mask;
+        if (mask != state->stencil_back_writemask ||
+            mask != state->stencil_writemask) {
+            state->stencil_back_writemask = mask;
+            state->stencil_writemask = mask;
             needs_call = true;
         }
         break;
@@ -2937,12 +2766,9 @@ static void
 caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail, 
                                      GLenum dpfail, GLenum dppass)
 {
-    egl_state_t *egl_state;
     bool needs_call = false;
 
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (face == GL_FRONT         ||
            face == GL_BACK          ||
@@ -2984,40 +2810,41 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
         return;
     }
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     switch (face) {
     case GL_FRONT:
-        if (sfail != egl_state->state.stencil_fail             ||
-            dpfail != egl_state->state.stencil_pass_depth_fail ||
-            dppass != egl_state->state.stencil_pass_depth_pass) {
-            egl_state->state.stencil_fail = sfail;
-            egl_state->state.stencil_pass_depth_fail = dpfail;
-            egl_state->state.stencil_pass_depth_pass = dppass;
+        if (sfail != state->stencil_fail             ||
+            dpfail != state->stencil_pass_depth_fail ||
+            dppass != state->stencil_pass_depth_pass) {
+            state->stencil_fail = sfail;
+            state->stencil_pass_depth_fail = dpfail;
+            state->stencil_pass_depth_pass = dppass;
             needs_call = true;
         }
         break;
     case GL_BACK:
-        if (sfail != egl_state->state.stencil_back_fail             ||
-            dpfail != egl_state->state.stencil_back_pass_depth_fail ||
-            dppass != egl_state->state.stencil_back_pass_depth_pass) {
-            egl_state->state.stencil_back_fail = sfail;
-            egl_state->state.stencil_back_pass_depth_fail = dpfail;
-            egl_state->state.stencil_back_pass_depth_pass = dppass;
+        if (sfail != state->stencil_back_fail             ||
+            dpfail != state->stencil_back_pass_depth_fail ||
+            dppass != state->stencil_back_pass_depth_pass) {
+            state->stencil_back_fail = sfail;
+            state->stencil_back_pass_depth_fail = dpfail;
+            state->stencil_back_pass_depth_pass = dppass;
             needs_call = true;
         }
         break;
     default:
-        if (sfail != egl_state->state.stencil_fail                  ||
-            dpfail != egl_state->state.stencil_pass_depth_fail      ||
-            dppass != egl_state->state.stencil_pass_depth_pass      ||
-            sfail != egl_state->state.stencil_back_fail             ||
-            dpfail != egl_state->state.stencil_back_pass_depth_fail ||
-            dppass != egl_state->state.stencil_back_pass_depth_pass) {
-            egl_state->state.stencil_fail = sfail;
-            egl_state->state.stencil_pass_depth_fail = dpfail;
-            egl_state->state.stencil_pass_depth_pass = dppass;
-            egl_state->state.stencil_back_fail = sfail;
-            egl_state->state.stencil_back_pass_depth_fail = dpfail;
-            egl_state->state.stencil_back_pass_depth_pass = dppass;
+        if (sfail != state->stencil_fail                  ||
+            dpfail != state->stencil_pass_depth_fail      ||
+            dppass != state->stencil_pass_depth_pass      ||
+            sfail != state->stencil_back_fail             ||
+            dpfail != state->stencil_back_pass_depth_fail ||
+            dppass != state->stencil_back_pass_depth_pass) {
+            state->stencil_fail = sfail;
+            state->stencil_pass_depth_fail = dpfail;
+            state->stencil_pass_depth_pass = dppass;
+            state->stencil_back_fail = sfail;
+            state->stencil_back_pass_depth_fail = dpfail;
+            state->stencil_back_pass_depth_pass = dppass;
             needs_call = true;
         }
         break;
@@ -3038,15 +2865,12 @@ caching_client_glStencilOp (void* client, GLenum sfail, GLenum dpfail, GLenum dp
 static void
 caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint param)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
     int active_texture_index;
     int target_index;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     active_texture_index = state->active_texture - GL_TEXTURE0;
 
     if (! (target == GL_TEXTURE_2D || 
@@ -3155,10 +2979,6 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
                              GLsizei height, GLint border, GLenum format,
                              GLenum type, const void *pixels)
 {
-    egl_state_t *egl_state;
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     if (level < 0 || width < 0 || height < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -3166,7 +2986,8 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
 
     CACHING_CLIENT(client)->super_dispatch.glTexImage2D (client, target, level, internalformat,
                                                          width, height, border, format, type, pixels);
-    egl_state->state.need_get_error = true;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
@@ -3181,10 +3002,6 @@ caching_client_glTexSubImage2D (void* client,
                                 GLenum type,
                                 const void *pixels)
 {
-    egl_state_t *egl_state;
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
- 
     if (level < 0 || width < 0 || height < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -3192,7 +3009,9 @@ caching_client_glTexSubImage2D (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
                                                             width, height, format, type, pixels);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
@@ -3247,13 +3066,10 @@ caching_client_glUniformMatrix4fv (void* client,
 static void
 caching_client_glUseProgram (void* client, GLuint program)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.current_program == program)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->current_program == program)
         return;
     if (program < 0) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
@@ -3264,21 +3080,17 @@ caching_client_glUseProgram (void* client, GLuint program)
 
     /* FIXME: this maybe not right because this program may be invalid
      * object, we save here to save time in glGetError() */
-    egl_state->state.current_program = program;
-    /* FIXME: do we need to have this ? */
-    //egl_state->state.need_get_error = true;
+    state->current_program = program;
 }
 
 static void
 caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
 {
-    egl_state_t *egl_state;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3289,13 +3101,10 @@ caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
 static void
 caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat v1)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-    
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3307,13 +3116,10 @@ static void
 caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0, 
                                  GLfloat v1, GLfloat v2)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3327,8 +3133,8 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
 {
     INSTRUMENT();
 
-     egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3341,8 +3147,8 @@ caching_client_glVertexAttrib1fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
 
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3353,8 +3159,9 @@ static void
 caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3365,8 +3172,9 @@ static void
 caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3377,8 +3185,9 @@ static void
 caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3390,17 +3199,13 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
                                       GLenum type, GLboolean normalized,
                                       GLsizei stride, const GLvoid *pointer)
 {
-    egl_state_t *egl_state;
-    gles2_state_t *state;
-
     vertex_attrib_list_t *attrib_list;
     vertex_attrib_t *attribs;
     int i, found_index = -1;
     int count;
     GLint bound_buffer = 0;
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    state = &egl_state->state;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -3419,19 +3224,19 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     }
 
     /* check max_vertex_attribs */
-    if (caching_client_glIndexIsTooLarge (client, &egl_state->state, index)) {
+    if (caching_client_glIndexIsTooLarge (client, state, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    
-    if (egl_state->state.vertex_array_binding) {
+
+    if (state->vertex_array_binding) {
         CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
                                                                       type, normalized, stride, pointer);
         /* FIXME: Do we need set this flag? */
-        //egl_state->state.need_get_error = true;
+        //state->need_get_error = true;
         return;
     }
-    bound_buffer = egl_state->state.array_buffer_binding;
+    bound_buffer = state->array_buffer_binding;
     /* check existing client state */
     for (i = 0; i < count; i++) {
         if (attribs[i].index == index) {
@@ -3455,7 +3260,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
                                                                       type, normalized, stride, pointer);
         /* FIXME: Do we need set this flag? */
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
     }
 
     if (found_index != -1) {
@@ -3508,16 +3313,13 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
 static void
 caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.viewport[0] == x     &&
-        egl_state->state.viewport[1] == y     &&
-        egl_state->state.viewport[2] == width &&
-        egl_state->state.viewport[3] == height)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->viewport[0] == x     &&
+        state->viewport[1] == y     &&
+        state->viewport[2] == width &&
+        state->viewport[3] == height)
         return;
 
     if (x < 0 || y < 0) {
@@ -3525,10 +3327,10 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
         return;
     }
 
-    egl_state->state.viewport[0] = x;
-    egl_state->state.viewport[1] = y;
-    egl_state->state.viewport[2] = width;
-    egl_state->state.viewport[3] = height;
+    state->viewport[0] = x;
+    state->viewport[1] = y;
+    state->viewport[2] = width;
+    state->viewport[3] = height;
 
     CACHING_CLIENT(client)->super_dispatch.glViewport (client, x, y, width, height);
 }
@@ -3536,31 +3338,24 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
 static void
 caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglImageOES image)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     if (target != GL_TEXTURE_2D) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
     CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void* 
 caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
 {
-    egl_state_t *egl_state;
     void *result = NULL;
 
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     if (access != GL_WRITE_ONLY_OES) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
@@ -3573,8 +3368,9 @@ caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
 
     result = CACHING_CLIENT(client)->super_dispatch.glMapBufferOES (client, target, access);
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result == NULL)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
 
     return result;
 }
@@ -3582,12 +3378,9 @@ caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
 static GLboolean
 caching_client_glUnmapBufferOES (void* client, GLenum target)
 {
-    egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (target == GL_ARRAY_BUFFER ||
            target == GL_ELEMENT_ARRAY_BUFFER)) {
@@ -3596,19 +3389,17 @@ caching_client_glUnmapBufferOES (void* client, GLenum target)
     }
 
     result = CACHING_CLIENT(client)->super_dispatch.glUnmapBufferOES (client, target);
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result != GL_TRUE)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
     return result;
 }
 
 static void
 caching_client_glGetBufferPointervOES (void* client, GLenum target, GLenum pname, GLvoid **params)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (! (target == GL_ARRAY_BUFFER ||
            target == GL_ELEMENT_ARRAY_BUFFER)) {
@@ -3617,19 +3408,21 @@ caching_client_glGetBufferPointervOES (void* client, GLenum target, GLenum pname
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGetBufferPointervOES (client, target, pname, params);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
-caching_client_glFramebufferTexture3DOES (void* client, GLenum target, GLenum attachment,
-                                GLenum textarget, GLuint texture,
-                                GLint level, GLint zoffset)
+caching_client_glFramebufferTexture3DOES (void* client,
+                                          GLenum target,
+                                          GLenum attachment,
+                                          GLenum textarget,
+                                          GLuint texture,
+                                          GLint level,
+                                          GLint zoffset)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -3638,7 +3431,8 @@ caching_client_glFramebufferTexture3DOES (void* client, GLenum target, GLenum at
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture3DOES (client, target, attachment,
                                                                       textarget, texture, level, zoffset);
-    egl_state->state.need_get_error = true;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 /* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
@@ -3654,30 +3448,22 @@ caching_client_glFramebufferTexture3DOES (void* client, GLenum target, GLenum at
 static void
 caching_client_glBindVertexArrayOES (void* client, GLuint array)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
-    if (egl_state->state.vertex_array_binding == array)
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (state->vertex_array_binding == array)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glBindVertexArrayOES (client, array);
-    egl_state->state.need_get_error = true;
+    state->need_get_error = true;
     /* FIXME: should we save this ? */
-    egl_state->state.vertex_array_binding = array;
+    state->vertex_array_binding = array;
 }
 
 static void
 caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *arrays)
 {
-    egl_state_t *egl_state;
-    int i;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (n <= 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3687,9 +3473,11 @@ caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *a
     CACHING_CLIENT(client)->super_dispatch.glDeleteVertexArraysOES (client, n, arrays);
 
     /* matching vertex_array_binding ? */
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    int i;
     for (i = 0; i < n; i++) {
-        if (arrays[i] == egl_state->state.vertex_array_binding) {
-            egl_state->state.vertex_array_binding = 0;
+        if (arrays[i] == state->vertex_array_binding) {
+            state->vertex_array_binding = 0;
             break;
         }
     }
@@ -3711,18 +3499,16 @@ caching_client_glGenVertexArraysOES (void* client, GLsizei n, GLuint *arrays)
 static GLboolean
 caching_client_glIsVertexArrayOES (void* client, GLuint array)
 {
-    egl_state_t *egl_state;
     GLboolean result = GL_FALSE;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-    
     result = CACHING_CLIENT(client)->super_dispatch.glIsVertexArrayOES (client, array);
 
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (result == GL_FALSE && 
-        egl_state->state.vertex_array_binding == array)
-        egl_state->state.vertex_array_binding = 0;
+        state->vertex_array_binding == array)
+        state->vertex_array_binding = 0;
     return result;
 }
 
@@ -3787,11 +3573,7 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
                                             GLuint texture,
                                             GLint level, GLsizei samples)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
        caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -3800,7 +3582,9 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleEXT (
         client, target, attachment, textarget, texture, level, samples);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
@@ -3810,11 +3594,7 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
                                                      GLuint texture,
                                                      GLint level, GLsizei samples)
 {
-    egl_state_t *egl_state;
-
     INSTRUMENT();
-
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
 
     if (target != GL_FRAMEBUFFER) {
        caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -3823,7 +3603,9 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleIMG (
         client, target, attachment, textarget, texture, level, samples);
-    egl_state->state.need_get_error = true;
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    state->need_get_error = true;
 }
 
 static void
@@ -3858,26 +3640,26 @@ caching_client_glTestFenceNV (void* client, GLuint fence)
     INSTRUMENT();
 
     GLboolean result = CACHING_CLIENT(client)->super_dispatch.glTestFenceNV (client, fence);
-    if (result == GL_FALSE) {
-        egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-        egl_state->state.need_get_error = true;
-    }
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (result == GL_FALSE)
+        state->need_get_error = true;
+
     return result;
 }
 
 static void 
 caching_client_glGetFenceivNV (void* client, GLuint fence, GLenum pname, int *params)
 {
-    egl_state_t *egl_state;
     int original_params = *params;
 
     INSTRUMENT();
 
-    egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-
     CACHING_CLIENT(client)->super_dispatch.glGetFenceivNV (client, fence, pname, params);
+
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     if (original_params == *params)
-        egl_state->state.need_get_error = true;
+        state->need_get_error = true;
 }
 
 static void
@@ -3939,7 +3721,7 @@ caching_client_eglReleaseThread (void* client)
         if (! CLIENT(client)->active_state)
             return result;
 
-        egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
+        egl_state_t *egl_state = client_get_current_state (CLIENT(client));
         _caching_client_make_current (client,
                                       egl_state->display,
                                       EGL_NO_SURFACE,
@@ -3966,28 +3748,24 @@ caching_client_eglDestroyContext (void* client,
 static EGLContext
 caching_client_eglGetCurrentContext (void* client)
 {
-    egl_state_t *state;
-
     INSTRUMENT();
 
     if (!CLIENT(client)->active_state)
         return EGL_NO_CONTEXT;
 
-    state = (egl_state_t *) CLIENT(client)->active_state->data;
+    egl_state_t *state = client_get_current_state (CLIENT(client));
     return state->context;
 }
 
 static EGLDisplay
 caching_client_eglGetCurrentDisplay (void* client)
 {
-    egl_state_t *state;
-    
     INSTRUMENT();
 
     if (!CLIENT(client)->active_state)
         return EGL_NO_DISPLAY;
 
-    state = (egl_state_t *) CLIENT(client)->active_state->data;
+    egl_state_t *state = client_get_current_state (CLIENT(client));
     return state->display;
 }
 
@@ -3995,16 +3773,14 @@ static EGLSurface
 caching_client_eglGetCurrentSurface (void* client,
                           EGLint readdraw)
 {
-    egl_state_t *state;
     EGLSurface surface = EGL_NO_SURFACE;
-    
+
     INSTRUMENT();
 
     if (!CLIENT(client)->active_state)
         return EGL_NO_SURFACE;
 
-    state = (egl_state_t *) CLIENT(client)->active_state->data;
-
+    egl_state_t *state = client_get_current_state (CLIENT(client));
     if (state->display == EGL_NO_DISPLAY || state->context == EGL_NO_CONTEXT)
         goto FINISH;
 
@@ -4025,12 +3801,12 @@ caching_client_eglSwapBuffers (void* client,
 
     if (!CLIENT(client)->active_state)
         return EGL_FALSE;
-    
-    egl_state_t *state = (egl_state_t *) CLIENT(client)->active_state->data;
+
+    egl_state_t *state = client_get_current_state (CLIENT(client));
     if (! (state->display == display &&
-           state->drawable == surface)) 
+           state->drawable == surface))
         return EGL_FALSE;
-    
+
     return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
 }
 
@@ -4056,7 +3832,7 @@ caching_client_eglMakeCurrent (void* client,
         }
     }
     else {
-        egl_state_t *egl_state = (egl_state_t *)CLIENT(client)->active_state->data;
+        egl_state_t *egl_state = client_get_current_state (CLIENT(client));
         if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
             /* we are switching from valid context to no context */
             command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
@@ -4085,7 +3861,7 @@ caching_client_eglMakeCurrent (void* client,
     if (found == true) {
         /* set active to exist, tell client about it */
         if (CLIENT(client)->active_state) {
-            egl_state_t *egl_state = (egl_state_t *)CLIENT(client)->active_state->data;
+            egl_state_t *egl_state = client_get_current_state (CLIENT(client));
             if (! same_context)
                 egl_state->active = false;
         }
@@ -4182,11 +3958,9 @@ caching_client_post_hook(client_t *client,
     case COMMAND_GLEXTISPROGRAMBINARYQCOM:
     case COMMAND_GLEXTGETPROGRAMBINARYSOURCEQCOM:
     case COMMAND_GLSTARTTILINGQCOM:
-    case COMMAND_GLENDTILINGQCOM: {
-        egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-        egl_state->state.need_get_error = true;
+    case COMMAND_GLENDTILINGQCOM:
+        client_get_current_gl_state (CLIENT (client))->need_get_error = true;
         break;
-    }
     default:
         break;
     }
