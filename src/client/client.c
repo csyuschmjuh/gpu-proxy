@@ -252,4 +252,16 @@ client_has_valid_state (client_t *client)
            ((egl_state_t *) client->active_state->data)->active;
 }
 
+egl_state_t *
+client_get_current_state (client_t *client)
+{
+    return (egl_state_t *) client->active_state->data;
+}
+
+gles2_state_t *
+client_get_current_gl_state (client_t *client)
+{
+    return &((egl_state_t *) client->active_state->data)->state;
+}
+
 #include "client_autogen.c"
