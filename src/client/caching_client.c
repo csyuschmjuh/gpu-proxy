@@ -1254,22 +1254,24 @@ caching_client_glEnable (void* client, GLenum cap)
 }
 
 static bool
-caching_client_glIndexIsTooLarge (void* client, gles2_state_t *state, GLuint index)
+caching_client_does_index_overflow (void* client,
+                                    GLuint index)
 {
-    if (index > state->max_vertex_attribs) {
-        if (! state->max_vertex_attribs_queried) {
-            CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
-                                                                  &state->max_vertex_attribs);
-            state->max_vertex_attribs_queried = true;
-        }
-        if (index > state->max_vertex_attribs) {
-            if (state->error == GL_NO_ERROR)
-                state->error = GL_INVALID_VALUE;
-            return true;
-        }
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    if (index <= state->max_vertex_attribs)
+        return false;
+
+    if (! state->max_vertex_attribs_queried) {
+        CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
+                                                              &state->max_vertex_attribs);
+        state->max_vertex_attribs_queried = true;
     }
 
-    return false;
+    if (index <= state->max_vertex_attribs)
+        return false;
+    if (state->error == GL_NO_ERROR)
+        state->error = GL_INVALID_VALUE;
+    return true;
 }
 
 static void
@@ -1309,7 +1311,7 @@ caching_client_glSetVertexAttribArray (void* client,
     }
 
     /* gles2 spec says at least 8 */
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         return;
     }
 
@@ -2332,7 +2334,7 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     }
 
     /* check index is too large */
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         return;
     }
 
@@ -2437,7 +2439,7 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
     }
 
     /* XXX: check index validity */
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         return;
     }
 
@@ -3089,8 +3091,7 @@ caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3103,8 +3104,7 @@ caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3118,8 +3118,7 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3133,8 +3132,7 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3147,8 +3145,7 @@ caching_client_glVertexAttrib1fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3160,8 +3157,7 @@ caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3173,8 +3169,7 @@ caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3186,8 +3181,7 @@ caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -3224,7 +3218,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     }
 
     /* check max_vertex_attribs */
-    if (caching_client_glIndexIsTooLarge (client, state, index)) {
+    if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
