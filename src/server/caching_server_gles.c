@@ -1875,6 +1875,8 @@ caching_server_glGenBuffers (void* server, GLsizei n, GLuint *buffers)
 
         free (server_buffers);
     }
+
+    free (buffers);
 }
 
 static void
