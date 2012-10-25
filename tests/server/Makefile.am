@@ -16,6 +16,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/dispatch_table.h \
 	$(rootsrcdir)/src/util/gles2_utils.c \
 	$(rootsrcdir)/src/util/gles2_utils.h \
+	$(rootsrcdir)/src/util/hash.c \
+	$(rootsrcdir)/src/util/hash.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/caching_server_gles_tests.h \

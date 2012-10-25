@@ -2,6 +2,7 @@
 #define CACHING_CLIENT_H
 
 #include "client.h"
+#include "name_handler.h"
 
 /* Initialize the commands in the buffer using the following sequence
  * of calls:
@@ -17,9 +18,14 @@ typedef struct caching_client {
      * that we can chain up to the superclass. The process of subclassing
      * overrides the original dispatch table. */
     dispatch_table_t super_dispatch;
+    name_handler_t *name_handler;
 } caching_client_t;
 
 private caching_client_t *
 caching_client_new ();
+
+private void
+caching_client_destroy (caching_client_t *client);
+
 
 #endif /* CACHING_CLIENT_H */

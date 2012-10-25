@@ -18,17 +18,15 @@ name_handler_destroy (name_handler_t *name_handler) {
     free (name_handler);
 }
 
-GLuint *
+void
 name_handler_alloc_names (name_handler_t *name_handler,
                           resource_namespace_t namespace,
-                          GLsizei n) {
-    GLuint *buffers = (GLuint *)malloc (sizeof (GLuint)*n);
+                          GLsizei n,
+                          GLuint *buffers) {
     int i;
 
+    /* FIXME: check overflow and reuse names. */
     for (i=0; i<n; i++)
         buffers[i] = ++name_handler->last_name[namespace];
-
-    /* FIXME: check overflow. */
-    return buffers;
 }
 

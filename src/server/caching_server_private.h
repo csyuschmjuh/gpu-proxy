@@ -4,6 +4,7 @@
 #include "server.h"
 #include "compiler_private.h"
 #include "egl_states.h"
+#include "hash.h"
 #include "types_private.h"
 #include <EGL/egl.h>
 
@@ -20,7 +21,7 @@ typedef struct _caching_server {
 
     /* The state of the active GL context. */
     link_list_t *active_state;
-
+    HashTable *names_cache;
 } caching_server_t;
 
 typedef struct gl_server_states
@@ -38,5 +39,8 @@ caching_server_init (caching_server_t *server, buffer_t *buffer);
 
 private caching_server_t *
 caching_server_new (buffer_t *buffer);
+
+private void
+caching_server_destroy (caching_server_t *server);
 
 #endif /* GPUPROCESS_EGL_SERVER_PRIVATE_H */
