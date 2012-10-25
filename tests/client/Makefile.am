@@ -5,8 +5,6 @@ noinst_PROGRAMS = \
 rootsrcdir=../..
 
 client_test_SOURCES = \
-	$(rootsrcdir)/src/name_handler.c \
-	$(rootsrcdir)/src/name_handler.h \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command_custom.c \
@@ -19,6 +17,8 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/client/caching_client.c \
 	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
+	$(rootsrcdir)/src/client/name_handler.c \
+	$(rootsrcdir)/src/client/name_handler.h \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	$(rootsrcdir)/src/generated/client_entry_points.c \
 	$(rootsrcdir)/src/util/gles2_utils.c \

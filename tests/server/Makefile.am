@@ -12,6 +12,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/client/caching_client.c \
 	$(rootsrcdir)/src/client/caching_client.h \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
+	$(rootsrcdir)/src/client/name_handler.h \
+	$(rootsrcdir)/src/client/name_handler.c \
 	$(rootsrcdir)/src/dispatch_table.c \
 	$(rootsrcdir)/src/dispatch_table.h \
 	$(rootsrcdir)/src/util/gles2_utils.c \
@@ -25,8 +27,6 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/server/caching_server_gles.c \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
-	$(rootsrcdir)/src/name_handler.h \
-	$(rootsrcdir)/src/name_handler.c \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command_custom.c \
