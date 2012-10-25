@@ -31,9 +31,10 @@ name_handler_create ();
 private void
 name_handler_destroy (name_handler_t *name_handler);
 
-private GLuint *
+private void
 name_handler_alloc_names (name_handler_t *name_handler,
                           resource_namespace_t namespace,
-                          GLsizei n);
+                          GLsizei n,
+                          GLuint *buffers);
 
 #endif /* CLIENT_STATE_H */

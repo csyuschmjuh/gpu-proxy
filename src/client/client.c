@@ -2,6 +2,7 @@
 #include "client.h"
 
 #include "caching_client.h"
+#include "caching_client_private.h"
 #include "command.h"
 
 #include <sys/prctl.h>
@@ -123,7 +124,7 @@ client_shutdown_server (client_t *client)
 }
 
 
-static bool
+bool
 client_destroy (client_t *client)
 {
     client_shutdown_server (client);
@@ -151,8 +152,8 @@ client_destroy_thread_local ()
     if (! thread_local_client)
         return;
 
-     client_destroy (thread_local_client);
-     thread_local_client = NULL;
+    caching_client_destroy (CACHING_CLIENT (thread_local_client));
+    thread_local_client = NULL;
 }
 
 name_handler_t *

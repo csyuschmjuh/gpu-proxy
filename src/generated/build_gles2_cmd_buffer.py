@@ -265,6 +265,7 @@ _FUNCTION_INFO = {
     'out_arguments': ['params']
   },
   'glGenBuffers': {
+    'type': 'Asynchronous',
     'out_arguments': ['buffers']
   },
   'glGenFramebuffers': {
@@ -2012,9 +2013,12 @@ class Function(object):
             not self.GetInfo('pepper_interface'))
 
   def IsSynchronous(self):
-    return self.IsType('Synchronous') \
-        or self.HasReturnValue() \
-        or len(self.info.out_arguments) > 0
+    if self.IsType('Asynchronous'):
+        return False
+    else:
+        return self.IsType('Synchronous') \
+            or self.HasReturnValue() \
+            or len(self.info.out_arguments) > 0
 
   def HasReturnValue(self):
     return self.return_type != 'void'

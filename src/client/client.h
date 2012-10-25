@@ -72,6 +72,9 @@ client_start_server (client_t *client);
 private client_t *
 client_new ();
 
+private bool
+client_destroy (client_t *client);
+
 private void
 client_init (client_t *);
 

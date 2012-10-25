@@ -2,6 +2,7 @@
 
 #include "caching_client.h"
 #include "caching_client_private.h"
+#include "client.h"
 #include "command.h"
 #include "egl_states.h"
 #include "types_private.h"
@@ -1126,6 +1127,8 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
             }
             break;
         }
+
+        /* FIXME: Return names to the name handler */
     }
 }
 
@@ -1796,6 +1799,8 @@ caching_client_glFrontFace (void* client, GLenum mode)
 static void
 caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 {
+    GLuint *server_buffers;
+
     INSTRUMENT();
 
     if (n < 0) {
@@ -1803,7 +1808,12 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
         return;
     }
 
-    CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, buffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
+                              RESOURCE_GEN_BUFFERS,
+                              n, buffers);
+
+    server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
+    CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, server_buffers);
 }
 
 static void
@@ -4196,6 +4206,8 @@ caching_client_init (caching_client_t *client)
 
     client->super.post_hook = caching_client_post_hook;
 
+    client->name_handler = name_handler_create ();
+
     #include "caching_client_dispatch_autogen.c"
 }
 
@@ -4205,4 +4217,11 @@ caching_client_new ()
     caching_client_t *client = (caching_client_t *)malloc (sizeof (caching_client_t));
     caching_client_init (client);
     return client;
+}
+
+void
+caching_client_destroy (caching_client_t *client)
+{
+    name_handler_destroy (client->name_handler);
+    client_destroy ((client_t *)client);
 }

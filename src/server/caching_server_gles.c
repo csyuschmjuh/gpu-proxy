@@ -636,7 +636,11 @@ caching_server_glBindBuffer (void* server, GLenum target, GLuint buffer)
             if (egl_state->state.array_buffer_binding == buffer)
                 return;
             else {
-                CACHING_SERVER(server)->super_dispatch.glBindBuffer (server, target, buffer);
+                GLuint *server_name;
+
+                server_name = (GLuint *)HashLookup (CACHING_SERVER(server)->names_cache,
+                                                    buffer);
+                CACHING_SERVER(server)->super_dispatch.glBindBuffer (server, target, *server_name);
                 egl_state->state.need_get_error = true;
 
                /* FIXME: we don't know whether it succeeds or not */
@@ -1175,6 +1179,8 @@ caching_server_glDeleteBuffers (void* server, GLsizei n, const GLuint *buffers)
         egl_state = (egl_state_t *) CACHING_SERVER(server)->active_state->data;
         vertex_attrib_list_t *attrib_list = &egl_state->state.vertex_attribs;
         vertex_attrib_t *attribs = attrib_list->attribs;
+        GLuint *server_buffers;
+
         count = attrib_list->count;
 
         if (n < 0) {
@@ -1182,28 +1188,35 @@ caching_server_glDeleteBuffers (void* server, GLsizei n, const GLuint *buffers)
             goto FINISH;
         }
 
-        CACHING_SERVER(server)->super_dispatch.glDeleteBuffers (server, n, buffers);
+        server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
+        for (i = 0; i < n; i++)
+            server_buffers[i] = *((GLuint *)HashLookup (CACHING_SERVER(server)->names_cache,
+                                                        buffers[i]));
+
+        CACHING_SERVER(server)->super_dispatch.glDeleteBuffers (server, n, server_buffers);
 
         /* check array_buffer_binding and element_array_buffer_binding */
         for (i = 0; i < n; i++) {
-            if (buffers[i] == egl_state->state.array_buffer_binding)
+            if (server_buffers[i] == egl_state->state.array_buffer_binding)
                 egl_state->state.array_buffer_binding = 0;
-            else if (buffers[i] == egl_state->state.element_array_buffer_binding)
+            else if (server_buffers[i] == egl_state->state.element_array_buffer_binding)
                 egl_state->state.element_array_buffer_binding = 0;
         }
-        
+
         /* update client state */
         if (count == 0)
             goto FINISH;
 
         for (i = 0; i < n; i++) {
-            if (attribs[0].array_buffer_binding == buffers[i]) {
+            if (attribs[0].array_buffer_binding == server_buffers[i]) {
                 for (j = 0; j < count; j++) {
                     attribs[j].array_buffer_binding = 0;
                 }
                 break;
             }
         }
+
+        free (server_buffers);
     }
 
 FINISH:
@@ -1843,13 +1856,24 @@ caching_server_glGenBuffers (void* server, GLsizei n, GLuint *buffers)
 {
     if (caching_server_glIsValidFunc (server, CACHING_SERVER(server)->super_dispatch.glGenBuffers) &&
         caching_server_glIsValidContext (server)) {
+        GLuint *server_buffers;
+        int i;
 
         if (n < 0) {
             caching_server_glSetError (server, GL_INVALID_VALUE);
             return;
         }
-    
-        CACHING_SERVER(server)->super_dispatch.glGenBuffers (server, n, buffers);
+
+        server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
+
+        CACHING_SERVER(server)->super_dispatch.glGenBuffers (server, n, server_buffers);
+        for (i=0; i<n; i++) {
+            GLuint *data = (GLuint *)malloc (sizeof (GLuint));
+            *data = server_buffers[i];
+            HashInsert (CACHING_SERVER(server)->names_cache, buffers[i], data);
+        }
+
+        free (server_buffers);
     }
 }
 
@@ -5118,6 +5142,7 @@ caching_server_init (caching_server_t *server, buffer_t *buffer)
     server->super.command_post_hook = caching_server_command_post_hook;
     server->super_dispatch = server->super.dispatch;
     server->active_state = NULL;
+    server->names_cache = NewHashTable();
 
     mutex_lock (server_states_mutex);
     if (server_states.initialized == false) {
@@ -5137,3 +5162,17 @@ caching_server_new (buffer_t *buffer)
     caching_server_init (server, buffer);
     return server;
 }
+
+static void
+delete_hash_data (GLuint key, void *data, void *userData)
+{
+    free (data);
+}
+
+void
+caching_server_destroy (caching_server_t *server)
+{
+    HashWalk (server->names_cache, delete_hash_data, NULL);
+    DeleteHashTable (server->names_cache);
+}
+
