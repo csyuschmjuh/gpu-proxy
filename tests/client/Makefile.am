@@ -21,8 +21,8 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	$(rootsrcdir)/src/generated/client_entry_points.c \
-	$(rootsrcdir)/src/gles2_utils.c \
-	$(rootsrcdir)/src/gles2_utils.h \
+	$(rootsrcdir)/src/util/gles2_utils.c \
+	$(rootsrcdir)/src/util/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/server.c \
@@ -49,6 +49,7 @@ client_test_CFLAGS = \
 	-I$(rootsrcdir)/src/client \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
+	-I$(rootsrcdir)/src/util \
 	-I$(rootsrcdir)/tests/server \
         -Werror \
 	-Wall

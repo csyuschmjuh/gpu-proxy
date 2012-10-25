@@ -14,8 +14,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/client/egl_api_custom.c \
 	$(rootsrcdir)/src/dispatch_table.c \
 	$(rootsrcdir)/src/dispatch_table.h \
-	$(rootsrcdir)/src/gles2_utils.c \
-	$(rootsrcdir)/src/gles2_utils.h \
+	$(rootsrcdir)/src/util/gles2_utils.c \
+	$(rootsrcdir)/src/util/gles2_utils.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
@@ -50,8 +50,9 @@ server_test_CFLAGS = \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
 	-I$(rootsrcdir)/src \
+	-I$(rootsrcdir)/src/client \
 	-I$(rootsrcdir)/src/generated \
 	-I$(rootsrcdir)/src/server \
-	-I$(rootsrcdir)/src/client \
+	-I$(rootsrcdir)/src/util \
         -Werror \
 	-Wall
