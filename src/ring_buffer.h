@@ -10,10 +10,6 @@
 #include <unistd.h>
 #include "compiler_private.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct buffer
 {
     void *address;
@@ -49,9 +45,5 @@ buffer_read_advance(buffer_t *buffer, size_t count_bytes);
 
 private void
 buffer_clear(buffer_t *buffer);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_RING_BUFFER_H */

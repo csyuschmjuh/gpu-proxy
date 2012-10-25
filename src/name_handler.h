@@ -20,10 +20,6 @@ typedef enum resource_namespace {
     RESOURCE_MAX
 } resource_namespace_t;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* FIXME: We have to allow to reuse names for some cases and. */
 typedef struct name_handler {
     unsigned int last_name[RESOURCE_MAX];
@@ -39,9 +35,5 @@ private GLuint *
 name_handler_alloc_names (name_handler_t *name_handler,
                           resource_namespace_t namespace,
                           GLsizei n);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CLIENT_STATE_H */

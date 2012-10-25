@@ -6,10 +6,6 @@
 #include "gles2_states.h"
 #include "thread_private.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct egl_state {
     EGLContext           context;        /* active context, initial EGL_NO_CONTEXT */
     EGLDisplay           display;        /* active display, initial EGL_NO_SURFACE */
@@ -25,9 +21,5 @@ typedef struct egl_state {
     bool             destroy_read;
     bool             destroy_draw;
 } egl_state_t;
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_EGL_STATE_H */

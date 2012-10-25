@@ -4,10 +4,6 @@
 #include "compiler_private.h"
 #include "glx_states.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define NUM_CONTEXTS
 
 typedef struct gl_server_states
@@ -45,10 +41,5 @@ _server_make_current (EGLDisplay display,
                                  EGLSurface drawable,
                                  EGLSurface readable,
                                  EGLContext context);
-
-#ifdef __cplusplus
-}
-#endif
-
 
 #endif /* GPUPROCESS_SERVER_PRIVATE_H */

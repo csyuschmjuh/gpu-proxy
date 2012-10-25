@@ -11,10 +11,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef enum command_type {
     COMMAND_NO_OP,
     COMMAND_SHUTDOWN,
@@ -40,9 +36,5 @@ command_get_size (command_type_t command_type);
 
 #include "command_custom.h"
 #include "generated/command_autogen.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* GPUPROCESS_COMMAND_H */

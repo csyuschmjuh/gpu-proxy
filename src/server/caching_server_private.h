@@ -7,10 +7,6 @@
 #include "types_private.h"
 #include <EGL/egl.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define NUM_CONTEXTS 4
 
 #define CACHING_SERVER(object) ((caching_server_t *) (object))

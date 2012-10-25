@@ -3,10 +3,6 @@
 
 #include "client.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Initialize the commands in the buffer using the following sequence
  * of calls:
  *   COMMAND_NAME_t *command =
@@ -25,9 +21,5 @@ typedef struct caching_client {
 
 private caching_client_t *
 caching_client_new ();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* CACHING_CLIENT_H */
