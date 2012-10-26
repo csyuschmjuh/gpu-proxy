@@ -277,6 +277,8 @@ typedef struct gl_state {
     bool         max_samples_queried;
 
     GLint        texture_max_level;
+
+    HashTable    *attrib_location_cache;
     HashTable    *uniform_location_cache;
 } gles2_state_t;
 

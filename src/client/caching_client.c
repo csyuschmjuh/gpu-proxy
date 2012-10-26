@@ -157,6 +157,7 @@ _caching_client_init_gles2_states (egl_state_t *egl_state)
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->uniform_location_cache = NewHashTable();
+    state->attrib_location_cache = NewHashTable();
 
     /* XXX: initialize a thread */
 }
@@ -198,6 +199,10 @@ _caching_client_remove_state (link_list_t **state)
     HashWalk (gles_state->uniform_location_cache, FreeDataCallback, NULL);
     DeleteHashTable (gles_state->uniform_location_cache);
     gles_state->uniform_location_cache = NULL;
+
+    HashWalk (gles_state->attrib_location_cache, FreeDataCallback, NULL);
+    DeleteHashTable (gles_state->attrib_location_cache);
+    gles_state->attrib_location_cache = NULL;
 
     free (egl_state);
     free (*state);
@@ -1938,12 +1943,26 @@ caching_client_glGetAttribLocation (void* client, GLuint program,
 {
     INSTRUMENT();
 
-    GLint result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
+    GLuint *location_pointer;
+    GLint result;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    GLuint *data;
 
+    location_pointer = (GLuint *)HashLookup (state->attrib_location_cache,
+                                             HashStr (name));
+
+    if (location_pointer)
+        return *location_pointer;
+
+    result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
     if (result == -1) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
         state->need_get_error = true;
+        return -1;
     }
+
+    data = (GLuint *)malloc (sizeof (GLuint));
+    *data = result;
+    HashInsert (state->attrib_location_cache, HashStr(name), data);
 
     return result;
 }
@@ -1956,6 +1975,7 @@ caching_client_glLinkProgram (void* client,
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
 
     HashDeleteAll(state->uniform_location_cache, FreeDataCallback, NULL);
+    HashDeleteAll(state->attrib_location_cache, FreeDataCallback, NULL);
 
     command_gllinkprogram_init (command,
                                 program);
