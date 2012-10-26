@@ -2778,7 +2778,7 @@ caching_client_glLineWidth (void* client, GLfloat width)
     CACHING_CLIENT(client)->super_dispatch.glLineWidth (client, width);
 }
 
-static void
+static GLboolean
 caching_client_glIsTexture (void *client, GLuint texture)
 {
     INSTRUMENT();
