@@ -17,6 +17,7 @@
 typedef enum resource_namespace {
     RESOURCE_INVALID,
     RESOURCE_GEN_BUFFERS,
+    RESOURCE_GEN_TEXTURES,
     RESOURCE_MAX
 } resource_namespace_t;
 

@@ -79,13 +79,13 @@ typedef struct v_program {
     v_program_uniform_list_t    uniforms;
 } v_program_t;
 
-typedef struct gl_texture {
+typedef struct _texture {
     GLuint                  id;
     GLenum                  internal_format;
     GLsizei                 width;
     GLsizei                 height;
     GLenum                  data_type;
-} gl_texture_t;
+} texture_t;
 
 typedef struct gl_state {
     GLenum                  error;             /* initial is GL_NO_ERROR */
@@ -288,6 +288,7 @@ typedef struct gl_state {
 
     HashTable    *attrib_location_cache;
     HashTable    *uniform_location_cache;
+    HashTable    *texture_cache;
 } gles2_state_t;
 
 #endif /* GPUPROCESS_GLES2_STATE_H */

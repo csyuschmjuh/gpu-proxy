@@ -158,6 +158,7 @@ _caching_client_init_gles2_states (egl_state_t *egl_state)
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->uniform_location_cache = NewHashTable();
     state->attrib_location_cache = NewHashTable();
+    state->texture_cache = NewHashTable();
 
     /* XXX: initialize a thread */
 }
@@ -203,6 +204,10 @@ _caching_client_remove_state (link_list_t **state)
     HashWalk (gles_state->attrib_location_cache, FreeDataCallback, NULL);
     DeleteHashTable (gles_state->attrib_location_cache);
     gles_state->attrib_location_cache = NULL;
+    
+    HashWalk (gles_state->texture_cache, FreeDataCallback, NULL);
+    DeleteHashTable (gles_state->texture_cache);
+    gles_state->texture_cache = NULL;
 
     free (egl_state);
     free (*state);
@@ -653,6 +658,8 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
 static void
 caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
 {
+    texture_t *tex;
+
     INSTRUMENT();
 
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
@@ -672,6 +679,13 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+
+    /* look up in cache */
+    tex = (texture_t *) HashLookup (state->texture_cache, texture);
+    if (! tex) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }    
 
     CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
 
@@ -1133,6 +1147,8 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
     }
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
+
+    /* FIXME: remove from texture cache */
 }
 
 static void
@@ -1866,9 +1882,26 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
     CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, renderbuffers);
 }
 
+static texture_t *
+_create_texture (GLuint id)
+{
+    texture_t *tex = (texture_t *) malloc (sizeof (texture_t));
+    tex->id = id;
+    tex->width = 0;
+    tex->height = 0;
+    tex->data_type = GL_UNSIGNED_BYTE;
+    tex->internal_format = GL_RGBA;
+
+    return tex;
+}
+    
 static void
 caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 {
+    GLuint *server_textures;
+    int i;
+    gles2_state_t *state;
+
     INSTRUMENT();
 
     if (n < 0) {
@@ -1876,7 +1909,27 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
         return;
     }
 
-    CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, textures);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
+                              RESOURCE_GEN_TEXTURES,
+                              n, textures);
+
+    server_textures = (GLuint *)malloc (n * sizeof (GLuint));
+    for (i = 0; i < n; i++)
+        server_textures[i] = textures [i];
+
+    /* FIXME:  we need to generate a list of client id for texture
+     * for each texture id, we need to call _create_texture(), and
+     * place them in the hashtable
+     */
+
+    CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, server_textures);
+
+    /* add textures to cache */
+    state = client_get_current_gl_state (CLIENT (client));
+    for (i = 0; i < n; i++) {
+        texture_t *tex = _create_texture (textures[i]);
+        HashInsert (state->texture_cache, textures[i], tex);
+    }
 }
 
 static void
@@ -3159,6 +3212,15 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
                              GLsizei height, GLint border, GLenum format,
                              GLenum type, const void *pixels)
 {
+    texture_t *tex;
+    GLuint tex_id;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+
+    INSTRUMENT();
+
+    if (! state)
+        return;
+
     if (level < 0 || width < 0 || height < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -3180,13 +3242,36 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         return;
     }
 
+    if (type == GL_UNSIGNED_SHORT_5_6_5 && format != GL_RGB) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+    
+    if ((type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+         type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+         format != GL_RGBA) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+     
+    /* FIXME: we need more checks on max width/height and level */ 
+    if (target == GL_TEXTURE_2D)
+        tex_id = state->texture_binding[0];
+    else
+        tex_id = state->texture_binding[1];
+
+    tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
+    if (! tex)
+        state->need_get_error = true;
+    else {
+        tex->internal_format = internalformat;
+        tex->width = width;
+        tex->height = height;
+        tex->data_type = type;
+    }
+
     CACHING_CLIENT(client)->super_dispatch.glTexImage2D (client, target, level, internalformat,
                                                          width, height, border, format, type, pixels);
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    
-    /* XXX: This is hacky */
-    if (! (format == GL_RGBA || format == GL_RGB))
-        state->need_get_error = true;
 }
 
 static void
@@ -3201,6 +3286,12 @@ caching_client_glTexSubImage2D (void* client,
                                 GLenum type,
                                 const void *pixels)
 {
+    texture_t *tex;
+    GLuint tex_id;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+
+    INSTRUMENT();
+
     if (level < 0 || width < 0 || height < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -3216,18 +3307,44 @@ caching_client_glTexSubImage2D (void* client,
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+    
+    if (type == GL_UNSIGNED_SHORT_5_6_5 && format != GL_RGB) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+    
+    if ((type == GL_UNSIGNED_SHORT_4_4_4_4 ||
+         type == GL_UNSIGNED_SHORT_5_5_5_1) &&
+         format != GL_RGBA) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+    
+    if (target == GL_TEXTURE_2D)
+        tex_id = state->texture_binding[0];
+    else
+        tex_id = state->texture_binding[1];
+
+    tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
+    if (! tex)
+        state->need_get_error = true;
+    else {
+        if (tex->internal_format != format) {
+            caching_client_glSetError (client, GL_INVALID_OPERATION);
+            return;
+        }
+        if (xoffset + width > tex->width ||
+            yoffset + height > tex->height) {        
+            caching_client_glSetError (client, GL_INVALID_VALUE);
+            return;
+        }
+    }
+
+    /* FIXME: we need to check level */
 
     CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
                                                             width, height, format, type, pixels);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-
-    /* XXX this is hacky, we also need to check xoffset+width > w,
-     * yoffset+height > h for previous glTexImage, and the format should
-     * match internal format
-     */
-    if (! (format == GL_RGBA || format == GL_RGB))
-        state->need_get_error = true;
 }
 
 static void
