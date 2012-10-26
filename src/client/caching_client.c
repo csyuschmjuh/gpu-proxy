@@ -2779,6 +2779,20 @@ caching_client_glLineWidth (void* client, GLfloat width)
 }
 
 static void
+caching_client_glIsTexture (void *client, GLuint texture)
+{
+    INSTRUMENT();
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    texture_t *tex;
+
+    tex = (texture_t *)HashLookup (state->texture_cache, texture);
+    if (! tex)
+        return GL_FALSE;
+
+    return GL_TRUE;
+}
+
+static void
 caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
 {
     INSTRUMENT();
