@@ -96,6 +96,14 @@ private GLuint
 HashNumEntries (const HashTable *table);
 
 private void
+FreeDataCallback (GLuint key,
+                  void *data,
+                  void *userData);
+
+private GLuint
+HashStr (const void *v);
+
+private void
 test_hash_functions (void);
 
 #endif
