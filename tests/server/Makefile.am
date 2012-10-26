@@ -22,9 +22,6 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/util/hash.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
-	$(rootsrcdir)/src/server/caching_server_gles_tests.h \
-	$(rootsrcdir)/src/server/caching_server_gles_private.h \
-	$(rootsrcdir)/src/server/caching_server_gles.c \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/server/server_custom.c \

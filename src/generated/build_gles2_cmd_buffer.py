@@ -2703,18 +2703,6 @@ class GLGenerator(object):
     file.Write("}\n")
     file.Close()
 
-  def WriteCachingServerDispatchTableImplementation(self, filename):
-    """Writes the caching server dispatch table implementation for the server-side"""
-    caching_server_text = open(os.path.join('..', 'server', 'caching_server_gles.c')).read()
-    file = CWriter(filename)
-
-    for func in self.functions:
-        caching_func_name = "caching_server_%s " % func.name
-        if caching_server_text.find(caching_func_name) == -1:
-            continue
-        file.Write('    server->super.dispatch.%s = %s;\n' % (func.name, caching_func_name))
-    file.Close()
-
   def WriteCachingClientDispatchTableImplementation(self, filename):
     caching_client_text = open(os.path.join('..', 'client', 'caching_client.c')).read()
     file = CWriter(filename)
@@ -2776,7 +2764,6 @@ def main(argv):
 
   # These are used on the server-side.
   gen.WriteBaseServer("server_autogen.c")
-  gen.WriteCachingServerDispatchTableImplementation("caching_server_dispatch_autogen.c")
 
   if gen.errors > 0:
     print "%d errors" % gen.errors

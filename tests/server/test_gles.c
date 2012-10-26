@@ -1,5 +1,5 @@
 #include "test_gles.h"
-#include "caching_server_private.h"
+#include "server.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <stdlib.h>
@@ -85,7 +85,7 @@ setup (void)
 
     buffer_t *first_buffer = malloc (sizeof (buffer_t));
     buffer_create (first_buffer);
-    server = (server_t *) caching_server_new (first_buffer);
+    server = (server_t *) server_new (first_buffer);
 
     egl_dpy = server->dispatch.eglGetDisplay (server, dpy1);
     printf ("egl display = %p\n", egl_dpy);
