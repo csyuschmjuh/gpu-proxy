@@ -87,4 +87,7 @@ client_get_current_state (client_t *client);
 private gles2_state_t *
 client_get_current_gl_state (client_t *client);
 
+private bool
+client_is_space_full_for_command (command_type_t command_type);
+
 #endif /* CLIENT_H */

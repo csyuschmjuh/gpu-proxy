@@ -4226,6 +4226,8 @@ caching_client_eglSwapBuffers (void* client,
                                EGLDisplay display,
                                EGLSurface surface)
 {
+    bool command_full = false;
+
     INSTRUMENT();
 
     if (!CLIENT(client)->active_state)
@@ -4236,7 +4238,17 @@ caching_client_eglSwapBuffers (void* client,
            state->drawable == surface))
         return EGL_FALSE;
 
-    return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
+    command_full = client_is_space_full_for_command (COMMAND_EGLSWAPBUFFERS);
+    if (command_full) {
+        return EGL_FALSE;
+    }
+    /* call real eglSwapBuffers */
+    command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
+    command_eglswapbuffers_init (command, display, surface);
+    client_run_command_async (command);
+    return EGL_TRUE;
+
+    //return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
 }
 
 static EGLBoolean 
