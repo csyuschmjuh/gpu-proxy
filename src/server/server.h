@@ -7,6 +7,7 @@ typedef struct _server server_t;
 #include "command.h"
 #include "compiler_private.h"
 #include "egl_states.h"
+#include "hash.h"
 #include "ring_buffer.h"
 #include "dispatch_table.h"
 #include "thread_private.h"
@@ -25,6 +26,7 @@ struct _server {
     buffer_t *buffer;
     thread_t thread;
     bool threaded;
+    HashTable *names_cache;
     void (*command_post_hook)(server_t *server, command_t *command);
 };
 
