@@ -681,10 +681,12 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
     }
 
     /* look up in cache */
-    tex = (texture_t *) HashLookup (state->texture_cache, texture);
-    if (! tex) {
-        caching_client_glSetError (client, GL_INVALID_OPERATION);
-        return;
+    if (texture != 0) {
+        tex = (texture_t *) HashLookup (state->texture_cache, texture);
+        if (! tex) {
+            caching_client_glSetError (client, GL_INVALID_OPERATION);
+            return;
+        }
     }    
 
     CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
