@@ -156,8 +156,6 @@ _caching_client_init_gles2_states (egl_state_t *egl_state)
 
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
-    state->uniform_location_cache = NewHashTable();
-    state->attrib_location_cache = NewHashTable();
     state->texture_cache = NewHashTable();
 
     /* XXX: initialize a thread */
@@ -181,6 +179,9 @@ _caching_client_remove_state (link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
     gles2_state_t *gles_state = &egl_state->state;
+    link_list_t *program_list = gles_state->programs;
+    program_t *program;
+    link_list_t *temp;
 
     if (egl_state->state.vertex_attribs.attribs != 
         egl_state->state.vertex_attribs.embedded_attribs)
@@ -197,13 +198,22 @@ _caching_client_remove_state (link_list_t **state)
     if ((*state)->next)
         (*state)->next->prev = (*state)->prev;
 
-    HashWalk (gles_state->uniform_location_cache, FreeDataCallback, NULL);
-    DeleteHashTable (gles_state->uniform_location_cache);
-    gles_state->uniform_location_cache = NULL;
+    while (program_list) {
+        program = (program_t *)program_list->data;
+        HashWalk (program->uniform_location_cache, FreeDataCallback, NULL);
+        DeleteHashTable (program->uniform_location_cache);
+        program->uniform_location_cache = NULL;
 
-    HashWalk (gles_state->attrib_location_cache, FreeDataCallback, NULL);
-    DeleteHashTable (gles_state->attrib_location_cache);
-    gles_state->attrib_location_cache = NULL;
+        HashWalk (program->attrib_location_cache, FreeDataCallback, NULL);
+        DeleteHashTable (program->attrib_location_cache);
+        program->attrib_location_cache = NULL;
+        
+        free (program);
+        temp = program_list;
+        program_list = program_list->next;
+        free (temp);
+    }
+    gles_state->programs = NULL;
     
     HashWalk (gles_state->texture_cache, FreeDataCallback, NULL);
     DeleteHashTable (gles_state->texture_cache);
@@ -1009,12 +1019,38 @@ static GLuint
 caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    link_list_t *program_list = state->programs;
+    link_list_t *new_program_list; 
+    
+    /* FIXME: client side create program */
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
     if (result == 0) {
         gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
         state->need_get_error = true;
     }
+
+    if (program_list) {
+        while (program_list->next)
+            program_list = program_list->next;
+    }
+ 
+    new_program_list = (link_list_t *) malloc (sizeof (link_list_t ));
+    new_program_list->prev = new_program_list->next = NULL;
+    program_t *new_program = (program_t *)malloc (sizeof (program_t));
+    new_program->id = result; 
+    new_program->uniform_location_cache = NewHashTable();
+    new_program->attrib_location_cache = NewHashTable();
+    new_program_list->data = new_program;
+    
+    if (program_list) {
+        new_program_list->prev = program_list;
+        program_list->next = new_program_list;
+    }
+    else
+        state->programs = new_program_list;
+  
     return result;
 }
 
@@ -2002,24 +2038,34 @@ caching_client_glGetAttribLocation (void* client, GLuint program,
     GLint result;
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     GLuint *data;
+    link_list_t *program_list = state->programs;
+    program_t *saved_program;
 
-    location_pointer = (GLuint *)HashLookup (state->attrib_location_cache,
-                                             HashStr (name));
+    while (program_list) {
+        saved_program = (program_t *)program_list->data;
+        if (saved_program->id == program) {
+            location_pointer = (GLuint *)HashLookup (saved_program->attrib_location_cache,
+                                                     HashStr (name));
 
-    if (location_pointer)
-        return *location_pointer;
+            if (location_pointer)
+                return *location_pointer;
 
-    result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
-    if (result == -1) {
-        state->need_get_error = true;
-        return -1;
+            result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
+
+            if (result == -1) {
+                state->need_get_error = true;
+                return -1;
+            }
+
+            data = (GLuint *)malloc (sizeof (GLuint));
+            *data = result;
+            HashInsert (saved_program->attrib_location_cache, HashStr(name), data);
+
+            return result;
+        }
+        program_list = program_list->next; 
     }
-
-    data = (GLuint *)malloc (sizeof (GLuint));
-    *data = result;
-    HashInsert (state->attrib_location_cache, HashStr(name), data);
-
-    return result;
+    return -1;
 }
 
 static void
@@ -2028,14 +2074,23 @@ caching_client_glLinkProgram (void* client,
 {
     command_t *command = client_get_space_for_command (COMMAND_GLLINKPROGRAM);
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    link_list_t *program_list = state->programs;
+    program_t *saved_program;
 
-    HashDeleteAll(state->uniform_location_cache, FreeDataCallback, NULL);
-    HashDeleteAll(state->attrib_location_cache, FreeDataCallback, NULL);
-
-    command_gllinkprogram_init (command,
+    /* need to check validity of program */
+    while (program_list) {
+        saved_program = (program_t *) program_list->data;
+        if (saved_program->id == program) { 
+            command_gllinkprogram_init (command,
                                 program);
 
-    client_run_command_async (command);
+            client_run_command_async (command);
+            return;
+        }
+        program_list = program_list->next;
+    }
+
+    caching_client_glSetError (client, GL_INVALID_VALUE);
 }
 
 static GLint
@@ -2048,25 +2103,34 @@ caching_client_glGetUniformLocation (void* client, GLuint program,
     GLint result;
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
     GLuint *data;
+    link_list_t *program_list = state->programs;
+    program_t *saved_program;
 
-    location_pointer = (GLuint *)HashLookup (state->uniform_location_cache,
-                                             HashStr (name));
+    while (program_list) {
+        saved_program = (program_t *)program_list->data;
+        if (saved_program->id == program) {
+            location_pointer = (GLuint *)HashLookup (saved_program->uniform_location_cache,
+                                                     HashStr (name));
 
-    if (location_pointer)
-        return *location_pointer;
+            if (location_pointer)
+                return *location_pointer;
 
-    result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
+            result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
 
-    if (result == -1) {
-        state->need_get_error = true;
-        return -1;
+            if (result == -1) {
+                state->need_get_error = true;
+                return -1;
+            }
+
+            data = (GLuint *)malloc (sizeof (GLuint));
+            *data = result;
+            HashInsert (saved_program->uniform_location_cache, HashStr(name), data);
+
+            return result;
+        }
+        program_list = program_list->next;
     }
-
-    data = (GLuint *)malloc (sizeof (GLuint));
-    *data = result;
-    HashInsert (state->uniform_location_cache, HashStr(name), data);
-
-    return result;
+    return -1;
 }
 
 static void
@@ -3418,18 +3482,35 @@ caching_client_glUseProgram (void* client, GLuint program)
     INSTRUMENT();
 
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    link_list_t *program_list = state->programs;
+    program_t *saved_program;
+    bool found = false;
+    
     if (state->current_program == program)
         return;
     if (program < 0) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
-
-    CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program);
-
-    /* FIXME: this maybe not right because this program may be invalid
+    /* this maybe not right because this program may be invalid
      * object, we save here to save time in glGetError() */
-    state->current_program = program;
+    while (program_list) {
+        saved_program = (program_t *) program_list->data;
+        if (saved_program->id == program) { 
+            found = true;
+            break;
+        }
+        program_list = program_list->next;
+    }
+    if (found) {
+        CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program);
+
+        /* this maybe not right because this program may be invalid
+         * object, we save here to save time in glGetError() */
+        state->current_program = program;
+        return;
+    }
+    caching_client_glSetError (client, GL_INVALID_OPERATION);
 }
 
 static void
