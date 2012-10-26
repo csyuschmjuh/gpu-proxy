@@ -156,6 +156,8 @@ _caching_client_init_gles2_states (egl_state_t *egl_state)
 
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
+    state->uniform_location_cache = NewHashTable();
+
     /* XXX: initialize a thread */
 }
 
@@ -176,6 +178,7 @@ static void
 _caching_client_remove_state (link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
+    gles2_state_t *gles_state = &egl_state->state;
 
     if (egl_state->state.vertex_attribs.attribs != 
         egl_state->state.vertex_attribs.embedded_attribs)
@@ -191,6 +194,10 @@ _caching_client_remove_state (link_list_t **state)
         (*state)->prev->next = (*state)->next;
     if ((*state)->next)
         (*state)->next->prev = (*state)->prev;
+
+    HashWalk (gles_state->uniform_location_cache, FreeDataCallback, NULL);
+    DeleteHashTable (gles_state->uniform_location_cache);
+    gles_state->uniform_location_cache = NULL;
 
     free (egl_state);
     free (*state);
@@ -1941,17 +1948,49 @@ caching_client_glGetAttribLocation (void* client, GLuint program,
     return result;
 }
 
-static GLint  
+static void
+caching_client_glLinkProgram (void* client,
+                              GLuint program)
+{
+    command_t *command = client_get_space_for_command (COMMAND_GLLINKPROGRAM);
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+
+    HashDeleteAll(state->uniform_location_cache, FreeDataCallback, NULL);
+
+    command_gllinkprogram_init (command,
+                                program);
+
+    client_run_command_async (command);
+}
+
+static GLint
 caching_client_glGetUniformLocation (void* client, GLuint program,
-                                  const GLchar *name)
+                                     const GLchar *name)
 {
     INSTRUMENT();
 
-    GLint result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
+    GLuint *location_pointer;
+    GLint result;
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    GLuint *data;
+
+    location_pointer = (GLuint *)HashLookup (state->uniform_location_cache,
+                                             HashStr (name));
+
+    if (location_pointer)
+        return *location_pointer;
+
+    result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
+
     if (result == -1) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
         state->need_get_error = true;
+        return -1;
     }
+
+    data = (GLuint *)malloc (sizeof (GLuint));
+    *data = result;
+    HashInsert (state->uniform_location_cache, HashStr(name), data);
+
     return result;
 }
 
