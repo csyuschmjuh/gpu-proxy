@@ -1,1 +1,1 @@
-SUBDIRS = src tests/client tests/server
+SUBDIRS = src
