@@ -4,6 +4,8 @@
 
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+
+#include "hash.h"
 #include "types_private.h"
 
 #define NUM_EMBEDDED 32
@@ -275,7 +277,7 @@ typedef struct gl_state {
     bool         max_samples_queried;
 
     GLint        texture_max_level;
-
+    HashTable    *uniform_location_cache;
 } gles2_state_t;
 
 #endif /* GPUPROCESS_GLES2_STATE_H */
