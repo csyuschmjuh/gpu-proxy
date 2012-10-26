@@ -79,6 +79,12 @@ typedef struct v_program {
     v_program_uniform_list_t    uniforms;
 } v_program_t;
 
+typedef struct _program {
+    GLuint       id;
+    HashTable    *attrib_location_cache;
+    HashTable    *uniform_location_cache;
+} program_t;
+
 typedef struct _texture {
     GLuint                  id;
     GLenum                  internal_format;
@@ -286,8 +292,6 @@ typedef struct gl_state {
 
     GLint        texture_max_level;
 
-    HashTable    *attrib_location_cache;
-    HashTable    *uniform_location_cache;
     HashTable    *texture_cache;
 } gles2_state_t;
 
