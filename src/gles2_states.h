@@ -79,6 +79,14 @@ typedef struct v_program {
     v_program_uniform_list_t    uniforms;
 } v_program_t;
 
+typedef struct gl_texture {
+    GLuint                  id;
+    GLenum                  internal_format;
+    GLsizei                 width;
+    GLsizei                 height;
+    GLenum                  data_type;
+} gl_texture_t;
+
 typedef struct gl_state {
     GLenum                  error;             /* initial is GL_NO_ERROR */
     bool                    need_get_error;

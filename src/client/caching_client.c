@@ -3164,10 +3164,29 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         return;
     }
 
+    if (internalformat != format) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+
+    if (! (target == GL_TEXTURE_2D                  ||
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X || 
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y || 
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
     CACHING_CLIENT(client)->super_dispatch.glTexImage2D (client, target, level, internalformat,
                                                          width, height, border, format, type, pixels);
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+    
+    /* XXX: This is hacky */
+    if (! (format == GL_RGBA || format == GL_RGB))
+        state->need_get_error = true;
 }
 
 static void
@@ -3187,11 +3206,28 @@ caching_client_glTexSubImage2D (void* client,
         return;
     }
 
+    if (! (target == GL_TEXTURE_2D                  ||
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X || 
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y || 
+           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
     CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
                                                             width, height, format, type, pixels);
 
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    state->need_get_error = true;
+
+    /* XXX this is hacky, we also need to check xoffset+width > w,
+     * yoffset+height > h for previous glTexImage, and the format should
+     * match internal format
+     */
+    if (! (format == GL_RGBA || format == GL_RGB))
+        state->need_get_error = true;
 }
 
 static void
