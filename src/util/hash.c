@@ -477,9 +477,34 @@ HashNumEntries (const HashTable *table)
     return count;
 }
 
+void
+FreeDataCallback (GLuint key,
+                  void *data,
+                  void *userData)
+{
+    free (data);
+}
 
+/* This function comes from glib library and implements the widely
+ * used "djb" hash apparently posted by Daniel Bernstein to
+ * comp.lang.c some time ago.  The 32 bit unsigned hash value starts
+ * at 5381 and for each byte 'c' in the string, is updated:
+ * <literal>hash = hash * 33 + c</literal>.  This function uses the
+ * signed value of each byte.
+ */
+GLuint
+HashStr (const void *v)
+{
+  const signed char *p;
+  unsigned int h = 5381;
 
-#if 1 /* debug only */
+  for (p = v; *p != '\0'; p++)
+    h = (h << 5) + h + *p;
+
+  return h;
+}
+
+#if 0 /* debug only */
 
 /**
  * Test walking over all the entries in a hash table.

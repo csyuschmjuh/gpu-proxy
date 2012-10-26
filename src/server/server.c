@@ -77,18 +77,12 @@ server_init (server_t *server,
     server_add_custom_command_handlers (server);
 }
 
-static void
-delete_hash_data (GLuint key, void *data, void *userData)
-{
-    free (data);
-}
-
 bool
 server_destroy (server_t *server)
 {
     server->buffer = NULL;
 
-    HashWalk (server->names_cache, delete_hash_data, NULL);
+    HashWalk (server->names_cache, FreeDataCallback, NULL);
     DeleteHashTable (server->names_cache);
 
     free (server);
