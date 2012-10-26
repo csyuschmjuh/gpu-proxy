@@ -23,10 +23,14 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/generated/client_entry_points.c \
 	$(rootsrcdir)/src/util/gles2_utils.c \
 	$(rootsrcdir)/src/util/gles2_utils.h \
+	$(rootsrcdir)/src/util/hash.c \
+	$(rootsrcdir)/src/util/hash.h \
 	$(rootsrcdir)/src/ring_buffer.c \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
+	$(rootsrcdir)/src/server/server_custom.c \
+	$(rootsrcdir)/src/server/server_custom.h \
 	$(rootsrcdir)/tests/server/gpuprocess_test.c \
 	$(rootsrcdir)/tests/server/gpuprocess_test.h \
 	basic_test.c \

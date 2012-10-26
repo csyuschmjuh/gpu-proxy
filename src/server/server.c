@@ -4,6 +4,7 @@
 #include "caching_server_private.h"
 #include "ring_buffer.h"
 #include "dispatch_table.h"
+#include "server_custom.h"
 #include "thread_private.h"
 #include <time.h>
 
@@ -71,13 +72,25 @@ server_init (server_t *server,
     server->command_post_hook = NULL;
 
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
+    server->names_cache = NewHashTable();
+
     server_fill_command_handler_table (server);
+    server_add_custom_command_handlers (server);
+}
+
+static void
+delete_hash_data (GLuint key, void *data, void *userData)
+{
+    free (data);
 }
 
 bool
 server_destroy (server_t *server)
 {
     server->buffer = NULL;
+
+    HashWalk (server->names_cache, delete_hash_data, NULL);
+    DeleteHashTable (server->names_cache);
 
     free (server);
     return true;
