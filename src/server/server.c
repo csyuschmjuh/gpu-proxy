@@ -1,7 +1,6 @@
 #include "config.h"
 #include "server.h"
 
-#include "caching_server_private.h"
 #include "ring_buffer.h"
 #include "dispatch_table.h"
 #include "server_custom.h"

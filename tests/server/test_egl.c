@@ -1,5 +1,5 @@
 #include "test_egl.h"
-#include "caching_server_private.h"
+#include "server.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <EGL/egl.h>
@@ -14,7 +14,7 @@ setup (void)
 {
     buffer_t *first_buffer = malloc (sizeof (buffer_t));
     buffer_create (first_buffer);
-    server = (server_t *) caching_server_new (first_buffer);
+    server = (server_t *) server_new (first_buffer);
 
     dpy = XOpenDisplay (NULL);
     GPUPROCESS_FAIL_IF (dpy == NULL, "XOpenDisplay should work");

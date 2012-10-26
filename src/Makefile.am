@@ -33,7 +33,6 @@ libGPUProcess_la_SOURCES = \
 	gl_states.h \
 	ring_buffer.h \
 	ring_buffer.c \
-	server/caching_server_private.h \
 	server/gl_server_private.h \
 	server/server.h \
 	server/server.c \
@@ -61,7 +60,6 @@ libGPUProcess_la_SOURCES += \
 	dispatch_table.h \
 	egl_states.h \
 	gles2_states.h \
-	server/caching_server_gles.c \
 	util/gles2_utils.c \
 	util/gles2_utils.h
 
