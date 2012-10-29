@@ -111,6 +111,13 @@ client_init (client_t *client)
     client->name_handler = name_handler_create ();
     client->token = 0;
 
+    client->last_1k_index = 0;
+    client->last_2k_index = 0;
+    client->last_4k_index = 0;
+    client->last_8k_index = 0;
+    client->last_16k_index = 0;
+    client->last_32k_index = 0;
+
     client_start_server (client);
     initializing_client = false;
 }

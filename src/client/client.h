@@ -19,6 +19,13 @@ typedef struct _client client_t;
  *   COMMAND_NAME_initialize (command, parameter1, parameter2, ...);
  *   client_write_command (command);
  */
+#define MEM_1K_SIZE  64
+#define MEM_2K_SIZE  32
+#define MEM_4K_SIZE  16
+#define MEM_8K_SIZE  8
+#define MEM_16K_SIZE 8
+#define MEM_32K_SIZE 8
+
 struct _client {
     dispatch_table_t dispatch;
 
@@ -34,6 +41,20 @@ struct _client {
     mutex_t server_started_mutex;
     thread_t server_thread;
     bool initializing;
+
+    /* pre-allocated vertex and indices memory */
+    char pre_1k_mem [MEM_1K_SIZE];
+    char pre_2k_mem [MEM_2K_SIZE];
+    char pre_4k_mem [MEM_4K_SIZE];
+    char pre_8k_mem [MEM_8K_SIZE];
+    char pre_16K_mem [MEM_16K_SIZE];
+    char pre_32k_mem [MEM_32K_SIZE];
+    int  last_1k_index;
+    int  last_2k_index;
+    int  last_4k_index;
+    int  last_8k_index;
+    int  last_16k_index;
+    int  last_32k_index;
 };
 
 private client_t *

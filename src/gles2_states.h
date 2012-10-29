@@ -81,6 +81,7 @@ typedef struct v_program {
 
 typedef struct _program {
     GLuint       id;
+    bool         mark_for_deletion;
     HashTable    *attrib_location_cache;
     HashTable    *uniform_location_cache;
 } program_t;

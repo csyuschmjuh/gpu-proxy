@@ -1040,6 +1040,7 @@ caching_client_glCreateProgram (void* client)
     new_program_list->prev = new_program_list->next = NULL;
     program_t *new_program = (program_t *)malloc (sizeof (program_t));
     new_program->id = result; 
+    new_program->mark_for_deletion = false;
     new_program->uniform_location_cache = NewHashTable();
     new_program->attrib_location_cache = NewHashTable();
     new_program_list->data = new_program;
@@ -1052,6 +1053,54 @@ caching_client_glCreateProgram (void* client)
         state->programs = new_program_list;
   
     return result;
+}
+
+static void
+caching_client_glDeleteProgram (client_t *client, GLuint program)
+{
+    INSTRUMENT();
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    link_list_t *program_list = state->programs;
+    program_t *cached_program; 
+    link_list_t *cached_program_list = NULL;
+
+    while (program_list) {
+        cached_program = (program_t *)program_list->data;
+        if (cached_program->id == program) {
+            cached_program_list = program_list;
+            break;
+        }
+
+        program_list = program_list->next;
+    }
+    
+    if (! cached_program_list) {        
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glDeleteProgram (client, program);
+
+    if (cached_program->id == state->current_program) {
+        cached_program->mark_for_deletion = true;
+        return;
+    }
+
+    program_list = cached_program_list->prev;
+    if (program_list)
+        program_list->next = cached_program_list->next;
+    
+    program_list = cached_program_list->next;
+    if (program_list)
+        program_list->prev = cached_program_list->prev;
+
+    HashWalk (cached_program->attrib_location_cache, FreeDataCallback, NULL);
+    DeleteHashTable (cached_program->attrib_location_cache);
+    HashWalk (cached_program->uniform_location_cache, FreeDataCallback, NULL);
+    DeleteHashTable (cached_program->uniform_location_cache);
+    free (cached_program);
+    free (cached_program_list);
+    
 }
 
 static GLuint
@@ -3485,6 +3534,7 @@ caching_client_glUseProgram (void* client, GLuint program)
     link_list_t *program_list = state->programs;
     program_t *saved_program;
     bool found = false;
+    link_list_t *saved_program_list = NULL;
     
     if (state->current_program == program)
         return;
@@ -3507,6 +3557,35 @@ caching_client_glUseProgram (void* client, GLuint program)
 
         /* this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
+
+        program_list = state->programs;
+        while (program_list) {
+            saved_program = (program_t *) program_list->data;
+            if (saved_program->id == state->current_program &&
+                saved_program->mark_for_deletion) { 
+                found = true;
+                saved_program_list = program_list;
+                break;
+            }
+            program_list = program_list->next;
+        }
+
+        if (saved_program_list) {
+            program_list = saved_program_list->prev;
+            if (program_list)
+                program_list->next = saved_program_list->next;
+    
+            program_list = saved_program_list->next;
+            if (program_list)
+                program_list->prev = saved_program_list->prev;
+
+            HashWalk (saved_program->attrib_location_cache, FreeDataCallback, NULL);
+            DeleteHashTable (saved_program->attrib_location_cache);
+            HashWalk (saved_program->uniform_location_cache, FreeDataCallback, NULL);
+            DeleteHashTable (saved_program->uniform_location_cache);
+            free (saved_program);
+            free (saved_program_list);
+        }
         state->current_program = program;
         return;
     }
