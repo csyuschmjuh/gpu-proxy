@@ -22,9 +22,9 @@ typedef struct _client client_t;
 #define MEM_1K_SIZE  64
 #define MEM_2K_SIZE  32
 #define MEM_4K_SIZE  16
-#define MEM_8K_SIZE  8
-#define MEM_16K_SIZE 8
-#define MEM_32K_SIZE 8
+#define MEM_8K_SIZE  16
+#define MEM_16K_SIZE 16
+#define MEM_32K_SIZE 16
 
 struct _client {
     dispatch_table_t dispatch;
@@ -43,12 +43,12 @@ struct _client {
     bool initializing;
 
     /* pre-allocated vertex and indices memory */
-    char pre_1k_mem [MEM_1K_SIZE];
-    char pre_2k_mem [MEM_2K_SIZE];
-    char pre_4k_mem [MEM_4K_SIZE];
-    char pre_8k_mem [MEM_8K_SIZE];
-    char pre_16K_mem [MEM_16K_SIZE];
-    char pre_32k_mem [MEM_32K_SIZE];
+    char pre_1k_mem [MEM_1K_SIZE][1024];
+    char pre_2k_mem [MEM_2K_SIZE][2048];
+    char pre_4k_mem [MEM_4K_SIZE][4096];
+    char pre_8k_mem [MEM_8K_SIZE][8192];
+    char pre_16k_mem [MEM_16K_SIZE][16384];
+    char pre_32k_mem [MEM_32K_SIZE][32768];
     int  last_1k_index;
     int  last_2k_index;
     int  last_4k_index;
