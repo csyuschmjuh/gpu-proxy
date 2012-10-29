@@ -1082,7 +1082,8 @@ caching_client_glCreateProgram (void* client)
 }
 
 static void
-caching_client_glDeleteProgram (client_t *client, GLuint program)
+caching_client_glDeleteProgram (void *client,
+                                GLuint program)
 {
     INSTRUMENT();
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
