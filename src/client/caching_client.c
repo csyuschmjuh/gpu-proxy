@@ -1632,12 +1632,37 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
     /* we can memcpy one array */
     if (one_array) {
-        one_array_data = (char *)malloc (array_size);
-        
+        if (array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
+            one_array_data = client->pre_1k_mem[client->last_1k_index];
+            client->last_1k_index++;
+        }
+        else if (array_size <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
+            one_array_data = client->pre_2k_mem[client->last_2k_index];
+            client->last_2k_index++;
+        }
+        else if (array_size <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
+            one_array_data = client->pre_4k_mem[client->last_4k_index];
+            client->last_4k_index++;
+        }
+        else if (array_size <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
+            one_array_data = client->pre_8k_mem[client->last_8k_index];
+            client->last_8k_index++;
+        }
+        else if (array_size <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
+            one_array_data = client->pre_16k_mem[client->last_16k_index];
+            client->last_16k_index++;
+        }
+        else if (array_size <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
+            one_array_data = client->pre_32k_mem[client->last_32k_index];
+            client->last_32k_index++;
+        }
+        else {
+            one_array_data = (char *)malloc (array_size);
+            prepend_element_to_list (allocated_data_arrays, one_array_data);
+        }
         memcpy (one_array_data,
                 attrib_list->first_index_pointer,
                 array_size);
-        prepend_element_to_list (allocated_data_arrays, one_array_data);
     }
 
     for (i = 0; i < attrib_list->count; i++) {
@@ -1768,10 +1793,12 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 /* FIXME: we should use pre-allocated buffer if possible */
 
 static char *
-caching_client_glCreateIndicesArray (GLenum mode,
+caching_client_glCreateIndicesArray (client_t *client,
+                                     GLenum mode,
                                      GLenum type,
                                      int count,
-                                     char *indices)
+                                     char *indices,
+                                     bool *needs_free)
 {
     char *data = NULL;
     int length;
@@ -1788,8 +1815,37 @@ caching_client_glCreateIndicesArray (GLenum mode,
          return NULL;
 
     length = size * count;
-
-    data = (char *) malloc (length);
+    *needs_free = false;
+    
+    if (length <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
+        data = client->pre_1k_mem[client->last_1k_index];
+        client->last_1k_index++;
+    }
+    else if (length <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
+        data = client->pre_2k_mem[client->last_2k_index];
+        client->last_2k_index++;
+    }
+    else if (length <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
+        data = client->pre_4k_mem[client->last_4k_index];
+        client->last_4k_index++;
+    }
+    else if (length <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
+        data = client->pre_8k_mem[client->last_8k_index];
+        client->last_8k_index++;
+    }
+    else if (length <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
+        data = client->pre_16k_mem[client->last_16k_index];
+        client->last_16k_index++;
+    }
+    else if (length <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
+        data = client->pre_32k_mem[client->last_32k_index];
+        client->last_32k_index++;
+    }
+    else {
+        data = (char *) malloc (length);
+        printf ("---------------malloc indices \n");
+        *needs_free = true;
+    }
     memcpy (data, indices, length);
 
     return data;
@@ -1845,9 +1901,15 @@ caching_client_glDrawElements (void* client,
 
     const char* indices_to_pass = indices;
     bool copy_indices = !state->vertex_array_binding && state->element_array_buffer_binding == 0;
+    bool needs_free = false;
     if (copy_indices)
-        indices_to_pass = caching_client_glCreateIndicesArray (mode, type,
-                                                               count, (char *)indices);
+        indices_to_pass = caching_client_glCreateIndicesArray (CLIENT(client),
+                                                               mode, type,
+                                                               count, (char *)indices,
+                                                               &needs_free);
+
+    if (! needs_free)
+        copy_indices = false;
     if (indices_to_pass) {
         command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
         command_gldrawelements_init (command, mode, count, type, indices_to_pass);
@@ -4315,7 +4377,15 @@ caching_client_eglSwapBuffers (void* client,
            state->drawable == surface))
         return EGL_FALSE;
 
-    return CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
+    CLIENT(client)->last_1k_index = 0;
+    CLIENT(client)->last_2k_index = 0;
+    CLIENT(client)->last_4k_index = 0;
+    CLIENT(client)->last_8k_index = 0;
+    CLIENT(client)->last_16k_index = 0;
+    CLIENT(client)->last_32k_index = 0;
+
+    return result;
 }
 
 static EGLBoolean 
