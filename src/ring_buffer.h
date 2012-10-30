@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include "compiler_private.h"
 
+#include "thread_private.h"
+
 typedef struct buffer
 {
     void *address;
@@ -20,6 +22,9 @@ typedef struct buffer
     unsigned int last_token;
 
     volatile size_t fill_count;
+
+    mutex_t mutex;
+    signal_t signal;
 } buffer_t;
 
 private void
