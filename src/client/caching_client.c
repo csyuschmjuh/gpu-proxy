@@ -1126,6 +1126,8 @@ caching_client_glDeleteProgram (void *client,
     HashWalk (cached_program->uniform_location_cache, FreeDataCallback, NULL);
     DeleteHashTable (cached_program->uniform_location_cache);
     free (cached_program);
+    if (state->programs == cached_program_list)
+        state->programs = cached_program_list->next;
     free (cached_program_list);
     
 }
