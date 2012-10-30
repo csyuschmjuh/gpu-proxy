@@ -75,6 +75,10 @@ buffer_create(buffer_t *buffer)
         report_exceptional_condition("Could not close file descriptor.");
 
     buffer->last_token = 0;
+
+    pthread_mutex_init (&buffer->mutex, NULL);
+
+    pthread_cond_init (&buffer->signal, NULL);
 }
 
 void
@@ -85,6 +89,9 @@ buffer_free(buffer_t *buffer)
     status = munmap (buffer->address, buffer->length << 1);
     if (status)
         report_exceptional_condition("Could not unmap memory.");
+
+    pthread_mutex_destroy (&buffer->mutex);
+    pthread_cond_destroy (&buffer->signal);
 }
 
 size_t
@@ -97,9 +104,12 @@ void *
 buffer_write_address(buffer_t *buffer,
                      size_t *writable_bytes)
 {
-    *writable_bytes = (buffer->length - buffer->fill_count);
-    if (*writable_bytes == 0)
-        return NULL;
+    pthread_mutex_lock (&buffer->mutex);
+
+    while (buffer->length - buffer->fill_count == 0)
+        pthread_cond_wait (&buffer->signal, &buffer->mutex);
+
+    pthread_mutex_unlock (&buffer->mutex);
     return ((char*)buffer->address + buffer->head);
 }
 
@@ -109,15 +119,20 @@ buffer_write_advance(buffer_t *buffer,
 {
     buffer->head = (buffer->head + count_bytes) % buffer->length;
     __sync_add_and_fetch (&buffer->fill_count, count_bytes);
+    
+    pthread_cond_signal (&buffer->signal);
 }
 
 void *
 buffer_read_address(buffer_t *buffer,
                     size_t *bytes_to_read)
 {
-    *bytes_to_read = buffer->fill_count;
-    if (*bytes_to_read == 0)
-        return NULL;
+    pthread_mutex_lock (&buffer->mutex);
+    while (buffer->fill_count == 0)
+        pthread_cond_wait (&buffer->signal, &buffer->mutex);
+
+    pthread_mutex_unlock (&buffer->mutex);
+
     return ((char*) buffer->address + buffer->tail);
 }
 
@@ -127,6 +142,8 @@ buffer_read_advance(buffer_t *buffer,
 {
     buffer->tail = (buffer->tail + count_bytes) % buffer->length;
     __sync_sub_and_fetch (&buffer->fill_count, count_bytes);
+
+    pthread_cond_signal (&buffer->signal);
 }
 
 void
