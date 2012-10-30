@@ -1846,7 +1846,6 @@ caching_client_glCreateIndicesArray (client_t *client,
     }
     else {
         data = (char *) malloc (length);
-        printf ("---------------malloc indices \n");
         *needs_free = true;
     }
     memcpy (data, indices, length);
