@@ -176,11 +176,11 @@ client_get_space_for_size (client_t *client,
     size_t available_space;
     command_t *write_location = (command_t *) buffer_write_address (&client->buffer,
                                                                     &available_space);
-    while (! write_location || available_space < size) {
+    /*while (! write_location || available_space < size) {
         sched_yield ();
         write_location = (command_t *) buffer_write_address (&client->buffer,
                                                              &available_space);
-    }
+    }*/
 
     return write_location;
 }
