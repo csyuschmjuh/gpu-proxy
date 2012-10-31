@@ -141,7 +141,7 @@ setup (void)
     XVisualInfo *vinfo;
 
     buffer_t *buffer = malloc (sizeof (buffer_t));
-    buffer_create (buffer);
+    buffer_create (buffer, 512, "command_buffer");
     server = (server_t *) server_new (buffer);
 
     first_test_info.dpy = XOpenDisplay (NULL);

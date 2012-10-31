@@ -84,7 +84,7 @@ setup (void)
     GPUPROCESS_FAIL_IF (dpy1 == NULL, "XOpenDisplay should work");
 
     buffer_t *first_buffer = malloc (sizeof (buffer_t));
-    buffer_create (first_buffer);
+    buffer_create (first_buffer, 512, "command_buffer");
     server = (server_t *) server_new (first_buffer);
 
     egl_dpy = server->dispatch.eglGetDisplay (server, dpy1);
