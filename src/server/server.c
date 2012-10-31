@@ -28,7 +28,7 @@ server_start_work_loop (server_t *server)
         size_t data_left_to_read;
         command_t *read_command;
 
-        if (buffer_use_mutex (server->buffer))
+        if (buffer_get_use_mutex (server->buffer))
             read_command = (command_t *) buffer_read_address (server->buffer,
                                                                      &data_left_to_read);
         else {
