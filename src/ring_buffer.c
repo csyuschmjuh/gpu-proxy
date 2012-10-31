@@ -8,13 +8,6 @@
 #include <unistd.h>
 #include "ring_buffer.h"
 
-static bool
-_use_mutex (void)
-{
-    const char *env = getenv ("GPUPROCESS_LOCK");
-    return env && !strcmp (env, "mutex");
-}
-
 private void
 report_exceptional_condition(const char* error)
 {
@@ -29,7 +22,7 @@ buffer_create(buffer_t *buffer)
      * may be larger.
      */
     /* TODO: Make this configurable. */
-    static unsigned long default_buffer_size = 1024 * 1024;
+    static unsigned long default_buffer_size = 1024 * 512;
 
     char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
@@ -82,13 +75,7 @@ buffer_create(buffer_t *buffer)
         report_exceptional_condition("Could not close file descriptor.");
 
     buffer->last_token = 0;
-
-    buffer->mutex_lock = _use_mutex ();
-    
-    if (buffer->mutex_lock) {
-        pthread_mutex_init (&buffer->mutex, NULL);
-        pthread_cond_init (&buffer->signal, NULL);
-    }
+    buffer->mutex_lock_initialized = false;
 }
 
 void
@@ -184,7 +171,7 @@ buffer_clear(buffer_t *buffer)
 }
 
 bool
-buffer_use_mutex (buffer_t *buffer)
+buffer_get_use_mutex (buffer_t *buffer)
 {
     return buffer->mutex_lock;
 }
@@ -194,4 +181,21 @@ buffer_signal_waiter (buffer_t *buffer)
 {
     if (buffer->mutex_lock)
         pthread_cond_signal (&buffer->signal);
+}
+
+void
+buffer_set_use_mutex (buffer_t *buffer, bool use_mutex)
+{
+    buffer->mutex_lock = use_mutex;
+    
+    if (buffer->mutex_lock && ! buffer->mutex_lock_initialized) {
+         pthread_mutex_init (&buffer->mutex, NULL);
+         pthread_cond_init (&buffer->signal, NULL);
+         buffer->mutex_lock_initialized = true;
+    }
+    else if (!buffer->mutex_lock && buffer->mutex_lock_initialized) {
+        pthread_mutex_destroy (&buffer->mutex);
+        pthread_cond_destroy (&buffer->signal);
+        buffer->mutex_lock_initialized = false;
+    }
 }

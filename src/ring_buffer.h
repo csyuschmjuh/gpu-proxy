@@ -27,6 +27,7 @@ typedef struct buffer
     mutex_t mutex;
     signal_t signal;
     bool mutex_lock;
+    bool mutex_lock_initialized;
 } buffer_t;
 
 private void
@@ -54,9 +55,12 @@ private void
 buffer_clear(buffer_t *buffer);
 
 private bool
-buffer_use_mutex (buffer_t *buffer);
+buffer_get_use_mutex (buffer_t *buffer);
 
 private void
 buffer_signal_waiter (buffer_t *buffer);
+
+private void
+buffer_set_use_mutex (buffer_t *buffer, bool use_mutex);
 
 #endif /* GPUPROCESS_RING_BUFFER_H */

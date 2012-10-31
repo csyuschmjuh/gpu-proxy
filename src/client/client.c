@@ -18,6 +18,13 @@ __thread bool initializing_client
 
 mutex_static_init (client_thread_mutex);
 
+static bool
+_buffer_mutex_enabled (void)
+{
+    const char *env = getenv ("GPUPROCESS_LOCK");
+    return env && ! strcmp (env, "mutex");
+}
+
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
 
@@ -100,6 +107,7 @@ client_init (client_t *client)
     client->post_hook = NULL;
 
     buffer_create (&client->buffer);
+    buffer_set_use_mutex (&client->buffer, _buffer_mutex_enabled ());
 
     // We initialize the base dispatch table synchronously here, so that we
     // don't have to worry about the server thread trying to initialize it
@@ -176,7 +184,7 @@ client_get_space_for_size (client_t *client,
     size_t available_space;
     command_t *write_location;
 
-    if (buffer_use_mutex (&client->buffer))
+    if (buffer_get_use_mutex (&client->buffer))
         write_location = (command_t *) buffer_write_address (&client->buffer,
                                                                     &available_space);
     else {
