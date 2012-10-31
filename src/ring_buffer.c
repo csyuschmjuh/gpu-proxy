@@ -140,7 +140,7 @@ buffer_write_advance(buffer_t *buffer,
     buffer->head = (buffer->head + count_bytes) % buffer->length;
     __sync_add_and_fetch (&buffer->fill_count, count_bytes);
    
-    if (buffer->mutex_lock) 
+    if (buffer->mutex_lock && buffer->fill_count == count_bytes) 
         pthread_cond_signal (&buffer->signal);
 }
 
@@ -172,7 +172,7 @@ buffer_read_advance(buffer_t *buffer,
     buffer->tail = (buffer->tail + count_bytes) % buffer->length;
     __sync_sub_and_fetch (&buffer->fill_count, count_bytes);
 
-    if (buffer->mutex_lock)
+    if (buffer->mutex_lock && buffer->fill_count == 0)
         pthread_cond_signal (&buffer->signal);
 }
 
