@@ -106,7 +106,7 @@ client_init (client_t *client)
 
     client->post_hook = NULL;
 
-    buffer_create (&client->buffer);
+    buffer_create (&client->buffer, 512, "command");
     buffer_set_use_mutex (&client->buffer, _buffer_mutex_enabled ());
 
     // We initialize the base dispatch table synchronously here, so that we

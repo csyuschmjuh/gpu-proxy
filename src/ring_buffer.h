@@ -31,7 +31,7 @@ typedef struct buffer
 } buffer_t;
 
 private void
-buffer_create(buffer_t *buffer);
+buffer_create(buffer_t *buffer, int size, const char *buffer_name);
 
 private void
 buffer_free(buffer_t *buffer);

@@ -15,7 +15,7 @@ report_exceptional_condition(const char* error)
 }
 
 void
-buffer_create(buffer_t *buffer)
+buffer_create(buffer_t *buffer, int size, const char *buffer_name)
 {
     /* The size of the buffer (in bytes). Note that for some buffers
      * such as the memory-mirrored ring buffer the actual buffer size
@@ -23,14 +23,26 @@ buffer_create(buffer_t *buffer)
      */
     /* TODO: Make this configurable. */
     static unsigned long default_buffer_size = 1024 * 512;
+    unsigned long buffer_size = 1024 * size;
+    int name_length = strlen (buffer_name);
+    
+    char *path = malloc (sizeof (char) * (name_length + 29));
+    memcpy (path, "/dev/shm/ring-buffer-", 21);
+    memcpy (path + 21, buffer_name, name_length);
+    memcpy (path + 21 + name_length, "-XXXXXX", 7);
+    path[name_length+28] = 0;
+ 
+    if (buffer_size < default_buffer_size)
+        buffer_size = default_buffer_size;
 
-    char path[] = "/dev/shm/ring-buffer-XXXXXX";
+    //char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
     void *address;
     int status;
 
     file_descriptor = mkstemp (path);
     if (file_descriptor < 0) {
+        free (path);
         report_exceptional_condition("Could not get a file descriptor.");
         return;
     }
@@ -41,7 +53,7 @@ buffer_create(buffer_t *buffer)
 
     // Round up the length to the nearest page boundary.
     long page_size = sysconf(_SC_PAGESIZE);
-    buffer->length = ((default_buffer_size + page_size - 1) / page_size) * page_size;
+    buffer->length = ((buffer_size + page_size - 1) / page_size) * page_size;
 
     buffer->fill_count = 0;
     buffer->head = buffer->tail = 0;
@@ -76,6 +88,7 @@ buffer_create(buffer_t *buffer)
 
     buffer->last_token = 0;
     buffer->mutex_lock_initialized = false;
+    free (path);
 }
 
 void
