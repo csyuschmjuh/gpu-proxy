@@ -29,7 +29,7 @@ buffer_create(buffer_t *buffer)
      * may be larger.
      */
     /* TODO: Make this configurable. */
-    static unsigned long default_buffer_size = 1024 * 512;
+    static unsigned long default_buffer_size = 1024 * 1024;
 
     char path[] = "/dev/shm/ring-buffer-XXXXXX";
     int file_descriptor;
@@ -121,8 +121,9 @@ buffer_write_address(buffer_t *buffer,
         if (buffer->mutex_lock) {
             pthread_mutex_lock (&buffer->mutex);
 
-            while (buffer->length - buffer->fill_count == 0)
+            while (buffer->length - buffer->fill_count == 0) {
                 pthread_cond_wait (&buffer->signal, &buffer->mutex);
+            }
 
             pthread_mutex_unlock (&buffer->mutex);
         }
@@ -151,8 +152,9 @@ buffer_read_address(buffer_t *buffer,
     if (buffer->fill_count == 0) {
         if (buffer->mutex_lock) {
             pthread_mutex_lock (&buffer->mutex);
-            while (buffer->fill_count == 0)
+            while (buffer->fill_count == 0) {
                 pthread_cond_wait (&buffer->signal, &buffer->mutex);
+            }
 
             pthread_mutex_unlock (&buffer->mutex);
         }
@@ -185,4 +187,11 @@ bool
 buffer_use_mutex (buffer_t *buffer)
 {
     return buffer->mutex_lock;
+}
+
+private void
+buffer_signal_waiter (buffer_t *buffer)
+{
+    if (buffer->mutex_lock)
+        pthread_cond_signal (&buffer->signal);
 }

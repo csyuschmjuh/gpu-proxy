@@ -227,8 +227,10 @@ client_run_command (command_t *command)
     command->token = token;
     client_run_command_async (command);
 
-    while (client->buffer.last_token < token)
+    while (client->buffer.last_token < token) {
+        buffer_signal_waiter (&client->buffer);
         sleep_nanoseconds (500);
+    }
 }
 
 void
