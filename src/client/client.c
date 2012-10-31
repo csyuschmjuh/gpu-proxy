@@ -174,13 +174,20 @@ client_get_space_for_size (client_t *client,
                            size_t size)
 {
     size_t available_space;
-    command_t *write_location = (command_t *) buffer_write_address (&client->buffer,
-                                                                    &available_space);
-    /*while (! write_location || available_space < size) {
-        sched_yield ();
+    command_t *write_location;
+
+    if (buffer_use_mutex (&client->buffer))
         write_location = (command_t *) buffer_write_address (&client->buffer,
+                                                                    &available_space);
+    else {
+        write_location = (command_t *) buffer_write_address (&client->buffer,
+                                                                    &available_space);
+        while (! write_location || available_space < size) {
+            sched_yield ();
+            write_location = (command_t *) buffer_write_address (&client->buffer,
                                                              &available_space);
-    }*/
+        }
+    }
 
     return write_location;
 }

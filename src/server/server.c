@@ -26,15 +26,21 @@ server_start_work_loop (server_t *server)
 {
     while (true) {
         size_t data_left_to_read;
-        command_t *read_command = (command_t *) buffer_read_address (server->buffer,
-                                                                     &data_left_to_read);
+        command_t *read_command;
 
-        /* The buffer is empty, so wait until there's something to read. */
-        /*while (! read_command) {
-            sleep_nanoseconds (500);
+        if (buffer_use_mutex (server->buffer))
             read_command = (command_t *) buffer_read_address (server->buffer,
+                                                                     &data_left_to_read);
+        else {
+            read_command = (command_t *) buffer_read_address (server->buffer,
+                                                                     &data_left_to_read);
+           /* The buffer is empty, so wait until there's something to read. */
+            while (! read_command) {
+                sleep_nanoseconds (500);
+                read_command = (command_t *) buffer_read_address (server->buffer,
                                                               &data_left_to_read);
-        }*/
+            }
+        }
 
         if (read_command->type == COMMAND_SHUTDOWN)
             break;
