@@ -8,6 +8,13 @@
 #include <unistd.h>
 #include "ring_buffer.h"
 
+static bool
+_use_mutex (void)
+{
+    const char *env = getenv ("GPUPROCESS_LOCK");
+    return env && !strcmp (env, "mutex");
+}
+
 private void
 report_exceptional_condition(const char* error)
 {
@@ -76,9 +83,12 @@ buffer_create(buffer_t *buffer)
 
     buffer->last_token = 0;
 
-    pthread_mutex_init (&buffer->mutex, NULL);
-
-    pthread_cond_init (&buffer->signal, NULL);
+    buffer->mutex_lock = _use_mutex ();
+    
+    if (buffer->mutex_lock) {
+        pthread_mutex_init (&buffer->mutex, NULL);
+        pthread_cond_init (&buffer->signal, NULL);
+    }
 }
 
 void
@@ -90,8 +100,10 @@ buffer_free(buffer_t *buffer)
     if (status)
         report_exceptional_condition("Could not unmap memory.");
 
-    pthread_mutex_destroy (&buffer->mutex);
-    pthread_cond_destroy (&buffer->signal);
+    if (buffer->mutex_lock) {
+        pthread_mutex_destroy (&buffer->mutex);
+        pthread_cond_destroy (&buffer->signal);
+    }
 }
 
 size_t
@@ -104,12 +116,19 @@ void *
 buffer_write_address(buffer_t *buffer,
                      size_t *writable_bytes)
 {
-    pthread_mutex_lock (&buffer->mutex);
+    *writable_bytes = buffer->length - buffer->fill_count;
+    if (*writable_bytes == 0) {
+        if (buffer->mutex_lock) {
+            pthread_mutex_lock (&buffer->mutex);
 
-    while (buffer->length - buffer->fill_count == 0)
-        pthread_cond_wait (&buffer->signal, &buffer->mutex);
+            while (buffer->length - buffer->fill_count == 0)
+                pthread_cond_wait (&buffer->signal, &buffer->mutex);
 
-    pthread_mutex_unlock (&buffer->mutex);
+            pthread_mutex_unlock (&buffer->mutex);
+        }
+        else
+            return NULL;
+    }
     return ((char*)buffer->address + buffer->head);
 }
 
@@ -119,19 +138,27 @@ buffer_write_advance(buffer_t *buffer,
 {
     buffer->head = (buffer->head + count_bytes) % buffer->length;
     __sync_add_and_fetch (&buffer->fill_count, count_bytes);
-    
-    pthread_cond_signal (&buffer->signal);
+   
+    if (buffer->mutex_lock) 
+        pthread_cond_signal (&buffer->signal);
 }
 
 void *
 buffer_read_address(buffer_t *buffer,
                     size_t *bytes_to_read)
 {
-    pthread_mutex_lock (&buffer->mutex);
-    while (buffer->fill_count == 0)
-        pthread_cond_wait (&buffer->signal, &buffer->mutex);
+    *bytes_to_read = buffer->fill_count;
+    if (buffer->fill_count == 0) {
+        if (buffer->mutex_lock) {
+            pthread_mutex_lock (&buffer->mutex);
+            while (buffer->fill_count == 0)
+                pthread_cond_wait (&buffer->signal, &buffer->mutex);
 
-    pthread_mutex_unlock (&buffer->mutex);
+            pthread_mutex_unlock (&buffer->mutex);
+        }
+        else
+            return NULL;
+    }
 
     return ((char*) buffer->address + buffer->tail);
 }
@@ -143,7 +170,8 @@ buffer_read_advance(buffer_t *buffer,
     buffer->tail = (buffer->tail + count_bytes) % buffer->length;
     __sync_sub_and_fetch (&buffer->fill_count, count_bytes);
 
-    pthread_cond_signal (&buffer->signal);
+    if (buffer->mutex_lock)
+        pthread_cond_signal (&buffer->signal);
 }
 
 void
@@ -151,4 +179,10 @@ buffer_clear(buffer_t *buffer)
 {
     buffer->head = buffer->tail = 0;
     buffer->fill_count = 0;
+}
+
+bool
+buffer_use_mutex (buffer_t *buffer)
+{
+    return buffer->mutex_lock;
 }
