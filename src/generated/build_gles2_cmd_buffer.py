@@ -281,6 +281,7 @@ _FUNCTION_INFO = {
     'out_arguments': ['renderbuffers']
   },
   'glGenTextures': {
+    'type': 'Asynchronous',
     'out_arguments': ['textures']
   },
   'glGetActiveAttrib': {
