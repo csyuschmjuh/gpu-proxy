@@ -57,6 +57,6 @@ private bool
 buffer_use_mutex (buffer_t *buffer);
 
 private void
-buffer_signal_write (buffer_t *buffer);
+buffer_signal_waiter (buffer_t *buffer);
 
 #endif /* GPUPROCESS_RING_BUFFER_H */
