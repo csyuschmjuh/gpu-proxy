@@ -76,11 +76,11 @@ start_server_thread_func (void *ptr)
     mutex_unlock (client->server_started_mutex);
     prctl (PR_SET_TIMERSLACK, 1);
 
-    pid_t pid = getpid();
+    pthread_t id = pthread_self ();
     //int scheduler = sched_getscheduler (pid);
     struct sched_param param;
     param.sched_priority = 99;
-    sched_setscheduler (pid, SCHED_FIFO, (const struct sched_param *)&param);
+    pthread_setschedparam (id, SCHED_FIFO, (const struct sched_param *)&param);
     int priority = sched_get_priority_max (SCHED_FIFO);
     pthread_setschedprio (pthread_self(), priority);
     server_start_work_loop (server);
