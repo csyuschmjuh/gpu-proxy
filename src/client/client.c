@@ -257,7 +257,6 @@ client_run_command_async (command_t *command)
 
     if (client->buffer.fill_count == command->size) {
         pthread_mutex_lock (&client->signal_mutex);
-        printf("signalling\n");
         pthread_cond_signal (&client->signal);
         pthread_mutex_unlock (&client->signal_mutex);
     }
