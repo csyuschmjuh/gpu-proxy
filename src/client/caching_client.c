@@ -1605,12 +1605,26 @@ prepend_element_to_list (link_list_t **list,
 }
 
 static bool
+client_has_vertex_attrib_array_set (client_t *client)
+{
+    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
+    vertex_attrib_t *attribs = attrib_list->attribs;
+
+    int i;
+    for (i = 0; i < attrib_list->count; i++) {
+        if (attribs[i].array_enabled || attribs[i].array_buffer_binding)
+            return true;
+    }
+    return false;
+}
+
+static void
 caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                                          size_t count,
                                                          link_list_t **allocated_data_arrays)
 {
     int i = 0;
-    bool needs_call = false;
     bool one_array = false;
     unsigned int array_size = 0;
     int data_size;
@@ -1676,18 +1690,13 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     }
 
     for (i = 0; i < attrib_list->count; i++) {
-        if (! attribs[i].array_enabled)
+        if (! attribs[i].array_enabled || attribs[i].array_buffer_binding)
             continue;
-        else if (attribs[i].array_buffer_binding) {
-            needs_call = true;
-            continue;
-        }
 
         /* We need to create a separate buffer for it. */
         if (one_array) {
             attribs[i].data = (char *)attribs[i].pointer - attrib_list->first_index_pointer + one_array_data;
-        }
-        else {
+        } else {
             attribs[i].data = _create_data_array (&attribs[i], count);
             if (! attribs[i].data)
                 continue;
@@ -1712,9 +1721,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                             0,
                                             (const void *)attribs[i].data);
         client_run_command_async (command);
-        needs_call = true;
     }
-    return needs_call;
 }
 
 static void
@@ -1723,9 +1730,6 @@ caching_client_glDrawArrays (void* client,
                              GLint first,
                              GLsizei count)
 {
-    bool needs_call = false;
-    size_t true_count = count;
-
     INSTRUMENT();
 
     if (! (mode == GL_POINTS         ||
@@ -1754,21 +1758,24 @@ caching_client_glDrawArrays (void* client,
     /* If vertex array binding is 0 and we have not bound a vertex attrib pointer, we
      * don't need to do anything. */
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    if (first > 0)
-        true_count = first + count;
+    if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
+        caching_client_clear_attribute_list_data (CLIENT(client));
+        return;
+    }
 
     link_list_t *arrays_to_free = NULL;
-    if (! state->vertex_array_binding)
-        needs_call = caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client),
-                                                                              true_count,
-                                                                              &arrays_to_free);
-
-    if (state->vertex_array_binding || needs_call) {
-        command_t *command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
-        command_gldrawarrays_init (command, mode, first, count);
-        ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
-        client_run_command_async (command);
+    if (! state->vertex_array_binding) {
+        size_t true_count = first > 0 ? first + count : count;
+        caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client),
+                                                                 true_count,
+                                                                 &arrays_to_free);
     }
+
+    command_t *command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
+    command_gldrawarrays_init (command, mode, first, count);
+    ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
+     client_run_command_async (command);
+
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
@@ -1883,63 +1890,50 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 }
 #endif
 
-/* FIXME: we should use pre-allocated buffer if possible */
+static size_t
+calculate_index_array_size (GLenum type,
+                            int count)
+{
+    if (type == GL_UNSIGNED_BYTE)
+       return sizeof (char) * count;
+    if (type == GL_UNSIGNED_SHORT)
+        return sizeof (unsigned short) * count;
+    return 0;
+}
 
 static char *
 caching_client_glCreateIndicesArray (client_t *client,
-                                     GLenum mode,
-                                     GLenum type,
-                                     int count,
+                                     size_t index_array_size,
                                      char *indices,
                                      bool *needs_free)
 {
     char *data = NULL;
-    int length;
-    int size = 0;
-
-    INSTRUMENT();
-
-    if (type == GL_UNSIGNED_BYTE)
-        size = sizeof (char);
-    else if (type == GL_UNSIGNED_SHORT)
-        size = sizeof (unsigned short);
-
-    if (size == 0)
-         return NULL;
-
-    length = size * count;
     *needs_free = false;
-    
-    if (length <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
+
+    if (index_array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
         data = client->pre_1k_mem[client->last_1k_index];
         client->last_1k_index++;
-    }
-    else if (length <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
+    } else if (index_array_size <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
         data = client->pre_2k_mem[client->last_2k_index];
         client->last_2k_index++;
-    }
-    else if (length <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
+    } else if (index_array_size <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
         data = client->pre_4k_mem[client->last_4k_index];
         client->last_4k_index++;
-    }
-    else if (length <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
+    } else if (index_array_size <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
         data = client->pre_8k_mem[client->last_8k_index];
         client->last_8k_index++;
-    }
-    else if (length <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
+    } else if (index_array_size <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
         data = client->pre_16k_mem[client->last_16k_index];
         client->last_16k_index++;
-    }
-    else if (length <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
+    } else if (index_array_size <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
         data = client->pre_32k_mem[client->last_32k_index];
         client->last_32k_index++;
-    }
-    else {
-        data = (char *) malloc (length);
+    } else {
+        data = (char *) malloc (index_array_size);
         *needs_free = true;
     }
-    memcpy (data, indices, length);
 
+    memcpy (data, indices, index_array_size);
     return data;
 }
 
@@ -1978,26 +1972,33 @@ caching_client_glDrawElements (void* client,
         return;
     }
 
-    link_list_t *arrays_to_free = NULL;
-    size_t elements_count = _get_elements_count (type, indices, count);
-
+    /* If we have not bound any attribute data then do not actually execute anything. */
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    bool needs_call = state->vertex_array_binding ||
-         caching_client_setup_vertex_attrib_pointer_if_necessary (
-            CLIENT (client), elements_count, &arrays_to_free);
-
-    if (!needs_call) {
+    if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
     }
 
-    const char* indices_to_pass = indices;
+    /* If we aren't actually passing any indices then do not execute anything. */
     bool copy_indices = !state->vertex_array_binding && state->element_array_buffer_binding == 0;
+    size_t index_array_size = calculate_index_array_size (type, count);
+    if (! indices || (copy_indices && ! index_array_size)) {
+        caching_client_clear_attribute_list_data (CLIENT(client));
+        return;
+    }
+
+    size_t elements_count = _get_elements_count (type, indices, count);
+    link_list_t *arrays_to_free = NULL;
+         caching_client_setup_vertex_attrib_pointer_if_necessary (
+            CLIENT (client), elements_count, &arrays_to_free);
+
+    const char* indices_to_pass = indices;
     bool needs_free = false;
+
     if (copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (CLIENT(client),
-                                                               mode, type,
-                                                               count, (char *)indices,
+                                                               index_array_size,
+                                                               (char *)indices,
                                                                &needs_free);
 
     if (! needs_free)
