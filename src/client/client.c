@@ -20,13 +20,6 @@ __thread bool initializing_client
 
 mutex_static_init (client_thread_mutex);
 
-static bool
-_buffer_mutex_enabled (void)
-{
-    const char *env = getenv ("GPUPROCESS_LOCK");
-    return env && ! strcmp (env, "mutex");
-}
-
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
 
@@ -73,6 +66,9 @@ start_server_thread_func (void *ptr)
     client_t *client = (client_t *)ptr;
     server_t *server = server_new (&client->buffer);
 
+    server->signal_mutex = &client->signal_mutex;
+    server->signal = &client->signal;
+
     mutex_unlock (client->server_started_mutex);
     prctl (PR_SET_TIMERSLACK, 1);
 
@@ -117,7 +113,6 @@ client_init (client_t *client)
     client->post_hook = NULL;
 
     buffer_create (&client->buffer, 512, "command");
-    buffer_set_use_mutex (&client->buffer, _buffer_mutex_enabled ());
 
     // We initialize the base dispatch table synchronously here, so that we
     // don't have to worry about the server thread trying to initialize it
@@ -128,6 +123,9 @@ client_init (client_t *client)
 
     client->name_handler = name_handler_create ();
     client->token = 0;
+
+    pthread_mutex_init (&client->signal_mutex, NULL);
+    pthread_cond_init (&client->signal, NULL);
 
     client->last_1k_index = 0;
     client->last_2k_index = 0;
@@ -155,6 +153,9 @@ client_destroy (client_t *client)
     client_shutdown_server (client);
 
     buffer_free (&client->buffer);
+
+    pthread_mutex_destroy (&client->signal_mutex);
+    pthread_cond_destroy (&client->signal);
 
     name_handler_destroy (client->name_handler);
     free (client);
@@ -194,17 +195,12 @@ client_get_space_for_size (client_t *client,
     size_t available_space;
     command_t *write_location;
 
-    if (buffer_get_use_mutex (&client->buffer))
-        write_location = (command_t *) buffer_write_address (&client->buffer,
+    write_location = (command_t *) buffer_write_address (&client->buffer,
                                                                     &available_space);
-    else {
+    while (! write_location || available_space < size) {
+        sched_yield ();
         write_location = (command_t *) buffer_write_address (&client->buffer,
-                                                                    &available_space);
-        while (! write_location || available_space < size) {
-            sched_yield ();
-            write_location = (command_t *) buffer_write_address (&client->buffer,
                                                              &available_space);
-        }
     }
 
     return write_location;
@@ -245,10 +241,8 @@ client_run_command (command_t *command)
     command->token = token;
     client_run_command_async (command);
 
-    while (client->buffer.last_token < token) {
-        buffer_signal_waiter (&client->buffer);
+    while (client->buffer.last_token < token)
         sleep_nanoseconds (500);
-    }
 }
 
 void
@@ -260,6 +254,13 @@ client_run_command_async (command_t *command)
         client->post_hook (client, command);
 
     buffer_write_advance (&client->buffer, command->size);
+
+    if (client->buffer.fill_count == command->size) {
+        pthread_mutex_lock (&client->signal_mutex);
+        printf("signalling\n");
+        pthread_cond_signal (&client->signal);
+        pthread_mutex_unlock (&client->signal_mutex);
+    }
 }
 
 bool
