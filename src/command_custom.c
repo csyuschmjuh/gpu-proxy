@@ -185,8 +185,6 @@ static void free_array (link_list_t* array)
 void
 command_gldrawelements_destroy_arguments (command_gldrawelements_t *command)
 {
-    if (command->need_to_free_indices)
-        free (command->indices);
     free_array (command->arrays_to_free);
 }
 

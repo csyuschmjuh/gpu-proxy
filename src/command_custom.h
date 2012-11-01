@@ -4,7 +4,6 @@ typedef struct _command_gldrawelements {
     GLsizei count;
     GLenum type;
     void* indices;
-    bool need_to_free_indices;
     link_list_t *arrays_to_free;
 } command_gldrawelements_t;
 

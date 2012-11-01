@@ -1905,11 +1905,9 @@ static char *
 caching_client_glCreateIndicesArray (client_t *client,
                                      size_t index_array_size,
                                      char *indices,
-                                     bool *needs_free)
+                                     link_list_t **allocated_data_arrays)
 {
     char *data = NULL;
-    *needs_free = false;
-
     if (index_array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
         data = client->pre_1k_mem[client->last_1k_index];
         client->last_1k_index++;
@@ -1930,7 +1928,7 @@ caching_client_glCreateIndicesArray (client_t *client,
         client->last_32k_index++;
     } else {
         data = (char *) malloc (index_array_size);
-        *needs_free = true;
+        prepend_element_to_list (allocated_data_arrays, data);
     }
 
     memcpy (data, indices, index_array_size);
@@ -1993,23 +1991,16 @@ caching_client_glDrawElements (void* client,
             CLIENT (client), elements_count, &arrays_to_free);
 
     const char* indices_to_pass = indices;
-    bool needs_free = false;
-
     if (copy_indices)
         indices_to_pass = caching_client_glCreateIndicesArray (CLIENT(client),
                                                                index_array_size,
                                                                (char *)indices,
-                                                               &needs_free);
+                                                               &arrays_to_free);
 
-    if (! needs_free)
-        copy_indices = false;
-    if (indices_to_pass) {
-        command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-        command_gldrawelements_init (command, mode, count, type, indices_to_pass);
-        ((command_gldrawelements_t *) command)->need_to_free_indices = copy_indices;
-        ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
-        client_run_command_async (command);
-    }
+    command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+    command_gldrawelements_init (command, mode, count, type, indices_to_pass);
+    ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
+    client_run_command_async (command);
 
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
