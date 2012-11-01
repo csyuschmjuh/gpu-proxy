@@ -188,6 +188,25 @@ client_get_name_handler ()
     return client_get_thread_local ()->name_handler;
 }
 
+command_t *
+client_try_get_space_for_command_with_extra_space (command_type_t command_type,
+                                                   size_t extra)
+{
+    client_t *client = client_get_thread_local ();
+
+    size_t available_space;
+    command_t *command = (command_t *) buffer_write_address (&client->buffer,
+                                                             &available_space);
+    size_t command_size = command_get_size (command_type) + extra;
+    if (! command || available_space < command_size);
+        return NULL;
+
+    command->type = command_type;
+    command->size = command_size;
+    command->token = 0;
+    return command;
+}
+
 static command_t *
 client_get_space_for_size (client_t *client,
                            size_t size)
@@ -196,7 +215,7 @@ client_get_space_for_size (client_t *client,
     command_t *write_location;
 
     write_location = (command_t *) buffer_write_address (&client->buffer,
-                                                                    &available_space);
+                                                         &available_space);
     while (! write_location || available_space < size) {
         sched_yield ();
         write_location = (command_t *) buffer_write_address (&client->buffer,
@@ -205,25 +224,17 @@ client_get_space_for_size (client_t *client,
 
     return write_location;
 }
+
 command_t *
 client_get_space_for_command (command_type_t command_type)
 {
-    command_t *command = NULL;
-    static bool initialized = false;
-    static size_t command_sizes[COMMAND_MAX_COMMAND];
-
-    if (!initialized) {
-        int i;
-        for (i = 0; i < COMMAND_MAX_COMMAND; i++)
-            command_sizes[i] = command_get_size (i);
-        initialized = true;
-    }
-
     assert (command_type >= 0 && command_type < COMMAND_MAX_COMMAND);
-    command = client_get_space_for_size (client_get_thread_local (),
-                                         command_sizes[command_type]);
+
+    client_t *client = client_get_thread_local ();
+    size_t command_size = command_get_size (command_type);
+    command_t *command = client_get_space_for_size (client, command_size);
     command->type = command_type;
-    command->size = command_sizes[command_type];
+    command->size = command_size;
     command->token = 0;
     return command;
 }
