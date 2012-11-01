@@ -77,12 +77,12 @@ start_server_thread_func (void *ptr)
     prctl (PR_SET_TIMERSLACK, 1);
 
     pid_t pid = getpid();
-    int scheduler = sched_getscheduler (pid);
+    //int scheduler = sched_getscheduler (pid);
     struct sched_param param;
     param.sched_priority = 99;
-    int ret_val = sched_setscheduler (pid, SCHED_FIFO, (const struct sched_param *)&param);
+    sched_setscheduler (pid, SCHED_FIFO, (const struct sched_param *)&param);
     int priority = sched_get_priority_max (SCHED_FIFO);
-    ret_val = pthread_setschedprio (pthread_self(), priority);
+    pthread_setschedprio (pthread_self(), priority);
     server_start_work_loop (server);
 
     server_destroy(server);
