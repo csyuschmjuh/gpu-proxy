@@ -11,6 +11,7 @@ AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE([1.11 -Wall no-define no-dist-gzip dist-xz])
 LT_INIT
 
+AC_PROG_CC_STDC
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
