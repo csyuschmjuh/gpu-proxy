@@ -28,6 +28,9 @@ struct _server {
     bool threaded;
     HashTable *names_cache;
     void (*command_post_hook)(server_t *server, command_t *command);
+
+    mutex_t* signal_mutex;
+    signal_t* signal;
 };
 
 private void

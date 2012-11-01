@@ -26,20 +26,28 @@ server_start_work_loop (server_t *server)
 {
     while (true) {
         size_t data_left_to_read;
-        command_t *read_command;
+        command_t *read_command = (command_t *) buffer_read_address (server->buffer,
+                                                                     &data_left_to_read);
+        /* The buffer is empty, so wait until there's something to read. */
+         int times_slept = 0;
+         while (! read_command && times_slept < 20) {
+             sleep_nanoseconds (500);
+             read_command = (command_t *) buffer_read_address (server->buffer,
+                                                           &data_left_to_read);
+             times_slept++;
+         }
 
-        if (buffer_get_use_mutex (server->buffer))
+        /* We ran out of hot cycles, try a more lackadaisical approach. */
+        if (! read_command) {
+            pthread_mutex_lock (server->signal_mutex);
             read_command = (command_t *) buffer_read_address (server->buffer,
-                                                                     &data_left_to_read);
-        else {
-            read_command = (command_t *) buffer_read_address (server->buffer,
-                                                                     &data_left_to_read);
-           /* The buffer is empty, so wait until there's something to read. */
+                                                               &data_left_to_read);
             while (! read_command) {
-                sleep_nanoseconds (500);
+                pthread_cond_wait (server->signal, server->signal_mutex);
                 read_command = (command_t *) buffer_read_address (server->buffer,
-                                                              &data_left_to_read);
+                                                                   &data_left_to_read);
             }
+            pthread_mutex_unlock (server->signal_mutex);
         }
 
         if (read_command->type == COMMAND_SHUTDOWN)

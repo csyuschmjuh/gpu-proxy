@@ -55,6 +55,9 @@ struct _client {
     int  last_8k_index;
     int  last_16k_index;
     int  last_32k_index;
+
+    mutex_t signal_mutex;
+    signal_t signal;
 };
 
 private client_t *
