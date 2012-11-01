@@ -1772,6 +1772,88 @@ caching_client_glDrawArrays (void* client,
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
+#ifdef __ARM_NEON__
+#include <arm_neon.h>
+union __char_result {
+    unsigned char     chars[16];
+    uint8x16_t result;
+};
+
+union __short_result {
+    uint16x8_t result;
+    unsigned short shorts[8];
+};
+
+static size_t 
+_get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
+{
+    uint8x16_t *char_indices;
+    unsigned char *char_idx;
+    uint16x8_t *short_indices;
+    unsigned short *short_idx;
+
+    size_t elements_count = 0;
+    int i;
+    int num;
+    int remain;
+    int j;
+
+    union __short_result short_result = { {0, 0, 0, 0,
+                                           0, 0, 0, 0} }; 
+    union __char_result char_result = { {0, 0, 0, 0,
+                                        0, 0, 0, 0,
+                                        0, 0, 0, 0,
+                                        0, 0, 0, 0 } };
+
+    INSTRUMENT();
+
+    if (type == GL_UNSIGNED_BYTE) {
+        num = count / 16;
+        remain = count - num * 16;
+    }
+    else {
+        num = count / 8;
+        remain = count - num * 8;
+    }
+
+    if (type == GL_UNSIGNED_BYTE) {
+        char_indices = (uint8x16_t *)indices;
+        for (i = 0; i < num ; i++) {
+            char_result.result = vmaxq_u8 (*(char_indices + i), 
+                                           char_result.result);
+        }
+        char_idx = (unsigned char *)char_result.chars;
+        for (j = 0; j < 16; j++) {
+            if (elements_count < (size_t)char_idx[j])
+                elements_count = (size_t)char_idx[j];
+        }
+        char_idx = (unsigned char *)indices + num * 16;
+        for (i = 0; i < remain; i++) {
+            if ((size_t) char_idx[i] > elements_count)
+                elements_count = (size_t) char_idx[i];
+        }
+    }
+    else {
+        short_indices = (uint16x8_t *)indices;
+        for (i = 0; i < num ; i++) {
+            short_result.result = vmaxq_u16 (*(short_indices + i), 
+                                             short_result.result);
+        }
+        short_idx = (unsigned short *)short_result.shorts;
+        for (j = 0; j < 8; j++) {
+            if (elements_count < (size_t)short_idx[j])
+                elements_count = (size_t)short_idx[j];
+        }
+        short_idx = (unsigned short *)indices + num * 8;
+        for (i = 0; i < (size_t) remain; i++) {
+            if ((size_t)short_idx[i] > elements_count)
+                elements_count = (size_t)short_idx[i];
+        }
+    }
+
+    return elements_count + 1;
+}
+#else
 static size_t 
 _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 {
@@ -1799,6 +1881,7 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 
     return elements_count + 1;
 }
+#endif
 
 /* FIXME: we should use pre-allocated buffer if possible */
 
