@@ -1901,40 +1901,6 @@ calculate_index_array_size (GLenum type,
     return 0;
 }
 
-static char *
-caching_client_glCreateIndicesArray (client_t *client,
-                                     size_t index_array_size,
-                                     char *indices,
-                                     link_list_t **allocated_data_arrays)
-{
-    char *data = NULL;
-    if (index_array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
-        data = client->pre_1k_mem[client->last_1k_index];
-        client->last_1k_index++;
-    } else if (index_array_size <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
-        data = client->pre_2k_mem[client->last_2k_index];
-        client->last_2k_index++;
-    } else if (index_array_size <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
-        data = client->pre_4k_mem[client->last_4k_index];
-        client->last_4k_index++;
-    } else if (index_array_size <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
-        data = client->pre_8k_mem[client->last_8k_index];
-        client->last_8k_index++;
-    } else if (index_array_size <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
-        data = client->pre_16k_mem[client->last_16k_index];
-        client->last_16k_index++;
-    } else if (index_array_size <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
-        data = client->pre_32k_mem[client->last_32k_index];
-        client->last_32k_index++;
-    } else {
-        data = (char *) malloc (index_array_size);
-        prepend_element_to_list (allocated_data_arrays, data);
-    }
-
-    memcpy (data, indices, index_array_size);
-    return data;
-}
-
 static void
 caching_client_glDrawElements (void* client,
                                GLenum mode,
@@ -1990,17 +1956,28 @@ caching_client_glDrawElements (void* client,
          caching_client_setup_vertex_attrib_pointer_if_necessary (
             CLIENT (client), elements_count, &arrays_to_free);
 
-    const char* indices_to_pass = indices;
-    if (copy_indices)
-        indices_to_pass = caching_client_glCreateIndicesArray (CLIENT(client),
-                                                               index_array_size,
-                                                               (char *)indices,
-                                                               &arrays_to_free);
+    char* indices_to_pass = (char*) indices;
+    command_gldrawelements_t *command = NULL;
 
-    command_t *command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-    command_gldrawelements_init (command, mode, count, type, indices_to_pass);
+    if (copy_indices) {
+        command = (command_gldrawelements_t *)
+            client_try_get_space_for_command_with_extra_space (COMMAND_GLDRAWELEMENTS,
+                                                               index_array_size);
+        if (command)
+            indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS);
+        else {
+            indices_to_pass = malloc (index_array_size);
+            prepend_element_to_list (&command->arrays_to_free, indices_to_pass);
+        }
+        memcpy (indices_to_pass, indices, index_array_size);
+    }
+
+    if (! command)
+        command = (command_gldrawelements_t *) client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+
+    command_gldrawelements_init (&command->header, mode, count, type, indices_to_pass);
     ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
-    client_run_command_async (command);
+    client_run_command_async (&command->header);
 
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
