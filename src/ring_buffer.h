@@ -8,10 +8,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <stdbool.h>
 #include "compiler_private.h"
-
-#include "thread_private.h"
 
 typedef struct buffer
 {
@@ -21,13 +18,7 @@ typedef struct buffer
     size_t tail;
     size_t head;
     unsigned int last_token;
-
     volatile size_t fill_count;
-
-    mutex_t mutex;
-    signal_t signal;
-    bool mutex_lock;
-    bool mutex_lock_initialized;
 } buffer_t;
 
 private void
@@ -53,14 +44,5 @@ buffer_read_advance(buffer_t *buffer, size_t count_bytes);
 
 private void
 buffer_clear(buffer_t *buffer);
-
-private bool
-buffer_get_use_mutex (buffer_t *buffer);
-
-private void
-buffer_signal_waiter (buffer_t *buffer);
-
-private void
-buffer_set_use_mutex (buffer_t *buffer, bool use_mutex);
 
 #endif /* GPUPROCESS_RING_BUFFER_H */
