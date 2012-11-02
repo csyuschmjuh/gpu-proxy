@@ -207,8 +207,19 @@ _caching_client_set_egl_states (egl_state_t *egl_state,
     egl_state->readable = readable;
 }
 
-static void 
-_caching_client_remove_state (link_list_t **state)
+void
+returnTextureNamesCallback (GLuint key,
+                            void *data,
+                            void *userData)
+{
+    name_handler_delete_names (CACHING_CLIENT(userData)->name_handler,
+                               RESOURCE_GEN_TEXTURES, 1, data);
+    free (data);
+}
+
+static void
+_caching_client_remove_state (client_t* client,
+                              link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
     gles2_state_t *gles_state = &egl_state->state;
@@ -216,7 +227,7 @@ _caching_client_remove_state (link_list_t **state)
     program_t *program;
     link_list_t *temp;
 
-    if (egl_state->state.vertex_attribs.attribs != 
+    if (egl_state->state.vertex_attribs.attribs !=
         egl_state->state.vertex_attribs.embedded_attribs)
         free (egl_state->state.vertex_attribs.attribs);
 
@@ -240,15 +251,16 @@ _caching_client_remove_state (link_list_t **state)
         HashWalk (program->attrib_location_cache, FreeDataCallback, NULL);
         DeleteHashTable (program->attrib_location_cache);
         program->attrib_location_cache = NULL;
-        
+
         free (program);
         temp = program_list;
         program_list = program_list->next;
         free (temp);
     }
     gles_state->programs = NULL;
-    
-    HashWalk (gles_state->texture_cache, FreeDataCallback, NULL);
+
+    HashWalk (gles_state->texture_cache, FreeDataCallback,
+              CACHING_CLIENT(client)->name_handler);
     DeleteHashTable (gles_state->texture_cache);
     gles_state->texture_cache = NULL;
 
@@ -355,7 +367,7 @@ _caching_client_terminate (client_t *client, EGLDisplay display)
 
         if (egl_state->display == display) {
             if (! egl_state->active)
-                _caching_client_remove_state (&current);
+                _caching_client_remove_state (client, &current);
                 /* XXX: Do we need to stop the thread? */
         }
     }
@@ -402,7 +414,7 @@ _caching_client_make_current (client_t *client,
         
         if (! egl_state->active && 
             (egl_state->destroy_dpy || egl_state->destroy_ctx))
-            _caching_client_remove_state (&CLIENT(client)->active_state);
+            _caching_client_remove_state (client, &CLIENT(client)->active_state);
         
         if (CLIENT(client)->active_state) {
             if (! egl_state->active) {
@@ -428,7 +440,7 @@ _caching_client_make_current (client_t *client,
          * called affect us?
          */
         if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _caching_client_remove_state (&CLIENT(client)->active_state);
+            _caching_client_remove_state (client, &CLIENT(client)->active_state);
         
         if (CLIENT(client)->active_state) {
             if (egl_state->destroy_read)
@@ -472,7 +484,7 @@ _caching_client_destroy_context (client_t *client,
         if (_caching_client_has_context (state, display, context)) {
             state->destroy_ctx = true;
             if (state->active == false) 
-                _caching_client_remove_state (&current);
+                _caching_client_remove_state (client, &current);
         }
     }
     mutex_unlock (cached_gl_states_mutex);
@@ -1195,6 +1207,9 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteBuffers (client, n, buffers);
 
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
+                               RESOURCE_GEN_BUFFERS, n, buffers);
+
     /* check array_buffer_binding and element_array_buffer_binding */
     for (i = 0; i < n; i++) {
         if (buffers[i] == state->array_buffer_binding)
@@ -1202,7 +1217,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
         else if (buffers[i] == state->element_array_buffer_binding)
             state->element_array_buffer_binding = 0;
     }
-    
+
     /* update client state */
     if (count == 0)
         return;
@@ -1214,8 +1229,6 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
             }
             break;
         }
-
-        /* FIXME: Return names to the name handler */
     }
 }
 
