@@ -45,8 +45,6 @@
 typedef struct _HashTable {
     struct HashEntry *Table[TABLE_SIZE];  /**< the lookup table */
     GLuint MaxKey;                        /**< highest key inserted so far */
-    mutex_t Mutex;                        /**< mutual exclusion lock */
-    mutex_t WalkMutex;                    /**< for HashWalk () */
     GLboolean InDeleteAll;                /**< Debug check */
 } HashTable;
 

@@ -64,10 +64,6 @@ NewHashTable (void)
 {
     HashTable *table = (HashTable *)
         calloc (1, sizeof (HashTable));
-    if (table) {
-        mutex_init (table->Mutex);
-        mutex_init (table->WalkMutex);
-    }
 
     return table;
 }
@@ -95,8 +91,6 @@ DeleteHashTable (HashTable *table)
             entry = next;
         }
     }
-    mutex_destroy (table->Mutex);
-    mutex_destroy (table->WalkMutex);
     free (table);
 }
 
@@ -140,9 +134,7 @@ HashLookup (HashTable *table, GLuint key)
 {
     void *res;
     assert (table);
-    mutex_lock (table->Mutex);
     res = HashLookup_unlocked (table, key);
-    mutex_unlock (table->Mutex);
     return res;
 }
 
@@ -165,8 +157,6 @@ HashInsert (HashTable *table, GLuint key, void *data)
     assert (table);
     assert (key);
 
-    mutex_lock (table->Mutex);
-
     if (key > table->MaxKey)
         table->MaxKey = key;
 
@@ -181,7 +171,6 @@ HashInsert (HashTable *table, GLuint key, void *data)
             assert (!entry->Data)
 #endif
                 entry->Data = data;
-            mutex_unlock (table->Mutex);
             return;
         }
     }
@@ -194,8 +183,6 @@ HashInsert (HashTable *table, GLuint key, void *data)
         entry->Next = table->Table[pos];
         table->Table[pos] = entry;
     }
-
-    mutex_unlock (table->Mutex);
 }
 
 
@@ -218,11 +205,8 @@ HashRemove (HashTable *table, GLuint key)
     assert (table);
     assert (key);
 
-    /* Have to check this outside of mutex lock. */
     /* HashRemove illegally called from HashDeleteAll callback function */
     assert (!table->InDeleteAll);
-
-    mutex_lock (table->Mutex);
 
     pos = HASH_FUNC (key);
     prev = NULL;
@@ -237,14 +221,11 @@ HashRemove (HashTable *table, GLuint key)
                 table->Table[pos] = entry->Next;
             }
             free (entry);
-            mutex_unlock (table->Mutex);
             return;
         }
         prev = entry;
         entry = entry->Next;
     }
-
-    mutex_unlock (table->Mutex);
 }
 
 
@@ -266,7 +247,6 @@ HashDeleteAll (HashTable *table,
     GLuint pos;
     assert (table);
     assert (callback);
-    mutex_lock (table->Mutex);
     table->InDeleteAll = GL_TRUE;
     for (pos = 0; pos < TABLE_SIZE; pos++) {
         struct HashEntry *entry, *next;
@@ -278,17 +258,11 @@ HashDeleteAll (HashTable *table,
         table->Table[pos] = NULL;
     }
     table->InDeleteAll = GL_FALSE;
-    mutex_unlock (table->Mutex);
 }
 
 
 /**
  * Walk over all entries in a hash table, calling callback function for each.
- * Note: we use a separate mutex in this function to avoid a recursive
- * locking deadlock (in case the callback calls HashRemove ()) and to
- * prevent multiple threads/contexts from getting tangled up.
- * A lock-less version of this function could be used when the table will
- * not be modified.
  * \param table  the hash table to walk
  * \param callback  the callback function
  * \param userData  arbitrary pointer to pass along to the callback
@@ -299,12 +273,9 @@ HashWalk (const HashTable *table,
           void (*callback)(GLuint key, void *data, void *userData),
           void *userData)
 {
-    /* cast-away const */
-    HashTable *table2 = (HashTable *) table;
     GLuint pos;
     assert (table);
     assert (callback);
-    mutex_lock (table2->WalkMutex);
     for (pos = 0; pos < TABLE_SIZE; pos++) {
         struct HashEntry *entry, *next;
         for (entry = table->Table[pos]; entry; entry = next) {
@@ -313,7 +284,6 @@ HashWalk (const HashTable *table,
             callback (entry->Key, entry->Data, userData);
         }
     }
-    mutex_unlock (table2->WalkMutex);
 }
 
 
@@ -330,14 +300,11 @@ HashFirstEntry (HashTable *table)
 {
     GLuint pos;
     assert (table);
-    mutex_lock (table->Mutex);
     for (pos = 0; pos < TABLE_SIZE; pos++) {
         if (table->Table[pos]) {
-            mutex_unlock (table->Mutex);
             return table->Table[pos]->Key;
         }
     }
-    mutex_unlock (table->Mutex);
     return 0;
 }
 
@@ -426,10 +393,8 @@ GLuint
 HashFindFreeKeyBlock (HashTable *table, GLuint numKeys)
 {
     const GLuint maxKey = ~((GLuint) 0);
-    mutex_lock (table->Mutex);
     if (maxKey - numKeys > table->MaxKey) {
         /* the quick solution */
-        mutex_unlock (table->Mutex);
         return table->MaxKey + 1;
     }
     else {
@@ -446,14 +411,11 @@ HashFindFreeKeyBlock (HashTable *table, GLuint numKeys)
             else {
                 /* this key not in use, check if we've found enough */
                 freeCount++;
-                if (freeCount == numKeys) {
-                    mutex_unlock (table->Mutex);
+                if (freeCount == numKeys)
                     return freeStart;
-                }
             }
         }
         /* cannot allocate a block of numKeys consecutive keys */
-        mutex_unlock (table->Mutex);
         return 0;
     }
 }
