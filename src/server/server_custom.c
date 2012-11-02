@@ -69,10 +69,29 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
     free (server_framebuffers);
 }
 
+static void
+server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_command)
+{
+    GLuint *server_buffer;
+    command_glbindframebuffer_t *command =
+            (command_glbindframebuffer_t *)abstract_command;
+
+    INSTRUMENT ();
+
+    server_buffer = (GLuint *)HashLookup (server->framebuffer_names_cache,
+                                          command->framebuffer);
+
+    server->dispatch.glBindFramebuffer (server, command->target, *server_buffer);
+
+    command_glbindframebuffer_destroy_arguments (command);
+}
+
 void
 server_add_custom_command_handlers (server_t *server) {
     server->handler_table[COMMAND_GLBINDBUFFER] =
         server_custom_handle_glbindbuffer;
+    server->handler_table[COMMAND_GLBINDFRAMEBUFFER] =
+        server_custom_handle_glbindframebuffer;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_custom_handle_glgenbuffers;
     server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
