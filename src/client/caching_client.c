@@ -742,7 +742,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
             caching_client_glSetError (client, GL_INVALID_OPERATION);
             return;
         }
-    }    
+    }
 
     CACHING_CLIENT(client)->super_dispatch.glBindTexture (client, target, texture);
 
