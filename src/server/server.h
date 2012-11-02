@@ -26,7 +26,8 @@ struct _server {
     buffer_t *buffer;
     thread_t thread;
     bool threaded;
-    HashTable *names_cache;
+    HashTable *buffer_names_cache;
+    HashTable *framebuffer_names_cache;
     void (*command_post_hook)(server_t *server, command_t *command);
 
     mutex_t* signal_mutex;
