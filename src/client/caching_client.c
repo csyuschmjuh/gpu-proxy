@@ -259,7 +259,7 @@ _caching_client_remove_state (client_t* client,
     }
     gles_state->programs = NULL;
 
-    HashWalk (gles_state->texture_cache, FreeDataCallback,
+    HashWalk (gles_state->texture_cache, returnTextureNamesCallback,
               CACHING_CLIENT(client)->name_handler);
     DeleteHashTable (gles_state->texture_cache);
     gles_state->texture_cache = NULL;
