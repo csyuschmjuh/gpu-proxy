@@ -2,6 +2,7 @@
 #define NAME_HANDLER_H
 
 #include "compiler_private.h"
+#include "hash.h"
 #include "types_private.h"
 
 #include "config.h"
@@ -24,6 +25,7 @@ typedef enum resource_namespace {
 /* FIXME: We have to allow to reuse names for some cases and. */
 typedef struct name_handler {
     unsigned int last_name[RESOURCE_MAX];
+    HashTable *used_names[RESOURCE_MAX];
 } name_handler_t;
 
 private name_handler_t *
@@ -37,5 +39,10 @@ name_handler_alloc_names (name_handler_t *name_handler,
                           resource_namespace_t namespace,
                           GLsizei n,
                           GLuint *buffers);
+void
+name_handler_delete_names (name_handler_t *name_handler,
+                           resource_namespace_t namespace,
+                           GLsizei n,
+                           const GLuint *buffers);
 
 #endif /* CLIENT_STATE_H */
