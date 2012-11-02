@@ -11,7 +11,7 @@ server_custom_handle_glbindbuffer (server_t *server,
 
     INSTRUMENT ();
 
-    server_buffer = (GLuint *)HashLookup (server->names_cache,
+    server_buffer = (GLuint *)HashLookup (server->buffer_names_cache,
                                           command->buffer);
 
     server->dispatch.glBindBuffer (server, command->target, *server_buffer);
@@ -37,11 +37,36 @@ server_custom_handle_glgenbuffers (server_t *server,
     for (i=0; i<command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_buffers[i];
-        HashInsert (server->names_cache, command->buffers[i], data);
+        HashInsert (server->buffer_names_cache, command->buffers[i], data);
     }
 
     free (command->buffers);
     free (server_buffers);
+}
+
+static void
+server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
+{
+    GLuint *server_framebuffers;
+    int i;
+
+    command_glgenframebuffers_t *command =
+            (command_glgenframebuffers_t *)abstract_command;
+
+    INSTRUMENT ();
+
+    server_framebuffers = (GLuint *)malloc (command->n * sizeof (GLuint));
+
+    server->dispatch.glGenFramebuffers (server, command->n, command->framebuffers);
+
+    for (i=0; i<command->n; i++) {
+        GLuint *data = (GLuint *)malloc (sizeof (GLuint));
+        *data = server_framebuffers[i];
+        HashInsert (server->framebuffer_names_cache, command->framebuffers[i], data);
+    }
+
+    free (command->framebuffers);
+    free (server_framebuffers);
 }
 
 void
@@ -50,5 +75,7 @@ server_add_custom_command_handlers (server_t *server) {
         server_custom_handle_glbindbuffer;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_custom_handle_glgenbuffers;
+    server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
+        server_custom_handle_glgenframebuffers;
 }
 

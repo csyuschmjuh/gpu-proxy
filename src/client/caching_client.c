@@ -2079,6 +2079,9 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 static void
 caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
 {
+    GLuint *server_framebuffers;
+    int i;
+
     INSTRUMENT();
 
     if (n < 0) {
@@ -2086,7 +2089,15 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
         return;
     }
 
-    CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, framebuffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
+                              RESOURCE_GEN_FRAMEBUFFERS,
+                              n, framebuffers);
+
+    server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
+    for (i=0; i<n; i++)
+        server_framebuffers[i] = framebuffers [i];
+
+    CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, server_framebuffers);
 }
 
 static void

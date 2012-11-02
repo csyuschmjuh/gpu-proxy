@@ -275,6 +275,7 @@ _FUNCTION_INFO = {
     'out_arguments': ['buffers']
   },
   'glGenFramebuffers': {
+    'type': 'Asynchronous',
     'out_arguments': ['framebuffers']
   },
   'glGenRenderbuffers': {
