@@ -40,6 +40,7 @@ server_custom_handle_glgenbuffers (server_t *server,
         HashInsert (server->names_cache, command->buffers[i], data);
     }
 
+    free (command->buffers);
     free (server_buffers);
 }
 
