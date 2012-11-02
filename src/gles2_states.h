@@ -32,8 +32,8 @@ typedef struct vertex_attrib_list
     int                 count;          /* initial 0 */
     vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
     vertex_attrib_t     *attribs;
-    char                *first_index_pointer;
-    char                *last_index_pointer;
+    vertex_attrib_t     *first_index_pointer;
+    vertex_attrib_t     *last_index_pointer;
 } vertex_attrib_list_t;
 
 typedef struct v_program_status {
