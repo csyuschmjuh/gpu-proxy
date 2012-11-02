@@ -86,15 +86,64 @@ server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_co
     command_glbindframebuffer_destroy_arguments (command);
 }
 
+static void
+server_custom_handle_glgentextures (server_t *server, command_t *abstract_command)
+{
+    GLuint *server_textures;
+    int i;
+
+    INSTRUMENT ();
+
+    command_glgentextures_t *command =
+            (command_glgentextures_t *)abstract_command;
+
+    server_textures = (GLuint *)malloc (command->n * sizeof (GLuint));
+
+    server->dispatch.glGenTextures (server, command->n, command->textures);
+
+    for (i=0; i<command->n; i++) {
+        GLuint *data = (GLuint *)malloc (sizeof (GLuint));
+        *data = server_textures[i];
+        HashInsert (server->texture_names_cache, command->textures[i], data);
+    }
+
+    command_glgentextures_destroy_arguments (command);
+
+    free (command->textures);
+    free (server_textures);
+}
+
+static void
+server_custom_handle_glbindtexture (server_t *server, command_t *abstract_command)
+{
+    GLuint *texture;
+    INSTRUMENT ();
+
+    command_glbindtexture_t *command =
+            (command_glbindtexture_t *)abstract_command;
+
+    texture = (GLuint *)HashLookup (server->texture_names_cache,
+                                    command->texture);
+
+    server->dispatch.glBindTexture (server, command->target, *texture);
+
+    command_glbindtexture_destroy_arguments (command);
+}
+
 void
 server_add_custom_command_handlers (server_t *server) {
     server->handler_table[COMMAND_GLBINDBUFFER] =
         server_custom_handle_glbindbuffer;
     server->handler_table[COMMAND_GLBINDFRAMEBUFFER] =
         server_custom_handle_glbindframebuffer;
+    server->handler_table[COMMAND_GLBINDTEXTURE] =
+        server_custom_handle_glbindtexture;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_custom_handle_glgenbuffers;
     server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
         server_custom_handle_glgenframebuffers;
+    server->handler_table[COMMAND_GLGENTEXTURES] =
+        server_custom_handle_glgentextures;
+
 }
 

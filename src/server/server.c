@@ -87,6 +87,7 @@ server_init (server_t *server,
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
     server->buffer_names_cache = NewHashTable();
     server->framebuffer_names_cache = NewHashTable();
+    server->texture_names_cache = NewHashTable();
 
     server_fill_command_handler_table (server);
     server_add_custom_command_handlers (server);
@@ -102,6 +103,9 @@ server_destroy (server_t *server)
 
     HashWalk (server->framebuffer_names_cache, FreeDataCallback, NULL);
     DeleteHashTable (server->framebuffer_names_cache);
+
+    HashWalk (server->texture_names_cache, FreeDataCallback, NULL);
+    DeleteHashTable (server->texture_names_cache);
 
     free (server);
     return true;
