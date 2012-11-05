@@ -1241,6 +1241,9 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
         return;
     }
 
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
+                               RESOURCE_GEN_FRAMEBUFFERS, n, framebuffers);
+
     CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
     int i;
@@ -1278,7 +1281,8 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
 
-    /* FIXME: remove from texture cache */
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
+                               RESOURCE_GEN_TEXTURES, n, textures);
 }
 
 static void
