@@ -45,6 +45,24 @@ server_custom_handle_glgenbuffers (server_t *server,
 }
 
 static void
+server_custom_handle_gldeletebuffers (server_t *server, command_t *abstract_command)
+{
+    int i;
+
+    INSTRUMENT ();
+
+    command_gldeletebuffers_t *command =
+            (command_gldeletebuffers_t *)abstract_command;
+
+    for (i=0; i<command->n; i++)
+        HashRemove (server->buffer_names_cache, command->buffers[i]);
+
+    server->dispatch.glDeleteBuffers (server, command->n, command->buffers);
+
+    command_gldeletebuffers_destroy_arguments (command);
+}
+
+static void
 server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
 {
     GLuint *server_framebuffers;
@@ -84,6 +102,24 @@ server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_co
     server->dispatch.glBindFramebuffer (server, command->target, *server_buffer);
 
     command_glbindframebuffer_destroy_arguments (command);
+}
+
+static void
+server_custom_handle_gldeleteframebuffers (server_t *server, command_t *abstract_command)
+{
+    int i;
+
+    INSTRUMENT ();
+
+    command_gldeleteframebuffers_t *command =
+            (command_gldeleteframebuffers_t *)abstract_command;
+
+    for (i=0; i<command->n; i++)
+        HashRemove (server->framebuffer_names_cache, command->framebuffers[i]);
+
+    server->dispatch.glDeleteFramebuffers (server, command->n, command->framebuffers);
+
+    command_gldeleteframebuffers_destroy_arguments (command);
 }
 
 static void
@@ -130,6 +166,24 @@ server_custom_handle_glbindtexture (server_t *server, command_t *abstract_comman
     command_glbindtexture_destroy_arguments (command);
 }
 
+static void
+server_custom_handle_gldeletetextures (server_t *server, command_t *abstract_command)
+{
+    int i;
+
+    INSTRUMENT ();
+
+    command_gldeletetextures_t *command =
+            (command_gldeletetextures_t *)abstract_command;
+
+    for (i=0; i<command->n; i++)
+        HashRemove (server->texture_names_cache, command->textures[i]);
+
+    server->dispatch.glDeleteTextures (server, command->n, command->textures);
+
+    command_gldeletetextures_destroy_arguments (command);
+}
+
 void
 server_add_custom_command_handlers (server_t *server) {
     server->handler_table[COMMAND_GLBINDBUFFER] =
@@ -138,6 +192,12 @@ server_add_custom_command_handlers (server_t *server) {
         server_custom_handle_glbindframebuffer;
     server->handler_table[COMMAND_GLBINDTEXTURE] =
         server_custom_handle_glbindtexture;
+    server->handler_table[COMMAND_GLDELETEBUFFERS] =
+        server_custom_handle_gldeletebuffers;
+    server->handler_table[COMMAND_GLDELETEFRAMEBUFFERS] =
+        server_custom_handle_gldeleteframebuffers;
+    server->handler_table[COMMAND_GLDELETETEXTURES] =
+        server_custom_handle_gldeletetextures;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_custom_handle_glgenbuffers;
     server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
