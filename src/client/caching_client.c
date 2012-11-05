@@ -579,9 +579,9 @@ _set_vertex_pointers (vertex_attrib_list_t *list,
                       vertex_attrib_t *new_attrib)
 {
     void *pointer = new_attrib->pointer;
-    if (pointer < list->first_index_pointer->pointer || ! list->first_index_pointer)
+    if (! list->first_index_pointer || pointer < list->first_index_pointer->pointer)
         list->first_index_pointer = new_attrib;
-    if (pointer > list->last_index_pointer->pointer || ! list->last_index_pointer)
+    if ( ! list->last_index_pointer || pointer > list->last_index_pointer->pointer)
         list->last_index_pointer = new_attrib;
 }
 
