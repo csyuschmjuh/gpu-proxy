@@ -1671,9 +1671,11 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     vertex_attrib_t *attribs = attrib_list->attribs;
 
     size_t array_size = caching_client_vertex_attribs_array_size (client, count);
-    bool fits_in_one_array = array_size < ATTRIB_BUFFER_SIZE;
+    if (!array_size)
+        return;
 
     char *one_array_data = NULL;
+    bool fits_in_one_array = array_size < ATTRIB_BUFFER_SIZE;
     if (fits_in_one_array) {
         if (array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
             one_array_data = client->pre_1k_mem[client->last_1k_index];
