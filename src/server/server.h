@@ -6,7 +6,6 @@ typedef struct _server server_t;
 
 #include "command.h"
 #include "compiler_private.h"
-#include "egl_states.h"
 #include "hash.h"
 #include "ring_buffer.h"
 #include "dispatch_table.h"

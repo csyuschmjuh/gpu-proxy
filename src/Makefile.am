@@ -58,8 +58,10 @@ libGPUProcess_la_SOURCES += \
 	client/caching_client_private.h \
 	dispatch_table.c \
 	dispatch_table.h \
-	egl_states.h \
-	gles2_states.h \
+	egl_state.c \
+	egl_state.h \
+	gles2_state.c \
+	gles2_state.h \
 	util/gles2_utils.c \
 	util/gles2_utils.h
 

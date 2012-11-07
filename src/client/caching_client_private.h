@@ -2,7 +2,6 @@
 #define CACHING_CLIENT_PRIVATE_H
 
 #include "compiler_private.h"
-#include "egl_states.h"
 #include "types_private.h"
 #include "caching_client.h"
 
