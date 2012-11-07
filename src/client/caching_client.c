@@ -1704,7 +1704,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
             prepend_element_to_list (allocated_data_arrays, one_array_data);
         }
         memcpy (one_array_data,
-                attrib_list->first_index_pointer,
+                attrib_list->first_index_pointer->pointer,
                 array_size);
     }
 
