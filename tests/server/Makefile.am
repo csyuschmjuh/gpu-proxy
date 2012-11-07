@@ -16,6 +16,10 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/client/name_handler.c \
 	$(rootsrcdir)/src/dispatch_table.c \
 	$(rootsrcdir)/src/dispatch_table.h \
+	$(rootsrcdir)/src/egl_state.c \
+	$(rootsrcdir)/src/egl_state.h \
+	$(rootsrcdir)/src/gles2_state.c \
+	$(rootsrcdir)/src/gles2_state.h \
 	$(rootsrcdir)/src/util/gles2_utils.c \
 	$(rootsrcdir)/src/util/gles2_utils.h \
 	$(rootsrcdir)/src/util/hash.c \

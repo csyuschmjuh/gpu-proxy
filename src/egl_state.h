@@ -3,7 +3,7 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
-#include "gles2_states.h"
+#include "gles2_state.h"
 #include "thread_private.h"
 
 typedef struct egl_state {
@@ -21,5 +21,11 @@ typedef struct egl_state {
     bool             destroy_read;
     bool             destroy_draw;
 } egl_state_t;
+
+private void
+egl_state_init (egl_state_t *egl_state);
+
+private egl_state_t *
+egl_state_new ();
 
 #endif /* GPUPROCESS_EGL_STATE_H */

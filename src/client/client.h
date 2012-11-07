@@ -4,7 +4,7 @@
 typedef struct _client client_t;
 
 #include "dispatch_table.h"
-#include "egl_states.h"
+#include "egl_state.h"
 #include "name_handler.h"
 #include "ring_buffer.h"
 #include "server.h"

@@ -94,7 +94,7 @@ typedef struct _texture {
     GLenum                  data_type;
 } texture_t;
 
-typedef struct gl_state {
+typedef struct _gles2_state {
     GLenum                  error;             /* initial is GL_NO_ERROR */
     bool                    need_get_error;
     link_list_t           *programs;         /* initial is NULL */
@@ -295,5 +295,8 @@ typedef struct gl_state {
 
     HashTable    *texture_cache;
 } gles2_state_t;
+
+void
+gles2_state_init (gles2_state_t *state);
 
 #endif /* GPUPROCESS_GLES2_STATE_H */
