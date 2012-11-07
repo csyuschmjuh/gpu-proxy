@@ -138,15 +138,13 @@ _caching_client_remove_state (client_t* client,
 }
 
 static void 
-_caching_client_remove_surface (link_list_t *state, bool read)
+_caching_client_destroy_pending_surfaces (client_t *client)
 {
-    egl_state_t *egl_state = (egl_state_t *) state->data;
-
-    if (read == true)
+    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
+    if (egl_state->destroy_read)
         egl_state->readable = EGL_NO_SURFACE;
-    else
+    if (egl_state->destroy_draw)
         egl_state->drawable = EGL_NO_SURFACE;
-
 }
 
 static link_list_t *
@@ -267,24 +265,18 @@ _caching_client_make_current (client_t *client,
             mutex_unlock (cached_gl_states_mutex);
             return;
         }
-        
+
         egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
         if (! (display == egl_state->display ||
                context == egl_state->context))
             egl_state->active = false;
-        
+
         if (! egl_state->active && 
             (egl_state->destroy_dpy || egl_state->destroy_ctx))
             _caching_client_remove_state (client, &CLIENT(client)->active_state);
-        
-        if (CLIENT(client)->active_state) {
-            if (! egl_state->active) {
-                if (egl_state->destroy_read)
-                    _caching_client_remove_surface (CLIENT(client)->active_state, true);
 
-                if (egl_state->destroy_draw)
-                    _caching_client_remove_surface (CLIENT(client)->active_state, false);
-            }
+        if (CLIENT(client)->active_state && ! egl_state->active) {
+            _caching_client_destroy_pending_surfaces (CLIENT (client));
         }
 
         CLIENT(client)->active_state = NULL;
@@ -296,19 +288,15 @@ _caching_client_make_current (client_t *client,
     if (CLIENT(client)->active_state) {
         egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
         egl_state->active = false;
-        
+
         /* XXX did eglTerminate()/eglDestroyContext()/eglDestroySurface()
          * called affect us?
          */
         if (egl_state->destroy_dpy || egl_state->destroy_ctx)
             _caching_client_remove_state (client, &CLIENT(client)->active_state);
-        
-        if (CLIENT(client)->active_state) {
-            if (egl_state->destroy_read)
-                _caching_client_remove_surface (CLIENT(client)->active_state, true);
 
-            if (egl_state->destroy_draw)
-                _caching_client_remove_surface (CLIENT(client)->active_state, false);
+        if (CLIENT(client)->active_state) {
+            _caching_client_destroy_pending_surfaces (CLIENT (client));
         }
     }
 
