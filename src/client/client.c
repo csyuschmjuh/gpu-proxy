@@ -12,14 +12,6 @@
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
 
-__thread bool client_thread
-    __attribute__(( tls_model ("initial-exec"))) = false;
-
-__thread bool initializing_client
-    __attribute__(( tls_model ("initial-exec"))) = false;
-
-mutex_static_init (client_thread_mutex);
-
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
 
@@ -30,33 +22,6 @@ sleep_nanoseconds (int num_nanoseconds)
     spec.tv_sec = 0;
     spec.tv_nsec = num_nanoseconds;
     nanosleep (&spec, NULL);
-}
-
-static bool
-on_client_thread ()
-{
-    static bool initialized = false;
-    if (initialized)
-        return client_thread;
-
-    mutex_lock (client_thread_mutex);
-    if (initialized)
-        return client_thread;
-    client_thread = true;
-    initialized = true;
-    mutex_unlock (client_thread_mutex);
-
-    return client_thread;
-}
-
-bool
-should_use_base_dispatch ()
-{
-    if (! on_client_thread ())
-        return true;
-    if (initializing_client)
-        return true;
-    return false;
 }
 
 void *
@@ -108,7 +73,6 @@ void
 client_init (client_t *client)
 {
     prctl (PR_SET_TIMERSLACK, 1);
-    initializing_client = true;
 
     client->post_hook = NULL;
 
@@ -135,7 +99,6 @@ client_init (client_t *client)
     client->last_32k_index = 0;
 
     client_start_server (client);
-    initializing_client = false;
 }
 
 static void

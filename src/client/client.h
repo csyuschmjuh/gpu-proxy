@@ -88,9 +88,6 @@ client_run_command (command_t *command);
 private bool
 client_flush (client_t *client);
 
-private bool
-should_use_base_dispatch ();
-
 private void
 client_start_server (client_t *client);
 

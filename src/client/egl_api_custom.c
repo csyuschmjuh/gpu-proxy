@@ -54,10 +54,6 @@ eglGetProcAddress (const char *procname)
 {
     INSTRUMENT();
 
-    if (should_use_base_dispatch ()) {
-        return dispatch_table_get_base ()->eglGetProcAddress (NULL, procname);
-    }
-
     if (_has_extension ("GL_OES_EGL_image")) {
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glEGLImageTargetTexture2DOES);
          RETURN_HIDDEN_SYMBOL_IF_NAME_MATCHES (glEGLImageTargetRenderbufferStorageOES);

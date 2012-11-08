@@ -2432,19 +2432,6 @@ class GLGenerator(object):
         file.Write("{\n")
         file.Write("    INSTRUMENT();\n")
 
-        file.Write("    if (should_use_base_dispatch ()) {\n")
-
-        file.Write("        ")
-        if func.HasReturnValue():
-            file.Write("return ")
-        file.Write("dispatch_table_get_base ()->%s (NULL" % func.name)
-        file.Write(func.MakeOriginalArgString("", add_separator=True))
-        file.Write(");\n")
-        if not func.HasReturnValue():
-            file.Write("        return;\n")
-
-        file.Write("    }\n")
-
         file.Write("    client_t *client = client_get_thread_local ();\n");
 
         # For EGL functions we don't need to have valid GL state in place to use them.
