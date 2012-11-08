@@ -75,7 +75,7 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
 
     server_framebuffers = (GLuint *)malloc (command->n * sizeof (GLuint));
 
-    server->dispatch.glGenFramebuffers (server, command->n, command->framebuffers);
+    server->dispatch.glGenFramebuffers (server, command->n, server_framebuffers);
 
     for (i=0; i<command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
@@ -135,7 +135,7 @@ server_custom_handle_glgentextures (server_t *server, command_t *abstract_comman
 
     server_textures = (GLuint *)malloc (command->n * sizeof (GLuint));
 
-    server->dispatch.glGenTextures (server, command->n, command->textures);
+    server->dispatch.glGenTextures (server, command->n, server_textures);
 
     for (i=0; i<command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
@@ -145,7 +145,6 @@ server_custom_handle_glgentextures (server_t *server, command_t *abstract_comman
 
     command_glgentextures_destroy_arguments (command);
 
-    free (command->textures);
     free (server_textures);
 }
 
