@@ -27,3 +27,9 @@ egl_state_new ()
     egl_state_init (new_state);
     return new_state;
 }
+
+void
+egl_state_destroy (egl_state_t *egl_state)
+{
+    gles2_state_destroy (&egl_state->state);
+}

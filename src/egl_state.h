@@ -28,4 +28,7 @@ egl_state_init (egl_state_t *egl_state);
 private egl_state_t *
 egl_state_new ();
 
+private void
+egl_state_destroy (egl_state_t *egl_state);
+
 #endif /* GPUPROCESS_EGL_STATE_H */

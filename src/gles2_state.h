@@ -296,7 +296,10 @@ typedef struct _gles2_state {
     HashTable    *texture_cache;
 } gles2_state_t;
 
-void
+private void
 gles2_state_init (gles2_state_t *state);
+
+private void
+gles2_state_destroy (gles2_state_t *state);
 
 #endif /* GPUPROCESS_GLES2_STATE_H */

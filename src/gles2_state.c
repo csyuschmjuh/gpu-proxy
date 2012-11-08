@@ -120,3 +120,29 @@ gles2_state_init (gles2_state_t *state)
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable();
 }
+
+void
+gles2_state_destroy (gles2_state_t *state)
+{
+    if (state->vertex_attribs.attribs != state->vertex_attribs.embedded_attribs)
+        free (state->vertex_attribs.attribs);
+
+    link_list_t *program_list = state->programs;
+    while (program_list) {
+        program_t *program = (program_t *)program_list->data;
+        HashWalk (program->uniform_location_cache, FreeDataCallback, NULL);
+        DeleteHashTable (program->uniform_location_cache);
+        program->uniform_location_cache = NULL;
+
+        HashWalk (program->attrib_location_cache, FreeDataCallback, NULL);
+        DeleteHashTable (program->attrib_location_cache);
+        program->attrib_location_cache = NULL;
+
+        free (program);
+        link_list_t *temp = program_list;
+        program_list = program_list->next;
+        free (temp);
+    }
+
+    state->programs = NULL;
+}
