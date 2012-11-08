@@ -88,14 +88,6 @@ _caching_client_remove_state (client_t* client,
                               link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
-    gles2_state_t *gles_state = &egl_state->state;
-    link_list_t *program_list = gles_state->programs;
-    program_t *program;
-    link_list_t *temp;
-
-    if (egl_state->state.vertex_attribs.attribs !=
-        egl_state->state.vertex_attribs.embedded_attribs)
-        free (egl_state->state.vertex_attribs.attribs);
 
     if (*state == cached_gl_states.states) {
         cached_gl_states.states = cached_gl_states.states->next;
@@ -108,28 +100,14 @@ _caching_client_remove_state (client_t* client,
     if ((*state)->next)
         (*state)->next->prev = (*state)->prev;
 
-    while (program_list) {
-        program = (program_t *)program_list->data;
-        HashWalk (program->uniform_location_cache, FreeDataCallback, NULL);
-        DeleteHashTable (program->uniform_location_cache);
-        program->uniform_location_cache = NULL;
-
-        HashWalk (program->attrib_location_cache, FreeDataCallback, NULL);
-        DeleteHashTable (program->attrib_location_cache);
-        program->attrib_location_cache = NULL;
-
-        free (program);
-        temp = program_list;
-        program_list = program_list->next;
-        free (temp);
-    }
-    gles_state->programs = NULL;
-
+    // TODO: Move this to gles_state.c eventually.
+    gles2_state_t *gles_state = &egl_state->state;
     HashWalk (gles_state->texture_cache, returnTextureNamesCallback,
               CACHING_CLIENT(client)->name_handler);
     DeleteHashTable (gles_state->texture_cache);
     gles_state->texture_cache = NULL;
 
+    egl_state_destroy (egl_state);
     free (egl_state);
     free (*state);
     *state = NULL;
