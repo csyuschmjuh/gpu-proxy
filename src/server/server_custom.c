@@ -40,8 +40,9 @@ server_custom_handle_glgenbuffers (server_t *server,
         HashInsert (server->buffer_names_cache, command->buffers[i], data);
     }
 
-    free (command->buffers);
     free (server_buffers);
+
+    command_glgenbuffers_destroy_arguments (command);
 }
 
 static void
@@ -83,8 +84,9 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
         HashInsert (server->framebuffer_names_cache, command->framebuffers[i], data);
     }
 
-    free (command->framebuffers);
     free (server_framebuffers);
+
+    command_glgenframebuffers_destroy_arguments (command);
 }
 
 static void
@@ -143,9 +145,9 @@ server_custom_handle_glgentextures (server_t *server, command_t *abstract_comman
         HashInsert (server->texture_names_cache, command->textures[i], data);
     }
 
-    command_glgentextures_destroy_arguments (command);
-
     free (server_textures);
+
+    command_glgentextures_destroy_arguments (command);
 }
 
 static void
