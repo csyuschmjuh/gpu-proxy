@@ -1811,7 +1811,7 @@ caching_client_glDrawElements (void* client,
             indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS);
         else {
             indices_to_pass = malloc (index_array_size);
-            prepend_element_to_list (&command->arrays_to_free, indices_to_pass);
+            prepend_element_to_list (&arrays_to_free, indices_to_pass);
         }
         memcpy (indices_to_pass, indices, index_array_size);
     }
