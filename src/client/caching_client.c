@@ -13,10 +13,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* global variable */
-gl_states_t cached_gl_states;
-
-/* global variable */
 mutex_static_init (cached_gl_states_mutex);
 
 static bool
@@ -88,11 +84,12 @@ _caching_client_remove_state (client_t* client,
                               link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
+    gl_states_t *states = cached_gl_states ();
 
-    if (*state == cached_gl_states.states) {
-        cached_gl_states.states = cached_gl_states.states->next;
-        if (cached_gl_states.states != NULL)
-            cached_gl_states.states->prev = NULL;
+    if (*state == states->states) {
+        states->states = states->states->next;
+        if (states->states != NULL)
+            states->states->prev = NULL;
     }
 
     if ((*state)->prev)
@@ -112,7 +109,7 @@ _caching_client_remove_state (client_t* client,
     free (*state);
     *state = NULL;
 
-    cached_gl_states.num_contexts --;
+    states->num_contexts--;
 }
 
 static void 
@@ -132,19 +129,20 @@ _caching_client_get_state (EGLDisplay dpy,
                            EGLContext ctx)
 {
     link_list_t *new_list;
-    link_list_t *list = cached_gl_states.states;
+    gl_states_t *states = cached_gl_states ();
+    link_list_t *list = states->states;
 
-    if (cached_gl_states.num_contexts == 0 || ! cached_gl_states.states) {
-        cached_gl_states.num_contexts = 1;
-        cached_gl_states.states = (link_list_t *)malloc (sizeof (link_list_t));
-        cached_gl_states.states->prev = NULL;
-        cached_gl_states.states->next = NULL;
+    if (states->num_contexts == 0 || ! states->states) {
+        states->num_contexts = 1;
+        states->states = (link_list_t *)malloc (sizeof (link_list_t));
+        states->states->prev = NULL;
+        states->states->next = NULL;
 
         egl_state_t *new_state = egl_state_new ();
         _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-        cached_gl_states.states->data = new_state;
+        states->states->data = new_state;
         new_state->active = true;
-        return cached_gl_states.states;
+        return states->states;
     }
 
     /* look for matching context in existing states */
@@ -163,9 +161,9 @@ _caching_client_get_state (EGLDisplay dpy,
     /* we have not found a context match */
     egl_state_t *new_state = egl_state_new ();
     _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-    cached_gl_states.num_contexts ++;
+    states->num_contexts ++;
 
-    list = cached_gl_states.states;
+    list = states->states;
     while (list->next != NULL)
         list = list->next;
 
@@ -185,18 +183,17 @@ _caching_client_get_state (EGLDisplay dpy,
 static void 
 _caching_client_terminate (client_t *client, EGLDisplay display)
 {
-    link_list_t *head = cached_gl_states.states;
+    gl_states_t *states = cached_gl_states ();
+    link_list_t *head = states->states;
     link_list_t *list = head;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-
-    if (cached_gl_states.initialized == false ||
-        cached_gl_states.num_contexts == 0 || (! cached_gl_states.states)) {
+    if (states->num_contexts == 0) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
-    
+
     while (list != NULL) {
         egl_state_t *egl_state = (egl_state_t *) list->data;
         current = list;
@@ -294,11 +291,12 @@ _caching_client_destroy_context (client_t *client,
                                  EGLContext context)
 {
     egl_state_t *state;
-    link_list_t *list = cached_gl_states.states;
+    gl_states_t *states = cached_gl_states ();
+    link_list_t *list = states->states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (cached_gl_states.num_contexts == 0 || ! cached_gl_states.states) {
+    if (states->num_contexts == 0 || ! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -323,11 +321,12 @@ _caching_client_destroy_surface (client_t *client,
                                  EGLSurface surface)
 {
     egl_state_t *state;
-    link_list_t *list = cached_gl_states.states;
+    gl_states_t *states = cached_gl_states ();
+    link_list_t *list = states->states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (cached_gl_states.num_contexts == 0 || ! cached_gl_states.states) {
+    if (states->num_contexts == 0 || ! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -365,11 +364,12 @@ _match (EGLDisplay display,
         link_list_t **state)
 {
     egl_state_t *egl_state;
-    link_list_t *list = cached_gl_states.states;
+    gl_states_t *states = cached_gl_states ();
+    link_list_t *list = states->states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (cached_gl_states.num_contexts == 0 || ! cached_gl_states.states) {
+    if (states->num_contexts == 0 || ! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return false;
     }
@@ -4444,11 +4444,8 @@ caching_client_init (caching_client_t *client)
     client->super.active_state = NULL;
 
     mutex_lock (cached_gl_states_mutex);
-    if (cached_gl_states.initialized == false) {
-        cached_gl_states.num_contexts = 0;
-        cached_gl_states.states = NULL;
-        cached_gl_states.initialized = true;
-    }
+    /* Initialize the cached GL states. */
+    cached_gl_states ();
     mutex_unlock (cached_gl_states_mutex);
 
     client->super.post_hook = caching_client_post_hook;
