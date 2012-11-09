@@ -1813,15 +1813,17 @@ caching_client_glDrawElements (void* client,
                                                                index_array_size);
         if (command)
             indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS);
-        else {
+        else
             indices_to_pass = malloc (index_array_size);
-            prepend_element_to_list (&command->arrays_to_free, indices_to_pass);
-        }
         memcpy (indices_to_pass, indices, index_array_size);
     }
 
-    if (! command)
+    if (! command) {
         command = (command_gldrawelements_t *) client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
+        command->arrays_to_free = NULL;
+        if (copy_indices)
+            prepend_element_to_list (&command->arrays_to_free, indices_to_pass);
+    }
 
     command_gldrawelements_init (&command->header, mode, count, type, indices_to_pass);
     ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
