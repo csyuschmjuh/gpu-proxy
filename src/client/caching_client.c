@@ -84,12 +84,12 @@ _caching_client_remove_state (client_t* client,
                               link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
-    gl_states_t *states = cached_gl_states ();
+    link_list_t **states = cached_gl_states ();
 
-    if (*state == states->states) {
-        states->states = states->states->next;
-        if (states->states != NULL)
-            states->states->prev = NULL;
+    if (*state == *states) {
+        *states = (*states)->next;
+        if (*states != NULL)
+            (*states)->prev = NULL;
     }
 
     if ((*state)->prev)
@@ -127,19 +127,19 @@ _caching_client_get_state (EGLDisplay dpy,
                            EGLContext ctx)
 {
     link_list_t *new_list;
-    gl_states_t *states = cached_gl_states ();
-    link_list_t *list = states->states;
+    link_list_t **states = cached_gl_states ();
+    link_list_t *list = *states;
 
-    if (! states->states) {
-        states->states = (link_list_t *)malloc (sizeof (link_list_t));
-        states->states->prev = NULL;
-        states->states->next = NULL;
+    if (! *states) {
+        *states = (link_list_t *)malloc (sizeof (link_list_t));
+        (*states)->prev = NULL;
+        (*states)->next = NULL;
 
         egl_state_t *new_state = egl_state_new ();
         _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-        states->states->data = new_state;
+        (*states)->data = new_state;
         new_state->active = true;
-        return states->states;
+        return *states;
     }
 
     /* look for matching context in existing states */
@@ -159,7 +159,7 @@ _caching_client_get_state (EGLDisplay dpy,
     egl_state_t *new_state = egl_state_new ();
     _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
 
-    list = states->states;
+    list = *states;
     while (list->next != NULL)
         list = list->next;
 
@@ -179,13 +179,13 @@ _caching_client_get_state (EGLDisplay dpy,
 static void 
 _caching_client_terminate (client_t *client, EGLDisplay display)
 {
-    gl_states_t *states = cached_gl_states ();
-    link_list_t *head = states->states;
+    link_list_t **states = cached_gl_states ();
+    link_list_t *head = *states;
     link_list_t *list = head;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (! states->states) {
+    if (! *states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -287,12 +287,12 @@ _caching_client_destroy_context (client_t *client,
                                  EGLContext context)
 {
     egl_state_t *state;
-    gl_states_t *states = cached_gl_states ();
-    link_list_t *list = states->states;
+    link_list_t **states = cached_gl_states ();
+    link_list_t *list = *states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (! states->states) {
+    if (! *states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -317,12 +317,12 @@ _caching_client_destroy_surface (client_t *client,
                                  EGLSurface surface)
 {
     egl_state_t *state;
-    gl_states_t *states = cached_gl_states ();
-    link_list_t *list = states->states;
+    link_list_t **states = cached_gl_states ();
+    link_list_t *list = *states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (! states->states) {
+    if (! *states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -360,12 +360,12 @@ _match (EGLDisplay display,
         link_list_t **state)
 {
     egl_state_t *egl_state;
-    gl_states_t *states = cached_gl_states ();
-    link_list_t *list = states->states;
+    link_list_t **states = cached_gl_states ();
+    link_list_t *list = *states;
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (! states->states) {
+    if (! *states) {
         mutex_unlock (cached_gl_states_mutex);
         return false;
     }

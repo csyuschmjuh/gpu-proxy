@@ -34,15 +34,9 @@ egl_state_destroy (egl_state_t *egl_state)
     gles2_state_destroy (&egl_state->state);
 }
 
-gl_states_t *
+link_list_t **
 cached_gl_states ()
 {
-    static gl_states_t states;
-    static bool initialized = false;
-    if (!initialized) {
-        states.states = NULL;
-        initialized = true;
-    }
-
+    static link_list_t *states = NULL;
     return &states;
 }

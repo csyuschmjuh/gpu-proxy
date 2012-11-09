@@ -22,11 +22,6 @@ typedef struct egl_state {
     bool             destroy_draw;
 } egl_state_t;
 
-typedef struct gl_states
-{
-    link_list_t      *states;
-} gl_states_t;
-
 private void
 egl_state_init (egl_state_t *egl_state);
 
@@ -36,7 +31,7 @@ egl_state_new ();
 private void
 egl_state_destroy (egl_state_t *egl_state);
 
-private gl_states_t *
+private link_list_t **
 cached_gl_states ();
 
 #endif /* GPUPROCESS_EGL_STATE_H */
