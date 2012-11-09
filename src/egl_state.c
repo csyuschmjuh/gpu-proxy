@@ -40,7 +40,6 @@ cached_gl_states ()
     static gl_states_t states;
     static bool initialized = false;
     if (!initialized) {
-        states.num_contexts = 0;
         states.states = NULL;
         initialized = true;
     }
