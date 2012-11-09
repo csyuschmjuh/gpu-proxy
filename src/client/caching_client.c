@@ -108,8 +108,6 @@ _caching_client_remove_state (client_t* client,
     free (egl_state);
     free (*state);
     *state = NULL;
-
-    states->num_contexts--;
 }
 
 static void 
@@ -132,8 +130,7 @@ _caching_client_get_state (EGLDisplay dpy,
     gl_states_t *states = cached_gl_states ();
     link_list_t *list = states->states;
 
-    if (states->num_contexts == 0 || ! states->states) {
-        states->num_contexts = 1;
+    if (! states->states) {
         states->states = (link_list_t *)malloc (sizeof (link_list_t));
         states->states->prev = NULL;
         states->states->next = NULL;
@@ -161,7 +158,6 @@ _caching_client_get_state (EGLDisplay dpy,
     /* we have not found a context match */
     egl_state_t *new_state = egl_state_new ();
     _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-    states->num_contexts ++;
 
     list = states->states;
     while (list->next != NULL)
@@ -189,7 +185,7 @@ _caching_client_terminate (client_t *client, EGLDisplay display)
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (states->num_contexts == 0) {
+    if (! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -296,7 +292,7 @@ _caching_client_destroy_context (client_t *client,
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (states->num_contexts == 0 || ! states->states) {
+    if (! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -326,7 +322,7 @@ _caching_client_destroy_surface (client_t *client,
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (states->num_contexts == 0 || ! states->states) {
+    if (! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
@@ -369,7 +365,7 @@ _match (EGLDisplay display,
     link_list_t *current;
 
     mutex_lock (cached_gl_states_mutex);
-    if (states->num_contexts == 0 || ! states->states) {
+    if (! states->states) {
         mutex_unlock (cached_gl_states_mutex);
         return false;
     }

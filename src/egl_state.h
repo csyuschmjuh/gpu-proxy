@@ -24,7 +24,6 @@ typedef struct egl_state {
 
 typedef struct gl_states
 {
-    int              num_contexts;
     link_list_t      *states;
 } gl_states_t;
 
