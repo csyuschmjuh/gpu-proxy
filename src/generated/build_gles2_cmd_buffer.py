@@ -279,6 +279,7 @@ _FUNCTION_INFO = {
     'out_arguments': ['framebuffers']
   },
   'glGenRenderbuffers': {
+    'type': 'Asynchronous',
     'out_arguments': ['renderbuffers']
   },
   'glGenTextures': {

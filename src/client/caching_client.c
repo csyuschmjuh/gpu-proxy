@@ -1083,11 +1083,14 @@ static void
 caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *renderbuffers)
 {
     INSTRUMENT();
- 
+
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
+
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
+                               RESOURCE_GEN_RENDERBUFFERS, n, renderbuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
 }
@@ -1941,7 +1944,16 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
         return;
     }
 
-    CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, renderbuffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
+                              RESOURCE_GEN_RENDERBUFFERS,
+                              n, renderbuffers);
+
+    GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
+    int i;
+    for (i = 0; i < n; i++)
+        server_renderbuffers[i] = renderbuffers [i];
+
+    CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, server_renderbuffers);
 }
 
 static texture_t *

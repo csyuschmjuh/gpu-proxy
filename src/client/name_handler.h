@@ -20,6 +20,7 @@ typedef enum resource_namespace {
     RESOURCE_GEN_BUFFERS,
     RESOURCE_GEN_FRAMEBUFFERS,
     RESOURCE_GEN_TEXTURES,
+    RESOURCE_GEN_RENDERBUFFERS,
     RESOURCE_MAX
 } resource_namespace_t;
 
