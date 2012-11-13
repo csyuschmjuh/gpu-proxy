@@ -40,6 +40,7 @@ libGPUProcess_la_SOURCES = \
 	server/server_custom.c \
 	thread_private.h \
 	types_private.h \
+	types_private.c \
 	util/hash.h \
 	util/hash.c
 
