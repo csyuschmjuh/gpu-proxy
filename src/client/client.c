@@ -300,7 +300,7 @@ client_has_valid_state (client_t *client)
 egl_state_t *
 client_get_current_state (client_t *client)
 {
-    return (egl_state_t *) client->active_state->data;
+    return client->active_state ? (egl_state_t *) client->active_state->data : 0;
 }
 
 gles2_state_t *

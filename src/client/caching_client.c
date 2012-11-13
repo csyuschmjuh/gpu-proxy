@@ -4245,79 +4245,57 @@ caching_client_eglSwapBuffers (void* client,
     return result;
 }
 
-static EGLBoolean 
+static EGLBoolean
 caching_client_eglMakeCurrent (void* client,
                                EGLDisplay display,
                                EGLSurface draw,
                                EGLSurface read,
-                               EGLContext ctx) 
+                               EGLContext ctx)
 {
-    link_list_t *exist = NULL;
-    bool found = false;
-    bool same_context = false;
-
     INSTRUMENT();
 
-    if (!CLIENT(client)->active_state) {
-        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT)
-            return EGL_TRUE;
-        else {
-            /* we are switch from no context to a context */
-            found = _match (display, draw, read, ctx, &exist);
-        }
-    }
-    else {
-        egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-        if (display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT) {
-            /* we are switching from valid context to no context */
-            command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
-            command_eglmakecurrent_init (command, display, draw, read, ctx);
-            client_run_command_async (command);
-            /* update cache */
-            _caching_client_make_current (client, display, draw, read, ctx);
-            return EGL_TRUE;
-        }
-        else if (egl_state->display == display &&
-                 egl_state->context == ctx) {
-            if (egl_state->drawable == draw &&
-                egl_state->readable == read)
-                return EGL_TRUE;
-            else {
-                found = true;
-                same_context = true;
-                exist = CLIENT(client)->active_state;
-            }
-        }
-    }
-    if (! found) {
-        /* look for existing */
-        found = _match (display, draw, read, ctx, &exist);
-    }
-    if (found == true) {
-        /* set active to exist, tell client about it */
-        if (CLIENT(client)->active_state) {
-            egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-            if (! same_context)
-                egl_state->active = false;
-        }
-        CLIENT(client)->active_state = exist;
+    /* First detect situations where we are not changing the context. */
+    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
 
-        /* call real makeCurrent */
+    /* Switching from none to none, so this is a no-op. */
+    bool switching_to_none = display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT;
+    if (switching_to_none && ! egl_state)
+        return EGL_TRUE;
+
+    /* Everything matches, so this is a no-op. */
+    bool display_and_context_match = egl_state && egl_state->display == display && egl_state->context == ctx;
+    if (display_and_context_match &&
+        egl_state->drawable == draw && egl_state->readable == read) {
+        return EGL_TRUE;
+    }
+
+    /* TODO: This should really go somewhere else. */
+    if (!display_and_context_match && egl_state)
+        egl_state->active = false;
+
+    /* We aren't switching to none and we aren't switch to the same context
+     * with different surfaces. We can do this asynchronous if we know that
+     * the last time we used this context we used the same surfaces. */
+    link_list_t *matching_existing_context = NULL;
+    if (!display_and_context_match && !switching_to_none)
+        _match (display, draw, read, ctx, &matching_existing_context);
+
+    /* If we are switching to none or we have previously activated this context
+     * with this pair of surfaces, we can safely do this operation asynchronously.
+     * We know it will succeed */
+    if (switching_to_none || matching_existing_context != NULL) {
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);
-        /* update cache */
         _caching_client_make_current (client, display, draw, read, ctx);
         return EGL_TRUE;
     }
 
-    /* We could not find in the saved state, we don't know whether
-     * parameters are valid or not 
-     */    
+    /* We are switching to a new context or the same context with an unknown
+     * pair of surfaces, so we need to do this synchronously, to detect errors. */
     EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglMakeCurrent (client, display, draw, read, ctx);
-    if (result == EGL_TRUE) {
+    if (result == EGL_TRUE)
         _caching_client_make_current (client, display, draw, read, ctx);
-    }
     return result;
 }
 
