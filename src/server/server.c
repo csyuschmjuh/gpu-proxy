@@ -85,7 +85,7 @@ server_init (server_t *server,
     server->command_post_hook = NULL;
 
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
-    server->name_mapping = NewHashTable();
+    server->name_mapping = NewHashTable(free);
 
     server_fill_command_handler_table (server);
     server_add_custom_command_handlers (server);
@@ -94,10 +94,7 @@ server_init (server_t *server,
 bool
 server_destroy (server_t *server)
 {
-    server->buffer = NULL;
-
-    HashWalk (server->name_mapping, FreeDataCallback, NULL);
-
+    DeleteHashTable (server->name_mapping);
     free (server);
     return true;
 }

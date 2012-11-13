@@ -118,7 +118,7 @@ gles2_state_init (gles2_state_t *state)
 
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
-    state->texture_cache = NewHashTable();
+    state->texture_cache = NewHashTable(free);
 }
 
 void
@@ -130,11 +130,9 @@ gles2_state_destroy (gles2_state_t *state)
     link_list_t *program_list = state->programs;
     while (program_list) {
         program_t *program = (program_t *)program_list->data;
-        HashWalk (program->uniform_location_cache, FreeDataCallback, NULL);
         DeleteHashTable (program->uniform_location_cache);
         program->uniform_location_cache = NULL;
 
-        HashWalk (program->attrib_location_cache, FreeDataCallback, NULL);
         DeleteHashTable (program->attrib_location_cache);
         program->attrib_location_cache = NULL;
 

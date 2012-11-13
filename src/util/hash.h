@@ -39,6 +39,8 @@
 
 #define TABLE_SIZE 1023  /**< Size of lookup table/array */
 
+typedef void (*hash_delete_function_t)(void *data);
+
 /**
  * The hash table data structure.
  */
@@ -46,9 +48,10 @@ typedef struct _HashTable {
     struct HashEntry *Table[TABLE_SIZE];  /**< the lookup table */
     GLuint MaxKey;                        /**< highest key inserted so far */
     GLboolean InDeleteAll;                /**< Debug check */
+    hash_delete_function_t delete_function;
 } HashTable;
 
-HashTable *NewHashTable (void);
+HashTable *NewHashTable (hash_delete_function_t delete_function);
 
 private void
 DeleteHashTable (HashTable *table);

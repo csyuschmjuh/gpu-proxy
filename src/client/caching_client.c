@@ -75,7 +75,6 @@ returnTextureNamesCallback (GLuint key,
                             void *userData)
 {
     name_handler_delete_names (CACHING_CLIENT(userData)->name_handler, 1, data);
-    free (data);
 }
 
 static void
@@ -905,8 +904,8 @@ caching_client_glCreateProgram (void* client)
     program_t *new_program = (program_t *)malloc (sizeof (program_t));
     new_program->id = result; 
     new_program->mark_for_deletion = false;
-    new_program->uniform_location_cache = NewHashTable();
-    new_program->attrib_location_cache = NewHashTable();
+    new_program->uniform_location_cache = NewHashTable(free);
+    new_program->attrib_location_cache = NewHashTable(free);
     new_program_list->data = new_program;
     
     if (program_list) {
@@ -959,9 +958,7 @@ caching_client_glDeleteProgram (void *client,
     if (program_list)
         program_list->prev = cached_program_list->prev;
 
-    HashWalk (cached_program->attrib_location_cache, FreeDataCallback, NULL);
     DeleteHashTable (cached_program->attrib_location_cache);
-    HashWalk (cached_program->uniform_location_cache, FreeDataCallback, NULL);
     DeleteHashTable (cached_program->uniform_location_cache);
     free (cached_program);
     if (state->programs == cached_program_list)
@@ -3539,9 +3536,7 @@ caching_client_glUseProgram (void* client, GLuint program)
             if (program_list)
                 program_list->prev = saved_program_list->prev;
 
-            HashWalk (saved_program->attrib_location_cache, FreeDataCallback, NULL);
             DeleteHashTable (saved_program->attrib_location_cache);
-            HashWalk (saved_program->uniform_location_cache, FreeDataCallback, NULL);
             DeleteHashTable (saved_program->uniform_location_cache);
             free (saved_program);
             free (saved_program_list);
