@@ -14,4 +14,13 @@ typedef struct link_list
 
 #define v_client_id_t pid_t
 
+link_list_t *
+link_list_new (void *data);
+
+void
+link_list_append (link_list_t *list, link_list_t *element);
+
+void
+link_list_free (link_list_t *array);
+
 #endif /* GPUPROCESS_TYPES_PRIVATE_H */

@@ -20,6 +20,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/egl_state.h \
 	$(rootsrcdir)/src/gles2_state.c \
 	$(rootsrcdir)/src/gles2_state.h \
+	$(rootsrcdir)/src/types_private.h \
+	$(rootsrcdir)/src/types_private.c \
 	$(rootsrcdir)/src/util/gles2_utils.c \
 	$(rootsrcdir)/src/util/gles2_utils.h \
 	$(rootsrcdir)/src/util/hash.c \

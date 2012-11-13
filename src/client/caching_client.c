@@ -129,14 +129,10 @@ _caching_client_get_state (EGLDisplay dpy,
     link_list_t *list = *states;
 
     if (! *states) {
-        *states = (link_list_t *)malloc (sizeof (link_list_t));
-        (*states)->prev = NULL;
-        (*states)->next = NULL;
-
         egl_state_t *new_state = egl_state_new ();
         _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-        (*states)->data = new_state;
         new_state->active = true;
+        *states = link_list_new (new_state);
         return *states;
     }
 
@@ -161,12 +157,9 @@ _caching_client_get_state (EGLDisplay dpy,
     while (list->next != NULL)
         list = list->next;
 
-    new_list = (link_list_t *)malloc (sizeof (link_list_t));
-    new_list->prev = list;
-    new_list->next = NULL;
-    new_list->data = new_state;
     new_state->active = true;
-    list->next = new_list;
+    new_list = link_list_new (new_state);
+    link_list_append (list, new_list);
 
     return new_list;
 }
@@ -899,19 +892,15 @@ caching_client_glCreateProgram (void* client)
             program_list = program_list->next;
     }
  
-    new_program_list = (link_list_t *) malloc (sizeof (link_list_t ));
-    new_program_list->prev = new_program_list->next = NULL;
     program_t *new_program = (program_t *)malloc (sizeof (program_t));
     new_program->id = result; 
     new_program->mark_for_deletion = false;
     new_program->uniform_location_cache = NewHashTable(free);
     new_program->attrib_location_cache = NewHashTable(free);
-    new_program_list->data = new_program;
+    new_program_list = link_list_new (new_program);
     
-    if (program_list) {
-        new_program_list->prev = program_list;
-        program_list->next = new_program_list;
-    }
+    if (program_list)
+        link_list_append (program_list, new_program_list);
     else
         state->programs = new_program_list;
   
