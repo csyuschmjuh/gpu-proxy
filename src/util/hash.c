@@ -60,11 +60,10 @@ struct HashEntry {
  * \return pointer to a new, empty hash table.
  */
 HashTable *
-NewHashTable (void)
+NewHashTable (hash_delete_function_t delete_function)
 {
-    HashTable *table = (HashTable *)
-        calloc (1, sizeof (HashTable));
-
+    HashTable *table = (HashTable *) calloc (1, sizeof (HashTable));
+    table->delete_function = delete_function;
     return table;
 }
 
@@ -87,6 +86,7 @@ DeleteHashTable (HashTable *table)
         struct HashEntry *entry = table->Table[pos];
         while (entry) {
             struct HashEntry *next = entry->Next;
+            table->delete_function (entry->Data);
             free (entry);
             entry = next;
         }
@@ -173,12 +173,8 @@ HashInsert (HashTable *table, GLuint key, void *data)
     /* Check if replacing an existing entry with same key. */
     for (entry = table->Table[pos]; entry; entry = entry->Next) {
         if (entry->Key == key) {
-            /* Replace entry's data. */
-#if 0 /* not sure this check is always valid */
-            /* In DeleteHashTable, found non-freed data. */
-            assert (!entry->Data)
-#endif
-                entry->Data = data;
+            table->delete_function (entry->Data);
+            entry->Data = data;
             return;
         }
     }
@@ -228,6 +224,7 @@ HashRemove (HashTable *table, GLuint key)
             else {
                 table->Table[pos] = entry->Next;
             }
+            table->delete_function (entry->Data);
             free (entry);
             return;
         }
@@ -473,71 +470,3 @@ HashStr (const void *v)
 
   return h;
 }
-
-#if 0 /* debug only */
-
-/**
- * Test walking over all the entries in a hash table.
- */
-static void
-test_hash_walking (void)
-{
-    HashTable *t = NewHashTable ();
-    const GLuint limit = 50000;
-    GLuint i;
-
-    /* create some entries */
-    for (i = 0; i < limit; i++) {
-        GLuint dummy;
-        GLuint k = (rand () % (limit * 10)) + 1;
-        while (HashLookup (t, k)) {
-            /* id already in use, try another */
-            k = (rand () % (limit * 10)) + 1;
-        }
-        HashInsert (t, k, &dummy);
-    }
-
-    /* walk over all entries */
-    {
-        GLuint k = HashFirstEntry (t);
-        GLuint count = 0;
-        while (k) {
-            GLuint knext = HashNextEntry (t, k);
-            assert (knext != k);
-            HashRemove (t, k);
-            count++;
-            k = knext;
-        }
-        assert (count == limit);
-        k = HashFirstEntry (t);
-        assert (k==0);
-    }
-
-    DeleteHashTable (t);
-}
-
-
-void
-test_hash_functions (void)
-{
-    int a, b, c;
-    HashTable *t;
-
-    a = b = c = 403;
-
-    t = NewHashTable ();
-    HashInsert (t, 501, &a);
-    HashInsert (t, 10, &c);
-    HashInsert (t, 0xfffffff8, &b);
-    HashPrint (t);
-
-    assert (HashLookup (t,501));
-    assert (!HashLookup (t,1313));
-    assert (HashFindFreeKeyBlock (t, 100));
-
-    DeleteHashTable (t);
-
-    test_hash_walking ();
-}
-
-#endif

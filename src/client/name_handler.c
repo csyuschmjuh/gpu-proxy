@@ -8,7 +8,7 @@ name_handler_create ()
 {
     name_handler_t *name_handler = (name_handler_t *)malloc (sizeof (name_handler_t));
     name_handler->last_name = 0;
-    name_handler->used_names = NewHashTable();
+    name_handler->used_names = NewHashTable(free);
     return name_handler;
 }
 
