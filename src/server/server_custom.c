@@ -47,10 +47,8 @@ server_custom_handle_gldeletebuffers (server_t *server, command_t *abstract_comm
 
     int i;
     for (i = 0; i < command->n; i++) {
-        unsigned client_name = command->buffers[i];
-        command->buffers[i] = *(GLuint *)HashLookup (server->name_mapping,
-                                                     client_name);
-        HashRemove (server->name_mapping, client_name);
+        command->buffers[i] = *(GLuint *)HashTake (server->name_mapping,
+                                                   command->buffers[i]);
     }
     server->dispatch.glDeleteBuffers (server, command->n, command->buffers);
 
@@ -98,10 +96,8 @@ server_custom_handle_gldeleteframebuffers (server_t *server, command_t *abstract
 
     int i;
     for (i = 0; i < command->n; i++) {
-        unsigned client_name = command->framebuffers[i];
-        command->framebuffers[i] = *(GLuint *)HashLookup (server->name_mapping,
-                                                          client_name);
-        HashRemove (server->name_mapping, command->framebuffers[i]);
+        command->framebuffers[i] = *(GLuint *)HashTake (server->name_mapping,
+                                                        command->framebuffers[i]);
     }
     server->dispatch.glDeleteFramebuffers (server, command->n, command->framebuffers);
 
@@ -147,10 +143,8 @@ server_custom_handle_gldeletetextures (server_t *server, command_t *abstract_com
 
     int i;
     for (i = 0; i < command->n; i++) {
-        unsigned client_name = command->textures[i];
-        command->textures[i] = *(GLuint *)HashLookup (server->name_mapping,
-                                                      client_name);
-        HashRemove (server->name_mapping, command->textures[i]);
+        command->textures[i] = *(GLuint *)HashTake (server->name_mapping,
+                                                    command->textures[i]);
     }
 
     server->dispatch.glDeleteTextures (server, command->n, command->textures);
@@ -186,10 +180,8 @@ server_custom_handle_gldeleterenderbuffers (server_t *server, command_t *abstrac
             (command_gldeleterenderbuffers_t *)abstract_command;
     int i;
     for (i=0; i < command->n; i++) {
-        unsigned client_name = command->renderbuffers[i];
-        command->renderbuffers[i] = *(GLuint *)HashLookup (server->name_mapping,
-                                                           client_name);
-        HashRemove (server->name_mapping, command->renderbuffers[i]);
+        command->renderbuffers[i] = *(GLuint *)HashTake (server->name_mapping,
+                                                         command->renderbuffers[i]);
     }
 
     server->dispatch.glDeleteBuffers (server, command->n, command->renderbuffers);
@@ -211,22 +203,24 @@ void
 server_add_custom_command_handlers (server_t *server) {
     server->handler_table[COMMAND_GLBINDBUFFER] =
         server_custom_handle_glbindbuffer;
-    server->handler_table[COMMAND_GLBINDFRAMEBUFFER] =
-        server_custom_handle_glbindframebuffer;
-    server->handler_table[COMMAND_GLBINDTEXTURE] =
-        server_custom_handle_glbindtexture;
-    server->handler_table[COMMAND_GLDELETEBUFFERS] =
-        server_custom_handle_gldeletebuffers;
-    server->handler_table[COMMAND_GLDELETEFRAMEBUFFERS] =
-        server_custom_handle_gldeleteframebuffers;
-    server->handler_table[COMMAND_GLDELETETEXTURES] =
-        server_custom_handle_gldeletetextures;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_custom_handle_glgenbuffers;
+    server->handler_table[COMMAND_GLDELETEBUFFERS] =
+        server_custom_handle_gldeletebuffers;
+
+    server->handler_table[COMMAND_GLBINDFRAMEBUFFER] =
+        server_custom_handle_glbindframebuffer;
+    server->handler_table[COMMAND_GLDELETEFRAMEBUFFERS] =
+        server_custom_handle_gldeleteframebuffers;
     server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
         server_custom_handle_glgenframebuffers;
+
+    server->handler_table[COMMAND_GLBINDTEXTURE] =
+        server_custom_handle_glbindtexture;
     server->handler_table[COMMAND_GLGENTEXTURES] =
         server_custom_handle_glgentextures;
+    server->handler_table[COMMAND_GLDELETETEXTURES] =
+        server_custom_handle_gldeletetextures;
 
     server->handler_table[COMMAND_GLBINDRENDERBUFFER] =
         server_custom_handle_glbindrenderbuffer;

@@ -138,6 +138,14 @@ HashLookup (HashTable *table, GLuint key)
     return res;
 }
 
+void *
+HashTake (HashTable *table, GLuint key)
+{
+    assert (table);
+    void *res = HashLookup_unlocked (table, key);
+    HashRemove (table, key);
+    return res;
+}
 
 /**
  * Insert a key/pointer pair into the hash table.
