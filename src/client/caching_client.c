@@ -70,9 +70,9 @@ _caching_client_set_egl_states (egl_state_t *egl_state,
 }
 
 void
-returnTextureNamesCallback (GLuint key,
-                            void *data,
-                            void *userData)
+delete_texture_from_name_handler (GLuint key,
+                                  void *data,
+                                  void *userData)
 {
     name_handler_delete_names (CACHING_CLIENT(userData)->name_handler, 1, data);
 }
@@ -95,12 +95,9 @@ _caching_client_remove_state (client_t* client,
     if ((*state)->next)
         (*state)->next->prev = (*state)->prev;
 
-    // TODO: Move this to gles_state.c eventually.
-    gles2_state_t *gles_state = &egl_state->state;
-    HashWalk (gles_state->texture_cache, returnTextureNamesCallback,
+    HashWalk (egl_state->state.texture_cache,
+              delete_texture_from_name_handler,
               CACHING_CLIENT(client)->name_handler);
-    DeleteHashTable (gles_state->texture_cache);
-    gles_state->texture_cache = NULL;
 
     egl_state_destroy (egl_state);
     free (egl_state);

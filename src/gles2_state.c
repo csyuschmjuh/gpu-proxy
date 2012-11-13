@@ -142,5 +142,7 @@ gles2_state_destroy (gles2_state_t *state)
         free (temp);
     }
 
+    DeleteHashTable (state->texture_cache);
+    state->texture_cache = NULL;
     state->programs = NULL;
 }
