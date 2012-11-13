@@ -154,9 +154,6 @@ _caching_client_get_state (EGLDisplay dpy,
     _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
 
     list = *states;
-    while (list->next != NULL)
-        list = list->next;
-
     new_state->active = true;
     new_list = link_list_new (new_state);
     link_list_append (list, new_list);
@@ -887,11 +884,6 @@ caching_client_glCreateProgram (void* client)
     if (result == 0)
         caching_client_set_needs_get_error (CLIENT (client));
 
-    if (program_list) {
-        while (program_list->next)
-            program_list = program_list->next;
-    }
- 
     program_t *new_program = (program_t *)malloc (sizeof (program_t));
     new_program->id = result; 
     new_program->mark_for_deletion = false;

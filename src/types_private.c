@@ -16,8 +16,16 @@ link_list_new (void *data)
 void
 link_list_append (link_list_t *list, link_list_t *element)
 {
-    element->prev = list;
-    list->next = element;
+    link_list_t *last_node = list;
+
+    if (! last_node || ! element)
+        return;
+
+    while (last_node->next != NULL)
+        last_node = last_node->next;
+
+    element->prev = last_node;
+    last_node->next = element;
 }
 
 void
