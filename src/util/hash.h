@@ -66,6 +66,10 @@ private void
 HashRemove (HashTable *table,
             GLuint key);
 
+private void *
+HashTake (HashTable *table,
+          GLuint key);
+
 private void
 HashDeleteAll (HashTable *table,
                void (*callback) (GLuint key, void *data, void *userData),
