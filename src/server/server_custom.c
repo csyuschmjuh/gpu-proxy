@@ -8,7 +8,7 @@ server_custom_handle_glbindbuffer (server_t *server,
     command_glbindbuffer_t *command =
         (command_glbindbuffer_t *)abstract_command;
 
-    GLuint *server_buffer = (GLuint *)HashLookup (server->buffer_names_cache,
+    GLuint *server_buffer = (GLuint *)HashLookup (server->name_mapping,
                                                   command->buffer);
 
     server->dispatch.glBindBuffer (server, command->target, *server_buffer);
@@ -31,7 +31,7 @@ server_custom_handle_glgenbuffers (server_t *server,
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_buffers[i];
-        HashInsert (server->buffer_names_cache, command->buffers[i], data);
+        HashInsert (server->name_mapping, command->buffers[i], data);
     }
 
     free (server_buffers);
@@ -49,9 +49,9 @@ server_custom_handle_gldeletebuffers (server_t *server, command_t *abstract_comm
 
     int i;
     for (i = 0; i < command->n; i++) {
-        server_buffers[i] = *(GLuint *)HashLookup (server->buffer_names_cache,
+        server_buffers[i] = *(GLuint *)HashLookup (server->name_mapping,
                                                    command->buffers[i]);
-        HashRemove (server->buffer_names_cache, command->buffers[i]);
+        HashRemove (server->name_mapping, command->buffers[i]);
     }
 
     server->dispatch.glDeleteBuffers (server, command->n, server_buffers);
@@ -74,7 +74,7 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_framebuffers[i];
-        HashInsert (server->framebuffer_names_cache, command->framebuffers[i], data);
+        HashInsert (server->name_mapping, command->framebuffers[i], data);
     }
 
     free (server_framebuffers);
@@ -88,7 +88,7 @@ server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_co
     command_glbindframebuffer_t *command =
             (command_glbindframebuffer_t *)abstract_command;
 
-   GLuint *server_buffer = (GLuint *)HashLookup (server->framebuffer_names_cache,
+   GLuint *server_buffer = (GLuint *)HashLookup (server->name_mapping,
                                                  command->framebuffer);
 
     server->dispatch.glBindFramebuffer (server, command->target, *server_buffer);
@@ -106,9 +106,9 @@ server_custom_handle_gldeleteframebuffers (server_t *server, command_t *abstract
 
     int i;
     for (i = 0; i < command->n; i++) {
-        server_framebuffers[i] = *(GLuint *)HashLookup (server->framebuffer_names_cache,
+        server_framebuffers[i] = *(GLuint *)HashLookup (server->name_mapping,
                                                         command->framebuffers[i]);
-        HashRemove (server->framebuffer_names_cache, command->framebuffers[i]);
+        HashRemove (server->name_mapping, command->framebuffers[i]);
     }
 
     server->dispatch.glDeleteFramebuffers (server, command->n, server_framebuffers);
@@ -131,7 +131,7 @@ server_custom_handle_glgentextures (server_t *server, command_t *abstract_comman
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_textures[i];
-        HashInsert (server->texture_names_cache, command->textures[i], data);
+        HashInsert (server->name_mapping, command->textures[i], data);
     }
 
     free (server_textures);
@@ -144,7 +144,7 @@ server_custom_handle_glbindtexture (server_t *server, command_t *abstract_comman
 {
     command_glbindtexture_t *command =
             (command_glbindtexture_t *)abstract_command;
-    GLuint *texture = (GLuint *)HashLookup (server->texture_names_cache,
+    GLuint *texture = (GLuint *)HashLookup (server->name_mapping,
                                             command->texture);
     server->dispatch.glBindTexture (server, command->target, *texture);
     command_glbindtexture_destroy_arguments (command);
@@ -159,9 +159,9 @@ server_custom_handle_gldeletetextures (server_t *server, command_t *abstract_com
 
     int i;
     for (i = 0; i < command->n; i++) {
-        server_textures[i] = *(GLuint *)HashLookup (server->texture_names_cache,
+        server_textures[i] = *(GLuint *)HashLookup (server->name_mapping,
                                                     command->textures[i]);
-        HashRemove (server->texture_names_cache, command->textures[i]);
+        HashRemove (server->name_mapping, command->textures[i]);
     }
 
     server->dispatch.glDeleteTextures (server, command->n, server_textures);
@@ -185,7 +185,7 @@ server_custom_handle_glgenrenderbuffers (server_t *server,
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_renderbuffers[i];
-        HashInsert (server->renderbuffer_names_cache, command->renderbuffers[i], data);
+        HashInsert (server->name_mapping, command->renderbuffers[i], data);
     }
 
     free (server_renderbuffers);
@@ -201,9 +201,9 @@ server_custom_handle_gldeleterenderbuffers (server_t *server, command_t *abstrac
 
     int i;
     for (i=0; i < command->n; i++) {
-        server_renderbuffers[i] = *(GLuint *)HashLookup (server->renderbuffer_names_cache,
+        server_renderbuffers[i] = *(GLuint *)HashLookup (server->name_mapping,
                                                          command->renderbuffers[i]);
-        HashRemove (server->renderbuffer_names_cache, command->renderbuffers[i]);
+        HashRemove (server->name_mapping, command->renderbuffers[i]);
     }
 
     server->dispatch.glDeleteBuffers (server, command->n, server_renderbuffers);
@@ -217,7 +217,7 @@ server_custom_handle_glbindrenderbuffer (server_t *server, command_t *abstract_c
 {
     command_glbindrenderbuffer_t *command =
             (command_glbindrenderbuffer_t *)abstract_command;
-    GLuint *renderbuffer = (GLuint *)HashLookup (server->renderbuffer_names_cache,
+    GLuint *renderbuffer = (GLuint *)HashLookup (server->name_mapping,
                                                  command->renderbuffer);
     server->dispatch.glBindRenderbuffer (server, command->target, *renderbuffer);
     command_glbindrenderbuffer_destroy_arguments (command);
