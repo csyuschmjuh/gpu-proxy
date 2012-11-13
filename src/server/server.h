@@ -26,11 +26,7 @@ struct _server {
     thread_t thread;
     bool threaded;
 
-    HashTable *buffer_names_cache;
-    HashTable *renderbuffer_names_cache;
-    HashTable *framebuffer_names_cache;
-    HashTable *texture_names_cache;
-
+    HashTable *name_mapping;
     void (*command_post_hook)(server_t *server, command_t *command);
 
     mutex_t* signal_mutex;

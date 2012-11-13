@@ -74,8 +74,7 @@ returnTextureNamesCallback (GLuint key,
                             void *data,
                             void *userData)
 {
-    name_handler_delete_names (CACHING_CLIENT(userData)->name_handler,
-                               RESOURCE_GEN_TEXTURES, 1, data);
+    name_handler_delete_names (CACHING_CLIENT(userData)->name_handler, 1, data);
     free (data);
 }
 
@@ -1029,8 +1028,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteBuffers (client, n, buffers);
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
-                               RESOURCE_GEN_BUFFERS, n, buffers);
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, buffers);
 
     /* check array_buffer_binding and element_array_buffer_binding */
     for (i = 0; i < n; i++) {
@@ -1064,8 +1062,7 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
         return;
     }
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
-                               RESOURCE_GEN_FRAMEBUFFERS, n, framebuffers);
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, framebuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
@@ -1089,8 +1086,7 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
         return;
     }
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
-                               RESOURCE_GEN_RENDERBUFFERS, n, renderbuffers);
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, renderbuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
 }
@@ -1107,8 +1103,7 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler,
-                               RESOURCE_GEN_TEXTURES, n, textures);
+    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, textures);
 }
 
 static void
@@ -1899,9 +1894,7 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
-                              RESOURCE_GEN_BUFFERS,
-                              n, buffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, buffers);
 
     server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
     for (i=0; i<n; i++)
@@ -1923,9 +1916,7 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
-                              RESOURCE_GEN_FRAMEBUFFERS,
-                              n, framebuffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, framebuffers);
 
     server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
     for (i=0; i<n; i++)
@@ -1944,9 +1935,7 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
-                              RESOURCE_GEN_RENDERBUFFERS,
-                              n, renderbuffers);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, renderbuffers);
 
     GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
     int i;
@@ -1983,9 +1972,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler,
-                              RESOURCE_GEN_TEXTURES,
-                              n, textures);
+    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, textures);
 
     server_textures = (GLuint *)malloc (n * sizeof (GLuint));
     for (i = 0; i < n; i++)
