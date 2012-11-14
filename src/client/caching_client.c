@@ -16,14 +16,6 @@
 mutex_static_init (cached_gl_states_mutex);
 
 static bool
-_caching_client_has_context (egl_state_t *state,
-                             EGLDisplay  display,
-                             EGLContext  context)
-{
-    return (state->context == context && state->display == display);
-}
-
-static bool
 caching_client_does_index_overflow (void* client,
                                     GLuint index)
 {
@@ -78,10 +70,10 @@ delete_texture_from_name_handler (GLuint key,
 }
 
 static void
-_caching_client_remove_state (client_t* client,
-                              link_list_t **state)
+_caching_client_destroy_state (client_t* client,
+                               link_list_t *state)
 {
-    egl_state_t *egl_state = (egl_state_t *) (*state)->data;
+    egl_state_t *egl_state = (egl_state_t *) state->data;
 
     HashWalk (egl_state->state.texture_cache,
               delete_texture_from_name_handler,
@@ -89,7 +81,6 @@ _caching_client_remove_state (client_t* client,
 
     egl_state_destroy (egl_state);
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
-    *state = NULL;
 }
 
 static void 
@@ -149,48 +140,6 @@ _caching_client_get_state (EGLDisplay dpy,
     return list;
 }
 
-/* the client first calls eglTerminate (display),
- * then look over the cached states
- */
-static void 
-_caching_client_terminate (client_t *client, EGLDisplay display)
-{
-    link_list_t **states = cached_gl_states ();
-    link_list_t *head = *states;
-    link_list_t *list = head;
-    link_list_t *current;
-
-    mutex_lock (cached_gl_states_mutex);
-    if (! *states) {
-        mutex_unlock (cached_gl_states_mutex);
-        return;
-    }
-
-    while (list != NULL) {
-        egl_state_t *egl_state = (egl_state_t *) list->data;
-        current = list;
-        list = list->next;
-
-        if (egl_state->display == display) {
-            if (! egl_state->active)
-                _caching_client_remove_state (client, &current);
-                /* XXX: Do we need to stop the thread? */
-        }
-    }
-
-    /* is current active state affected ?*/
-    if (CLIENT(client)->active_state) { 
-        egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state->data;
-        if (egl_state->display == display)
-            egl_state->destroy_dpy = true;
-    }
-    /* XXX: should we stop current client thread ? */
-    /*
-    else if (! CLIENT(client)->active_state) {
-    } */
-    mutex_unlock (cached_gl_states_mutex);
-}
-
 /* we should call real eglMakeCurrent() before, and wait for result
  * if eglMakeCurrent() returns EGL_TRUE, then we call this
  */
@@ -218,9 +167,10 @@ _caching_client_make_current (client_t *client,
                context == egl_state->context))
             egl_state->active = false;
 
-        if (! egl_state->active && 
-            (egl_state->destroy_dpy || egl_state->destroy_ctx))
-            _caching_client_remove_state (client, &CLIENT(client)->active_state);
+        if (! egl_state->active && (egl_state->destroy_dpy || egl_state->destroy_ctx)) {
+            _caching_client_destroy_state (client, CLIENT(client)->active_state);
+            CLIENT(client)->active_state = NULL;
+        }
 
         if (CLIENT(client)->active_state && ! egl_state->active) {
             _caching_client_destroy_pending_surfaces (CLIENT (client));
@@ -239,8 +189,10 @@ _caching_client_make_current (client_t *client,
         /* XXX did eglTerminate()/eglDestroyContext()/eglDestroySurface()
          * called affect us?
          */
-        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _caching_client_remove_state (client, &CLIENT(client)->active_state);
+        if (egl_state->destroy_dpy || egl_state->destroy_ctx) {
+            _caching_client_destroy_state (client, CLIENT(client)->active_state);
+            CLIENT(client)->active_state = NULL;
+        }
 
         if (CLIENT(client)->active_state) {
             _caching_client_destroy_pending_surfaces (CLIENT (client));
@@ -250,40 +202,6 @@ _caching_client_make_current (client_t *client,
     /* get existing state or create a new one */
     CLIENT(client)->active_state = 
         _caching_client_get_state (display, drawable, readable, context);
-    mutex_unlock (cached_gl_states_mutex);
-}
-
-/* called by eglDestroyContext() - once we know there is matching context
- * we call real eglDestroyContext(), and if returns EGL_TRUE, we call 
- * this function 
- */
-static void
-_caching_client_destroy_context (client_t *client,
-                                 EGLDisplay display, 
-                                 EGLContext context)
-{
-    egl_state_t *state;
-    link_list_t **states = cached_gl_states ();
-    link_list_t *list = *states;
-    link_list_t *current;
-
-    mutex_lock (cached_gl_states_mutex);
-    if (! *states) {
-        mutex_unlock (cached_gl_states_mutex);
-        return;
-    }
-
-    while (list != NULL) {
-        current = list;
-        list = list->next;
-        state = (egl_state_t *)current->data;
-    
-        if (_caching_client_has_context (state, display, context)) {
-            state->destroy_ctx = true;
-            if (state->active == false) 
-                _caching_client_remove_state (client, &current);
-        }
-    }
     mutex_unlock (cached_gl_states_mutex);
 }
 
@@ -4031,12 +3949,35 @@ caching_client_eglTerminate (void* client,
 {
     INSTRUMENT();
 
-    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglTerminate (client, display);
-    if (result == EGL_TRUE) {
-        /* XXX: remove egl_state structure */
-        _caching_client_terminate (client, display);
+    if (CACHING_CLIENT(client)->super_dispatch.eglTerminate (client, display) == EGL_FALSE)
+        return EGL_FALSE;
+
+    mutex_lock (cached_gl_states_mutex);
+
+    link_list_t **states = cached_gl_states ();
+    if (! *states) {
+        mutex_unlock (cached_gl_states_mutex);
+        return EGL_TRUE;
     }
-    return result;
+
+    link_list_t *list = *states;
+    while (list != NULL) {
+
+        /* We might delete current in the following code. */
+        link_list_t *current = list;
+        list = current->next;
+
+        egl_state_t *egl_state = (egl_state_t *) current->data;
+        if (egl_state->display == display && ! egl_state->active)
+            _caching_client_destroy_state (client, current);
+    }
+
+    egl_state_t *egl_state = client_get_current_state (CLIENT (client));
+    if (egl_state && egl_state->display == display)
+        egl_state->destroy_dpy = true; /* Queue destroy later. */
+
+    mutex_unlock (cached_gl_states_mutex);
+    return EGL_TRUE;
 }
 
 static EGLBoolean
@@ -4088,10 +4029,26 @@ caching_client_eglDestroyContext (void* client,
 {
     INSTRUMENT();
 
-    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglDestroyContext (client, dpy, ctx);
-    if (result == GL_TRUE)
-        _caching_client_destroy_context (CLIENT(client), dpy, ctx);
-    return result;
+    if (CACHING_CLIENT(client)->super_dispatch.eglDestroyContext (client, dpy, ctx) == EGL_FALSE)
+        return EGL_FALSE; /* Failure, so do nothing locally. */
+
+    /* Destroy our cached version of this context. */
+    mutex_lock (cached_gl_states_mutex);
+
+    link_list_t *list = find_state_with_display_and_context (dpy, ctx, false);
+    if (!list) {
+        mutex_unlock (cached_gl_states_mutex);
+        return EGL_TRUE;
+    }
+
+    egl_state_t *state = (egl_state_t *)list->data;
+    if (! state->active) 
+        _caching_client_destroy_state (client, list);
+    else
+        state->destroy_ctx = true;
+
+    mutex_unlock (cached_gl_states_mutex);
+    return EGL_TRUE;
 }
 
 static EGLContext
