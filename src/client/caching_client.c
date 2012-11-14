@@ -4073,6 +4073,27 @@ caching_client_eglSwapBuffers (void* client,
     return result;
 }
 
+static EGLContext
+caching_client_eglCreateContext (void *client,
+                                 EGLDisplay dpy,
+                                 EGLConfig config,
+                                 EGLContext share_context,
+                                 const EGLint* attrib_list)
+{
+    EGLContext result =
+        CACHING_CLIENT(client)->super_dispatch.eglCreateContext (client,
+                                                                 dpy,
+                                                                 config,
+                                                                 share_context,
+                                                                 attrib_list);
+    if (share_context == EGL_NO_CONTEXT || result == EGL_NO_CONTEXT)
+        return result;
+
+    egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
+    new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
+    return result;
+}
+
 static EGLBoolean
 caching_client_eglMakeCurrent (void* client,
                                EGLDisplay display,
@@ -4226,13 +4247,12 @@ caching_client_init (caching_client_t *client)
     client_init (&client->super);
     client->super_dispatch = client->super.dispatch;
 
-    mutex_lock (cached_gl_states_mutex);
     /* Initialize the cached GL states. */
+    mutex_lock (cached_gl_states_mutex);
     cached_gl_states ();
     mutex_unlock (cached_gl_states_mutex);
 
     client->super.post_hook = caching_client_post_hook;
-
     client->name_handler = name_handler_create ();
 
     #include "caching_client_dispatch_autogen.c"

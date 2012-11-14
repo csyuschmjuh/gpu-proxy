@@ -6,6 +6,7 @@
 #include "gles2_state.h"
 #include "thread_private.h"
 
+typedef struct egl_state egl_state_t;
 typedef struct egl_state {
     EGLContext           context;        /* active context, initial EGL_NO_CONTEXT */
     EGLDisplay           display;        /* active display, initial EGL_NO_SURFACE */
@@ -14,6 +15,7 @@ typedef struct egl_state {
                                          */
     EGLSurface           drawable;        /* active draw drawable, initial EGL_NO_SURFACE */
     EGLSurface           readable;        /* active read drawable, initial EGL_NO_SURFACE */
+    egl_state_t         *share_context;
 
     bool             active;
     bool             destroy_dpy;
