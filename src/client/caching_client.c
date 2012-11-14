@@ -68,7 +68,7 @@ _caching_client_destroy_state (client_t* client,
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
 }
 
-static void 
+static void
 _caching_client_clear_desroyed_surfaces (client_t *client)
 {
     egl_state_t *egl_state = client_get_current_state (CLIENT(client));
@@ -3959,24 +3959,17 @@ caching_client_eglDestroySurface (void* client,
 static EGLBoolean
 caching_client_eglReleaseThread (void* client)
 {
-
     INSTRUMENT();
 
-    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglReleaseThread (client);
+    if (CACHING_CLIENT(client)->super_dispatch.eglReleaseThread (client) == EGL_FALSE)
+        return EGL_FALSE;
 
-    if (result == EGL_TRUE) {
-        if (! CLIENT(client)->active_state)
-            return result;
-
-        egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-        _caching_client_make_current (client,
-                                      egl_state->display,
-                                      EGL_NO_SURFACE,
-                                      EGL_NO_SURFACE,
-                                      EGL_NO_CONTEXT);
-    }
-
-    return result;
+    _caching_client_make_current (client,
+                                  EGL_NO_DISPLAY,
+                                  EGL_NO_SURFACE,
+                                  EGL_NO_SURFACE,
+                                  EGL_NO_CONTEXT);
+    return EGL_TRUE;
 }
 
 static EGLBoolean
@@ -4136,16 +4129,15 @@ caching_client_eglMakeCurrent (void* client,
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);
-        _caching_client_make_current (client, display, draw, read, ctx);
-        return EGL_TRUE;
+    } else {
+        /* Otherwise we must do this synchronously. */
+        if (CACHING_CLIENT(client)->super_dispatch.eglMakeCurrent (client, display,
+                                                                   draw, read, ctx) == EGL_FALSE)
+            return EGL_FALSE; /* Don't do anything else if we fail. */
     }
 
-    /* We are switching to a new context or the same context with an unknown
-     * pair of surfaces, so we need to do this synchronously, to detect errors. */
-    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglMakeCurrent (client, display, draw, read, ctx);
-    if (result == EGL_TRUE)
-        _caching_client_make_current (client, display, draw, read, ctx);
-    return result;
+    _caching_client_make_current (client, display, draw, read, ctx);
+    return EGL_TRUE;
 }
 
 /* we specify those passthrough GL APIs that needs to set need_get_error */
