@@ -116,6 +116,32 @@ _caching_client_destroy_pending_surfaces (client_t *client)
 }
 
 static link_list_t *
+find_state_with_display_and_context (EGLDisplay display,
+                                     EGLContext context,
+                                     bool hold_mutex)
+{
+    if (hold_mutex)
+        mutex_lock (cached_gl_states_mutex);
+
+    link_list_t **states = cached_gl_states ();
+
+    link_list_t *current = *states;
+    while (current) {
+        egl_state_t *state = (egl_state_t *)current->data;
+        if (state->context == context && state->display == display) {
+            if (hold_mutex)
+                mutex_unlock (cached_gl_states_mutex);
+            return current;
+        }
+        current = current->next;
+    }
+
+    if (hold_mutex)
+        mutex_unlock (cached_gl_states_mutex);
+    return NULL;
+}
+
+static link_list_t *
 _caching_client_get_state (EGLDisplay dpy,
                            EGLSurface draw,
                            EGLSurface read,
@@ -133,17 +159,12 @@ _caching_client_get_state (EGLDisplay dpy,
         return *states;
     }
 
-    /* look for matching context in existing states */
-    while (list) {
+    /* We should already be holding the cached states mutex. */
+    list = find_state_with_display_and_context(dpy, ctx, false);
+    if (list) {
         egl_state_t *state = (egl_state_t *)list->data;
-
-        if (state->context == ctx &&
-            state->display == dpy) {
-            _caching_client_set_egl_states (state, dpy, draw, read, ctx);
-            state->active = true;
-            return list;
-        }
-        list = list->next;
+        _caching_client_set_egl_states (state, dpy, draw, read, ctx);
+        state->active = true;
     }
 
     /* we have not found a context match */
@@ -335,51 +356,6 @@ _caching_client_destroy_surface (client_t *client,
     }
 
     mutex_unlock (cached_gl_states_mutex);
-}
-
-static bool
-_match (EGLDisplay display,
-        EGLSurface drawable,
-        EGLSurface readable,
-        EGLContext context, 
-        link_list_t **state)
-{
-    egl_state_t *egl_state;
-    link_list_t **states = cached_gl_states ();
-    link_list_t *list = *states;
-    link_list_t *current;
-
-    mutex_lock (cached_gl_states_mutex);
-    if (! *states) {
-        mutex_unlock (cached_gl_states_mutex);
-        return false;
-    }
-
-    while (list != NULL) {
-        current = list;
-        list = list->next;
-        egl_state = (egl_state_t *)current->data;
-
-        /* we check matching of display, context, readable and drawable,
-         * and also whether destroy_dpy is true or not
-         * if destroy_dpy has been set, we should not return as it
-         * as a valid state
-         */
-        if (egl_state->display == display && 
-            egl_state->context == context &&
-            egl_state->drawable == drawable &&
-            egl_state->readable == readable &&
-            egl_state->active == false      && 
-            ! egl_state->destroy_dpy ) {
-                egl_state->active = true;
-                *state = current;
-                mutex_unlock (cached_gl_states_mutex);
-                return true;
-        }
-    }
-
-    mutex_unlock (cached_gl_states_mutex);
-    return false;
 }
 
 static void
@@ -4255,35 +4231,50 @@ caching_client_eglMakeCurrent (void* client,
     INSTRUMENT();
 
     /* First detect situations where we are not changing the context. */
-    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
+    egl_state_t *current_state = client_get_current_state (CLIENT(client));
 
     /* Switching from none to none, so this is a no-op. */
     bool switching_to_none = display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT;
-    if (switching_to_none && ! egl_state)
+    if (switching_to_none && ! current_state)
         return EGL_TRUE;
 
     /* Everything matches, so this is a no-op. */
-    bool display_and_context_match = egl_state && egl_state->display == display && egl_state->context == ctx;
+    bool display_and_context_match = current_state &&
+                                     current_state->display == display &&
+                                     current_state->context == ctx;
     if (display_and_context_match &&
-        egl_state->drawable == draw && egl_state->readable == read) {
+        current_state->drawable == draw && current_state->readable == read) {
         return EGL_TRUE;
     }
 
     /* TODO: This should really go somewhere else. */
-    if (!display_and_context_match && egl_state)
-        egl_state->active = false;
+    if (!display_and_context_match && current_state)
+        current_state->active = false;
 
     /* We aren't switching to none and we aren't switch to the same context
      * with different surfaces. We can do this asynchronous if we know that
      * the last time we used this context we used the same surfaces. */
-    link_list_t *matching_existing_context = NULL;
-    if (!display_and_context_match && !switching_to_none)
-        _match (display, draw, read, ctx, &matching_existing_context);
+    link_list_t *matching_state = NULL;
+    if (!display_and_context_match && !switching_to_none) {
+        matching_state = find_state_with_display_and_context (display, ctx, true);
+
+        /* We cannot activate this context asynchronously if we are switching
+         * read or write surfaces, if it's an active context or if we have
+         * queued destroying its display. */
+        if (matching_state) {
+            egl_state_t *matching_egl_state = (egl_state_t *) matching_state->data;
+            if (matching_egl_state->drawable != draw ||
+                matching_egl_state->readable != read ||
+                matching_egl_state->active ||
+                matching_egl_state->destroy_dpy)
+                matching_egl_state = NULL;
+            }
+    }
 
     /* If we are switching to none or we have previously activated this context
      * with this pair of surfaces, we can safely do this operation asynchronously.
      * We know it will succeed */
-    if (switching_to_none || matching_existing_context != NULL) {
+    if (switching_to_none || matching_state != NULL) {
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);
