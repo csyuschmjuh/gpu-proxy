@@ -78,7 +78,7 @@ _caching_client_clear_desroyed_surfaces (client_t *client)
         egl_state->drawable = EGL_NO_SURFACE;
 }
 
-static link_list_t *
+static egl_state_t *
 find_state_with_display_and_context (EGLDisplay display,
                                      EGLContext context,
                                      bool hold_mutex)
@@ -94,7 +94,7 @@ find_state_with_display_and_context (EGLDisplay display,
         if (state->context == context && state->display == display) {
             if (hold_mutex)
                 mutex_unlock (cached_gl_states_mutex);
-            return current;
+            return current->data;
         }
         current = current->next;
     }
@@ -109,11 +109,11 @@ _caching_client_get_or_create_state (EGLDisplay dpy,
                                      EGLContext ctx)
 {
     /* We should already be holding the cached states mutex. */
-    link_list_t *list = find_state_with_display_and_context(dpy, ctx, false);
-    if (list)
-        return (egl_state_t *)list->data;
+    egl_state_t *state = find_state_with_display_and_context(dpy, ctx, false);
+    if (state)
+        return state;
 
-    egl_state_t *state = egl_state_new ();
+    state = egl_state_new ();
     state->context = ctx;
     state->display = dpy;
     link_list_append (cached_gl_states (), state);
@@ -3992,14 +3992,13 @@ caching_client_eglDestroyContext (void* client,
     /* Destroy our cached version of this context. */
     mutex_lock (cached_gl_states_mutex);
 
-    link_list_t *list = find_state_with_display_and_context (dpy, ctx, false);
-    if (!list) {
+    egl_state_t *state = find_state_with_display_and_context (dpy, ctx, false);
+    if (!state) {
         mutex_unlock (cached_gl_states_mutex);
         return EGL_TRUE;
     }
 
-    egl_state_t *state = (egl_state_t *)list->data;
-    if (! state->active) 
+    if (! state->active)
         _caching_client_destroy_state (client, state);
     else
         state->destroy_ctx = true;
@@ -4114,21 +4113,20 @@ caching_client_eglMakeCurrent (void* client,
     /* We aren't switching to none and we aren't switch to the same context
      * with different surfaces. We can do this asynchronous if we know that
      * the last time we used this context we used the same surfaces. */
-    link_list_t *matching_state = NULL;
+    egl_state_t *matching_state = NULL;
     if (!display_and_context_match && !switching_to_none) {
         matching_state = find_state_with_display_and_context (display, ctx, true);
 
         /* We cannot activate this context asynchronously if we are switching
          * read or write surfaces, if it's an active context or if we have
          * queued destroying its display. */
-        if (matching_state) {
-            egl_state_t *matching_egl_state = (egl_state_t *) matching_state->data;
-            if (matching_egl_state->drawable != draw ||
-                matching_egl_state->readable != read ||
-                matching_egl_state->active ||
-                matching_egl_state->destroy_dpy)
-                matching_egl_state = NULL;
-            }
+        if (matching_state &&
+            ( matching_state->drawable != draw ||
+              matching_state->readable != read ||
+              matching_state->active ||
+              matching_state->destroy_dpy)) {
+            matching_state = NULL;
+         }
     }
 
     /* If we are switching to none or we have previously activated this context
