@@ -134,6 +134,8 @@ client_init (client_t *client)
     client->last_16k_index = 0;
     client->last_32k_index = 0;
 
+    client->active_state = NULL;
+
     client_start_server (client);
     initializing_client = false;
 }
@@ -145,7 +147,6 @@ client_shutdown_server (client_t *client)
     command->type = COMMAND_SHUTDOWN;
     client_run_command (command);
 }
-
 
 bool
 client_destroy (client_t *client)
@@ -286,27 +287,25 @@ client_get_unpack_alignment ()
     if (!client->active_state)
         return 4;
 
-    egl_state_t *egl_state = (egl_state_t *)client->active_state->data;
-    return egl_state->state.unpack_alignment;
+    return client->active_state->state.unpack_alignment;
 }
 
 bool
 client_has_valid_state (client_t *client)
 {
-    return client->active_state &&
-           ((egl_state_t *) client->active_state->data)->active;
+    return client->active_state && client->active_state->active;
 }
 
 egl_state_t *
 client_get_current_state (client_t *client)
 {
-    return client->active_state ? (egl_state_t *) client->active_state->data : 0;
+    return client->active_state;
 }
 
 gles2_state_t *
 client_get_current_gl_state (client_t *client)
 {
-    return &((egl_state_t *) client->active_state->data)->state;
+    return &client->active_state->state;
 }
 
 #include "client_autogen.c"

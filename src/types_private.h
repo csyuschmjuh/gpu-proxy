@@ -14,7 +14,7 @@ typedef struct link_list
 
 #define v_client_id_t pid_t
 
-link_list_t *
+void
 link_list_append (link_list_t **list, void *data);
 
 void
