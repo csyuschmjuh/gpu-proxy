@@ -132,40 +132,32 @@ _caching_client_make_current (client_t *client,
 {
     mutex_lock (cached_gl_states_mutex);
 
+    /* If we aren't switching to the "none" context, the new_state isn't null. */
+    egl_state_t *new_state = NULL;
+    if (context != EGL_NO_CONTEXT && display != EGL_NO_DISPLAY) {
+        new_state = _caching_client_get_or_create_state (display, context);
+        new_state->drawable = drawable;
+        new_state->readable = readable;
+        new_state->active = true;
+    }
 
-    egl_state_t *egl_state = (egl_state_t *) CLIENT(client)->active_state;
-
-    /* we are switching to None context */
-    if (context == EGL_NO_CONTEXT || display == EGL_NO_DISPLAY) {
-        if (! egl_state) { /* Switching from none to none */
-            mutex_unlock (cached_gl_states_mutex);
-            return;
-        }
-
-        egl_state->active = false;
-        _caching_client_clear_desroyed_surfaces (CLIENT (client));
-        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _caching_client_destroy_state (client, egl_state);
-
-        CLIENT(client)->active_state = NULL;
+    /* We aren't switching contexts, so do nothing. Note that we may have
+     * still updated the read and write surfaces above. */
+    egl_state_t *current_state = (egl_state_t *) CLIENT(client)->active_state;
+    if (current_state == new_state) {
         mutex_unlock (cached_gl_states_mutex);
         return;
     }
 
-    /* we are switch to one of the valid context */
-    if (egl_state) {
-        egl_state->active = false;
-        _caching_client_clear_desroyed_surfaces (CLIENT (client));
-        if (egl_state->destroy_dpy || egl_state->destroy_ctx)
-            _caching_client_destroy_state (client, egl_state);
-    }
+    CLIENT(client)->active_state = new_state;
 
-    /* get existing state or create a new one */
-    egl_state_t *state = _caching_client_get_or_create_state (display, context);
-    state->active = true;
-    state->drawable = drawable;
-    state->readable = readable;
-    CLIENT(client)->active_state = state;
+    /* Deactivate the old surface and clean up any previously destroyed bits of it. */
+    if (current_state) {
+        current_state->active = false;
+        _caching_client_clear_desroyed_surfaces (CLIENT (client));
+        if (current_state->destroy_dpy || current_state->destroy_ctx)
+            _caching_client_destroy_state (client, current_state);
+    }
 
     mutex_unlock (cached_gl_states_mutex);
 }
