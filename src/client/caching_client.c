@@ -4121,7 +4121,7 @@ caching_client_eglDestroyContext (void* client,
 
     EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglDestroyContext (client, dpy, ctx);
     if (result == GL_TRUE)
-        _caching_client_destroy_context (dpy, ctx, CLIENT(client)->active_state);
+        _caching_client_destroy_context (CLIENT(client), dpy, ctx);
     return result;
 }
 
