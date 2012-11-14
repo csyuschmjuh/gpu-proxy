@@ -60,10 +60,23 @@ static void
 _caching_client_destroy_state (client_t* client,
                                egl_state_t *egl_state)
 {
+    egl_state->contexts_sharing--;
+
+    /* Wait until we've deleted the children sharing us to delete ourself.*/
+    if (egl_state->contexts_sharing > 0)
+        return;
+
+    egl_state_t* share_context = egl_state->share_context;
+    if (share_context) {
+        share_context->contexts_sharing--;
+        _caching_client_destroy_state (client, share_context);
+    }
+
+    /* We don't use egl_state_get_texture_cache here because we don't want to
+     * delete a sharing context's texture when we are cleaning up a client context. */
     HashWalk (egl_state->texture_cache,
               delete_texture_from_name_handler,
               CACHING_CLIENT(client)->name_handler);
-
     egl_state_destroy (egl_state);
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
 }
@@ -365,7 +378,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
 
     /* look up in cache */
     if (texture != 0) {
-        tex = (texture_t *) HashLookup (state->texture_cache, texture);
+        tex = (texture_t *) HashLookup (egl_state_get_texture_cache (state), texture);
         if (! tex) {
             caching_client_glSetError (client, GL_INVALID_OPERATION);
             return;
@@ -1761,7 +1774,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     state = client_get_current_state (CLIENT (client));
     for (i = 0; i < n; i++) {
         texture_t *tex = _create_texture (textures[i]);
-        HashInsert (state->texture_cache, textures[i], tex);
+        HashInsert (egl_state_get_texture_cache (state), textures[i], tex);
     }
 }
 
@@ -2631,9 +2644,7 @@ caching_client_glIsTexture (void *client, GLuint texture)
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    texture_t *tex;
-
-    tex = (texture_t *)HashLookup (state->texture_cache, texture);
+    texture_t *tex = (texture_t *)HashLookup (egl_state_get_texture_cache (state), texture);
     if (! tex)
         return GL_FALSE;
 
@@ -3122,7 +3133,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
     else
         tex_id = state->texture_binding[1];
 
-    tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
+    tex = (texture_t *)HashLookup (egl_state_get_texture_cache (state), tex_id);
     if (! tex)
         caching_client_set_needs_get_error (CLIENT (client));
     else {
@@ -3187,7 +3198,7 @@ caching_client_glTexSubImage2D (void* client,
     else
         tex_id = state->texture_binding[1];
 
-    tex = (texture_t *)HashLookup (state->texture_cache, tex_id);
+    tex = (texture_t *)HashLookup (egl_state_get_texture_cache (state), tex_id);
     if (! tex)
         caching_client_glSetError (client, GL_INVALID_OPERATION);
     else {
@@ -4091,6 +4102,7 @@ caching_client_eglCreateContext (void *client,
 
     egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
     new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
+    new_state->share_context->contexts_sharing++;
     return result;
 }
 

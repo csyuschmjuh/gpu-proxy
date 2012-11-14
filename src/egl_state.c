@@ -11,6 +11,9 @@ egl_state_init (egl_state_t *state)
     state->drawable = EGL_NO_SURFACE;
     state->readable = EGL_NO_SURFACE;
 
+    state->share_context = NULL;
+    state->contexts_sharing = 0;
+
     state->active = false;
 
     state->destroy_dpy = false;
@@ -165,6 +168,7 @@ egl_state_destroy (egl_state_t *state)
     DeleteHashTable (state->texture_cache);
     state->texture_cache = NULL;
     state->programs = NULL;
+
 }
 
 link_list_t **
@@ -172,4 +176,12 @@ cached_gl_states ()
 {
     static link_list_t *states = NULL;
     return &states;
+}
+
+HashTable *
+egl_state_get_texture_cache (egl_state_t *egl_state)
+{
+    if (egl_state->share_context)
+        return egl_state->share_context->texture_cache;
+    return egl_state->texture_cache;
 }
