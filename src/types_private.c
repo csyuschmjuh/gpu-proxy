@@ -25,6 +25,33 @@ link_list_append (link_list_t **list, void *data)
 }
 
 void
+link_list_delete_first_entry_matching_data (link_list_t **list, void *data)
+{
+    link_list_t *current = *list;
+    while (current) {
+        if (current->data == data) {
+            link_list_delete_element (list, current);
+            return;
+        }
+    }
+}
+
+void
+link_list_delete_element (link_list_t **list, link_list_t *element)
+{
+    if (*list == element) {
+        *list = element->next;
+    } else {
+        element->prev->next = element->next;
+        if (element->next)
+            element->next->prev = element->prev;
+    }
+
+    free (element->data);
+    free (element);
+}
+
+void
 link_list_free (link_list_t* array)
 {
     if (!array)
@@ -34,6 +61,8 @@ link_list_free (link_list_t* array)
     while (array) {
         link_list_t *current = array;
         array = array->next;
+        /* We should probably provide a delete function the same way we do
+         * for our hash table implementation. */
         free (current->data);
         free (current);
     }

@@ -18,6 +18,12 @@ link_list_t *
 link_list_append (link_list_t **list, void *data);
 
 void
+link_list_delete_first_entry_matching_data (link_list_t **list, void *data);
+
+void
+link_list_delete_element (link_list_t **list, link_list_t *element);
+
+void
 link_list_free (link_list_t *array);
 
 #endif /* GPUPROCESS_TYPES_PRIVATE_H */

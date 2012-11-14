@@ -82,26 +82,13 @@ _caching_client_remove_state (client_t* client,
                               link_list_t **state)
 {
     egl_state_t *egl_state = (egl_state_t *) (*state)->data;
-    link_list_t **states = cached_gl_states ();
-
-    if (*state == *states) {
-        *states = (*states)->next;
-        if (*states != NULL)
-            (*states)->prev = NULL;
-    }
-
-    if ((*state)->prev)
-        (*state)->prev->next = (*state)->next;
-    if ((*state)->next)
-        (*state)->next->prev = (*state)->prev;
 
     HashWalk (egl_state->state.texture_cache,
               delete_texture_from_name_handler,
               CACHING_CLIENT(client)->name_handler);
 
     egl_state_destroy (egl_state);
-    free (egl_state);
-    free (*state);
+    link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
     *state = NULL;
 }
 
@@ -852,25 +839,21 @@ caching_client_glDeleteProgram (void *client,
 {
     INSTRUMENT();
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    link_list_t *program_list = state->programs;
-    program_t *cached_program; 
-    link_list_t *cached_program_list = NULL;
 
-    while (program_list) {
-        cached_program = (program_t *)program_list->data;
-        if (cached_program->id == program) {
-            cached_program_list = program_list;
+    link_list_t *cached_program_item = state->programs;
+    program_t *cached_program = NULL;
+    while (cached_program_item) {
+        cached_program = (program_t *) cached_program_item->data;
+        if (cached_program->id == program)
             break;
-        }
-
-        program_list = program_list->next;
+        cached_program_item = cached_program_item->next;
     }
-    
-    if (! cached_program_list) {        
+
+    if (! cached_program_item) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    
+
     CACHING_CLIENT(client)->super_dispatch.glDeleteProgram (client, program);
 
     if (cached_program->id == state->current_program) {
@@ -878,21 +861,10 @@ caching_client_glDeleteProgram (void *client,
         return;
     }
 
-    program_list = cached_program_list->prev;
-    if (program_list)
-        program_list->next = cached_program_list->next;
-    
-    program_list = cached_program_list->next;
-    if (program_list)
-        program_list->prev = cached_program_list->prev;
-
     DeleteHashTable (cached_program->attrib_location_cache);
     DeleteHashTable (cached_program->uniform_location_cache);
-    free (cached_program);
-    if (state->programs == cached_program_list)
-        state->programs = cached_program_list->next;
-    free (cached_program_list);
-    
+
+    link_list_delete_element (&state->programs, cached_program_item);
 }
 
 static GLuint
