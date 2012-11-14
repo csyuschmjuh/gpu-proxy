@@ -3,25 +3,16 @@
 #include <stdlib.h>
 
 link_list_t *
-link_list_new (void *data)
+link_list_append (link_list_t **list, void *data)
 {
-    link_list_t *list = (link_list_t *) malloc (sizeof (link_list_t));
-    list->data = data;
-    list->prev = NULL;
-    list->next = NULL;
-
-    return list;
-}
-
-void
-link_list_append (link_list_t **list, link_list_t *new_element)
-{
-    if (!new_element)
-        return;
+    link_list_t *new_element = (link_list_t *) malloc (sizeof (link_list_t));
+    new_element->data = data;
+    new_element->next = NULL;
+    new_element->prev = NULL;
 
     if (!*list) {
         *list = new_element;
-        return;
+        return new_element;
     }
 
     link_list_t *current = *list;
@@ -30,6 +21,7 @@ link_list_append (link_list_t **list, link_list_t *new_element)
 
     new_element->prev = current;
     current->next = new_element;
+    return new_element;
 }
 
 void
