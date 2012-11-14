@@ -154,8 +154,7 @@ _caching_client_get_state (EGLDisplay dpy,
         state = (egl_state_t *)list->data;
     } else {
         state = egl_state_new ();
-        list = link_list_new (state);
-        link_list_append (cached_gl_states (), list);
+        list = link_list_append (cached_gl_states (), state);
     }
 
     _caching_client_set_egl_states (state, dpy, draw, read, ctx);
@@ -832,7 +831,6 @@ caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    link_list_t *new_program_list; 
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
     if (result == 0)
@@ -843,8 +841,7 @@ caching_client_glCreateProgram (void* client)
     new_program->mark_for_deletion = false;
     new_program->uniform_location_cache = NewHashTable(free);
     new_program->attrib_location_cache = NewHashTable(free);
-    new_program_list = link_list_new (new_program);
-    link_list_append (&state->programs, new_program_list);
+    link_list_append (&state->programs, new_program);
 
     return result;
 }
