@@ -99,6 +99,9 @@ typedef struct egl_state {
     EGLSurface           drawable;        /* active draw drawable, initial EGL_NO_SURFACE */
     EGLSurface           readable;        /* active read drawable, initial EGL_NO_SURFACE */
     egl_state_t         *share_context;
+    size_t              contexts_sharing; /* Number of contexts using this one as a sharing context.
+                                             This is always at least one, since a context shares with itself
+                                             by default. Thus it's a hackish reference count. */
 
     bool             active;
     bool             destroy_dpy;
@@ -305,8 +308,6 @@ typedef struct egl_state {
     GLint        texture_max_level;
 
     HashTable    *texture_cache;
-
-
 } egl_state_t;
 
 private void
@@ -320,5 +321,8 @@ egl_state_destroy (egl_state_t *egl_state);
 
 private link_list_t **
 cached_gl_states ();
+
+private HashTable *
+egl_state_get_texture_cache (egl_state_t *egl_state);
 
 #endif /* GPUPROCESS_EGL_STATE_H */
