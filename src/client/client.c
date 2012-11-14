@@ -250,7 +250,7 @@ client_get_unpack_alignment ()
     if (!client->active_state)
         return 4;
 
-    return client->active_state->state.unpack_alignment;
+    return client->active_state->unpack_alignment;
 }
 
 bool
@@ -263,12 +263,6 @@ egl_state_t *
 client_get_current_state (client_t *client)
 {
     return client->active_state;
-}
-
-gles2_state_t *
-client_get_current_gl_state (client_t *client)
-{
-    return &client->active_state->state;
 }
 
 #include "client_autogen.c"

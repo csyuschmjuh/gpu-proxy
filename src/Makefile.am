@@ -5,7 +5,7 @@ libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
-        -Werror \
+	-Werror \
 	-Wall \
 	-Igenerated \
 	-Iclient \
@@ -61,8 +61,6 @@ libGPUProcess_la_SOURCES += \
 	dispatch_table.h \
 	egl_state.c \
 	egl_state.h \
-	gles2_state.c \
-	gles2_state.h \
 	util/gles2_utils.c \
 	util/gles2_utils.h
 
