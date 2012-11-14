@@ -14,18 +14,22 @@ link_list_new (void *data)
 }
 
 void
-link_list_append (link_list_t *list, link_list_t *element)
+link_list_append (link_list_t **list, link_list_t *new_element)
 {
-    link_list_t *last_node = list;
-
-    if (! last_node || ! element)
+    if (!new_element)
         return;
 
-    while (last_node->next != NULL)
-        last_node = last_node->next;
+    if (!*list) {
+        *list = new_element;
+        return;
+    }
 
-    element->prev = last_node;
-    last_node->next = element;
+    link_list_t *current = *list;
+    while (current->next != NULL)
+        current = current->next;
+
+    new_element->prev = current;
+    current->next = new_element;
 }
 
 void

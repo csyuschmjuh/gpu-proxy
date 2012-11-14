@@ -147,36 +147,20 @@ _caching_client_get_state (EGLDisplay dpy,
                            EGLSurface read,
                            EGLContext ctx)
 {
-    link_list_t *new_list;
-    link_list_t **states = cached_gl_states ();
-    link_list_t *list = *states;
-
-    if (! *states) {
-        egl_state_t *new_state = egl_state_new ();
-        _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-        new_state->active = true;
-        *states = link_list_new (new_state);
-        return *states;
-    }
-
     /* We should already be holding the cached states mutex. */
-    list = find_state_with_display_and_context(dpy, ctx, false);
+    link_list_t *list = find_state_with_display_and_context(dpy, ctx, false);
+    egl_state_t *state = NULL;
     if (list) {
-        egl_state_t *state = (egl_state_t *)list->data;
-        _caching_client_set_egl_states (state, dpy, draw, read, ctx);
-        state->active = true;
+        state = (egl_state_t *)list->data;
+    } else {
+        state = egl_state_new ();
+        list = link_list_new (state);
+        link_list_append (cached_gl_states (), list);
     }
 
-    /* we have not found a context match */
-    egl_state_t *new_state = egl_state_new ();
-    _caching_client_set_egl_states (new_state, dpy, draw, read, ctx); 
-
-    list = *states;
-    new_state->active = true;
-    new_list = link_list_new (new_state);
-    link_list_append (list, new_list);
-
-    return new_list;
+    _caching_client_set_egl_states (state, dpy, draw, read, ctx);
+    state->active = true;
+    return list;
 }
 
 /* the client first calls eglTerminate (display),
@@ -848,10 +832,7 @@ caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
     gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
-    link_list_t *program_list = state->programs;
     link_list_t *new_program_list; 
-    
-    /* FIXME: client side create program */
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
     if (result == 0)
@@ -863,12 +844,8 @@ caching_client_glCreateProgram (void* client)
     new_program->uniform_location_cache = NewHashTable(free);
     new_program->attrib_location_cache = NewHashTable(free);
     new_program_list = link_list_new (new_program);
-    
-    if (program_list)
-        link_list_append (program_list, new_program_list);
-    else
-        state->programs = new_program_list;
-  
+    link_list_append (&state->programs, new_program_list);
+
     return result;
 }
 
