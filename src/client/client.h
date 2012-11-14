@@ -112,7 +112,4 @@ client_has_valid_state (client_t *client);
 private egl_state_t *
 client_get_current_state (client_t *client);
 
-private gles2_state_t *
-client_get_current_gl_state (client_t *client);
-
 #endif /* CLIENT_H */

@@ -19,7 +19,7 @@ static bool
 caching_client_does_index_overflow (void* client,
                                     GLuint index)
 {
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (index <= state->max_vertex_attribs)
         return false;
 
@@ -39,13 +39,13 @@ caching_client_does_index_overflow (void* client,
 static void
 caching_client_set_needs_get_error (client_t *client)
 {
-    client_get_current_gl_state (CLIENT (client))->need_get_error = true;
+    client_get_current_state (CLIENT (client))->need_get_error = true;
 }
 
 static void
 caching_client_reset_set_needs_get_error (client_t *client)
 {
-    client_get_current_gl_state (CLIENT (client))->need_get_error = false;
+    client_get_current_state (CLIENT (client))->need_get_error = false;
 }
 
 void
@@ -60,7 +60,7 @@ static void
 _caching_client_destroy_state (client_t* client,
                                egl_state_t *egl_state)
 {
-    HashWalk (egl_state->state.texture_cache,
+    HashWalk (egl_state->texture_cache,
               delete_texture_from_name_handler,
               CACHING_CLIENT(client)->name_handler);
 
@@ -218,8 +218,8 @@ static void
 caching_client_glSetError (void* client, GLenum error)
 {
     egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-    if (egl_state->active && egl_state->state.error == GL_NO_ERROR)
-        egl_state->state.error = error;
+    if (egl_state->active && egl_state->error == GL_NO_ERROR)
+        egl_state->error = error;
 }
 
 /* GLES2 core profile API */
@@ -231,7 +231,7 @@ caching_client_glActiveTexture (void* client,
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->active_texture == texture)
         return;
     else if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
@@ -269,7 +269,7 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (target == GL_ARRAY_BUFFER) {
         if (state->array_buffer_binding == buffer)
             return;
@@ -303,7 +303,7 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (target == GL_FRAMEBUFFER &&
         state->framebuffer_binding == framebuffer)
             return;
@@ -334,7 +334,7 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
     /* FIXME: should we save it, it will be invalid if the
      * renderbuffer is invalid 
      */
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     state->renderbuffer_binding = renderbuffer;
 }
 
@@ -345,7 +345,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (target == GL_TEXTURE_2D &&
         state->texture_binding[0] == texture)
         return;
@@ -390,7 +390,7 @@ caching_client_glBlendColor (void* client, GLclampf red,
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->blend_color[0] == red &&
         state->blend_color[1] == green &&
         state->blend_color[2] == blue &&
@@ -410,7 +410,7 @@ caching_client_glBlendEquation (void* client, GLenum mode)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->blend_equation[0] == mode &&
         state->blend_equation[1] == mode)
         return;
@@ -433,7 +433,7 @@ caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum mod
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->blend_equation[0] == modeRGB &&
         state->blend_equation[1] == modeAlpha)
         return;
@@ -459,7 +459,7 @@ caching_client_glBlendFunc (void* client, GLenum sfactor, GLenum dfactor)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->blend_src[0] == sfactor &&
         state->blend_src[1] == sfactor &&
         state->blend_dst[0] == dfactor &&
@@ -512,7 +512,7 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->blend_src[0] == srcRGB &&
         state->blend_src[1] == srcAlpha &&
         state->blend_dst[0] == dstRGB &&
@@ -625,7 +625,7 @@ caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->color_clear_value[0] == red &&
         state->color_clear_value[1] == green &&
         state->color_clear_value[2] == blue &&
@@ -645,7 +645,7 @@ caching_client_glClearDepthf (void* client, GLclampf depth)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->depth_clear_value == depth)
         return;
 
@@ -659,7 +659,7 @@ caching_client_glClearStencil (void* client, GLint s)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->stencil_clear_value == s)
         return;
 
@@ -673,7 +673,7 @@ caching_client_glColorMask (void* client, GLboolean red, GLboolean green,
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->color_writemask[0] == red &&
         state->color_writemask[1] == green &&
         state->color_writemask[2] == blue &&
@@ -692,7 +692,7 @@ static GLuint
 caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
     if (result == 0)
@@ -713,7 +713,7 @@ caching_client_glDeleteProgram (void *client,
                                 GLuint program)
 {
     INSTRUMENT();
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
 
     link_list_t *cached_program_item = state->programs;
     program_t *cached_program = NULL;
@@ -765,7 +765,7 @@ caching_client_glCullFace (void* client, GLenum mode)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->cull_face_mode == mode)
         return;
 
@@ -788,7 +788,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -840,7 +840,7 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
 
     int i;
     for (i = 0; i < n; i++) {
-        gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+        egl_state_t *state = client_get_current_state (CLIENT (client));
         if (state->framebuffer_binding == framebuffers[i]) {
             state->framebuffer_binding = 0;
             break;
@@ -883,7 +883,7 @@ caching_client_glDepthFunc (void* client, GLenum func)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->depth_func == func)
         return;
 
@@ -908,7 +908,7 @@ caching_client_glDepthMask (void* client, GLboolean flag)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->depth_writemask == flag)
         return;
 
@@ -921,7 +921,7 @@ caching_client_glDepthRangef (void* client, GLclampf nearVal, GLclampf farVal)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->depth_range[0] == nearVal &&
         state->depth_range[1] == farVal)
         return;
@@ -939,7 +939,7 @@ caching_client_glSetCap (void* client, GLenum cap, GLboolean enable)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (cap) {
     case GL_BLEND:
         if (state->blend != enable) {
@@ -1025,7 +1025,7 @@ caching_client_glEnable (void* client, GLenum cap)
 static void
 caching_client_glSetVertexAttribArray (void* client,
                                        GLuint index,
-                                       gles2_state_t *state,
+                                       egl_state_t *state,
                                        GLboolean enable)
 {
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
@@ -1147,7 +1147,7 @@ static void
 caching_client_glDisableVertexAttribArray (void* client, GLuint index)
 {
     INSTRUMENT();
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     caching_client_glSetVertexAttribArray (client, index, state, GL_FALSE);
 }
 
@@ -1155,7 +1155,7 @@ static void
 caching_client_glEnableVertexAttribArray (void* client, GLuint index)
 {
     INSTRUMENT();
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     caching_client_glSetVertexAttribArray (client, index, state, GL_TRUE);
 }
 
@@ -1188,7 +1188,7 @@ _create_data_array (vertex_attrib_t *attrib, int count)
 static void
 caching_client_clear_attribute_list_data (client_t *client)
 {
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
 
     int i = -1;
@@ -1216,7 +1216,7 @@ prepend_element_to_list (link_list_t **list,
 static bool
 client_has_vertex_attrib_array_set (client_t *client)
 {
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
@@ -1232,7 +1232,7 @@ static size_t
 caching_client_vertex_attribs_array_size (client_t *client,
                                           size_t count)
 {
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
 
     vertex_attrib_t *last_pointer = attrib_list->last_index_pointer;
@@ -1259,7 +1259,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
@@ -1371,7 +1371,7 @@ caching_client_glDrawArrays (void* client,
 
     /* If vertex array binding is 0 and we have not bound a vertex attrib pointer, we
      * don't need to do anything. */
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1551,7 +1551,7 @@ caching_client_glDrawElements (void* client,
     }
 
     /* If we have not bound any attribute data then do not actually execute anything. */
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1640,7 +1640,7 @@ caching_client_glFrontFace (void* client, GLenum mode)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->front_face == mode)
         return;
 
@@ -1735,7 +1735,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 {
     GLuint *server_textures;
     int i;
-    gles2_state_t *state;
+    egl_state_t *state;
 
     INSTRUMENT();
 
@@ -1758,7 +1758,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, server_textures);
 
     /* add textures to cache */
-    state = client_get_current_gl_state (CLIENT (client));
+    state = client_get_current_state (CLIENT (client));
     for (i = 0; i < n; i++) {
         texture_t *tex = _create_texture (textures[i]);
         HashInsert (state->texture_cache, textures[i], tex);
@@ -1826,7 +1826,7 @@ caching_client_glGetAttribLocation (void* client, GLuint program,
 
     GLuint *location_pointer;
     GLint result;
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     GLuint *data;
     link_list_t *program_list = state->programs;
     program_t *saved_program;
@@ -1863,7 +1863,7 @@ caching_client_glLinkProgram (void* client,
                               GLuint program)
 {
     command_t *command = client_get_space_for_command (COMMAND_GLLINKPROGRAM);
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     link_list_t *program_list = state->programs;
     program_t *saved_program;
 
@@ -1891,7 +1891,7 @@ caching_client_glGetUniformLocation (void* client, GLuint program,
 
     GLuint *location_pointer;
     GLint result;
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     GLuint *data;
     link_list_t *program_list = state->programs;
     program_t *saved_program;
@@ -1928,7 +1928,7 @@ caching_client_glGetBooleanv (void* client, GLenum pname, GLboolean *params)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (pname) {
     case GL_BLEND:
         *params = state->blend;
@@ -1977,7 +1977,7 @@ caching_client_glGetFloatv (void* client, GLenum pname, GLfloat *params)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (pname) {
     case GL_BLEND_COLOR:
         memcpy (params, state->blend_color, sizeof (GLfloat) * 4);
@@ -2033,7 +2033,7 @@ caching_client_glGetIntegerv (void* client,
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2219,7 +2219,7 @@ caching_client_glGetError (void* client)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state->need_get_error) {
         error = state->error;
         state->error = GL_NO_ERROR;
@@ -2325,7 +2325,7 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         return;
     }
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     active_texture_index = state->active_texture - GL_TEXTURE0;
     if (target == GL_TEXTURE_2D)
         target_index = 0;
@@ -2396,7 +2396,7 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2507,7 +2507,7 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
 
     *pointer = 0;
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2544,7 +2544,7 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (target == GL_GENERATE_MIPMAP_HINT &&
         state->generate_mipmap_hint == mode)
         return;
@@ -2572,7 +2572,7 @@ caching_client_glIsEnabled (void* client, GLenum cap)
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (cap) {
     case GL_BLEND:
         result = state->blend;
@@ -2613,7 +2613,7 @@ caching_client_glLineWidth (void* client, GLfloat width)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->line_width == width)
         return;
 
@@ -2630,7 +2630,7 @@ static GLboolean
 caching_client_glIsTexture (void *client, GLuint texture)
 {
     INSTRUMENT();
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     texture_t *tex;
 
     tex = (texture_t *)HashLookup (state->texture_cache, texture);
@@ -2645,7 +2645,7 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if ((pname == GL_PACK_ALIGNMENT                &&
          state->pack_alignment == param) ||
         (pname == GL_UNPACK_ALIGNMENT              &&
@@ -2678,7 +2678,7 @@ caching_client_glPolygonOffset (void* client, GLfloat factor, GLfloat units)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->polygon_offset_factor == factor &&
         state->polygon_offset_units == units)
         return;
@@ -2694,7 +2694,7 @@ caching_client_glSampleCoverage (void* client, GLclampf value, GLboolean invert)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (value == state->sample_coverage_value &&
         invert == state->sample_coverage_invert)
         return;
@@ -2710,7 +2710,7 @@ caching_client_glScissor (void* client, GLint x, GLint y, GLsizei width, GLsizei
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (x == state->scissor_box[0]     &&
         y == state->scissor_box[1]     &&
         width == state->scissor_box[2] &&
@@ -2738,7 +2738,7 @@ caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! (face == GL_FRONT ||
            face == GL_BACK ||
            face == GL_FRONT_AND_BACK)) {
@@ -2822,7 +2822,7 @@ caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
         return;
     }
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (face) {
     case GL_FRONT:
         if (mask != state->stencil_writemask) {
@@ -2905,7 +2905,7 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
         return;
     }
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (face) {
     case GL_FRONT:
         if (sfail != state->stencil_fail             ||
@@ -2965,7 +2965,7 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
 
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     active_texture_index = state->active_texture - GL_TEXTURE0;
 
     if (! (target == GL_TEXTURE_2D || 
@@ -3076,7 +3076,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
 {
     texture_t *tex;
     GLuint tex_id;
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
 
     INSTRUMENT();
 
@@ -3150,7 +3150,7 @@ caching_client_glTexSubImage2D (void* client,
 {
     texture_t *tex;
     GLuint tex_id;
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
 
     INSTRUMENT();
 
@@ -3262,7 +3262,7 @@ caching_client_glUseProgram (void* client, GLuint program)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     link_list_t *program_list = state->programs;
     program_t *saved_program;
     bool found = false;
@@ -3436,7 +3436,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     int count;
     GLint bound_buffer = 0;
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -3553,7 +3553,7 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->viewport[0] == x     &&
         state->viewport[1] == y     &&
         state->viewport[2] == width &&
@@ -3680,7 +3680,7 @@ caching_client_glBindVertexArrayOES (void* client, GLuint array)
 {
     INSTRUMENT();
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->vertex_array_binding == array)
         return;
 
@@ -3704,7 +3704,7 @@ caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *a
     CACHING_CLIENT(client)->super_dispatch.glDeleteVertexArraysOES (client, n, arrays);
 
     /* matching vertex_array_binding ? */
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     int i;
     for (i = 0; i < n; i++) {
         if (arrays[i] == state->vertex_array_binding) {
@@ -3736,7 +3736,7 @@ caching_client_glIsVertexArrayOES (void* client, GLuint array)
 
     result = CACHING_CLIENT(client)->super_dispatch.glIsVertexArrayOES (client, array);
 
-    gles2_state_t *state = client_get_current_gl_state (CLIENT (client));
+    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (result == GL_FALSE && 
         state->vertex_array_binding == array)
         state->vertex_array_binding = 0;
