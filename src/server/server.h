@@ -26,7 +26,6 @@ struct _server {
     thread_t thread;
     bool threaded;
 
-    HashTable *name_mapping;
     void (*command_post_hook)(server_t *server, command_t *command);
 
     mutex_t* signal_mutex;
@@ -45,6 +44,9 @@ server_destroy (server_t *server);
 
 private void
 server_start_work_loop (server_t *server);
+
+private void
+server_custom_init (void);
 
 #endif /* GPUPROCESS_SERVER_H */
 
