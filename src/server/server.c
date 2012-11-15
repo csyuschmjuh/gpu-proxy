@@ -85,16 +85,15 @@ server_init (server_t *server,
     server->command_post_hook = NULL;
 
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
-    server->name_mapping = NewHashTable(free);
 
     server_fill_command_handler_table (server);
     server_add_custom_command_handlers (server);
+    server_custom_init();
 }
 
 bool
 server_destroy (server_t *server)
 {
-    DeleteHashTable (server->name_mapping);
     free (server);
     return true;
 }
