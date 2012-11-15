@@ -168,7 +168,6 @@ egl_state_destroy (egl_state_t *state)
     DeleteHashTable (state->texture_cache);
     state->texture_cache = NULL;
     state->programs = NULL;
-
 }
 
 link_list_t **

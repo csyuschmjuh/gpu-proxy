@@ -4,6 +4,7 @@
 #include "caching_client.h"
 #include "caching_client_private.h"
 #include "command.h"
+#include "name_handler.h"
 
 #include <sys/prctl.h>
 #include <sched.h>
@@ -44,6 +45,7 @@ on_client_thread ()
         return client_thread;
     client_thread = true;
     initialized = true;
+    name_handler_init ();
     mutex_unlock (client_thread_mutex);
 
     return client_thread;
@@ -121,7 +123,6 @@ client_init (client_t *client)
 
     client_fill_dispatch_table (&client->dispatch);
 
-    client->name_handler = name_handler_create ();
     client->token = 0;
 
     pthread_mutex_init (&client->signal_mutex, NULL);
@@ -158,7 +159,6 @@ client_destroy (client_t *client)
     pthread_mutex_destroy (&client->signal_mutex);
     pthread_cond_destroy (&client->signal);
 
-    name_handler_destroy (client->name_handler);
     free (client);
 
     return true;
@@ -181,12 +181,6 @@ client_destroy_thread_local ()
 
     caching_client_destroy (CACHING_CLIENT (thread_local_client));
     thread_local_client = NULL;
-}
-
-name_handler_t *
-client_get_name_handler ()
-{
-    return client_get_thread_local ()->name_handler;
 }
 
 command_t *

@@ -5,6 +5,7 @@
 #include "client.h"
 #include "command.h"
 #include "egl_state.h"
+#include "name_handler.h"
 #include "types_private.h"
 #include <EGL/eglext.h>
 #include <EGL/egl.h>
@@ -53,7 +54,7 @@ delete_texture_from_name_handler (GLuint key,
                                   void *data,
                                   void *userData)
 {
-    name_handler_delete_names (CACHING_CLIENT(userData)->name_handler, 1, data);
+    name_handler_delete_names (1, data);
 }
 
 static void
@@ -76,7 +77,7 @@ _caching_client_destroy_state (client_t* client,
      * delete a sharing context's texture when we are cleaning up a client context. */
     HashWalk (egl_state->texture_cache,
               delete_texture_from_name_handler,
-              CACHING_CLIENT(client)->name_handler);
+              NULL);
     egl_state_destroy (egl_state);
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
 }
@@ -808,7 +809,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteBuffers (client, n, buffers);
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, buffers);
+    name_handler_delete_names (n, buffers);
 
     /* check array_buffer_binding and element_array_buffer_binding */
     for (i = 0; i < n; i++) {
@@ -837,18 +838,19 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
 {
     INSTRUMENT();
 
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, framebuffers);
+    name_handler_delete_names (n, framebuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
     int i;
     for (i = 0; i < n; i++) {
-        egl_state_t *state = client_get_current_state (CLIENT (client));
         if (state->framebuffer_binding == framebuffers[i]) {
             state->framebuffer_binding = 0;
             break;
@@ -866,7 +868,7 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
         return;
     }
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, renderbuffers);
+    name_handler_delete_names (n, renderbuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
 }
@@ -883,7 +885,7 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
 
-    name_handler_delete_names (CACHING_CLIENT(client)->name_handler, n, textures);
+    name_handler_delete_names (n, textures);
 }
 
 static void
@@ -1674,7 +1676,7 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, buffers);
+    name_handler_alloc_names (n, buffers);
 
     server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
     for (i=0; i<n; i++)
@@ -1696,7 +1698,7 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, framebuffers);
+    name_handler_alloc_names (n, framebuffers);
 
     server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
     for (i=0; i<n; i++)
@@ -1715,7 +1717,7 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, renderbuffers);
+    name_handler_alloc_names (n, renderbuffers);
 
     GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
     int i;
@@ -1743,16 +1745,18 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 {
     GLuint *server_textures;
     int i;
-    egl_state_t *state;
+
 
     INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
 
-    name_handler_alloc_names (CACHING_CLIENT(client)->name_handler, n, textures);
+    name_handler_alloc_names (n, textures);
 
     server_textures = (GLuint *)malloc (n * sizeof (GLuint));
     for (i = 0; i < n; i++)
@@ -1766,7 +1770,6 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, server_textures);
 
     /* add textures to cache */
-    state = client_get_current_state (CLIENT (client));
     for (i = 0; i < n; i++) {
         texture_t *tex = _create_texture (textures[i]);
         HashInsert (egl_state_get_texture_cache (state), textures[i], tex);
@@ -4260,7 +4263,6 @@ caching_client_init (caching_client_t *client)
     mutex_unlock (cached_gl_states_mutex);
 
     client->super.post_hook = caching_client_post_hook;
-    client->name_handler = name_handler_create ();
 
     #include "caching_client_dispatch_autogen.c"
 }
@@ -4276,6 +4278,5 @@ caching_client_new ()
 void
 caching_client_destroy (caching_client_t *client)
 {
-    name_handler_destroy (client->name_handler);
     client_destroy ((client_t *)client);
 }

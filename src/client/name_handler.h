@@ -15,25 +15,14 @@
 #endif
 #include <stdlib.h>
 
-/* FIXME: We have to allow to reuse names for some cases and. */
-typedef struct name_handler {
-    unsigned int last_name;
-    HashTable *used_names;
-} name_handler_t;
-
-private name_handler_t *
-name_handler_create ();
+private void
+name_handler_init ();
 
 private void
-name_handler_destroy (name_handler_t *name_handler);
-
-private void
-name_handler_alloc_names (name_handler_t *name_handler,
-                          GLsizei n,
+name_handler_alloc_names (GLsizei n,
                           GLuint *buffers);
-void
-name_handler_delete_names (name_handler_t *name_handler,
-                           GLsizei n,
+private void
+name_handler_delete_names (GLsizei n,
                            const GLuint *buffers);
 
 #endif /* CLIENT_STATE_H */

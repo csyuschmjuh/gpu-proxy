@@ -5,7 +5,6 @@ typedef struct _client client_t;
 
 #include "dispatch_table.h"
 #include "egl_state.h"
-#include "name_handler.h"
 #include "ring_buffer.h"
 #include "server.h"
 #include "types_private.h"
@@ -28,8 +27,6 @@ typedef struct _client client_t;
 
 struct _client {
     dispatch_table_t dispatch;
-
-    name_handler_t *name_handler;
 
     void (*post_hook)(client_t *client, command_t *command);
 
@@ -68,9 +65,6 @@ client_destroy_thread_local ();
 
 private int
 client_get_unpack_alignment ();
-
-private name_handler_t *
-client_get_name_handler ();
 
 private command_t *
 client_get_space_for_command (command_type_t command_type);
