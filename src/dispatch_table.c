@@ -67,7 +67,16 @@ dispatch_table_get_base ()
     }
 
     initializing_table = true;
+
+    FunctionPointerType *temp = NULL;
+    temp = (FunctionPointerType *) &real_eglInitialize;
+    *temp = dlsym (libegl_handle (), "eglInitialize");
+    temp = (FunctionPointerType *) &real_eglGetDisplay;
+    *temp = dlsym (libegl_handle (), "eglGetDisplay");
+
+    real_eglInitialize (real_eglGetDisplay (EGL_DEFAULT_DISPLAY), NULL, NULL);
     dispatch_table_fill_base (&dispatch);
+
     initializing_table = false;
     table_initialized = true;
 
