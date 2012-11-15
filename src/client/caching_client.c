@@ -81,16 +81,6 @@ _caching_client_destroy_state (client_t* client,
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
 }
 
-static void
-_caching_client_clear_desroyed_surfaces (client_t *client)
-{
-    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-    if (egl_state->destroy_read)
-        egl_state->readable = EGL_NO_SURFACE;
-    if (egl_state->destroy_draw)
-        egl_state->drawable = EGL_NO_SURFACE;
-}
-
 static egl_state_t *
 find_state_with_display_and_context (EGLDisplay display,
                                      EGLContext context,
@@ -167,7 +157,12 @@ _caching_client_make_current (client_t *client,
     /* Deactivate the old surface and clean up any previously destroyed bits of it. */
     if (current_state) {
         current_state->active = false;
-        _caching_client_clear_desroyed_surfaces (CLIENT (client));
+
+        if (current_state->destroy_read)
+            current_state->readable = EGL_NO_SURFACE;
+        if (current_state->destroy_draw)
+            current_state->drawable = EGL_NO_SURFACE;
+
         if (current_state->destroy_dpy || current_state->destroy_ctx)
             _caching_client_destroy_state (client, current_state);
     }
