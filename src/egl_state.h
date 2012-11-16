@@ -322,7 +322,12 @@ egl_state_destroy (egl_state_t *egl_state);
 private link_list_t **
 cached_gl_states ();
 
-private HashTable *
-egl_state_get_texture_cache (egl_state_t *egl_state);
+private texture_t *
+egl_state_lookup_cached_texture (egl_state_t *egl_state,
+                                 GLuint texture_id);
+
+private void
+egl_state_create_cached_texture (egl_state_t *egl_state,
+                                 GLuint texture_id);
 
 #endif /* GPUPROCESS_EGL_STATE_H */
