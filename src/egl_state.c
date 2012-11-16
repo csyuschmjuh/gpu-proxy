@@ -1,5 +1,6 @@
 #include "config.h"
 #include "egl_state.h"
+#include "name_handler.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -153,10 +154,24 @@ egl_state_new ()
 }
 
 void
+delete_texture_from_name_handler (GLuint key,
+                                  void *data,
+                                  void *userData)
+{
+    name_handler_delete_names (1, data);
+}
+
+void
 egl_state_destroy (egl_state_t *state)
 {
     if (state->vertex_attribs.attribs != state->vertex_attribs.embedded_attribs)
         free (state->vertex_attribs.attribs);
+
+    /* We don't use egl_state_get_texture_cache here because we don't want to
+     * delete a sharing context's texture when we are cleaning up a client context. */
+    HashWalk (state->texture_cache, delete_texture_from_name_handler, NULL);
+    DeleteHashTable (state->texture_cache);
+    state->texture_cache = NULL;
 
     link_list_t *program_list = state->programs;
     while (program_list) {
@@ -173,8 +188,6 @@ egl_state_destroy (egl_state_t *state)
         free (temp);
     }
 
-    DeleteHashTable (state->texture_cache);
-    state->texture_cache = NULL;
     state->programs = NULL;
 }
 
@@ -185,10 +198,38 @@ cached_gl_states ()
     return &states;
 }
 
-HashTable *
+static HashTable *
 egl_state_get_texture_cache (egl_state_t *egl_state)
 {
     if (egl_state->share_context)
         return egl_state->share_context->texture_cache;
     return egl_state->texture_cache;
+}
+
+texture_t *
+egl_state_lookup_cached_texture (egl_state_t *egl_state,
+                                 GLuint texture_id)
+{
+    return (texture_t *) HashLookup (egl_state_get_texture_cache (egl_state), texture_id);
+}
+
+static texture_t *
+_create_texture (GLuint id)
+{
+    texture_t *tex = (texture_t *) malloc (sizeof (texture_t));
+    tex->id = id;
+    tex->width = 0;
+    tex->height = 0;
+    tex->data_type = GL_UNSIGNED_BYTE;
+    tex->internal_format = GL_RGBA;
+    return tex;
+}
+
+void
+egl_state_create_cached_texture (egl_state_t *egl_state,
+                                 GLuint texture_id)
+{
+    HashInsert (egl_state_get_texture_cache (egl_state),
+                texture_id, _create_texture (texture_id));
+
 }
