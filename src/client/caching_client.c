@@ -708,7 +708,7 @@ caching_client_glCreateProgram (void* client)
         caching_client_set_needs_get_error (CLIENT (client));
 
     program_t *new_program = (program_t *)malloc (sizeof (program_t));
-    new_program->id = result; 
+    new_program->id = result;
     new_program->mark_for_deletion = false;
     new_program->uniform_location_cache = NewHashTable(free);
     new_program->attrib_location_cache = NewHashTable(free);
@@ -3276,7 +3276,7 @@ caching_client_glUseProgram (void* client, GLuint program)
     program_t *saved_program;
     bool found = false;
     link_list_t *saved_program_list = NULL;
-    
+
     if (state->current_program == program)
         return;
     if (program < 0) {
@@ -4100,6 +4100,8 @@ caching_client_eglCreateContext (void *client,
 
     egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
     new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
+    /* We have to share the programs list. */
+    new_state->programs = new_state->share_context->programs;
     new_state->share_context->contexts_sharing++;
     return result;
 }
