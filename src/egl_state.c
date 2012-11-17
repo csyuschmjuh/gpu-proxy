@@ -41,14 +41,10 @@ egl_state_init (egl_state_t *state)
 
     state->error = GL_NO_ERROR;
     state->need_get_error = false;
+
+    /* We add a head to the list so we can get a reference. */
     state->programs = NULL;
-    /* We add a head to the list so we can get a reference */
-    program_t *head = (program_t *)malloc (sizeof (program_t));
-    head->id = 0;
-    head->mark_for_deletion = false;
-    head->uniform_location_cache = NULL;
-    head->attrib_location_cache = NULL;
-    link_list_append (&state->programs, head);
+    link_list_append (&state->programs, program_new (0));
 
 
     state->active_texture = GL_TEXTURE0;

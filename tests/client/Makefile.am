@@ -23,6 +23,8 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/egl_state.h \
 	$(rootsrcdir)/src/generated/command_autogen.c \
 	$(rootsrcdir)/src/generated/client_entry_points.c \
+	$(rootsrcdir)/src/program.c \
+	$(rootsrcdir)/src/program.h \
 	$(rootsrcdir)/src/types_private.h \
 	$(rootsrcdir)/src/types_private.c \
 	$(rootsrcdir)/src/util/gles2_utils.c \

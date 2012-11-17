@@ -61,6 +61,8 @@ libGPUProcess_la_SOURCES += \
 	dispatch_table.h \
 	egl_state.c \
 	egl_state.h \
+	program.c \
+	program.h \
 	util/gles2_utils.c \
 	util/gles2_utils.h
 
