@@ -166,25 +166,11 @@ egl_state_destroy (void *abstract_state)
     if (state->vertex_attribs.attribs != state->vertex_attribs.embedded_attribs)
         free (state->vertex_attribs.attribs);
 
-    /* We don't use egl_state_get_texture_cache here because we don't want to
-     * delete a sharing context's texture when we are cleaning up a client context. */
+    /* We don't use egl_state_get_texture_cache or egl_state_get_program_list
+     * here because we don't want to delete a sharing context's state. */
     HashWalk (state->texture_cache, delete_texture_from_name_handler, NULL);
     DeleteHashTable (state->texture_cache);
-
-    link_list_t *program_list = state->programs;
-    while (program_list) {
-        program_t *program = (program_t *)program_list->data;
-        DeleteHashTable (program->uniform_location_cache);
-        program->uniform_location_cache = NULL;
-
-        DeleteHashTable (program->attrib_location_cache);
-        program->attrib_location_cache = NULL;
-
-        free (program);
-        link_list_t *temp = program_list;
-        program_list = program_list->next;
-        free (temp);
-    }
+    link_list_clear (&state->programs);
 
     free (state);
 }

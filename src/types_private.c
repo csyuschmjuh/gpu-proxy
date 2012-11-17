@@ -54,16 +54,18 @@ link_list_delete_element (link_list_t **list, link_list_t *element)
 }
 
 void
-link_list_free (link_list_t* array)
+link_list_clear (link_list_t** list)
 {
-    if (!array)
+    if (!*list)
         return;
 
-    array->prev->next = NULL;
-    while (array) {
-        link_list_t *current = array;
-        array = array->next;
+    link_list_t *current = *list;
+    while (current) {
+        link_list_t *next = current->next;
         current->delete_function (current->data);
         free (current);
+        current = next;
     }
+
+    *list = NULL;
 }
