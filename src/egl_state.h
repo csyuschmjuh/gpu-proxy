@@ -281,4 +281,15 @@ private void
 egl_state_create_cached_texture (egl_state_t *egl_state,
                                  GLuint texture_id);
 
+private program_t *
+egl_state_lookup_cached_program (egl_state_t *egl_state,
+                                 GLuint program_id);
+
+private void
+egl_state_create_cached_program (egl_state_t *egl_state,
+                                 GLuint program_id);
+private void
+egl_state_destroy_cached_program (egl_state_t *egl_state,
+                                  program_t *program);
+
 #endif /* GPUPROCESS_EGL_STATE_H */
