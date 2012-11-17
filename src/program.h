@@ -58,7 +58,10 @@ typedef struct _program {
     HashTable    *uniform_location_cache;
 } program_t;
 
-private program_t*
+private program_t *
 program_new (GLuint id);
+
+private void
+program_destroy (void *abstract_program);
 
 #endif

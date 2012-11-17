@@ -268,7 +268,7 @@ private egl_state_t *
 egl_state_new ();
 
 private void
-egl_state_destroy (egl_state_t *egl_state);
+egl_state_destroy (void *abstract_state);
 
 private link_list_t **
 cached_gl_states ();

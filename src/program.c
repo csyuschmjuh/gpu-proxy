@@ -12,3 +12,11 @@ program_new (GLuint id)
     new_program->attrib_location_cache = id ? NewHashTable(free) : NULL;
     return new_program;
 }
+
+void
+program_destroy (void *abstract_program)
+{
+    program_t *program = abstract_program;
+    DeleteHashTable (program->attrib_location_cache);
+    DeleteHashTable (program->uniform_location_cache);
+}
