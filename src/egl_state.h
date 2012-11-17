@@ -262,10 +262,13 @@ typedef struct egl_state {
 } egl_state_t;
 
 private void
-egl_state_init (egl_state_t *egl_state);
+egl_state_init (egl_state_t *egl_state,
+                EGLDisplay display,
+                EGLContext context);
 
 private egl_state_t *
-egl_state_new ();
+egl_state_new (EGLDisplay display,
+               EGLContext context);
 
 private void
 egl_state_destroy (void *abstract_state);
