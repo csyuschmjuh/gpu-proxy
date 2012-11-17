@@ -159,8 +159,10 @@ delete_texture_from_name_handler (GLuint key,
 }
 
 void
-egl_state_destroy (egl_state_t *state)
+egl_state_destroy (void *abstract_state)
 {
+    egl_state_t *state = abstract_state;
+
     if (state->vertex_attribs.attribs != state->vertex_attribs.embedded_attribs)
         free (state->vertex_attribs.attribs);
 
@@ -168,7 +170,6 @@ egl_state_destroy (egl_state_t *state)
      * delete a sharing context's texture when we are cleaning up a client context. */
     HashWalk (state->texture_cache, delete_texture_from_name_handler, NULL);
     DeleteHashTable (state->texture_cache);
-    state->texture_cache = NULL;
 
     link_list_t *program_list = state->programs;
     while (program_list) {
@@ -185,7 +186,7 @@ egl_state_destroy (egl_state_t *state)
         free (temp);
     }
 
-    state->programs = NULL;
+    free (state);
 }
 
 link_list_t **
@@ -243,7 +244,7 @@ egl_state_create_cached_program (egl_state_t *egl_state,
                                  GLuint program_id)
 {
     link_list_t **program_list = egl_state_get_program_list (egl_state);
-    link_list_append (program_list, program_new (program_id));
+    link_list_append (program_list, program_new (program_id), program_destroy);
 }
 
 program_t *
@@ -265,8 +266,6 @@ void
 egl_state_destroy_cached_program (egl_state_t *egl_state,
                                   program_t *program)
 {
-    DeleteHashTable (program->attrib_location_cache);
-    DeleteHashTable (program->uniform_location_cache);
     link_list_delete_first_entry_matching_data (
         egl_state_get_program_list (egl_state),
         program);

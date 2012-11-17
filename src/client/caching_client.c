@@ -65,7 +65,6 @@ _caching_client_destroy_state (client_t* client,
         _caching_client_destroy_state (client, share_context);
     }
 
-    egl_state_destroy (egl_state);
     link_list_delete_first_entry_matching_data (cached_gl_states (), egl_state);
 }
 
@@ -107,7 +106,7 @@ _caching_client_get_or_create_state (EGLDisplay dpy,
     state = egl_state_new ();
     state->context = ctx;
     state->display = dpy;
-    link_list_append (cached_gl_states (), state);
+    link_list_append (cached_gl_states (), state, egl_state_destroy);
     return state;
 }
 

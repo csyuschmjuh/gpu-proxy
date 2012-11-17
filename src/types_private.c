@@ -3,12 +3,15 @@
 #include <stdlib.h>
 
 void
-link_list_append (link_list_t **list, void *data)
+link_list_append (link_list_t **list,
+                  void *data,
+                  list_delete_function_t delete_function)
 {
     link_list_t *new_element = (link_list_t *) malloc (sizeof (link_list_t));
     new_element->data = data;
     new_element->next = NULL;
     new_element->prev = NULL;
+    new_element->delete_function = delete_function;
 
     if (!*list) {
         *list = new_element;
@@ -46,7 +49,7 @@ link_list_delete_element (link_list_t **list, link_list_t *element)
             element->next->prev = element->prev;
     }
 
-    free (element->data);
+    element->delete_function (element->data);
     free (element);
 }
 
@@ -60,9 +63,7 @@ link_list_free (link_list_t* array)
     while (array) {
         link_list_t *current = array;
         array = array->next;
-        /* We should probably provide a delete function the same way we do
-         * for our hash table implementation. */
-        free (current->data);
+        current->delete_function (current->data);
         free (current);
     }
 }
