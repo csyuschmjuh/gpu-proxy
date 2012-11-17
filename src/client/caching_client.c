@@ -100,13 +100,10 @@ _caching_client_get_or_create_state (EGLDisplay dpy,
 {
     /* We should already be holding the cached states mutex. */
     egl_state_t *state = find_state_with_display_and_context(dpy, ctx, false);
-    if (state)
-        return state;
-
-    state = egl_state_new ();
-    state->context = ctx;
-    state->display = dpy;
-    link_list_append (cached_gl_states (), state, egl_state_destroy);
+    if (!state) {
+        state = egl_state_new (dpy, ctx);
+        link_list_append (cached_gl_states (), state, egl_state_destroy);
+    }
     return state;
 }
 

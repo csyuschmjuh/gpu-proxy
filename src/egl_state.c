@@ -5,10 +5,12 @@
 #include <string.h>
 
 void
-egl_state_init (egl_state_t *state)
+egl_state_init (egl_state_t *state,
+                EGLDisplay display,
+                EGLContext context)
 {
-    state->context = EGL_NO_CONTEXT;
-    state->display = EGL_NO_DISPLAY;
+    state->context = context;
+    state->display = display;
     state->drawable = EGL_NO_SURFACE;
     state->readable = EGL_NO_SURFACE;
 
@@ -143,10 +145,10 @@ egl_state_init (egl_state_t *state)
 }
 
 egl_state_t *
-egl_state_new ()
+egl_state_new (EGLDisplay display, EGLContext context)
 {
     egl_state_t *new_state = malloc (sizeof (egl_state_t));
-    egl_state_init (new_state);
+    egl_state_init (new_state, display, context);
     return new_state;
 }
 
