@@ -44,8 +44,6 @@ egl_state_init (egl_state_t *state)
 
     /* We add a head to the list so we can get a reference. */
     state->programs = NULL;
-    link_list_append (&state->programs, program_new (0));
-
 
     state->active_texture = GL_TEXTURE0;
     state->array_buffer_binding = 0;
@@ -223,7 +221,6 @@ _create_texture (GLuint id)
     tex->internal_format = GL_RGBA;
     return tex;
 }
-
 void
 egl_state_create_cached_texture (egl_state_t *egl_state,
                                  GLuint texture_id)
@@ -231,4 +228,46 @@ egl_state_create_cached_texture (egl_state_t *egl_state,
     HashInsert (egl_state_get_texture_cache (egl_state),
                 texture_id, _create_texture (texture_id));
 
+}
+
+static link_list_t **
+egl_state_get_program_list (egl_state_t *egl_state)
+{
+    if (egl_state->share_context)
+        return &egl_state->share_context->programs;
+    return &egl_state->programs;
+}
+
+void
+egl_state_create_cached_program (egl_state_t *egl_state,
+                                 GLuint program_id)
+{
+    link_list_t **program_list = egl_state_get_program_list (egl_state);
+    link_list_append (program_list, program_new (program_id));
+}
+
+program_t *
+egl_state_lookup_cached_program (egl_state_t *egl_state,
+                                 GLuint program_id)
+{
+    link_list_t **program_list = egl_state_get_program_list (egl_state);
+    link_list_t *current = *program_list;
+    while (current) {
+        program_t *program = (program_t *)current->data;
+        if (program->id == program_id)
+            return program;
+        current = current->next;
+    }
+    return NULL;
+}
+
+void
+egl_state_destroy_cached_program (egl_state_t *egl_state,
+                                  program_t *program)
+{
+    DeleteHashTable (program->attrib_location_cache);
+    DeleteHashTable (program->uniform_location_cache);
+    link_list_delete_first_entry_matching_data (
+        egl_state_get_program_list (egl_state),
+        program);
 }

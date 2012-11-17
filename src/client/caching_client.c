@@ -686,10 +686,12 @@ caching_client_glCreateProgram (void* client)
     egl_state_t *state = client_get_current_state (CLIENT (client));
 
     GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
-    if (result == 0)
+    if (result == 0) {
         caching_client_set_needs_get_error (CLIENT (client));
+        return 0;
+    }
 
-    link_list_append (&state->programs, program_new(result));
+    egl_state_create_cached_program (state, result);
     return result;
 }
 
@@ -700,16 +702,8 @@ caching_client_glDeleteProgram (void *client,
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
 
-    link_list_t *cached_program_item = state->programs;
-    program_t *cached_program = NULL;
-    while (cached_program_item) {
-        cached_program = (program_t *) cached_program_item->data;
-        if (cached_program->id == program)
-            break;
-        cached_program_item = cached_program_item->next;
-    }
-
-    if (! cached_program_item) {
+    program_t *cached_program = egl_state_lookup_cached_program (client, program);
+    if (!cached_program) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
@@ -721,10 +715,7 @@ caching_client_glDeleteProgram (void *client,
         return;
     }
 
-    DeleteHashTable (cached_program->attrib_location_cache);
-    DeleteHashTable (cached_program->uniform_location_cache);
-
-    link_list_delete_element (&state->programs, cached_program_item);
+    egl_state_destroy_cached_program (state, cached_program);
 }
 
 static GLuint
@@ -1786,108 +1777,75 @@ static void caching_client_glGetActiveUniform (void *client,
 }
 
 static GLint
-caching_client_glGetAttribLocation (void* client, GLuint program,
+caching_client_glGetAttribLocation (void* client,
+                                    GLuint program,
                                     const GLchar *name)
 {
     INSTRUMENT();
 
-    GLuint *location_pointer;
-    GLint result;
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    GLuint *data;
-    link_list_t *program_list = state->programs;
-    program_t *saved_program;
+    program_t *saved_program = egl_state_lookup_cached_program (state, program);
+    if (!saved_program)
+        return -1;
 
-    while (program_list) {
-        saved_program = (program_t *)program_list->data;
-        if (saved_program->id == program) {
-            location_pointer = (GLuint *)HashLookup (saved_program->attrib_location_cache,
-                                                     HashStr (name));
+    GLuint *location = (GLuint *)HashLookup (saved_program->attrib_location_cache,
+                                            HashStr (name));
+    if (location)
+        return *location;
 
-            if (location_pointer)
-                return *location_pointer;
-
-            result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
-
-            if (result == -1) {
-                caching_client_set_needs_get_error (CLIENT (client));
-                return -1;
-            }
-
-            data = (GLuint *)malloc (sizeof (GLuint));
-            *data = result;
-            HashInsert (saved_program->attrib_location_cache, HashStr(name), data);
-
-            return result;
-        }
-        program_list = program_list->next; 
+    GLuint result = CACHING_CLIENT(client)->super_dispatch.glGetAttribLocation (client, program, name);
+    if (result == -1) {
+        caching_client_set_needs_get_error (CLIENT (client));
+        return -1;
     }
-    return -1;
+
+    GLuint *data = (GLuint *)malloc (sizeof (GLuint));
+    *data = result;
+    HashInsert (saved_program->attrib_location_cache, HashStr(name), data);
+    return result;
 }
 
 static void
 caching_client_glLinkProgram (void* client,
                               GLuint program)
 {
-    command_t *command = client_get_space_for_command (COMMAND_GLLINKPROGRAM);
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    link_list_t *program_list = state->programs;
-    program_t *saved_program;
-
-    /* need to check validity of program */
-    while (program_list) {
-        saved_program = (program_t *) program_list->data;
-        if (saved_program->id == program) { 
-            command_gllinkprogram_init (command,
-                                program);
-
-            client_run_command_async (command);
-            return;
-        }
-        program_list = program_list->next;
+    program_t *saved_program = egl_state_lookup_cached_program (state, program);
+    if (!saved_program) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
     }
 
-    caching_client_glSetError (client, GL_INVALID_VALUE);
+    CACHING_CLIENT(client)->super_dispatch.glLinkProgram (client, program);
 }
 
 static GLint
-caching_client_glGetUniformLocation (void* client, GLuint program,
+caching_client_glGetUniformLocation (void* client,
+                                     GLuint program,
                                      const GLchar *name)
 {
     INSTRUMENT();
 
-    GLuint *location_pointer;
-    GLint result;
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    GLuint *data;
-    link_list_t *program_list = state->programs;
-    program_t *saved_program;
+    program_t *saved_program = egl_state_lookup_cached_program (state, program);
+    if (!saved_program)
+        return -1;
 
-    while (program_list) {
-        saved_program = (program_t *)program_list->data;
-        if (saved_program->id == program) {
-            location_pointer = (GLuint *)HashLookup (saved_program->uniform_location_cache,
-                                                     HashStr (name));
+    GLuint *location = (GLuint *)HashLookup (saved_program->uniform_location_cache,
+                                            HashStr (name));
+    if (location)
+        return *location;
 
-            if (location_pointer)
-                return *location_pointer;
-
-            result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
-
-            if (result == -1) {
-                caching_client_set_needs_get_error (CLIENT (client));
-                return -1;
-            }
-
-            data = (GLuint *)malloc (sizeof (GLuint));
-            *data = result;
-            HashInsert (saved_program->uniform_location_cache, HashStr(name), data);
-
-            return result;
-        }
-        program_list = program_list->next;
+    GLuint result = CACHING_CLIENT(client)->super_dispatch.glGetUniformLocation (client, program, name);
+    if (result == -1) {
+        caching_client_set_needs_get_error (CLIENT (client));
+        return -1;
     }
-    return -1;
+
+    GLuint *data = (GLuint *)malloc (sizeof (GLuint));
+    *data = result;
+    HashInsert (saved_program->uniform_location_cache, HashStr(name), data);
+    return result;
 }
 
 static void
@@ -3216,74 +3174,40 @@ caching_client_glUniformMatrix4fv (void* client,
 }
 
 static void
-caching_client_glUseProgram (void* client, GLuint program)
+caching_client_glUseProgram (void* client,
+                             GLuint program_id)
 {
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    link_list_t *program_list = state->programs;
-    program_t *saved_program;
-    bool found = false;
-    link_list_t *saved_program_list = NULL;
-
-    if (state->current_program == program)
+    if (state->current_program == program_id)
         return;
-    if (program < 0) {
+    if (program_id < 0) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
+
     /* this maybe not right because this program may be invalid
      * object, we save here to save time in glGetError() */
-    while (program_list) {
-        saved_program = (program_t *) program_list->data;
-        if (saved_program->id == program) { 
-            found = true;
-            break;
-        }
-        program_list = program_list->next;
-    }
-    if (found) {
-        CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program);
-
-        /* this maybe not right because this program may be invalid
-         * object, we save here to save time in glGetError() */
-
-        program_list = state->programs;
-        while (program_list) {
-            saved_program = (program_t *) program_list->data;
-            if (saved_program->id == state->current_program &&
-                saved_program->mark_for_deletion) { 
-                found = true;
-                saved_program_list = program_list;
-                break;
-            }
-            program_list = program_list->next;
-        }
-
-        if (saved_program_list) {
-            program_list = saved_program_list->prev;
-            if (program_list)
-                program_list->next = saved_program_list->next;
-    
-            program_list = saved_program_list->next;
-            if (program_list)
-                program_list->prev = saved_program_list->prev;
-
-            DeleteHashTable (saved_program->attrib_location_cache);
-            DeleteHashTable (saved_program->uniform_location_cache);
-            free (saved_program);
-            free (saved_program_list);
-        }
-        state->current_program = program;
+    program_t *new_program = egl_state_lookup_cached_program (state, program_id);
+    if (!new_program) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
-    caching_client_glSetError (client, GL_INVALID_OPERATION);
+
+    CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program_id);
+
+    /* this maybe not right because this program may be invalid
+     * object, we save here to save time in glGetError() */
+    program_t *current_program = egl_state_lookup_cached_program (state, state->current_program);
+    if (current_program && current_program->mark_for_deletion)
+        egl_state_destroy_cached_program (state, current_program);
+    state->current_program = program_id;
 }
 
 static void
 caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
 {
-
     INSTRUMENT();
 
     if (caching_client_does_index_overflow (client, index)) {
@@ -4049,8 +3973,6 @@ caching_client_eglCreateContext (void *client,
 
     egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
     new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
-    /* We have to share the programs list. */
-    new_state->programs = new_state->share_context->programs;
     new_state->share_context->contexts_sharing++;
     return result;
 }
