@@ -463,6 +463,87 @@ _FUNCTION_INFO = {
   },
 }
 
+FUNCTIONS_GENERATING_ERRORS = [
+ 'glAttachShader',
+ 'glBindAttribLocation',
+ 'glBindBuffer',
+ 'glBufferData',
+ 'glBufferSubData',
+ 'glCompileShader',
+ 'glCompressedTexImage2D',
+ 'glCompressedTexSubImage2D',
+ 'glCopyTexImage2D',
+ 'glCopyTexSubImage2D',
+ 'glDeleteProgram',
+ 'glDeleteShader',
+ 'glDetachShader',
+ 'glDisableVertexAttribArray',
+ 'glEnableVertexAttribArray',
+ 'glFramebufferRenderbuffer',
+ 'glFramebufferTexture2D',
+ 'glGenerateMipmap',
+ 'glGetBufferParameteriv',
+ 'glGetIntegerv',
+ 'glGetProgramInfoLog',
+ 'glGetShaderInfoLog',
+ 'glGetShaderiv',
+ 'glGetShaderPrecisionFormat',
+ 'glGetShaderSource',
+ 'glLinkProgram',
+ 'glReadPixels',
+ 'glReleaseShaderCompiler',
+ 'glRenderbufferStorage',
+ 'glShaderBinary',
+ 'glShaderSource',
+ 'glValidateProgram',
+ 'glVertexAttribPointer',
+ 'glBindVertexArrayOES',
+ 'glEGLImageTargetTexture2DOES',
+ 'glGetProgramBinaryOES',
+ 'glProgramBinaryOES',
+ 'glGetBufferPointervOES',
+ 'glTexImage3DOES',
+ 'glTexSubImage3DOES',
+ 'glCopyTexSubImage3DOES',
+ 'glCompressedTexImage3DOES',
+ 'glCompressedTexSubImage3DOES',
+ 'glFramebufferTexture2DMultisampleEXT',
+ 'glFramebufferTexture2DMultisampleIMG',
+ 'glFramebufferTexture3DOES',
+ 'glBeginPerfMonitorAMD',
+ 'glGetPerfMonitorGroupsAMD',
+ 'glGetPerfMonitorCountersAMD',
+ 'glGetPerfMonitorGroupStringAMD',
+ 'glGetPerfMonitorCounterStringAMD',
+ 'glGetPerfMonitorCounterInfoAMD',
+ 'glGenPerfMonitorsAMD',
+ 'glEndPerfMonitorAMD',
+ 'glDeletePerfMonitorsAMD',
+ 'glSelectPerfMonitorCountersAMD',
+ 'glGetPerfMonitorCounterDataAMD',
+ 'glBlitFramebufferANGLE',
+ 'glRenderbufferStorageMultisampleANGLE',
+ 'glRenderbufferStorageMultisampleAPPLE',
+ 'glResolveMultisampleFramebufferAPPLE',
+ 'glRenderbufferStorageMultisampleEXT',
+ 'glRenderbufferStorageMultisampleIMG',
+ 'glSetFenceNV',
+ 'glFinishFenceNV',
+ 'glCoverageMaskNV',
+ 'glGetDriverControlsQCOM',
+ 'glEnableDriverControlQCOM',
+ 'glDisableDriverControlQCOM',
+ 'glExtTexObjectStateOverrideiQCOM',
+ 'glGetDriverControlStringQCOM',
+ 'glExtGetTexLevelParameterivQCOM',
+ 'glExtGetTexSubImageQCOM',
+ 'glExtGetBufferPointervQCOM',
+ 'glExtIsProgramBinaryQCOM',
+ 'glExtGetProgramBinarySourceQCOM',
+ 'glStartTilingQCOM',
+ 'glEndTilingQCOM',
+]
+
 # This string is copied directly out of the gl2.h file from GLES2.0
 #
 # Edits:
@@ -2465,6 +2546,10 @@ class GLGenerator(object):
         file.Write(")\n")
 
         file.Write("{\n")
+
+        if func.name in FUNCTIONS_GENERATING_ERRORS:
+            file.Write("client_get_current_state (CLIENT (object))->need_get_error = false;\n\n");
+
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
 
         header = "    command_%s_init (" % func.name.lower()

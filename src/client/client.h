@@ -28,8 +28,6 @@ typedef struct _client client_t;
 struct _client {
     dispatch_table_t dispatch;
 
-    void (*post_hook)(client_t *client, command_t *command);
-
     buffer_t buffer;
     unsigned int token;
 
