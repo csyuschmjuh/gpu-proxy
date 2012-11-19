@@ -548,11 +548,6 @@ _ENUM_LISTS = {
       'GL_STATIC_READ',
     ],
   },
-  'CompressedTextureFormat': {
-    'type': 'GLenum',
-    'valid': [
-    ],
-  },
   'GLState': {
     'type': 'GLenum',
     'valid': [
@@ -639,9 +634,6 @@ _ENUM_LISTS = {
       'GL_TEXTURE_BINDING_2D',
       'GL_TEXTURE_BINDING_CUBE_MAP',
       'GL_UNPACK_ALIGNMENT',
-      'GL_UNPACK_FLIP_Y_CHROMIUM',
-      'GL_UNPACK_PREMULTIPLY_ALPHA_CHROMIUM',
-      'GL_UNPACK_UNPREMULTIPLY_ALPHA_CHROMIUM',
       'GL_VIEWPORT',
     ],
     'invalid': [
@@ -653,6 +645,7 @@ _ENUM_LISTS = {
     'valid': [
       'GL_TEXTURE_2D',
       'GL_TEXTURE_CUBE_MAP',
+      'GL_TEXTURE_3D_OES',
     ],
     'invalid': [
       'GL_PROXY_TEXTURE_CUBE_MAP',
@@ -678,6 +671,7 @@ _ENUM_LISTS = {
     'valid': [
       'GL_TEXTURE_2D',
       'GL_TEXTURE_CUBE_MAP',
+      'GL_TEXTURE_3D_OES',
     ],
     'invalid': [
       'GL_TEXTURE_1D',
@@ -835,6 +829,9 @@ _ENUM_LISTS = {
       'GL_COLOR_ATTACHMENT0',
       'GL_DEPTH_ATTACHMENT',
       'GL_STENCIL_ATTACHMENT',
+       'GL_COLOR_EXT',
+       'GL_DEPTH_EXT',
+       'GL_STENCIL_EXT',
     ],
   },
   'BufferParameter': {
@@ -888,7 +885,6 @@ _ENUM_LISTS = {
     'valid': [
       'GL_ANY_SAMPLES_PASSED_EXT',
       'GL_ANY_SAMPLES_PASSED_CONSERVATIVE_EXT',
-      'GL_COMMANDS_ISSUED_CHROMIUM',
     ],
   },
   'RenderBufferParameter': {
@@ -944,6 +940,7 @@ _ENUM_LISTS = {
       'GL_TEXTURE_MIN_FILTER',
       'GL_TEXTURE_WRAP_S',
       'GL_TEXTURE_WRAP_T',
+      'GL_TEXTURE_WRAP_R_OES',
     ],
     'invalid': [
       'GL_GENERATE_MIPMAP',
@@ -1024,9 +1021,6 @@ _ENUM_LISTS = {
     'valid': [
       'GL_PACK_ALIGNMENT',
       'GL_UNPACK_ALIGNMENT',
-      'GL_UNPACK_FLIP_Y_CHROMIUM',
-      'GL_UNPACK_PREMULTIPLY_ALPHA_CHROMIUM',
-      'GL_UNPACK_UNPREMULTIPLY_ALPHA_CHROMIUM',
     ],
     'invalid': [
       'GL_PACK_SWAP_BYTES',
@@ -1088,11 +1082,6 @@ _ENUM_LISTS = {
       'GL_RGB5_A1',
       'GL_DEPTH_COMPONENT16',
       'GL_STENCIL_INDEX8',
-    ],
-  },
-  'ShaderBinaryFormat': {
-    'type': 'GLenum',
-    'valid': [
     ],
   },
   'StencilOp': {
@@ -2726,6 +2715,22 @@ class GLGenerator(object):
     file.Write("\n")
     file.Close()
 
+  def WriteEnumValidation(self, filename):
+    """Writes the implementation for enum validation"""
+    file = CWriter(filename)
+    file.Write("#include \"config.h\"\n")
+    file.Write("#include <GLES2/gl2.h>\n")
+    file.Write("#include <GLES2/gl2ext.h>\n\n")
+
+    for (key, value) in _ENUM_LISTS.iteritems():
+        file.Write("private bool\n")
+        file.Write("is_valid_%s (%s value)\n" % (key, value['type']))
+        file.Write("{\n")
+        file.Write("    return %s;\n" %
+            " ||\n        ".join([("value == %s" % type) for type in value['valid']]))
+        file.Write("}\n\n")
+    file.Close()
+
 def main(argv):
   """This is the main function."""
   parser = OptionParser()
@@ -2758,6 +2763,8 @@ def main(argv):
   gen.WritePassthroughDispatchTableImplementation("dispatch_table_autogen.c")
   gen.WriteCommandHeader("command_autogen.h")
   gen.WriteCommandEnum("command_types_autogen.h")
+
+  gen.WriteEnumValidation("enum_validation.h")
 
   # These are used on the client-side.
   gen.WriteCommandInitilizationAndSizeFunction("command_autogen.c")
