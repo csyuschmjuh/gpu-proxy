@@ -4,6 +4,7 @@
 #include "caching_client_private.h"
 #include "client.h"
 #include "command.h"
+#include "enum_validation.h"
 #include "egl_state.h"
 #include "name_handler.h"
 #include "types_private.h"
@@ -226,7 +227,7 @@ caching_client_glActiveTexture (void* client,
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->active_texture == texture)
         return;
-    else if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
+    if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
 
@@ -402,9 +403,7 @@ caching_client_glBlendEquation (void* client, GLenum mode)
         state->blend_equation[1] == mode)
         return;
 
-    if (! (mode == GL_FUNC_ADD ||
-           mode == GL_FUNC_SUBTRACT ||
-           mode == GL_FUNC_REVERSE_SUBTRACT)) {
+    if (! is_valid_Equation (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -425,12 +424,7 @@ caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum mod
         state->blend_equation[1] == modeAlpha)
         return;
 
-    if (! (modeRGB == GL_FUNC_ADD ||
-           modeRGB == GL_FUNC_SUBTRACT ||
-           modeRGB == GL_FUNC_REVERSE_SUBTRACT) || 
-        ! (modeAlpha == GL_FUNC_ADD ||
-           modeAlpha == GL_FUNC_SUBTRACT ||
-           modeAlpha == GL_FUNC_REVERSE_SUBTRACT)) {
+    if (! is_valid_Equation (modeRGB) || ! is_valid_Equation (modeAlpha)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -453,36 +447,7 @@ caching_client_glBlendFunc (void* client, GLenum sfactor, GLenum dfactor)
         state->blend_dst[1] == dfactor)
         return;
 
-    if (! (sfactor == GL_ZERO ||
-           sfactor == GL_ONE ||
-           sfactor == GL_SRC_COLOR ||
-           sfactor == GL_ONE_MINUS_SRC_COLOR ||
-           sfactor == GL_DST_COLOR ||
-           sfactor == GL_ONE_MINUS_DST_COLOR ||
-           sfactor == GL_SRC_ALPHA ||
-           sfactor == GL_ONE_MINUS_SRC_ALPHA ||
-           sfactor == GL_DST_ALPHA ||
-           sfactor == GL_ONE_MINUS_DST_ALPHA ||
-           sfactor == GL_CONSTANT_COLOR ||
-           sfactor == GL_ONE_MINUS_CONSTANT_COLOR ||
-           sfactor == GL_CONSTANT_ALPHA ||
-           sfactor == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           sfactor == GL_SRC_ALPHA_SATURATE) ||
-        ! (dfactor == GL_ZERO ||
-           dfactor == GL_ONE ||
-           dfactor == GL_SRC_COLOR ||
-           dfactor == GL_ONE_MINUS_SRC_COLOR ||
-           dfactor == GL_DST_COLOR ||
-           dfactor == GL_ONE_MINUS_DST_COLOR ||
-           dfactor == GL_SRC_ALPHA ||
-           dfactor == GL_ONE_MINUS_SRC_ALPHA ||
-           dfactor == GL_DST_ALPHA ||
-           dfactor == GL_ONE_MINUS_DST_ALPHA ||
-           dfactor == GL_CONSTANT_COLOR ||
-           dfactor == GL_ONE_MINUS_CONSTANT_COLOR ||
-           dfactor == GL_CONSTANT_ALPHA ||
-           dfactor == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           dfactor == GL_SRC_ALPHA_SATURATE)) {
+    if (! is_valid_SrcBlendFactor (sfactor) || ! is_valid_DstBlendFactor (dfactor)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -506,66 +471,8 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
         state->blend_dst[1] == dstAlpha)
         return;
 
-    if (! (srcRGB == GL_ZERO ||
-           srcRGB == GL_ONE ||
-           srcRGB == GL_SRC_COLOR ||
-           srcRGB == GL_ONE_MINUS_SRC_COLOR ||
-           srcRGB == GL_DST_COLOR ||
-           srcRGB == GL_ONE_MINUS_DST_COLOR ||
-           srcRGB == GL_SRC_ALPHA ||
-           srcRGB == GL_ONE_MINUS_SRC_ALPHA ||
-           srcRGB == GL_DST_ALPHA ||
-           srcRGB == GL_ONE_MINUS_DST_ALPHA ||
-           srcRGB == GL_CONSTANT_COLOR ||
-           srcRGB == GL_ONE_MINUS_CONSTANT_COLOR ||
-           srcRGB == GL_CONSTANT_ALPHA ||
-           srcRGB == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           srcRGB == GL_SRC_ALPHA_SATURATE) ||
-        ! (dstRGB == GL_ZERO ||
-           dstRGB == GL_ONE ||
-           dstRGB == GL_SRC_COLOR ||
-           dstRGB == GL_ONE_MINUS_SRC_COLOR ||
-           dstRGB == GL_DST_COLOR ||
-           dstRGB == GL_ONE_MINUS_DST_COLOR ||
-           dstRGB == GL_SRC_ALPHA ||
-           dstRGB == GL_ONE_MINUS_SRC_ALPHA ||
-           dstRGB == GL_DST_ALPHA ||
-           dstRGB == GL_ONE_MINUS_DST_ALPHA ||
-           dstRGB == GL_CONSTANT_COLOR ||
-           dstRGB == GL_ONE_MINUS_CONSTANT_COLOR ||
-           dstRGB == GL_CONSTANT_ALPHA ||
-           dstRGB == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           dstRGB == GL_SRC_ALPHA_SATURATE) ||
-        ! (srcAlpha == GL_ZERO ||
-           srcAlpha == GL_ONE ||
-           srcAlpha == GL_SRC_COLOR ||
-           srcAlpha == GL_ONE_MINUS_SRC_COLOR ||
-           srcAlpha == GL_DST_COLOR ||
-           srcAlpha == GL_ONE_MINUS_DST_COLOR ||
-           srcAlpha == GL_SRC_ALPHA ||
-           srcAlpha == GL_ONE_MINUS_SRC_ALPHA ||
-           srcAlpha == GL_DST_ALPHA ||
-           srcAlpha == GL_ONE_MINUS_DST_ALPHA ||
-           srcAlpha == GL_CONSTANT_COLOR ||
-           srcAlpha == GL_ONE_MINUS_CONSTANT_COLOR ||
-           srcAlpha == GL_CONSTANT_ALPHA ||
-           srcAlpha == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           srcAlpha == GL_SRC_ALPHA_SATURATE) ||
-        ! (dstAlpha == GL_ZERO ||
-           dstAlpha == GL_ONE ||
-           dstAlpha == GL_SRC_COLOR ||
-           dstAlpha == GL_ONE_MINUS_SRC_COLOR ||
-           dstAlpha == GL_DST_COLOR ||
-           dstAlpha == GL_ONE_MINUS_DST_COLOR ||
-           dstAlpha == GL_SRC_ALPHA ||
-           dstAlpha == GL_ONE_MINUS_SRC_ALPHA ||
-           dstAlpha == GL_DST_ALPHA ||
-           dstAlpha == GL_ONE_MINUS_DST_ALPHA ||
-           dstAlpha == GL_CONSTANT_COLOR ||
-           dstAlpha == GL_ONE_MINUS_CONSTANT_COLOR ||
-           dstAlpha == GL_CONSTANT_ALPHA ||
-           dstAlpha == GL_ONE_MINUS_CONSTANT_ALPHA ||
-           dstAlpha == GL_SRC_ALPHA_SATURATE)) {
+    if (! is_valid_SrcBlendFactor (srcRGB) || ! is_valid_SrcBlendFactor (srcAlpha) ||
+        ! is_valid_DstBlendFactor (dstRGB) || ! is_valid_DstBlendFactor (dstAlpha)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -719,8 +626,7 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
 {
     INSTRUMENT();
 
-    if (! (shaderType == GL_VERTEX_SHADER ||
-           shaderType == GL_FRAGMENT_SHADER)) {
+    if (! is_valid_ShaderType (shaderType)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return 0;
     }
@@ -741,9 +647,7 @@ caching_client_glCullFace (void* client, GLenum mode)
     if (state->cull_face_mode == mode)
         return;
 
-    if (! (mode == GL_FRONT ||
-           mode == GL_BACK ||
-           mode == GL_FRONT_AND_BACK)) {
+    if (! is_valid_FaceType (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -860,14 +764,7 @@ caching_client_glDepthFunc (void* client, GLenum func)
     if (state->depth_func == func)
         return;
 
-    if (! (func == GL_NEVER ||
-           func == GL_LESS ||
-           func == GL_EQUAL ||
-           func == GL_LEQUAL ||
-           func == GL_GREATER ||
-           func == GL_NOTEQUAL ||
-           func == GL_GEQUAL ||
-           func == GL_ALWAYS)) {
+    if (! is_valid_CmpFunction (func)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -1319,13 +1216,7 @@ caching_client_glDrawArrays (void* client,
 {
     INSTRUMENT();
 
-    if (! (mode == GL_POINTS         ||
-           mode == GL_LINE_STRIP     ||
-           mode == GL_LINE_LOOP      ||
-           mode == GL_LINES          ||
-           mode == GL_TRIANGLE_STRIP ||
-           mode == GL_TRIANGLE_FAN   ||
-           mode == GL_TRIANGLES)) {
+    if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1495,13 +1386,7 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
-    if (! (mode == GL_POINTS         ||
-           mode == GL_LINE_STRIP     ||
-           mode == GL_LINE_LOOP      ||
-           mode == GL_LINES          ||
-           mode == GL_TRIANGLE_STRIP ||
-           mode == GL_TRIANGLE_FAN   ||
-           mode == GL_TRIANGLES)) {
+    if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1724,11 +1609,7 @@ caching_client_glGenerateMipmap (void* client, GLenum target)
 {
     INSTRUMENT();
 
-    if (! (target == GL_TEXTURE_2D       || 
-           target == GL_TEXTURE_CUBE_MAP
-                                         || 
-           target == GL_TEXTURE_3D_OES
-                                      )) {
+    if (! is_valid_TextureBindTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2204,11 +2085,7 @@ caching_client_glGetString (void* client, GLenum name)
 
     INSTRUMENT();
 
-    if (! (name == GL_VENDOR                   || 
-           name == GL_RENDERER                 ||
-           name == GL_SHADING_LANGUAGE_VERSION ||
-           name == GL_EXTENSIONS               ||
-           name == GL_VERSION)) {
+    if (! is_valid_StringType (name)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return NULL;
     }
@@ -2230,18 +2107,12 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
 
     INSTRUMENT();
 
-    if (! (target == GL_TEXTURE_2D       ||
-           target == GL_TEXTURE_CUBE_MAP ||
-           target == GL_TEXTURE_3D_OES)) {
+    if (! is_valid_GetTexParamTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
-    if (! (pname == GL_TEXTURE_MAG_FILTER ||
-           pname == GL_TEXTURE_MIN_FILTER ||
-           pname == GL_TEXTURE_WRAP_S     ||
-           pname == GL_TEXTURE_WRAP_T     ||
-           pname == GL_TEXTURE_WRAP_R_OES)) {
+    if (! is_valid_TextureParameter (pname)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2322,13 +2193,7 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     attribs = attrib_list->attribs;
     count = attrib_list->count;
 
-    if (! (pname == GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING ||
-           pname == GL_VERTEX_ATTRIB_ARRAY_ENABLED        ||
-           pname == GL_VERTEX_ATTRIB_ARRAY_SIZE           ||
-           pname == GL_VERTEX_ATTRIB_ARRAY_STRIDE         ||
-           pname == GL_VERTEX_ATTRIB_ARRAY_TYPE           ||
-           pname == GL_VERTEX_ATTRIB_ARRAY_NORMALIZED     ||
-           pname == GL_CURRENT_VERTEX_ATTRIB)) {
+    if (! is_valid_VertexAttribute (pname)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -3474,8 +3339,8 @@ caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
     }
-    else if (! (target == GL_ARRAY_BUFFER ||
-                target == GL_ELEMENT_ARRAY_BUFFER)) {
+
+    if (! is_valid_BufferTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
     }
@@ -3494,8 +3359,7 @@ caching_client_glUnmapBufferOES (void* client, GLenum target)
 
     INSTRUMENT();
 
-    if (! (target == GL_ARRAY_BUFFER ||
-           target == GL_ELEMENT_ARRAY_BUFFER)) {
+    if (! is_valid_BufferTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
     }
@@ -3512,8 +3376,7 @@ caching_client_glGetBufferPointervOES (void* client, GLenum target, GLenum pname
 {
     INSTRUMENT();
 
-    if (! (target == GL_ARRAY_BUFFER ||
-           target == GL_ELEMENT_ARRAY_BUFFER)) {
+    if (! is_valid_BufferTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -3636,12 +3499,7 @@ caching_client_glDiscardFramebufferEXT (void* client,
     }
 
     for (i = 0; i < numAttachments; i++) {
-        if (! (attachments[i] == GL_COLOR_ATTACHMENT0  ||
-               attachments[i] == GL_DEPTH_ATTACHMENT   ||
-               attachments[i] == GL_STENCIL_ATTACHMENT ||
-               attachments[i] == GL_COLOR_EXT          ||
-               attachments[i] == GL_DEPTH_EXT          ||
-               attachments[i] == GL_STENCIL_EXT)) {
+        if (! is_valid_Attachment (attachments[i])) {
             caching_client_glSetError (client, GL_INVALID_ENUM);
             return;
         }
