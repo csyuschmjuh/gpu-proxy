@@ -53,6 +53,7 @@ egl_state_init (egl_state_t *state)
 
     state->active_texture = GL_TEXTURE0;
     state->array_buffer_binding = 0;
+    state->vertex_array_binding = 0;
 
     state->blend = GL_FALSE;
 
@@ -134,6 +135,8 @@ egl_state_init (egl_state_t *state)
         for (j = 0; j < 3; j++) {
             state->texture_mag_filter[i][j] = GL_LINEAR;
             state->texture_mag_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
+            state->texture_min_filter[i][j] = GL_LINEAR;
+            state->texture_min_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
             state->texture_wrap_s[i][j] = GL_REPEAT;
             state->texture_wrap_t[i][j] = GL_REPEAT;
         }
