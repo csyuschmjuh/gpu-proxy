@@ -2325,13 +2325,10 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (target == GL_GENERATE_MIPMAP_HINT &&
-        state->generate_mipmap_hint == mode)
+    if (target == GL_GENERATE_MIPMAP_HINT && state->generate_mipmap_hint == mode)
         return;
 
-    if ( !(mode == GL_FASTEST ||
-           mode == GL_NICEST  ||
-           mode == GL_DONT_CARE)) {
+    if (is_valid_HintMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2420,10 +2417,8 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    if ((pname == GL_PACK_ALIGNMENT                &&
-         state->pack_alignment == param) ||
-        (pname == GL_UNPACK_ALIGNMENT              &&
-         state->unpack_alignment == param))
+    if ((pname == GL_PACK_ALIGNMENT && state->pack_alignment == param) ||
+        (pname == GL_UNPACK_ALIGNMENT && state->unpack_alignment == param))
         return;
 
     if (! (param == 1 ||
@@ -2513,21 +2508,12 @@ caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! (face == GL_FRONT ||
-           face == GL_BACK ||
-           face == GL_FRONT_AND_BACK)) {
+    if (! is_valid_FaceType (face)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
-    if (! (func == GL_NEVER ||
-                func == GL_LESS ||
-                func == GL_LEQUAL ||
-                func == GL_GREATER ||
-                func == GL_GEQUAL ||
-                func == GL_EQUAL ||
-                func == GL_NOTEQUAL ||
-                func == GL_ALWAYS)) {
+    if (! is_valid_CmpFunction (func)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2585,18 +2571,15 @@ caching_client_glStencilFunc (void* client, GLenum func, GLint ref, GLuint mask)
 static void
 caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
 {
-    bool needs_call = false;
-
     INSTRUMENT();
 
-    if (! (face == GL_FRONT         ||
-           face == GL_BACK          ||
-           face == GL_FRONT_AND_BACK)) {
+    if (! is_valid_FaceType (face)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    bool needs_call = false;
     switch (face) {
     case GL_FRONT:
         if (mask != state->stencil_writemask) {
@@ -2639,42 +2622,10 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
 
     INSTRUMENT();
 
-    if (! (face == GL_FRONT         ||
-           face == GL_BACK          ||
-           face == GL_FRONT_AND_BACK)) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
-        return;
-    }
-    else if (! (sfail == GL_KEEP       ||
-                sfail == GL_ZERO       ||
-                sfail == GL_REPLACE    ||
-                sfail == GL_INCR       ||
-                sfail == GL_INCR_WRAP  ||
-                sfail == GL_DECR       ||
-                sfail == GL_DECR_WRAP  ||
-                sfail == GL_INVERT)) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
-        return;
-    }
-    else if (! (dpfail == GL_KEEP      ||
-                dpfail == GL_ZERO      ||
-                dpfail == GL_REPLACE   ||
-                dpfail == GL_INCR      ||
-                dpfail == GL_INCR_WRAP ||
-                dpfail == GL_DECR      ||
-                dpfail == GL_DECR_WRAP ||
-                dpfail == GL_INVERT)) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
-        return;
-    }
-    else if (! (dppass == GL_KEEP      ||
-                dppass == GL_ZERO      ||
-                dppass == GL_REPLACE   ||
-                dppass == GL_INCR      ||
-                dppass == GL_INCR_WRAP ||
-                dppass == GL_DECR      ||
-                dppass == GL_DECR_WRAP ||
-                dppass == GL_INVERT)) {
+    if (! is_valid_FaceType (face) ||
+        ! is_valid_StencilOp (sfail) ||
+        ! is_valid_StencilOp (dpfail) ||
+        ! is_valid_StencilOp (dppass)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2727,28 +2678,20 @@ static void
 caching_client_glStencilOp (void* client, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     INSTRUMENT();
-
     caching_client_glStencilOpSeparate (client, GL_FRONT_AND_BACK, sfail, dpfail, dppass);
 }
 
 static void
 caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint param)
 {
-    int active_texture_index;
-    int target_index;
-
     INSTRUMENT();
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    active_texture_index = state->active_texture - GL_TEXTURE0;
-
-    if (! (target == GL_TEXTURE_2D || 
-           target == GL_TEXTURE_CUBE_MAP || 
-           target == GL_TEXTURE_3D_OES)) {
+    if (! is_valid_GetTexParamTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
+    int target_index;
     if (target == GL_TEXTURE_2D)
         target_index = 0;
     else if (target == GL_TEXTURE_CUBE_MAP)
@@ -2756,80 +2699,49 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
     else
         target_index = 2;
 
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    int active_texture_index = state->active_texture - GL_TEXTURE0;
+
     if (pname == GL_TEXTURE_MAG_FILTER) {
         if (state->texture_mag_filter[active_texture_index][target_index] != param) {
             state->texture_mag_filter[active_texture_index][target_index] = param;
-        }
-        else
+        } else
             return;
-    }
-    else if (pname == GL_TEXTURE_MIN_FILTER) {
+    } else if (pname == GL_TEXTURE_MIN_FILTER) {
         if (state->texture_min_filter[active_texture_index][target_index] != param) {
             state->texture_min_filter[active_texture_index][target_index] = param;
-        }
-        else
+        } else
             return;
-    }
-    else if (pname == GL_TEXTURE_WRAP_S) {
+    } else if (pname == GL_TEXTURE_WRAP_S) {
         if (state->texture_wrap_s[active_texture_index][target_index] != param) {
             state->texture_wrap_s[active_texture_index][target_index] = param;
-        }
-        else
+        } else
             return;
-    }
-    else if (pname == GL_TEXTURE_WRAP_T) {
+    } else if (pname == GL_TEXTURE_WRAP_T) {
         if (state->texture_wrap_t[active_texture_index][target_index] != param) {
             state->texture_wrap_t[active_texture_index][target_index] = param;
-        }
-        else
+        } else
             return;
-    }
-    else if (pname == GL_TEXTURE_WRAP_R_OES) {
+    } else if (pname == GL_TEXTURE_WRAP_R_OES) {
         if (state->texture_3d_wrap_r[active_texture_index] != param) {
             state->texture_3d_wrap_r[active_texture_index] = param;
-        }
-        else
+        } else
             return;
     }
 
-    if (! (pname == GL_TEXTURE_MAG_FILTER ||
-           pname == GL_TEXTURE_MIN_FILTER ||
-           pname == GL_TEXTURE_WRAP_S     ||
-           pname == GL_TEXTURE_WRAP_T
-                                          || 
-           pname == GL_TEXTURE_WRAP_R_OES
-                                         )) {
+    if (! is_valid_TextureParameter (pname)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
-    if (pname == GL_TEXTURE_MAG_FILTER &&
-        ! (param == GL_NEAREST ||
-           param == GL_LINEAR ||
-           param == GL_NEAREST_MIPMAP_NEAREST ||
-           param == GL_LINEAR_MIPMAP_NEAREST  ||
-           param == GL_NEAREST_MIPMAP_LINEAR  ||
-           param == GL_LINEAR_MIPMAP_LINEAR)) {
+    if ((pname == GL_TEXTURE_MAG_FILTER && ! is_valid_TextureMagFilterMode (param)) ||
+        (pname == GL_TEXTURE_MIN_FILTER && ! is_valid_TextureMinFilterMode (param)) ||
+        ((pname == GL_TEXTURE_WRAP_S || pname == GL_TEXTURE_WRAP_T || pname == GL_TEXTURE_WRAP_R_OES) &&
+            ! is_valid_TextureWrapMode (param))) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
-    else if (pname == GL_TEXTURE_MIN_FILTER &&
-             ! (param == GL_NEAREST ||
-                param == GL_LINEAR)) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
-        return;
-    }
-    else if ((pname == GL_TEXTURE_WRAP_S ||
-              pname == GL_TEXTURE_WRAP_T
-                                         || 
-              pname == GL_TEXTURE_WRAP_R_OES
-                                            ) &&
-             ! (param == GL_CLAMP_TO_EDGE   ||
-                param == GL_MIRRORED_REPEAT ||
-                param == GL_REPEAT)) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
-        return;
-    }
+
     CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
 }
 
@@ -2866,13 +2778,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         return;
     }
 
-    if (! (target == GL_TEXTURE_2D                  ||
-           target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X || 
-           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
-           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y || 
-           target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
-           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
+    if (! is_valid_TextureTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -2881,7 +2787,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
-    
+
     if ((type == GL_UNSIGNED_SHORT_4_4_4_4 ||
          type == GL_UNSIGNED_SHORT_5_5_5_1) &&
          format != GL_RGBA) {
