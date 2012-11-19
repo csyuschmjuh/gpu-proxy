@@ -112,8 +112,6 @@ client_init (client_t *client)
     prctl (PR_SET_TIMERSLACK, 1);
     initializing_client = true;
 
-    client->post_hook = NULL;
-
     buffer_create (&client->buffer, 512, "command");
 
     // We initialize the base dispatch table synchronously here, so that we
@@ -255,9 +253,6 @@ void
 client_run_command_async (command_t *command)
 {
     client_t *client = client_get_thread_local ();
-
-    if (client->post_hook)
-        client->post_hook (client, command);
 
     buffer_write_advance (&client->buffer, command->size);
 

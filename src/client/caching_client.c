@@ -268,7 +268,6 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
             return;
         else {
             CACHING_CLIENT(client)->super_dispatch.glBindBuffer (client, target, buffer);
-            caching_client_set_needs_get_error (CLIENT (client));
 
            /* FIXME: we don't know whether it succeeds or not */
            state->array_buffer_binding = buffer;
@@ -911,7 +910,6 @@ caching_client_glSetVertexAttribArray (void* client,
            CACHING_CLIENT(client)->super_dispatch.glEnableVertexAttribArray (client, index);
         else
            CACHING_CLIENT(client)->super_dispatch.glDisableVertexAttribArray (client, index);
-        caching_client_set_needs_get_error (CLIENT (client));
         return;
     }
  
@@ -1470,7 +1468,6 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
     }
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferRenderbuffer (client, target, attachment, renderbuffertarget, renderbuffer);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -1490,7 +1487,6 @@ caching_client_glFramebufferTexture2D (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2D (client, target, attachment,
                                                                    textarget, texture, level);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -1615,7 +1611,6 @@ caching_client_glGenerateMipmap (void* client, GLenum target)
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGenerateMipmap (client, target);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void caching_client_glGetActiveAttrib (void *client,
@@ -1997,7 +1992,6 @@ caching_client_glGetIntegerv (void* client,
         break;
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, pname, params);
-        caching_client_set_needs_get_error (CLIENT (client));
         break;
     }
 
@@ -3236,8 +3230,6 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     if (bound_buffer) {
         CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
                                                                       type, normalized, stride, pointer);
-        /* FIXME: Do we need set this flag? */
-        caching_client_set_needs_get_error (CLIENT (client));
     }
 
     if (found_index != -1) {
@@ -3326,7 +3318,6 @@ caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglI
     }
 
     CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void* 
@@ -3382,7 +3373,6 @@ caching_client_glGetBufferPointervOES (void* client, GLenum target, GLenum pname
     }
 
     CACHING_CLIENT(client)->super_dispatch.glGetBufferPointervOES (client, target, pname, params);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -3403,7 +3393,6 @@ caching_client_glFramebufferTexture3DOES (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture3DOES (client, target, attachment,
                                                                       textarget, texture, level, zoffset);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 /* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
@@ -3421,15 +3410,13 @@ caching_client_glBindVertexArrayOES (void* client, GLuint array)
 {
     INSTRUMENT();
 
+    /* FIXME: should we save this ? */
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (state->vertex_array_binding == array)
         return;
+    state->vertex_array_binding = array;
 
     CACHING_CLIENT(client)->super_dispatch.glBindVertexArrayOES (client, array);
-    caching_client_set_needs_get_error (CLIENT (client));
-
-    /* FIXME: should we save this ? */
-    state->vertex_array_binding = array;
 }
 
 static void
@@ -3549,7 +3536,6 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleEXT (
         client, target, attachment, textarget, texture, level, samples);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -3568,7 +3554,6 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleIMG (
         client, target, attachment, textarget, texture, level, samples);
-    caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -3898,86 +3883,6 @@ caching_client_eglMakeCurrent (void* client,
     return EGL_TRUE;
 }
 
-/* we specify those passthrough GL APIs that needs to set need_get_error */
-static void
-caching_client_post_hook(client_t *client,
-                         command_t *command)
-{
-    switch (command->type) {
-    case COMMAND_GLATTACHSHADER:
-    case COMMAND_GLBINDATTRIBLOCATION:
-    case COMMAND_GLBUFFERDATA:
-    case COMMAND_GLBUFFERSUBDATA:
-    case COMMAND_GLCOMPILESHADER:
-    case COMMAND_GLCOMPRESSEDTEXIMAGE2D:
-    case COMMAND_GLCOMPRESSEDTEXSUBIMAGE2D:
-    case COMMAND_GLCOPYTEXIMAGE2D:
-    case COMMAND_GLCOPYTEXSUBIMAGE2D:
-    case COMMAND_GLDELETEPROGRAM:
-    case COMMAND_GLDELETESHADER:
-    case COMMAND_GLDETACHSHADER:
-    case COMMAND_GLGETBUFFERPARAMETERIV:
-    case COMMAND_GLGETPROGRAMINFOLOG:
-    case COMMAND_GLGETSHADERIV:
-    case COMMAND_GLGETSHADERPRECISIONFORMAT:
-    case COMMAND_GLGETSHADERINFOLOG:
-    case COMMAND_GLGETSHADERSOURCE:
-    case COMMAND_GLLINKPROGRAM:
-    case COMMAND_GLVALIDATEPROGRAM:
-    case COMMAND_GLREADPIXELS:
-    case COMMAND_GLRELEASESHADERCOMPILER:
-    case COMMAND_GLRENDERBUFFERSTORAGE:
-    case COMMAND_GLSHADERBINARY:
-    case COMMAND_GLSHADERSOURCE:
-    case COMMAND_GLEGLIMAGETARGETRENDERBUFFERSTORAGEOES:
-    case COMMAND_GLGETPROGRAMBINARYOES:
-    case COMMAND_GLPROGRAMBINARYOES:
-    case COMMAND_GLGETBUFFERPOINTERVOES:
-    case COMMAND_GLTEXIMAGE3DOES:
-    case COMMAND_GLTEXSUBIMAGE3DOES:
-    case COMMAND_GLCOPYTEXSUBIMAGE3DOES:
-    case COMMAND_GLCOMPRESSEDTEXIMAGE3DOES:
-    case COMMAND_GLCOMPRESSEDTEXSUBIMAGE3DOES:
-    case COMMAND_GLFRAMEBUFFERTEXTURE3DOES:
-    case COMMAND_GLBEGINPERFMONITORAMD:
-    case COMMAND_GLGETPERFMONITORGROUPSAMD:
-    case COMMAND_GLGETPERFMONITORCOUNTERSAMD:
-    case COMMAND_GLGETPERFMONITORGROUPSTRINGAMD:
-    case COMMAND_GLGETPERFMONITORCOUNTERSTRINGAMD:
-    case COMMAND_GLGETPERFMONITORCOUNTERINFOAMD:
-    case COMMAND_GLGENPERFMONITORSAMD:
-    case COMMAND_GLENDPERFMONITORAMD:
-    case COMMAND_GLDELETEPERFMONITORSAMD:
-    case COMMAND_GLSELECTPERFMONITORCOUNTERSAMD:
-    case COMMAND_GLGETPERFMONITORCOUNTERDATAAMD:
-    case COMMAND_GLBLITFRAMEBUFFERANGLE:
-    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEANGLE:
-    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEAPPLE:
-    case COMMAND_GLRESOLVEMULTISAMPLEFRAMEBUFFERAPPLE:
-    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEEXT:
-    case COMMAND_GLRENDERBUFFERSTORAGEMULTISAMPLEIMG:
-    case COMMAND_GLSETFENCENV:
-    case COMMAND_GLFINISHFENCENV:
-    case COMMAND_GLCOVERAGEMASKNV:
-    case COMMAND_GLGETDRIVERCONTROLSQCOM:
-    case COMMAND_GLENABLEDRIVERCONTROLQCOM:
-    case COMMAND_GLDISABLEDRIVERCONTROLQCOM:
-    case COMMAND_GLEXTTEXOBJECTSTATEOVERRIDEIQCOM:
-    case COMMAND_GLGETDRIVERCONTROLSTRINGQCOM:
-    case COMMAND_GLEXTGETTEXLEVELPARAMETERIVQCOM:
-    case COMMAND_GLEXTGETTEXSUBIMAGEQCOM:
-    case COMMAND_GLEXTGETBUFFERPOINTERVQCOM:
-    case COMMAND_GLEXTISPROGRAMBINARYQCOM:
-    case COMMAND_GLEXTGETPROGRAMBINARYSOURCEQCOM:
-    case COMMAND_GLSTARTTILINGQCOM:
-    case COMMAND_GLENDTILINGQCOM:
-        caching_client_set_needs_get_error (CLIENT (client));
-        break;
-    default:
-        break;
-    }
-}
-
 static void
 caching_client_init (caching_client_t *client)
 {
@@ -3988,8 +3893,6 @@ caching_client_init (caching_client_t *client)
     mutex_lock (cached_gl_states_mutex);
     cached_gl_states ();
     mutex_unlock (cached_gl_states_mutex);
-
-    client->super.post_hook = caching_client_post_hook;
 
     #include "caching_client_dispatch_autogen.c"
 }
