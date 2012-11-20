@@ -22,7 +22,7 @@ name_handler_init ()
 
     name_handler.initialized = true;
     name_handler.last_name = 0;
-    name_handler.used_names = NewHashTable(free);
+    name_handler.used_names = NewHashTable(NULL);
 
     mutex_unlock (name_handler_mutex);
 }

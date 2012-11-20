@@ -86,7 +86,8 @@ DeleteHashTable (HashTable *table)
         struct HashEntry *entry = table->Table[pos];
         while (entry) {
             struct HashEntry *next = entry->Next;
-            table->delete_function (entry->Data);
+            if (table->delete_function)
+                table->delete_function (entry->Data);
             free (entry);
             entry = next;
         }
@@ -173,7 +174,8 @@ HashInsert (HashTable *table, GLuint key, void *data)
     /* Check if replacing an existing entry with same key. */
     for (entry = table->Table[pos]; entry; entry = entry->Next) {
         if (entry->Key == key) {
-            table->delete_function (entry->Data);
+            if (table->delete_function)
+                table->delete_function (entry->Data);
             entry->Data = data;
             return;
         }
@@ -220,12 +222,14 @@ HashRemove (HashTable *table, GLuint key)
             /* found it! */
             if (prev) {
                 prev->Next = entry->Next;
-            }
-            else {
+            } else {
                 table->Table[pos] = entry->Next;
             }
-            table->delete_function (entry->Data);
+
+            if (table->delete_function)
+                table->delete_function (entry->Data);
             free (entry);
+
             return;
         }
         prev = entry;
