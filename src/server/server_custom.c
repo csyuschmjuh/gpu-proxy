@@ -193,6 +193,23 @@ server_custom_handle_gldeletetextures (server_t *server, command_t *abstract_com
 }
 
 static void
+server_custom_handle_glframebuffertexture2d (server_t *server, command_t *abstract_command)
+{
+    command_glframebuffertexture2d_t *command =
+        (command_glframebuffertexture2d_t *)abstract_command;
+
+    if (command->texture) {
+        mutex_lock (name_mapping_mutex);
+        command->texture = *((GLuint *)HashLookup (name_mapping, command->texture));
+        mutex_unlock (name_mapping_mutex);
+    }
+
+    server->dispatch.glFramebufferTexture2D (
+        server, command->target, command->attachment,
+        command->textarget, command->texture, command->level);
+}
+
+static void
 server_custom_handle_glgenrenderbuffers (server_t *server,
                                          command_t *abstract_command)
 {
@@ -269,6 +286,8 @@ server_add_custom_command_handlers (server_t *server) {
         server_custom_handle_glgentextures;
     server->handler_table[COMMAND_GLDELETETEXTURES] =
         server_custom_handle_gldeletetextures;
+    server->handler_table[COMMAND_GLFRAMEBUFFERTEXTURE2D] =
+        server_custom_handle_glframebuffertexture2d;
 
     server->handler_table[COMMAND_GLBINDRENDERBUFFER] =
         server_custom_handle_glbindrenderbuffer;
