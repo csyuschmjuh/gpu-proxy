@@ -23,6 +23,12 @@ link_list_append (link_list_t **list,
                   list_delete_function_t delete_function);
 
 void
+link_list_prepend (link_list_t **list,
+                   void *data,
+                   list_delete_function_t delete_function);
+
+
+void
 link_list_delete_first_entry_matching_data (link_list_t **list,
                                             void *data);
 

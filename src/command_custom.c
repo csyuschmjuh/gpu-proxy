@@ -179,3 +179,11 @@ command_gldrawarrays_destroy_arguments (command_gldrawarrays_t *command)
 {
     link_list_clear (&command->arrays_to_free);
 }
+
+void
+command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t *command)
+
+{
+    /* This command is asynchronous, but we don't want to free the pointer
+     * until after glDraw(Elements/Arrays). */
+}

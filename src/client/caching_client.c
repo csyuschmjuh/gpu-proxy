@@ -1064,23 +1064,6 @@ caching_client_clear_attribute_list_data (client_t *client)
         attrib_list->attribs[i].data = NULL;
 }
 
-static void
-prepend_element_to_list (link_list_t **list,
-                         void *element)
-{
-    link_list_t *new_list = (link_list_t *) malloc (sizeof (link_list_t));
-    new_list->data = element;
-    if (*list) {
-        new_list->next = *list;
-        new_list->prev = (*list)->prev;
-        (*list)->prev = new_list;
-    } else {
-        new_list->next = new_list;
-        new_list->prev = new_list;
-    }
-    *list = new_list;
-}
-
 static bool
 client_has_vertex_attrib_array_set (client_t *client)
 {
@@ -1164,7 +1147,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
         }
         else {
             one_array_data = (char *)malloc (array_size);
-            prepend_element_to_list (allocated_data_arrays, one_array_data);
+            link_list_prepend (allocated_data_arrays, one_array_data, free);
         }
         memcpy (one_array_data,
                 attrib_list->first_index_pointer->pointer,
@@ -1182,8 +1165,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
             attribs[i].data = _create_data_array (&attribs[i], count);
             if (! attribs[i].data)
                 continue;
-
-            prepend_element_to_list (allocated_data_arrays, attribs[i].data);
+            link_list_prepend (allocated_data_arrays, attribs[i].data, free);
         }
         command_t *command = client_get_space_for_command (COMMAND_GLVERTEXATTRIBPOINTER);
         if (fits_in_one_array)
@@ -1423,8 +1405,8 @@ caching_client_glDrawElements (void* client,
 
     size_t elements_count = _get_elements_count (type, indices, count);
     link_list_t *arrays_to_free = NULL;
-         caching_client_setup_vertex_attrib_pointer_if_necessary (
-            CLIENT (client), elements_count, &arrays_to_free);
+    caching_client_setup_vertex_attrib_pointer_if_necessary (
+        CLIENT (client), elements_count, &arrays_to_free);
 
     char* indices_to_pass = (char*) indices;
     command_gldrawelements_t *command = NULL;
@@ -1437,7 +1419,7 @@ caching_client_glDrawElements (void* client,
             indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS);
         else {
             indices_to_pass = malloc (index_array_size);
-            prepend_element_to_list (&arrays_to_free, indices_to_pass);
+            link_list_prepend (&arrays_to_free, indices_to_pass, free);
         }
         memcpy (indices_to_pass, indices, index_array_size);
     }
