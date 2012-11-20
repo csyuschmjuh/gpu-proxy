@@ -84,7 +84,6 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
         (command_glgenframebuffers_t *)abstract_command;
 
     GLuint *server_framebuffers = (GLuint *)malloc (command->n * sizeof (GLuint));
-
     server->dispatch.glGenFramebuffers (server, command->n, server_framebuffers);
 
     int i;
@@ -107,12 +106,13 @@ server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_co
     command_glbindframebuffer_t *command =
         (command_glbindframebuffer_t *)abstract_command;
 
-    mutex_lock (name_mapping_mutex);
-    GLuint *server_buffer = (GLuint *)HashLookup (name_mapping,
-                                                  command->framebuffer);
-    mutex_unlock (name_mapping_mutex);
+    if (command->framebuffer) {
+        mutex_lock (name_mapping_mutex);
+        command->framebuffer = *((GLuint *)HashLookup (name_mapping, command->framebuffer));
+        mutex_unlock (name_mapping_mutex);
+    }
 
-    server->dispatch.glBindFramebuffer (server, command->target, *server_buffer);
+    server->dispatch.glBindFramebuffer (server, command->target, command->framebuffer);
     command_glbindframebuffer_destroy_arguments (command);
 }
 
