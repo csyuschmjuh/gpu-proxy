@@ -264,6 +264,23 @@ server_custom_handle_glbindrenderbuffer (server_t *server, command_t *abstract_c
     command_glbindrenderbuffer_destroy_arguments (command);
 }
 
+static void
+server_custom_handle_glframebufferrenderbuffer (server_t *server, command_t *abstract_command)
+{
+    command_glframebufferrenderbuffer_t *command =
+        (command_glframebufferrenderbuffer_t *)abstract_command;
+
+    if (command->renderbuffer) {
+        mutex_lock (name_mapping_mutex);
+        command->renderbuffer = *((GLuint *)HashLookup (name_mapping, command->renderbuffer));
+        mutex_unlock (name_mapping_mutex);
+    }
+
+    server->dispatch.glFramebufferRenderbuffer (
+        server, command->target, command->attachment,
+        command->renderbuffertarget, command->renderbuffer);
+}
+
 void
 server_add_custom_command_handlers (server_t *server) {
     server->handler_table[COMMAND_GLBINDBUFFER] =
@@ -295,5 +312,7 @@ server_add_custom_command_handlers (server_t *server) {
         server_custom_handle_glgenrenderbuffers;
     server->handler_table[COMMAND_GLDELETERENDERBUFFERS] =
         server_custom_handle_gldeleterenderbuffers;
+    server->handler_table[COMMAND_GLFRAMEBUFFERRENDERBUFFER] =
+        server_custom_handle_glframebufferrenderbuffer;
 }
 
