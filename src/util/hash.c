@@ -45,6 +45,9 @@
 
 #define HASH_FUNC(K)  ((K) % TABLE_SIZE)
 
+static void
+HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete);
+
 /**
  * An entry in the hash table.
  */
@@ -144,7 +147,7 @@ HashTake (HashTable *table, GLuint key)
 {
     assert (table);
     void *res = HashLookup_unlocked (table, key);
-    HashRemove (table, key);
+    HashRemoveWithDeletion (table, key, false);
     return res;
 }
 
@@ -191,19 +194,8 @@ HashInsert (HashTable *table, GLuint key, void *data)
     }
 }
 
-
-
-/**
- * Remove an entry from the hash table.
- *
- * \param table the hash table.
- * \param key key of entry to remove.
- *
- * While holding the hash table's lock, searches the entry with the matching
- * key and unlinks it.
- */
-void
-HashRemove (HashTable *table, GLuint key)
+static void
+HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete)
 {
     GLuint pos;
     struct HashEntry *entry, *prev;
@@ -226,7 +218,7 @@ HashRemove (HashTable *table, GLuint key)
                 table->Table[pos] = entry->Next;
             }
 
-            if (table->delete_function)
+            if (delete && table->delete_function)
                 table->delete_function (entry->Data);
             free (entry);
 
@@ -235,6 +227,21 @@ HashRemove (HashTable *table, GLuint key)
         prev = entry;
         entry = entry->Next;
     }
+}
+
+/**
+ * Remove an entry from the hash table.
+ *
+ * \param table the hash table.
+ * \param key key of entry to remove.
+ *
+ * While holding the hash table's lock, searches the entry with the matching
+ * key and unlinks it.
+ */
+void
+HashRemove (HashTable *table, GLuint key)
+{
+    HashRemoveWithDeletion (table, key, true);
 }
 
 

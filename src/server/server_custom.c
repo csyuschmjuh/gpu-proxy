@@ -67,8 +67,9 @@ server_custom_handle_gldeletebuffers (server_t *server, command_t *abstract_comm
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        command->buffers[i] = *(GLuint *)HashTake (name_mapping,
-                                                   command->buffers[i]);
+        GLuint *entry = HashTake (name_mapping, command->buffers[i]);
+        command->buffers[i] = *entry;
+        free (entry);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -125,8 +126,9 @@ server_custom_handle_gldeleteframebuffers (server_t *server, command_t *abstract
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        command->framebuffers[i] = *(GLuint *)HashTake (name_mapping,
-                                                        command->framebuffers[i]);
+        GLuint *entry = HashTake (name_mapping, command->framebuffers[i]);
+        command->framebuffers[i] = *entry;
+        free (entry);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -182,8 +184,9 @@ server_custom_handle_gldeletetextures (server_t *server, command_t *abstract_com
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        command->textures[i] = *(GLuint *)HashTake (name_mapping,
-                                                    command->textures[i]);
+        GLuint *entry = HashTake (name_mapping, command->textures[i]);
+        command->textures[i] = *entry;
+        free (entry);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -240,9 +243,10 @@ server_custom_handle_gldeleterenderbuffers (server_t *server, command_t *abstrac
 
     int i;
     mutex_lock (name_mapping_mutex);
-    for (i=0; i < command->n; i++) {
-        command->renderbuffers[i] = *(GLuint *)HashTake (name_mapping,
-                                                         command->renderbuffers[i]);
+    for (i = 0; i < command->n; i++) {
+        GLuint *entry = HashTake (name_mapping, command->renderbuffers[i]);
+        command->renderbuffers[i] = *entry;
+        free (entry);
     }
     mutex_unlock (name_mapping_mutex);
 
