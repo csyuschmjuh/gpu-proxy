@@ -43,7 +43,6 @@ typedef struct _texture {
     GLenum                  data_type;
 } texture_t;
 
-typedef struct egl_state egl_state_t;
 typedef struct egl_state {
     EGLContext           context;        /* active context, initial EGL_NO_CONTEXT */
     EGLDisplay           display;        /* active display, initial EGL_NO_SURFACE */
