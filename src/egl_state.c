@@ -34,9 +34,13 @@ egl_state_init (egl_state_t *state,
     state->max_vertex_attribs = 8;
     state->max_cube_map_texture_size = 16;
     state->max_fragment_uniform_vectors = 16;
+    state->max_fragment_uniform_vectors_queried = false;
     state->max_renderbuffer_size = 1;
+    state->max_renderbuffer_size_queried = false;
     state->max_texture_image_units = 8;
+    state->max_texture_image_units_queried = false;
     state->max_texture_size = 64;
+    state->max_texture_size_queried = false;
     state->max_varying_vectors = 8;
     state->max_vertex_uniform_vectors = 128;
     state->max_vertex_texture_image_units = 0;
