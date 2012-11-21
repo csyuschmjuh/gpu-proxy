@@ -200,6 +200,8 @@ static void
 _set_vertex_pointers (vertex_attrib_list_t *list,
                       vertex_attrib_t *new_attrib)
 {
+    if (! new_attrib->array_enabled)
+        return;
     void *pointer = new_attrib->pointer;
     if (! list->first_index_pointer || pointer < list->first_index_pointer->pointer)
         list->first_index_pointer = new_attrib;
@@ -946,9 +948,9 @@ caching_client_glSetVertexAttribArray (void* client,
                 _set_vertex_pointers (attrib_list, &attribs[found_index]);
             }
             else {
-                if (attribs[found_index].pointer == attrib_list->first_index_pointer)
+                if (&attribs[found_index] == attrib_list->first_index_pointer)
                     attrib_list->first_index_pointer = 0;
-                if (attribs[found_index].pointer == attrib_list->last_index_pointer)
+                if (&attribs[found_index] == attrib_list->last_index_pointer)
                     attrib_list->last_index_pointer = 0;
             
                 for (i = 0; i < attrib_list->count; i++) {
