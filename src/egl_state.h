@@ -43,7 +43,8 @@ typedef struct _texture {
     GLenum                  data_type;
 } texture_t;
 
-typedef struct egl_state {
+typedef struct egl_state  egl_state_t;
+struct egl_state {
     EGLContext           context;        /* active context, initial EGL_NO_CONTEXT */
     EGLDisplay           display;        /* active display, initial EGL_NO_SURFACE */
     EGLSurface           drawable;        /* active draw drawable, initial EGL_NO_SURFACE */
@@ -258,7 +259,7 @@ typedef struct egl_state {
     GLint        texture_max_level;
 
     HashTable    *texture_cache;
-} egl_state_t;
+};
 
 private void
 egl_state_init (egl_state_t *egl_state,
