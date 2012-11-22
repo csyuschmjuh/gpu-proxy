@@ -2932,12 +2932,18 @@ caching_client_glUseProgram (void* client,
         return;
     }
 
-    /* this maybe not right because this program may be invalid
-     * object, we save here to save time in glGetError() */
-    program_t *new_program = egl_state_lookup_cached_program (state, program_id);
-    if (!new_program) {
-        caching_client_glSetError (client, GL_INVALID_OPERATION);
-        return;
+    /* From glUseProgram doc: if program is zero, then the current
+     * rendering state refers to an invalid program object and the
+     * results of shader execution are undefined. However, this is not
+     * an error.*/
+    if (program_id) {
+        /* this maybe not right because this program may be invalid
+         * object, we save here to save time in glGetError() */
+        program_t *new_program = egl_state_lookup_cached_program (state, program_id);
+        if (!new_program) {
+            caching_client_glSetError (client, GL_INVALID_OPERATION);
+            return;
+        }
     }
 
     CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program_id);
