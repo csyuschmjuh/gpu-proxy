@@ -48,7 +48,8 @@ server_test_SOURCES = \
 server_test_LDFLAGS = \
 	-lX11 \
 	-ldl \
-	-lpthread
+	-lpthread \
+	$(GLES_LIBS)
 
 server_test_CFLAGS = \
 	-g \
