@@ -30,7 +30,7 @@ static bool
 _has_extension (const char* extension_name)
 {
     const char* extensions =
-        (const char*) dispatch_table_get_base ()->glGetString (NULL, GL_EXTENSIONS);
+        (const char*) glGetString (GL_EXTENSIONS);
 
     if (! extensions)
         return false;
