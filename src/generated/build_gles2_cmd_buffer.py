@@ -2518,11 +2518,6 @@ class GLGenerator(object):
 
         file.Write("    client_t *client = client_get_thread_local ();\n");
 
-        # For EGL functions we don't need to have valid GL state in place to use them.
-        if not func.name.startswith("egl"):
-          file.Write("    if (! client || ! client_has_valid_state (client))\n")
-          file.Write("        %s;" % func.MakeDefaultReturnStatement())
-
         file.Write("    ")
         if func.HasReturnValue():
             file.Write("return ")
@@ -2548,7 +2543,9 @@ class GLGenerator(object):
         file.Write("{\n")
 
         if func.name in FUNCTIONS_GENERATING_ERRORS:
-            file.Write("client_get_current_state (CLIENT (object))->need_get_error = false;\n\n");
+            file.Write("    egl_state_t *state = client_get_current_state (CLIENT (object));\n");
+            file.Write("    if (state)\n");
+            file.Write("        state->need_get_error = false;\n\n");
 
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
 
