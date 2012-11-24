@@ -2823,40 +2823,41 @@ caching_client_glTexSubImage2D (void* client,
 
     if (! (target == GL_TEXTURE_2D                  ||
            target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
-           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X || 
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X ||
            target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
-           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y || 
+           target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ||
            target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
            target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
-    
+
     if (type == GL_UNSIGNED_SHORT_5_6_5 && format != GL_RGB) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
-    
+
     if ((type == GL_UNSIGNED_SHORT_4_4_4_4 ||
          type == GL_UNSIGNED_SHORT_5_5_5_1) &&
          format != GL_RGBA) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
-    
+
+    if (! is_valid_TextureFormat (format)) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+
     if (target == GL_TEXTURE_2D)
         tex_id = state->texture_binding[0];
     else
         tex_id = state->texture_binding[1];
 
     texture_t *texture = egl_state_lookup_cached_texture (state, tex_id);
-    if (! texture)
+    if (! texture) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
-    else {
-        if (texture->internal_format != format) {
-            caching_client_glSetError (client, GL_INVALID_OPERATION);
-            return;
-        }
+    } else {
         if (xoffset + width > texture->width || yoffset + height > texture->height) {
             caching_client_glSetError (client, GL_INVALID_VALUE);
             return;
