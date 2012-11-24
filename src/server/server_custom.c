@@ -20,18 +20,19 @@ static void
 server_custom_handle_glbindbuffer (server_t *server,
                                    command_t *abstract_command)
 {
-    command_glbindbuffer_t *command =
-        (command_glbindbuffer_t *)abstract_command;
+    command_glbindbuffer_t *command = (command_glbindbuffer_t *)abstract_command;
 
-    mutex_lock (name_mapping_mutex);
-    GLuint *server_buffer = (GLuint *)HashLookup (name_mapping,
-                                                  command->buffer);
-    mutex_unlock (name_mapping_mutex);
+    if (command->buffer) {
+        mutex_lock (name_mapping_mutex);
+        GLuint *buffer = HashLookup (name_mapping, command->buffer);
+        mutex_unlock (name_mapping_mutex);
 
-    if (server_buffer)
-        server->dispatch.glBindBuffer (server, command->target, *server_buffer);
+        if (!buffer)
+            return;
+        command->buffer = *buffer;
+    }
 
-    command_glbindbuffer_destroy_arguments (command);
+    server->dispatch.glBindBuffer (server, command->target, command->buffer);
 }
 
 static void
@@ -42,7 +43,6 @@ server_custom_handle_glgenbuffers (server_t *server,
         (command_glgenbuffers_t *)abstract_command;
 
     GLuint *server_buffers = (GLuint *)malloc (command->n * sizeof (GLuint));
-
     server->dispatch.glGenBuffers (server, command->n, server_buffers);
 
     int i;
@@ -55,7 +55,6 @@ server_custom_handle_glgenbuffers (server_t *server,
     mutex_unlock (name_mapping_mutex);
 
     free (server_buffers);
-
     command_glgenbuffers_destroy_arguments (command);
 }
 
@@ -100,7 +99,6 @@ server_custom_handle_glgenframebuffers (server_t *server, command_t *abstract_co
     mutex_unlock (name_mapping_mutex);
 
     free (server_framebuffers);
-
     command_glgenframebuffers_destroy_arguments (command);
 }
 
@@ -109,18 +107,18 @@ server_custom_handle_glbindframebuffer (server_t *server, command_t *abstract_co
 {
     command_glbindframebuffer_t *command =
         (command_glbindframebuffer_t *)abstract_command;
-    GLuint *framebuffer = NULL;
 
     if (command->framebuffer) {
         mutex_lock (name_mapping_mutex);
-        framebuffer = HashLookup (name_mapping, command->framebuffer);
+        GLuint *framebuffer = HashLookup (name_mapping, command->framebuffer);
         mutex_unlock (name_mapping_mutex);
+
+        if (!framebuffer)
+            return;
+        command->framebuffer = *framebuffer;
     }
 
-    if (framebuffer)
-        server->dispatch.glBindFramebuffer (server, command->target, *framebuffer);
-
-    command_glbindframebuffer_destroy_arguments (command);
+    server->dispatch.glBindFramebuffer (server, command->target, command->framebuffer);
 }
 
 static void
@@ -164,7 +162,6 @@ server_custom_handle_glgentextures (server_t *server, command_t *abstract_comman
     mutex_unlock (name_mapping_mutex);
 
     free (server_textures);
-
     command_glgentextures_destroy_arguments (command);
 }
 
@@ -174,15 +171,17 @@ server_custom_handle_glbindtexture (server_t *server, command_t *abstract_comman
     command_glbindtexture_t *command =
         (command_glbindtexture_t *)abstract_command;
 
-    mutex_lock (name_mapping_mutex);
-    GLuint *texture = texture = HashLookup (name_mapping,
-                                            command->texture);
-    mutex_unlock (name_mapping_mutex);
+    if (command->texture) {
+        mutex_lock (name_mapping_mutex);
+        GLuint *texture = HashLookup (name_mapping, command->texture);
+        mutex_unlock (name_mapping_mutex);
 
-    if (texture)
-        server->dispatch.glBindTexture (server, command->target, *texture);
+        if (!texture)
+            return;
+        command->texture = *texture;
+    }
 
-    command_glbindtexture_destroy_arguments (command);
+    server->dispatch.glBindTexture (server, command->target, command->texture);
 }
 
 static void
@@ -212,18 +211,20 @@ server_custom_handle_glframebuffertexture2d (server_t *server, command_t *abstra
 {
     command_glframebuffertexture2d_t *command =
         (command_glframebuffertexture2d_t *)abstract_command;
-    GLuint *texture = NULL;
 
     if (command->texture) {
         mutex_lock (name_mapping_mutex);
-        texture = HashLookup (name_mapping, command->texture);
+        GLuint *texture =  HashLookup (name_mapping, command->texture);
         mutex_unlock (name_mapping_mutex);
+
+        if (!texture)
+            return;
+        command->texture = *texture;
     }
 
-    if (texture)
-        server->dispatch.glFramebufferTexture2D (
-            server, command->target, command->attachment,
-            command->textarget, *texture, command->level);
+    server->dispatch.glFramebufferTexture2D (
+        server, command->target, command->attachment,
+        command->textarget, command->texture, command->level);
 }
 
 static void
@@ -275,15 +276,18 @@ server_custom_handle_glbindrenderbuffer (server_t *server, command_t *abstract_c
 {
     command_glbindrenderbuffer_t *command =
         (command_glbindrenderbuffer_t *)abstract_command;
-    mutex_lock (name_mapping_mutex);
-    GLuint *renderbuffer = (GLuint *)HashLookup (name_mapping,
-                                                 command->renderbuffer);
-    mutex_unlock (name_mapping_mutex);
 
-    if (renderbuffer)
-        server->dispatch.glBindRenderbuffer (server, command->target, *renderbuffer);
+    if (command->renderbuffer) {
+        mutex_lock (name_mapping_mutex);
+        GLuint *renderbuffer = HashLookup (name_mapping, command->renderbuffer);
+        mutex_unlock (name_mapping_mutex);
 
-    command_glbindrenderbuffer_destroy_arguments (command);
+        if (!renderbuffer)
+            return;
+        command->renderbuffer = *renderbuffer;
+    }
+
+    server->dispatch.glBindRenderbuffer (server, command->target, command->renderbuffer);
 }
 
 static void
@@ -291,22 +295,25 @@ server_custom_handle_glframebufferrenderbuffer (server_t *server, command_t *abs
 {
     command_glframebufferrenderbuffer_t *command =
         (command_glframebufferrenderbuffer_t *)abstract_command;
-    GLuint *renderbuffer = NULL;
 
     if (command->renderbuffer) {
         mutex_lock (name_mapping_mutex);
-        renderbuffer = HashLookup (name_mapping, command->renderbuffer);
+        GLuint *renderbuffer = HashLookup (name_mapping, command->renderbuffer);
         mutex_unlock (name_mapping_mutex);
+
+        if (!renderbuffer)
+            return;
+        command->renderbuffer = *renderbuffer;
     }
 
-    if (renderbuffer)
-        server->dispatch.glFramebufferRenderbuffer (
-            server, command->target, command->attachment,
-            command->renderbuffertarget, *renderbuffer);
+    server->dispatch.glFramebufferRenderbuffer (
+        server, command->target, command->attachment,
+        command->renderbuffertarget, command->renderbuffer);
 }
 
 void
-server_add_custom_command_handlers (server_t *server) {
+server_add_custom_command_handlers (server_t *server)
+{
     server->handler_table[COMMAND_GLBINDBUFFER] =
         server_custom_handle_glbindbuffer;
     server->handler_table[COMMAND_GLGENBUFFERS] =

@@ -1494,9 +1494,6 @@ caching_client_glFrontFace (void* client, GLenum mode)
 static void
 caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 {
-    GLuint *server_buffers;
-    int i;
-
     INSTRUMENT();
 
     if (n < 0) {
@@ -1505,10 +1502,8 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
     }
 
     name_handler_alloc_names (n, buffers);
-
-    server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
-    for (i=0; i<n; i++)
-        server_buffers[i] = buffers [i];
+    GLuint *server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
+    memcpy (server_buffers, buffers, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, server_buffers);
 }
@@ -1516,9 +1511,6 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 static void
 caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
 {
-    GLuint *server_framebuffers;
-    int i;
-
     INSTRUMENT();
 
     if (n < 0) {
@@ -1527,10 +1519,8 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
     }
 
     name_handler_alloc_names (n, framebuffers);
-
-    server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
-    for (i=0; i<n; i++)
-        server_framebuffers[i] = framebuffers [i];
+    GLuint *server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
+    memcpy (server_framebuffers, framebuffers, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, server_framebuffers);
 }
@@ -1546,11 +1536,8 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
     }
 
     name_handler_alloc_names (n, renderbuffers);
-
     GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
-    int i;
-    for (i = 0; i < n; i++)
-        server_renderbuffers[i] = renderbuffers [i];
+    memcpy (server_renderbuffers, renderbuffers, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, server_renderbuffers);
 }
@@ -1558,10 +1545,6 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
 static void
 caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 {
-    GLuint *server_textures;
-    int i;
-
-
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -1572,14 +1555,13 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     }
 
     name_handler_alloc_names (n, textures);
-
-    server_textures = (GLuint *)malloc (n * sizeof (GLuint));
-    for (i = 0; i < n; i++)
-        server_textures[i] = textures [i];
+    GLuint *server_textures = (GLuint *)malloc (n * sizeof (GLuint));
+    memcpy (server_textures, textures, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, server_textures);
 
     /* add textures to cache */
+    int i;
     for (i = 0; i < n; i++)
         egl_state_create_cached_texture (state, textures[i]);
 }
