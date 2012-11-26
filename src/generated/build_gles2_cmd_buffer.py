@@ -2801,8 +2801,8 @@ class GLGenerator(object):
     """Writes the implementation for enum validation"""
     file = CWriter(filename)
     file.Write("#include \"config.h\"\n")
-    file.Write("#include <GLES2/gl2.h>\n")
-    file.Write("#include <GLES2/gl2ext.h>\n\n")
+    file.Write("#include \"gl2ext.h\"\n")
+    file.Write("#include <GLES2/gl2.h>\n\n")
 
     for (key, value) in _ENUM_LISTS.iteritems():
         file.Write("private bool\n")
