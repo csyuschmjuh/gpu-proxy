@@ -2846,6 +2846,12 @@ caching_client_glTexSubImage2D (void* client,
         }
     }
 
+    /* if internal format does not match format, we need to set 
+       needs_get_error = true
+     */
+    if (texture->internal_format != format)
+        caching_client_set_needs_get_error (CLIENT (client));
+
     /* FIXME: we need to check level */
 
     CACHING_CLIENT(client)->super_dispatch.glTexSubImage2D (client, target, level, xoffset, yoffset,
