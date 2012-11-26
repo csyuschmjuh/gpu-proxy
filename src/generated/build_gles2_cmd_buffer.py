@@ -2342,6 +2342,7 @@ class GLGenerator(object):
     self.interface_info = {}
     self.command_custom_text = None
     self.command_custom_header_text = None
+    self.server_text = None
 
     for func_name in _FUNCTION_INFO:
       info = _FUNCTION_INFO[func_name]
@@ -2625,6 +2626,11 @@ class GLGenerator(object):
         self.command_custom_header_text = open(os.path.join('..', 'command_custom.h')).read()
     return self.command_custom_header_text
 
+  def ServerText(self):
+    if not self.server_text:
+        self.server_text = open(os.path.join('..', 'server', 'server.c')).read()
+    return self.server_text
+
   def HasCustomInit(self, func):
     init_name = "command_%s_init " % func.name.lower()
     return self.CommandCustomText().find(init_name) != -1
@@ -2636,6 +2642,10 @@ class GLGenerator(object):
   def HasCustomStruct(self, func):
     struct_declaration = "typedef struct _command_%s " % func.name.lower()
     return self.CommandCustomHeaderText().find(struct_declaration) != -1
+
+  def HasCustomServerHandler(self, func):
+    handler_name = "server_handle_%s " % func.name.lower()
+    return self.ServerText().find(handler_name) != -1
 
   def WriteCommandInitilizationAndSizeFunction(self, filename):
     """Writes the command implementation for the client-side"""
@@ -2684,6 +2694,9 @@ class GLGenerator(object):
     file = CWriter(filename)
 
     for func in self.functions:
+        if self.HasCustomServerHandler(func):
+            continue
+
         file.Write("static void\n")
         file.Write("server_handle_%s (server_t *server, command_t *abstract_command)\n" % func.name.lower())
         file.Write("{\n")

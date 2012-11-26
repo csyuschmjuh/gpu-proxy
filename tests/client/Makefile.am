@@ -35,8 +35,6 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
-	$(rootsrcdir)/src/server/server_custom.c \
-	$(rootsrcdir)/src/server/server_custom.h \
 	$(rootsrcdir)/tests/server/gpuprocess_test.c \
 	$(rootsrcdir)/tests/server/gpuprocess_test.h \
 	basic_test.c \
