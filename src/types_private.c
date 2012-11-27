@@ -55,6 +55,7 @@ link_list_delete_first_entry_matching_data (link_list_t **list, void *data)
             link_list_delete_element (list, current);
             return;
         }
+        current = current->next;
     }
 }
 
