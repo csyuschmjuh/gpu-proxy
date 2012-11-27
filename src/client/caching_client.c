@@ -606,7 +606,7 @@ caching_client_glDeleteProgram (void *client,
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
 
-    program_t *cached_program = egl_state_lookup_cached_program (client, program);
+    program_t *cached_program = egl_state_lookup_cached_program (state, program);
     if (!cached_program) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -1123,7 +1123,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     char *one_array_data = NULL;
     bool fits_in_one_array = array_size < ATTRIB_BUFFER_SIZE;
     if (fits_in_one_array) {
-        if (array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
+        /*if (array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
             one_array_data = client->pre_1k_mem[client->last_1k_index];
             client->last_1k_index++;
         }
@@ -1147,7 +1147,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
             one_array_data = client->pre_32k_mem[client->last_32k_index];
             client->last_32k_index++;
         }
-        else {
+        else*/ {
             one_array_data = (char *)malloc (array_size);
             link_list_prepend (allocated_data_arrays, one_array_data, free);
         }
@@ -3733,7 +3733,6 @@ caching_client_eglSwapBuffers (void* client,
     CLIENT(client)->last_8k_index = 0;
     CLIENT(client)->last_16k_index = 0;
     CLIENT(client)->last_32k_index = 0;
-
     return result;
 }
 
