@@ -491,6 +491,12 @@ _FUNCTION_INFO = {
   'glFramebufferRenderbuffer' : {
     'mapped_name': 'renderbuffer'
   },
+  'glFramebufferTexture2DMultisampleEXT': {
+    'mapped_name': 'texture'
+  },
+  'glFramebufferTexture2DMultisampleIMG': {
+    'mapped_name': 'texture'
+  },
 }
 
 FUNCTIONS_GENERATING_ERRORS = [
