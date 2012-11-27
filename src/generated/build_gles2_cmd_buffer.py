@@ -461,6 +461,36 @@ _FUNCTION_INFO = {
   'eglCreateDRMImageMESA': {
     'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
   },
+  'glBindBuffer' : {
+    'mapped_name': 'buffer'
+  },
+  'glIsBuffer' : {
+    'mapped_name': 'buffer'
+  },
+  'glBindFramebuffer' : {
+    'mapped_name': 'framebuffer'
+  },
+  'glIsFramebuffer' : {
+    'mapped_name': 'framebuffer'
+  },
+  'glBindTexture' : {
+    'mapped_name': 'texture'
+  },
+  'glIsTexture' : {
+    'mapped_name': 'texture'
+  },
+  'glFramebufferTexture2D' : {
+    'mapped_name': 'texture'
+  },
+  'glBindRenderbuffer' : {
+    'mapped_name': 'renderbuffer'
+  },
+  'glIsRenderbuffer' : {
+    'mapped_name': 'renderbuffer'
+  },
+  'glFramebufferRenderbuffer' : {
+    'mapped_name': 'renderbuffer'
+  },
 }
 
 FUNCTIONS_GENERATING_ERRORS = [
@@ -1622,6 +1652,8 @@ class FunctionInfo(object):
       self.argument_element_size = {}
     if not 'argument_size_from_function' in info:
       self.argument_size_from_function = {}
+    if not 'mapped_name' in info:
+      self.mapped_name = []
 
 
 class Argument(object):
@@ -2245,6 +2277,9 @@ class Function(object):
   def ShouldHideEntryPoint(self):
     return self.IsExtensionFunction() and not self.name.startswith("egl")
 
+  def GetMappedName(self):
+    return self.info.mapped_name
+
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
 
@@ -2703,9 +2738,20 @@ class GLGenerator(object):
         file.Write("    INSTRUMENT ();\n")
 
         need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
-        if  need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
+        if need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
           file.Write("    command_%s_t *command = \n" % func.name.lower())
           file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
+
+        mapped_name = func.GetMappedName()
+        if mapped_name:
+          file.Write("    if (command->%s) {\n" % mapped_name)
+          file.Write("        mutex_lock (name_mapping_mutex);\n")
+          file.Write("        GLuint *%s = HashLookup (name_mapping, command->%s);\n" % (mapped_name, mapped_name))
+          file.Write("        mutex_unlock (name_mapping_mutex);\n")
+          file.Write("        if (!%s)\n" % mapped_name)
+          file.Write("            return;\n")
+          file.Write("        command->%s = *%s;\n" % (mapped_name, mapped_name))
+          file.Write("    }\n")
 
         file.Write("    ")
         if func.HasReturnValue():
@@ -2721,7 +2767,7 @@ class GLGenerator(object):
 
         if need_destructor_call:
           file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
-        file.Write("}\n")
+        file.Write("}\n\n")
 
     file.Write("static void\n")
     file.Write("server_fill_command_handler_table (server_t* server)\n")
