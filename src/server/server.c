@@ -79,25 +79,6 @@ mutex_static_init (name_mapping_mutex);
 static HashTable *name_mapping = NULL;
 
 static void
-server_handle_glbindbuffer (server_t *server,
-                                   command_t *abstract_command)
-{
-    command_glbindbuffer_t *command = (command_glbindbuffer_t *)abstract_command;
-
-    if (command->buffer) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *buffer = HashLookup (name_mapping, command->buffer);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!buffer)
-            return;
-        command->buffer = *buffer;
-    }
-
-    server->dispatch.glBindBuffer (server, command->target, command->buffer);
-}
-
-static void
 server_handle_glgenbuffers (server_t *server,
                                    command_t *abstract_command)
 {
@@ -165,25 +146,6 @@ server_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
 }
 
 static void
-server_handle_glbindframebuffer (server_t *server, command_t *abstract_command)
-{
-    command_glbindframebuffer_t *command =
-        (command_glbindframebuffer_t *)abstract_command;
-
-    if (command->framebuffer) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *framebuffer = HashLookup (name_mapping, command->framebuffer);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!framebuffer)
-            return;
-        command->framebuffer = *framebuffer;
-    }
-
-    server->dispatch.glBindFramebuffer (server, command->target, command->framebuffer);
-}
-
-static void
 server_handle_gldeleteframebuffers (server_t *server, command_t *abstract_command)
 {
     command_gldeleteframebuffers_t *command =
@@ -228,25 +190,6 @@ server_handle_glgentextures (server_t *server, command_t *abstract_command)
 }
 
 static void
-server_handle_glbindtexture (server_t *server, command_t *abstract_command)
-{
-    command_glbindtexture_t *command =
-        (command_glbindtexture_t *)abstract_command;
-
-    if (command->texture) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *texture = HashLookup (name_mapping, command->texture);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!texture)
-            return;
-        command->texture = *texture;
-    }
-
-    server->dispatch.glBindTexture (server, command->target, command->texture);
-}
-
-static void
 server_handle_gldeletetextures (server_t *server, command_t *abstract_command)
 {
     command_gldeletetextures_t *command =
@@ -266,27 +209,6 @@ server_handle_gldeletetextures (server_t *server, command_t *abstract_command)
     server->dispatch.glDeleteTextures (server, command->n, command->textures);
 
     command_gldeletetextures_destroy_arguments (command);
-}
-
-static void
-server_handle_glframebuffertexture2d (server_t *server, command_t *abstract_command)
-{
-    command_glframebuffertexture2d_t *command =
-        (command_glframebuffertexture2d_t *)abstract_command;
-
-    if (command->texture) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *texture =  HashLookup (name_mapping, command->texture);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!texture)
-            return;
-        command->texture = *texture;
-    }
-
-    server->dispatch.glFramebufferTexture2D (
-        server, command->target, command->attachment,
-        command->textarget, command->texture, command->level);
 }
 
 static void
@@ -333,46 +255,6 @@ server_handle_gldeleterenderbuffers (server_t *server, command_t *abstract_comma
     command_gldeleterenderbuffers_destroy_arguments (command);
 }
 
-static void
-server_handle_glbindrenderbuffer (server_t *server, command_t *abstract_command)
-{
-    command_glbindrenderbuffer_t *command =
-        (command_glbindrenderbuffer_t *)abstract_command;
-
-    if (command->renderbuffer) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *renderbuffer = HashLookup (name_mapping, command->renderbuffer);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!renderbuffer)
-            return;
-        command->renderbuffer = *renderbuffer;
-    }
-
-    server->dispatch.glBindRenderbuffer (server, command->target, command->renderbuffer);
-}
-
-static void
-server_handle_glframebufferrenderbuffer (server_t *server, command_t *abstract_command)
-{
-    command_glframebufferrenderbuffer_t *command =
-        (command_glframebufferrenderbuffer_t *)abstract_command;
-
-    if (command->renderbuffer) {
-        mutex_lock (name_mapping_mutex);
-        GLuint *renderbuffer = HashLookup (name_mapping, command->renderbuffer);
-        mutex_unlock (name_mapping_mutex);
-
-        if (!renderbuffer)
-            return;
-        command->renderbuffer = *renderbuffer;
-    }
-
-    server->dispatch.glFramebufferRenderbuffer (
-        server, command->target, command->attachment,
-        command->renderbuffertarget, command->renderbuffer);
-}
-
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -384,37 +266,22 @@ server_init (server_t *server,
     server->handler_table[COMMAND_NO_OP] = server_handle_no_op;
     server_fill_command_handler_table (server);
 
-    server->handler_table[COMMAND_GLBINDBUFFER] =
-        server_handle_glbindbuffer;
     server->handler_table[COMMAND_GLGENBUFFERS] =
         server_handle_glgenbuffers;
     server->handler_table[COMMAND_GLDELETEBUFFERS] =
         server_handle_gldeletebuffers;
-
-    server->handler_table[COMMAND_GLBINDFRAMEBUFFER] =
-        server_handle_glbindframebuffer;
     server->handler_table[COMMAND_GLDELETEFRAMEBUFFERS] =
         server_handle_gldeleteframebuffers;
     server->handler_table[COMMAND_GLGENFRAMEBUFFERS] =
         server_handle_glgenframebuffers;
-
-    server->handler_table[COMMAND_GLBINDTEXTURE] =
-        server_handle_glbindtexture;
     server->handler_table[COMMAND_GLGENTEXTURES] =
         server_handle_glgentextures;
     server->handler_table[COMMAND_GLDELETETEXTURES] =
         server_handle_gldeletetextures;
-    server->handler_table[COMMAND_GLFRAMEBUFFERTEXTURE2D] =
-        server_handle_glframebuffertexture2d;
-
-    server->handler_table[COMMAND_GLBINDRENDERBUFFER] =
-        server_handle_glbindrenderbuffer;
     server->handler_table[COMMAND_GLGENRENDERBUFFERS] =
         server_handle_glgenrenderbuffers;
     server->handler_table[COMMAND_GLDELETERENDERBUFFERS] =
         server_handle_gldeleterenderbuffers;
-    server->handler_table[COMMAND_GLFRAMEBUFFERRENDERBUFFER] =
-        server_handle_glframebufferrenderbuffer;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping)
