@@ -14,6 +14,12 @@ egl_state_init (egl_state_t *state,
     state->drawable = EGL_NO_SURFACE;
     state->readable = EGL_NO_SURFACE;
 
+    state->vendor_string = NULL;
+    state->renderer_string = NULL;
+    state->version_string = NULL;
+    state->shading_language_version_string = NULL;
+    state->extensions_string = NULL;
+
     state->share_context = NULL;
     state->contexts_sharing = 0;
 
@@ -177,6 +183,17 @@ egl_state_destroy (void *abstract_state)
     HashWalk (state->texture_cache, delete_texture_from_name_handler, NULL);
     DeleteHashTable (state->texture_cache);
     link_list_clear (&state->programs);
+
+    if (state->vendor_string)
+        free (state->vendor_string);
+    if (state->renderer_string)
+        free (state->renderer_string);
+    if (state->version_string)
+        free (state->version_string);
+    if (state->shading_language_version_string)
+        free (state->version_string);
+    if (state->extensions_string)
+        free (state->extensions_string);
 
     free (state);
 }

@@ -2042,6 +2042,7 @@ static const GLubyte *
 caching_client_glGetString (void* client, GLenum name)
 {
     const GLubyte *result = NULL;
+    int length = 0;
 
     INSTRUMENT();
 
@@ -2050,10 +2051,67 @@ caching_client_glGetString (void* client, GLenum name)
         return NULL;
     }
 
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    switch (name) {
+    case GL_VENDOR:
+        if (state->vendor_string)
+            return (const GLubyte *)state->vendor_string;
+        break;
+    case GL_RENDERER:
+        if (state->renderer_string)
+            return (const GLubyte *)state->renderer_string;
+        break;
+    case GL_VERSION:
+        if (state->version_string)
+            return (const GLubyte *)state->version_string;
+        break;
+    case GL_SHADING_LANGUAGE_VERSION:
+        if (state->shading_language_version_string)
+            return (const GLubyte *)state->shading_language_version_string;
+        break;
+    case GL_EXTENSIONS:
+        if (state->extensions_string)
+            return (const GLubyte *)state->extensions_string;
+        break;
+    default:
+        break;
+    }
+
     result = CACHING_CLIENT(client)->super_dispatch.glGetString (client, name);
 
     if (result == 0)
         caching_client_set_needs_get_error (CLIENT (client));
+
+    length = strlen ((char *)result);
+    switch (name) {
+    case GL_VENDOR:
+        state->vendor_string = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (state->vendor_string, result, length);
+        state->vendor_string[length] = 0;
+        break;
+    case GL_RENDERER:
+        state->renderer_string = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (state->renderer_string, result, length);
+        state->renderer_string[length] = 0;
+        break;
+    case GL_VERSION:
+        state->version_string = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (state->version_string, result, length);
+        state->version_string[length] = 0;
+        break;
+    case GL_SHADING_LANGUAGE_VERSION:
+        state->shading_language_version_string = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (state->shading_language_version_string, result, length);
+        state->shading_language_version_string[length] = 0;
+        break;
+    case GL_EXTENSIONS:
+        state->extensions_string = (char *)malloc (sizeof (char) * (length+1));
+        memcpy (state->extensions_string, result, length);
+        state->extensions_string[length] = 0;
+        break;
+    default:
+        break;
+    }
 
     return result;
 }

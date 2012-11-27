@@ -54,6 +54,12 @@ struct egl_state {
                                              This is always at least one, since a context shares with itself
                                              by default. Thus it's a hackish reference count. */
 
+    char             *version_string;
+    char             *extensions_string;
+    char             *renderer_string;
+    char             *vendor_string;
+    char             *shading_language_version_string;
+
     bool             active;
     bool             destroy_dpy;
     bool             destroy_ctx;

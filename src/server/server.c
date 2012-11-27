@@ -82,6 +82,8 @@ static void
 server_handle_glgenbuffers (server_t *server,
                                    command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_glgenbuffers_t *command =
         (command_glgenbuffers_t *)abstract_command;
 
@@ -104,6 +106,8 @@ server_handle_glgenbuffers (server_t *server,
 static void
 server_handle_gldeletebuffers (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_gldeletebuffers_t *command =
         (command_gldeletebuffers_t *)abstract_command;
 
@@ -126,6 +130,8 @@ server_handle_gldeletebuffers (server_t *server, command_t *abstract_command)
 static void
 server_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_glgenframebuffers_t *command =
         (command_glgenframebuffers_t *)abstract_command;
 
@@ -148,6 +154,8 @@ server_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
 static void
 server_handle_gldeleteframebuffers (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_gldeleteframebuffers_t *command =
         (command_gldeleteframebuffers_t *)abstract_command;
 
@@ -170,6 +178,8 @@ server_handle_gldeleteframebuffers (server_t *server, command_t *abstract_comman
 static void
 server_handle_glgentextures (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_glgentextures_t *command =
         (command_glgentextures_t *)abstract_command;
 
@@ -192,6 +202,8 @@ server_handle_glgentextures (server_t *server, command_t *abstract_command)
 static void
 server_handle_gldeletetextures (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_gldeletetextures_t *command =
         (command_gldeletetextures_t *)abstract_command;
 
@@ -215,6 +227,8 @@ static void
 server_handle_glgenrenderbuffers (server_t *server,
                                          command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_glgenrenderbuffers_t *command =
         (command_glgenrenderbuffers_t *)abstract_command;
 
@@ -237,6 +251,8 @@ server_handle_glgenrenderbuffers (server_t *server,
 static void
 server_handle_gldeleterenderbuffers (server_t *server, command_t *abstract_command)
 {
+    INSTRUMENT();
+
     command_gldeleterenderbuffers_t *command =
         (command_gldeleterenderbuffers_t *)abstract_command;
 
