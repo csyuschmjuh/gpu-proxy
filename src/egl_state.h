@@ -265,6 +265,8 @@ struct egl_state {
     GLint        texture_max_level;
 
     HashTable    *texture_cache;
+
+    bool framebuffer_complete;
 };
 
 private void
