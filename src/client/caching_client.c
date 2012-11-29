@@ -302,15 +302,15 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
         state->framebuffer_binding == framebuffer)
             return;
 
-    if (target != GL_FRAMEBUFFER)
+    if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
+    }
 
     CACHING_CLIENT(client)->super_dispatch.glBindFramebuffer (client, target, framebuffer);
     /* FIXME: should we save it, it will be invalid if the
      * framebuffer is invalid 
      */
     state->framebuffer_binding = framebuffer;
-    state->framebuffer_complete = true;
 
     //state->need_get_error = true;
 }
@@ -330,7 +330,6 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
      */
     egl_state_t *state = client_get_current_state (CLIENT (client));
     state->renderbuffer_binding = renderbuffer;
-    state->framebuffer_complete = true;
 }
 
 static void
@@ -371,7 +370,6 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
         state->texture_binding[1] = texture;
     else
         state->texture_binding_3d = texture;
-    state->framebuffer_complete = true;
 }
 
 static void
@@ -498,21 +496,13 @@ caching_client_glCheckFramebufferStatus (void* client, GLenum target)
         return GL_INVALID_ENUM;
     }
 
-    GLenum result = CACHING_CLIENT(client)->super_dispatch.glCheckFramebufferStatus (client, target);
-    client_get_current_state (CLIENT (client))->framebuffer_complete =
-        (result == GL_FRAMEBUFFER_COMPLETE);
-    return result;
+    return CACHING_CLIENT(client)->super_dispatch.glCheckFramebufferStatus (client, target);
 }
 
 static void
 caching_client_glClear (void* client, GLbitfield mask)
 {
     INSTRUMENT();
-
-    if (! client_get_current_state (CLIENT (client))->framebuffer_complete) {
-        caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
-        return;
-    }
 
     if (! (mask & GL_COLOR_BUFFER_BIT ||
            mask & GL_DEPTH_BUFFER_BIT ||
@@ -522,7 +512,6 @@ caching_client_glClear (void* client, GLbitfield mask)
     }
 
     CACHING_CLIENT(client)->super_dispatch.glClear (client, mask);
-    state->needs_get_error = true; /* May have an incomplete framebuffer. */
 }
 
 static void
@@ -1209,11 +1198,6 @@ caching_client_glDrawArrays (void* client,
 {
     INSTRUMENT();
 
-    if (! client_get_current_state (CLIENT (client))->framebuffer_complete) {
-        caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
-        return;
-    }
-
     if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
@@ -1252,7 +1236,6 @@ caching_client_glDrawArrays (void* client,
     ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
      client_run_command_async (command);
 
-    state->needs_get_error = true; /* May have an incomplete framebuffer. */
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
@@ -1385,11 +1368,6 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
-    if (! client_get_current_state (CLIENT (client))->framebuffer_complete) {
-        caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
-        return;
-    }
-
     if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
@@ -1455,7 +1433,6 @@ caching_client_glDrawElements (void* client,
     ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
     client_run_command_async (&command->header);
 
-    state->needs_get_error = true; /* May have an incomplete framebuffer. */
     caching_client_clear_attribute_list_data (CLIENT(client));
 }
 
@@ -2015,15 +1992,6 @@ caching_client_glGetError (void* client)
 
     caching_client_reset_set_needs_get_error (CLIENT (client));
     state->error = GL_NO_ERROR;
-
-    /* We're being a bit conservative here, since there are some cases
-     * where the framebuffer is incomplete and we don't know it. We want
-     * to err on the side of caution though since it's much worse to fail
-     * when the framebuffer is actually complete. */
-    if (error == GL_INVALID_FRAMEBUFFER_OPERATION)
-        state->framebuffer_complete = false;
-    else
-        state->framebuffer_complete = true;
 
     return error;
 }

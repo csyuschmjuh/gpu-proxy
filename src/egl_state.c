@@ -152,8 +152,6 @@ egl_state_init (egl_state_t *state,
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable(free);
-
-    state->framebuffer_complete = true;
 }
 
 egl_state_t *
