@@ -19,11 +19,11 @@ typedef struct _client client_t;
  *   client_write_command (command);
  */
 #define MEM_1K_SIZE  64
-#define MEM_2K_SIZE  32
-#define MEM_4K_SIZE  16
-#define MEM_8K_SIZE  16
-#define MEM_16K_SIZE 16
-#define MEM_32K_SIZE 16
+#define MEM_2K_SIZE  64
+#define MEM_4K_SIZE  64
+#define MEM_8K_SIZE  64
+#define MEM_16K_SIZE 32
+#define MEM_32K_SIZE 32
 
 struct _client {
     dispatch_table_t dispatch;
@@ -51,8 +51,10 @@ struct _client {
     int  last_16k_index;
     int  last_32k_index;
 
-    mutex_t signal_mutex;
-    signal_t signal;
+    mutex_t server_signal_mutex;
+    signal_t server_signal;
+    mutex_t client_signal_mutex;
+    signal_t client_signal;
 };
 
 private client_t *
