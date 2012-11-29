@@ -60,7 +60,8 @@ server_start_work_loop (server_t *server)
             pthread_cond_signal (server->client_signal);
             pthread_mutex_unlock (server->client_signal_mutex);
         }*/
-        server->buffer->last_token = read_command->token;
+        if (read_command->token)
+            server->buffer->last_token = read_command->token;
     }
 }
 
