@@ -68,8 +68,10 @@ start_server_thread_func (void *ptr)
     client_t *client = (client_t *)ptr;
     server_t *server = server_new (&client->buffer);
 
-    server->signal_mutex = &client->signal_mutex;
-    server->signal = &client->signal;
+    server->server_signal_mutex = &client->server_signal_mutex;
+    server->server_signal = &client->server_signal;
+    server->client_signal_mutex = &client->client_signal_mutex;
+    server->client_signal = &client->client_signal;
 
     mutex_unlock (client->server_started_mutex);
     prctl (PR_SET_TIMERSLACK, 1);
@@ -123,8 +125,10 @@ client_init (client_t *client)
 
     client->token = 0;
 
-    pthread_mutex_init (&client->signal_mutex, NULL);
-    pthread_cond_init (&client->signal, NULL);
+    pthread_mutex_init (&client->server_signal_mutex, NULL);
+    pthread_cond_init (&client->server_signal, NULL);
+    pthread_mutex_init (&client->client_signal_mutex, NULL);
+    pthread_cond_init (&client->client_signal, NULL);
 
     client->last_1k_index = 0;
     client->last_2k_index = 0;
@@ -154,8 +158,10 @@ client_destroy (client_t *client)
 
     buffer_free (&client->buffer);
 
-    pthread_mutex_destroy (&client->signal_mutex);
-    pthread_cond_destroy (&client->signal);
+    pthread_mutex_destroy (&client->server_signal_mutex);
+    pthread_cond_destroy (&client->server_signal);
+    pthread_mutex_destroy (&client->client_signal_mutex);
+    pthread_cond_destroy (&client->client_signal);
 
     free (client);
 
@@ -247,6 +253,11 @@ client_run_command (command_t *command)
 
     while (client->buffer.last_token < token)
         sleep_nanoseconds (500);
+
+    /*pthread_mutex_lock (&client->client_signal_mutex);
+    if (client->buffer.last_token < token)
+        pthread_cond_wait (&client->client_signal, &client->client_signal_mutex);
+    pthread_mutex_unlock (&client->client_signal_mutex);*/
 }
 
 void
@@ -257,9 +268,9 @@ client_run_command_async (command_t *command)
     buffer_write_advance (&client->buffer, command->size);
 
     if (client->buffer.fill_count == command->size) {
-        pthread_mutex_lock (&client->signal_mutex);
-        pthread_cond_signal (&client->signal);
-        pthread_mutex_unlock (&client->signal_mutex);
+        pthread_mutex_lock (&client->server_signal_mutex);
+        pthread_cond_signal (&client->server_signal);
+        pthread_mutex_unlock (&client->server_signal_mutex);
     }
 }
 

@@ -28,8 +28,10 @@ struct _server {
 
     void (*command_post_hook)(server_t *server, command_t *command);
 
-    mutex_t* signal_mutex;
-    signal_t* signal;
+    mutex_t* server_signal_mutex;
+    signal_t* server_signal;
+    mutex_t* client_signal_mutex;
+    signal_t* client_signal;
 };
 
 private void
