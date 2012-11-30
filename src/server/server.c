@@ -276,6 +276,41 @@ server_handle_gldeleterenderbuffers (server_t *server, command_t *abstract_comma
     command_gldeleterenderbuffers_destroy_arguments (command);
 }
 
+static void
+server_handle_glcreateprogram (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_glcreateprogram_t *command =
+            (command_glcreateprogram_t *)abstract_command;
+    GLuint *program = (GLuint *)malloc (sizeof (GLuint));
+
+    *program = server->dispatch.glCreateProgram (server);
+
+    mutex_lock (name_mapping_mutex);
+    HashInsert (name_mapping, command->result, program);
+    mutex_unlock (name_mapping_mutex);
+
+}
+
+static void
+server_handle_gldeleteprogram (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_gldeleteprogram_t *command =
+            (command_gldeleteprogram_t *)abstract_command;
+
+    mutex_lock (name_mapping_mutex);
+    GLuint *program = HashTake (name_mapping, command->program);
+    mutex_unlock (name_mapping_mutex);
+
+    if (program)
+        server->dispatch.glDeleteProgram (server, *program);
+
+    command_gldeleteprogram_destroy_arguments (command);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -303,6 +338,10 @@ server_init (server_t *server,
         server_handle_glgenrenderbuffers;
     server->handler_table[COMMAND_GLDELETERENDERBUFFERS] =
         server_handle_gldeleterenderbuffers;
+    server->handler_table[COMMAND_GLCREATEPROGRAM] =
+        server_handle_glcreateprogram;
+    server->handler_table[COMMAND_GLDELETEPROGRAM] =
+        server_handle_gldeleteprogram;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping)

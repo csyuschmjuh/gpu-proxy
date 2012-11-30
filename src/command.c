@@ -1,5 +1,5 @@
+#include "client.h"
 #include "config.h"
-#include "command.h"
 #include <stdbool.h>
 
 size_t

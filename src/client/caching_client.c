@@ -588,8 +588,15 @@ caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    GLuint result = 0;
 
-    GLuint result = CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
+    name_handler_alloc_names (1, &result);
+    CLIENT (client)->generated_result_id = result;
+
+    CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
+
+    CLIENT (client)->generated_result_id = 0;
+
     if (result == 0) {
         caching_client_set_needs_get_error (CLIENT (client));
         return 0;

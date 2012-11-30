@@ -138,6 +138,7 @@ client_init (client_t *client)
     client->last_32k_index = 0;
 
     client->active_state = NULL;
+    client->generated_result_id = 0;
 
     client_start_server (client);
     initializing_client = false;
