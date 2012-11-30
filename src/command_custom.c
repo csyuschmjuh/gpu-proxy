@@ -187,3 +187,13 @@ command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t
     /* This command is asynchronous, but we don't want to free the pointer
      * until after glDraw(Elements/Arrays). */
 }
+
+void
+command_glcreateprogram_init (command_t *abstract_command)
+{
+    command_glcreateprogram_t *command =
+        (command_glcreateprogram_t *) abstract_command;
+    client_t *client = client_get_thread_local ();
+
+    command->result = client->generated_result_id;
+}

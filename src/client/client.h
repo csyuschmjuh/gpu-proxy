@@ -55,6 +55,7 @@ struct _client {
     signal_t server_signal;
     mutex_t client_signal_mutex;
     signal_t client_signal;
+    GLuint generated_result_id;
 };
 
 private client_t *

@@ -108,9 +108,11 @@ _FUNCTION_INFO = {
   },
   'glGetUniformLocation': {
     'default_return': '-1',
+    'mapped_name': 'program'
   },
   'glGetAttribLocation': {
     'default_return': '-1',
+    'mapped_name': 'program'
   },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
@@ -286,14 +288,20 @@ _FUNCTION_INFO = {
     'type': 'Asynchronous',
     'out_arguments': ['textures']
   },
+  'glCreateProgram': {
+    'type': 'Asynchronous'
+  },
   'glGetActiveAttrib': {
-    'out_arguments': ['length', 'size', 'type', 'name']
+    'out_arguments': ['length', 'size', 'type', 'name'],
+    'mapped_name': 'program'
   },
   'glGetActiveUniform': {
-    'out_arguments': ['length', 'size', 'type', 'name']
+    'out_arguments': ['length', 'size', 'type', 'name'],
+    'mapped_name': 'program'
   },
   'glGetAttachedShaders': {
-    'out_arguments': ['count', 'shaders']
+    'out_arguments': ['count', 'shaders'],
+    'mapped_name': 'program'
   },
   'glGetBufferParameteriv': {
     'out_arguments': ['params']
@@ -302,10 +310,12 @@ _FUNCTION_INFO = {
     'out_arguments': ['params']
   },
   'glGetProgramInfoLog': {
-    'out_arguments': ['length', 'infolog']
+    'out_arguments': ['length', 'infolog'],
+    'mapped_name': 'program'
   },
   'glGetProgramiv': {
-    'out_arguments': ['params']
+    'out_arguments': ['params'],
+    'mapped_name': 'program'
   },
   'glGetRenderbufferParameteriv': {
     'out_arguments': ['params']
@@ -329,10 +339,12 @@ _FUNCTION_INFO = {
     'out_arguments': ['params']
   },
   'glGetUniformiv': {
-    'out_arguments': ['params']
+    'out_arguments': ['params'],
+    'mapped_name': 'program'
   },
   'glGetUniformfv': {
-    'out_arguments': ['params']
+    'out_arguments': ['params'],
+    'mapped_name': 'program'
   },
   'glGetVertexAttribiv': {
     'out_arguments': ['params']
@@ -496,6 +508,27 @@ _FUNCTION_INFO = {
   },
   'glFramebufferTexture2DMultisampleIMG': {
     'mapped_name': 'texture'
+  },
+  'glAttachShader' : {
+    'mapped_name': 'program'
+  },
+  'glBindAttribLocation' : {
+    'mapped_name': 'program'
+  },
+  'glDetachShader' : {
+    'mapped_name': 'program'
+  },
+  'glIsProgram' : {
+    'mapped_name': 'program'
+  },
+  'glLinkProgram' : {
+    'mapped_name': 'program'
+  },
+  'glUseProgram' : {
+    'mapped_name': 'program'
+  },
+  'glValidateProgram' : {
+    'mapped_name': 'program'
   },
 }
 
@@ -2745,7 +2778,7 @@ class GLGenerator(object):
 
         need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
         if need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
-          file.Write("    command_%s_t *command = \n" % func.name.lower())
+          file.Write("    command_%s_t *command =\n" % func.name.lower())
           file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
         mapped_name = func.GetMappedName()
