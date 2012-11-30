@@ -197,3 +197,15 @@ command_glcreateprogram_init (command_t *abstract_command)
 
     command->result = client->generated_result_id;
 }
+
+void
+command_glcreateshader_init (command_t *abstract_command,
+                             GLenum type)
+{
+    command_glcreateshader_t *command =
+        (command_glcreateshader_t *) abstract_command;
+    client_t *client = client_get_thread_local ();
+
+    command->result = client->generated_result_id;
+    command->type = type;
+}
