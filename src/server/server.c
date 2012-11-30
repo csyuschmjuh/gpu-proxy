@@ -311,6 +311,40 @@ server_handle_gldeleteprogram (server_t *server, command_t *abstract_command)
     command_gldeleteprogram_destroy_arguments (command);
 }
 
+static void
+server_handle_glcreateshader (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_glcreateshader_t *command =
+            (command_glcreateshader_t *)abstract_command;
+    GLuint *shader = (GLuint *)malloc (sizeof (GLuint));
+
+    *shader = server->dispatch.glCreateShader (server, command->type);
+
+    mutex_lock (name_mapping_mutex);
+    HashInsert (name_mapping, command->result, shader);
+    mutex_unlock (name_mapping_mutex);
+}
+
+static void
+server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_gldeleteshader_t *command =
+            (command_gldeleteshader_t *)abstract_command;
+
+    mutex_lock (name_mapping_mutex);
+    GLuint *shader = HashTake (name_mapping, command->shader);
+    mutex_unlock (name_mapping_mutex);
+
+    if (shader)
+        server->dispatch.glDeleteShader (server, *shader);
+
+    command_gldeleteshader_destroy_arguments (command);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -342,6 +376,10 @@ server_init (server_t *server,
         server_handle_glcreateprogram;
     server->handler_table[COMMAND_GLDELETEPROGRAM] =
         server_handle_gldeleteprogram;
+    server->handler_table[COMMAND_GLCREATESHADER] =
+        server_handle_glcreateshader;
+    server->handler_table[COMMAND_GLDELETESHADER] =
+        server_handle_gldeleteshader;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping)
