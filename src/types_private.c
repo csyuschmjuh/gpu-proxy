@@ -70,7 +70,8 @@ link_list_delete_element (link_list_t **list, link_list_t *element)
             element->next->prev = element->prev;
     }
 
-    element->delete_function (element->data);
+    if (element->delete_function)
+        element->delete_function (element->data);
     free (element);
 }
 
@@ -83,10 +84,26 @@ link_list_clear (link_list_t** list)
     link_list_t *current = *list;
     while (current) {
         link_list_t *next = current->next;
-        current->delete_function (current->data);
+        if (current->delete_function)
+            current->delete_function (current->data);
         free (current);
         current = next;
     }
 
     *list = NULL;
+}
+
+bool
+link_list_match (link_list_t **list, void *data)
+{
+    if (!*list)
+        return false;
+
+    link_list_t *current = *list;
+    while (current) {
+        if (current->data == data)
+            return true;
+        current = current->next;
+    }
+    return false;
 }

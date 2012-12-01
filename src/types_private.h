@@ -39,4 +39,7 @@ link_list_delete_element (link_list_t **list,
 void
 link_list_clear (link_list_t **array);
 
+bool
+link_list_match (link_list_t **list, void *data);
+
 #endif /* GPUPROCESS_TYPES_PRIVATE_H */

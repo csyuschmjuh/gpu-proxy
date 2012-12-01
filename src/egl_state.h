@@ -53,7 +53,7 @@ struct egl_state {
     size_t              contexts_sharing; /* Number of contexts using this one as a sharing context.
                                              This is always at least one, since a context shares with itself
                                              by default. Thus it's a hackish reference count. */
-
+    
     char             *version_string;
     char             *extensions_string;
     char             *renderer_string;
@@ -267,6 +267,11 @@ struct egl_state {
     HashTable    *texture_cache;
 };
 
+typedef struct display_surfaces {
+    EGLDisplay display;
+    link_list_t *surfaces;
+} display_surfaces_t;
+
 private void
 egl_state_init (egl_state_t *egl_state,
                 EGLDisplay display,
@@ -281,6 +286,27 @@ egl_state_destroy (void *abstract_state);
 
 private link_list_t **
 cached_gl_states ();
+
+private link_list_t **
+cached_gl_displays ();
+
+private display_surfaces_t *
+cached_gl_display_new (EGLDisplay display);
+
+private void
+destroy_dpy (void *abstract_dpy);
+
+private void
+cached_gl_display_destroy (EGLDisplay display);
+
+private link_list_t **
+cached_gl_surfaces (EGLDisplay display);
+
+private void
+cached_gl_surface_add (EGLDisplay display, EGLSurface surface);
+
+private void
+cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface);
 
 private texture_t *
 egl_state_lookup_cached_texture (egl_state_t *egl_state,
