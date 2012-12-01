@@ -199,6 +199,114 @@ egl_state_destroy (void *abstract_state)
 }
 
 link_list_t **
+cached_gl_displays ()
+{
+    static link_list_t *displays = NULL;
+    return &displays;
+}
+
+display_surfaces_t *
+cached_gl_display_new (EGLDisplay display)
+{
+    display_surfaces_t *dpy = malloc (sizeof (display_surfaces_t));
+    dpy->display = display;
+    dpy->surfaces = NULL;
+    return dpy;
+}
+
+void
+destroy_dpy (void *abstract_dpy)
+{
+    display_surfaces_t *dpy_sur = (display_surfaces_t *)abstract_dpy;
+    link_list_clear (&(dpy_sur)->surfaces);
+    free (dpy_sur);
+}
+
+void
+cached_gl_display_destroy (EGLDisplay display)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    link_list_t *dpy = *dpys;
+
+    if (! dpy)
+        return;
+    
+    while (dpy) {
+        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display) {
+            link_list_delete_first_entry_matching_data (dpys, (void *)dpy_surfaces);
+            return;
+        }
+
+        dpy = dpy->next;
+    }
+}
+
+link_list_t **
+cached_gl_surfaces (EGLDisplay display)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return NULL;
+
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display)
+            return &(dpy_surfaces->surfaces);
+
+        dpy = dpy->next;
+    }
+
+    return NULL;
+}
+
+void
+cached_gl_surface_add (EGLDisplay display, EGLSurface surface)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return;
+
+    link_list_t *dpy = *dpys;
+    display_surfaces_t *matched_dpy = NULL;
+    while (dpy) {
+        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display) {
+            matched_dpy = dpy_surfaces;
+            break;
+        }
+
+        dpy = dpy->next;
+    }
+
+    if (matched_dpy)
+        link_list_append (&(matched_dpy->surfaces), (void *)surface, NULL);
+}
+
+void cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return;
+
+    link_list_t *dpy = *dpys;
+    display_surfaces_t *matched_dpy = NULL;
+    while (dpy) {
+        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display) {
+            matched_dpy = dpy_surfaces;
+            break;
+        }
+
+        dpy = dpy->next;
+    }
+
+    if (matched_dpy) 
+        link_list_delete_first_entry_matching_data (&(matched_dpy->surfaces), (void *)surface);
+}
+
+link_list_t **
 cached_gl_states ()
 {
     static link_list_t *states = NULL;
@@ -279,3 +387,5 @@ egl_state_destroy_cached_program (egl_state_t *egl_state,
         egl_state_get_program_list (egl_state),
         program);
 }
+
+
