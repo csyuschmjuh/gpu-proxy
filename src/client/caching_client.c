@@ -118,8 +118,6 @@ _caching_client_make_current (client_t *client,
                               EGLSurface readable,
                               EGLContext context)
 {
-    link_list_t **surfaces = cached_gl_surfaces (display);
-
     mutex_lock (cached_gl_states_mutex);
 
     /* If we aren't switching to the "none" context, the new_state isn't null. */
@@ -147,17 +145,21 @@ _caching_client_make_current (client_t *client,
         EGLSurface temp = current_state->readable;
 
         if (current_state->destroy_read) {
-            link_list_delete_first_entry_matching_data (surfaces, current_state->readable);
+            cached_gl_surface_destroy (display, current_state->readable);
             current_state->readable = EGL_NO_SURFACE;
         }
         if (current_state->destroy_draw) {
             if (temp != current_state->drawable)
-                link_list_delete_first_entry_matching_data (surfaces, current_state->readable);
+                cached_gl_surface_destroy (display, current_state->drawable);
             current_state->drawable = EGL_NO_SURFACE;
         }
 
         if (current_state->destroy_dpy || current_state->destroy_ctx)
             _caching_client_destroy_state (client, current_state);
+
+        if (current_state->destroy_ctx)
+            cached_gl_context_destroy (current_state->display,
+                                       current_state->context);
     }
 
     mutex_unlock (cached_gl_states_mutex);
@@ -172,8 +174,6 @@ _caching_client_destroy_surface (client_t *client,
     link_list_t **states = cached_gl_states ();
     link_list_t *list = *states;
     link_list_t *current;
-
-    link_list_t **surfaces = cached_gl_surfaces (display);
 
     mutex_lock (cached_gl_states_mutex);
     if (! *states) {
@@ -200,7 +200,7 @@ _caching_client_destroy_surface (client_t *client,
                     state->destroy_draw == true)
                     state->drawable = EGL_NO_SURFACE;
 
-                link_list_delete_first_entry_matching_data (surfaces, surface);
+                cached_gl_surface_destroy (display, surface);
             }
             
         }
@@ -3598,8 +3598,8 @@ caching_client_eglGetDisplay (void *client,
 {
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
 
-    if (result != EGL_NO_DISPLAY) {
-        display_surfaces_t *dpy = cached_gl_display_new (result);
+    if (result != EGL_NO_DISPLAY && !cached_gl_display_find (result)) {
+        display_ctxs_surfaces_t *dpy = cached_gl_display_new (result);
         link_list_t **dpys = cached_gl_displays ();
         link_list_append (dpys, (void *)dpy, destroy_dpy);
     }
@@ -3699,8 +3699,10 @@ caching_client_eglDestroyContext (void* client,
         return EGL_TRUE;
     }
 
-    if (! state->active)
+    if (! state->active) {
         _caching_client_destroy_state (client, state);
+        cached_gl_context_destroy (dpy, ctx);
+    }
     else
         state->destroy_ctx = true;
 
@@ -3792,7 +3794,7 @@ caching_client_eglCreatePbufferSurface (void *client,
                                                             config,
                                                             attrib_list);
     if (result) {
-        cached_gl_surface_add (display, result);
+        cached_gl_surface_add (display, config, result);
     }
 
     return result;
@@ -3812,7 +3814,7 @@ caching_client_eglCreatePixmapSurface (void *client,
                                                             native_pixmap,
                                                             attrib_list);
     if (result) {
-        cached_gl_surface_add (display, result);
+        cached_gl_surface_add (display, config, result);
     }
 
     return result;
@@ -3832,7 +3834,7 @@ caching_client_eglCreateWindowSurface (void *client,
                                                             native_window,
                                                             attrib_list);
     if (result) {
-        cached_gl_surface_add (display, result);
+        cached_gl_surface_add (display, config, result);
     }
 
     return result;
@@ -3851,8 +3853,14 @@ caching_client_eglCreateContext (void *client,
                                                                  config,
                                                                  share_context,
                                                                  attrib_list);
-    if (share_context == EGL_NO_CONTEXT || result == EGL_NO_CONTEXT)
-        return result;
+    if (share_context == EGL_NO_CONTEXT) {
+        if (result == EGL_NO_CONTEXT)
+            return result;
+        else {
+            cached_gl_context_add (dpy, config, result);
+            return result;
+        }
+    }
 
     egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
     new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
@@ -3938,6 +3946,18 @@ caching_client_eglMakeCurrent (void* client,
      * with this pair of surfaces, we can safely do this operation asynchronously.
      * We know it will succeed */
     if (switching_to_none || matching_state != NULL) {
+        command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
+        command_eglmakecurrent_init (command, display, draw, read, ctx);
+        client_run_command_async (command);
+    }
+    else if (cached_gl_find_display_context_surface_matching (display,
+                                                              ctx, 
+                                                              draw,
+                                                              read)) {
+       /* we have not found in other cached states, but we might cached 
+          them, if that is the case and the context/draw/read surfaces
+          are compatible, we can make it async 
+        */
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);
