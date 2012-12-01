@@ -205,10 +205,10 @@ cached_gl_displays ()
     return &displays;
 }
 
-display_surfaces_t *
+display_ctxs_surfaces_t *
 cached_gl_display_new (EGLDisplay display)
 {
-    display_surfaces_t *dpy = malloc (sizeof (display_surfaces_t));
+    display_ctxs_surfaces_t *dpy = malloc (sizeof (display_ctxs_surfaces_t));
     dpy->display = display;
     dpy->surfaces = NULL;
     return dpy;
@@ -217,8 +217,9 @@ cached_gl_display_new (EGLDisplay display)
 void
 destroy_dpy (void *abstract_dpy)
 {
-    display_surfaces_t *dpy_sur = (display_surfaces_t *)abstract_dpy;
+    display_ctxs_surfaces_t *dpy_sur = (display_ctxs_surfaces_t *)abstract_dpy;
     link_list_clear (&(dpy_sur)->surfaces);
+    link_list_clear (&(dpy_sur)->contexts);
     free (dpy_sur);
 }
 
@@ -232,7 +233,7 @@ cached_gl_display_destroy (EGLDisplay display)
         return;
     
     while (dpy) {
-        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
         if (dpy_surfaces->display == display) {
             link_list_delete_first_entry_matching_data (dpys, (void *)dpy_surfaces);
             return;
@@ -251,7 +252,7 @@ cached_gl_surfaces (EGLDisplay display)
 
     link_list_t *dpy = *dpys;
     while (dpy) {
-        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
         if (dpy_surfaces->display == display)
             return &(dpy_surfaces->surfaces);
 
@@ -262,16 +263,16 @@ cached_gl_surfaces (EGLDisplay display)
 }
 
 void
-cached_gl_surface_add (EGLDisplay display, EGLSurface surface)
+cached_gl_surface_add (EGLDisplay display, EGLConfig config, EGLSurface surface)
 {
     link_list_t **dpys = cached_gl_displays ();
     if (! *dpys)
         return;
 
     link_list_t *dpy = *dpys;
-    display_surfaces_t *matched_dpy = NULL;
+    display_ctxs_surfaces_t *matched_dpy = NULL;
     while (dpy) {
-        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
         if (dpy_surfaces->display == display) {
             matched_dpy = dpy_surfaces;
             break;
@@ -280,8 +281,12 @@ cached_gl_surface_add (EGLDisplay display, EGLSurface surface)
         dpy = dpy->next;
     }
 
-    if (matched_dpy)
-        link_list_append (&(matched_dpy->surfaces), (void *)surface, NULL);
+    if (matched_dpy) {
+        surface_t *s = malloc (sizeof (surface_t));
+        s->config = config;
+        s->surface = surface;
+        link_list_append (&(matched_dpy->surfaces), (void *)s, free);
+    }
 }
 
 void cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface)
@@ -291,9 +296,9 @@ void cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface)
         return;
 
     link_list_t *dpy = *dpys;
-    display_surfaces_t *matched_dpy = NULL;
+    display_ctxs_surfaces_t *matched_dpy = NULL;
     while (dpy) {
-        display_surfaces_t *dpy_surfaces = (display_surfaces_t *)dpy->data;
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
         if (dpy_surfaces->display == display) {
             matched_dpy = dpy_surfaces;
             break;
@@ -306,6 +311,145 @@ void cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface)
         link_list_delete_first_entry_matching_data (&(matched_dpy->surfaces), (void *)surface);
 }
 
+link_list_t **
+cached_gl_contexts (EGLDisplay display)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return NULL;
+
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display)
+            return &(dpy_surfaces->contexts);
+
+        dpy = dpy->next;
+    }
+
+    return NULL;
+}
+
+void
+cached_gl_context_add (EGLDisplay display, EGLConfig config, EGLContext context)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return;
+
+    link_list_t *dpy = *dpys;
+    display_ctxs_surfaces_t *matched_dpy = NULL;
+    while (dpy) {
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display) {
+            matched_dpy = dpy_surfaces;
+            break;
+        }
+
+        dpy = dpy->next;
+    }
+
+    if (matched_dpy) {
+        context_t *c = malloc (sizeof (context_t));
+        c->config = config;
+        c->context = context;
+        link_list_append (&(matched_dpy->contexts), (void *)c, free);
+    }
+}
+
+void cached_gl_context_destroy (EGLDisplay display, EGLContext context)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    if (! *dpys)
+        return;
+
+    link_list_t *dpy = *dpys;
+    display_ctxs_surfaces_t *matched_dpy = NULL;
+    while (dpy) {
+        display_ctxs_surfaces_t *dpy_surfaces = (display_ctxs_surfaces_t *)dpy->data;
+        if (dpy_surfaces->display == display) {
+            matched_dpy = dpy_surfaces;
+            break;
+        }
+
+        dpy = dpy->next;
+    }
+
+    if (matched_dpy) 
+        link_list_delete_first_entry_matching_data (&(matched_dpy->contexts), (void *)context);
+}
+
+bool
+cached_gl_display_find (EGLDisplay display)
+{
+    if (display == EGL_NO_DISPLAY)
+        return false;
+
+    link_list_t **dpys = cached_gl_displays();
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_ctxs_surfaces_t *d = (display_ctxs_surfaces_t *)dpy->data;
+        if (d->display == display)
+            return false;
+        dpy = dpy->next;
+    }
+    return false;
+}
+
+bool
+cached_gl_find_display_context_surface_matching (EGLDisplay display,
+                                                 EGLContext context,
+                                                 EGLSurface draw,
+                                                 EGLSurface read)
+{
+    link_list_t **ctxs = cached_gl_contexts (display);
+    link_list_t **surfaces = cached_gl_surfaces (display);
+    EGLConfig ctx_config = 0;
+    EGLConfig draw_config = 0;
+    EGLConfig read_config = 0;
+
+    if (! ctxs || !surfaces)
+        return false;
+
+    link_list_t *lt = *ctxs;
+    while (lt) {
+        context_t *c = (context_t *) lt->data;
+        if (c->context == context) {
+            ctx_config = c->config;
+            break;
+        }
+        lt = lt->next;
+    }
+
+    if (ctx_config == 0)
+        return false;
+
+    lt = *surfaces;
+    bool find_read = false;
+    bool find_draw = false;
+    while (lt) {
+        surface_t *s = (surface_t *) lt->data;
+        if (! find_draw) {
+            if (s->surface == draw) {
+                draw_config = s->config;
+                find_draw = true;
+            }
+        }
+        if (! find_read) {
+            if (s->surface == read) {
+                read_config = s->config;
+                find_read = true;
+            }
+        }
+        if (find_draw && find_read)
+            break;
+        lt = lt->next;
+    }
+    if (draw_config == read_config && draw_config == ctx_config)
+        return true;
+    return false;
+}
+          
 link_list_t **
 cached_gl_states ()
 {

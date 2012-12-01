@@ -267,10 +267,21 @@ struct egl_state {
     HashTable    *texture_cache;
 };
 
-typedef struct display_surfaces {
+typedef struct display_ctxs_surfaces {
     EGLDisplay display;
     link_list_t *surfaces;
-} display_surfaces_t;
+    link_list_t *contexts;
+} display_ctxs_surfaces_t;
+
+typedef struct egl_surface {
+    EGLConfig config;
+    EGLSurface surface;
+} surface_t;
+
+typedef struct egl_context {
+    EGLConfig config;
+    EGLContext context;
+} context_t;
 
 private void
 egl_state_init (egl_state_t *egl_state,
@@ -290,7 +301,7 @@ cached_gl_states ();
 private link_list_t **
 cached_gl_displays ();
 
-private display_surfaces_t *
+private display_ctxs_surfaces_t *
 cached_gl_display_new (EGLDisplay display);
 
 private void
@@ -303,10 +314,28 @@ private link_list_t **
 cached_gl_surfaces (EGLDisplay display);
 
 private void
-cached_gl_surface_add (EGLDisplay display, EGLSurface surface);
+cached_gl_surface_add (EGLDisplay display, EGLConfig config, EGLSurface surface);
 
 private void
 cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface);
+
+private link_list_t **
+cached_gl_contexts (EGLDisplay display);
+
+private void
+cached_gl_context_add (EGLDisplay display, EGLConfig config, EGLContext context);
+
+private void
+cached_gl_context_destroy (EGLDisplay display, EGLContext context);
+
+private bool
+cached_gl_display_find (EGLDisplay display);
+
+private bool
+cached_gl_find_display_context_surface_matching (EGLDisplay display, 
+                                                 EGLContext context,
+                                                 EGLSurface draw,
+                                                 EGLSurface read);
 
 private texture_t *
 egl_state_lookup_cached_texture (egl_state_t *egl_state,
