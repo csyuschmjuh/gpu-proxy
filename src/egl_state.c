@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static link_list_t *null_list = NULL;
+
 void
 egl_state_init (egl_state_t *state,
                 EGLDisplay display,
@@ -211,6 +213,8 @@ cached_gl_display_new (EGLDisplay display)
     display_ctxs_surfaces_t *dpy = malloc (sizeof (display_ctxs_surfaces_t));
     dpy->display = display;
     dpy->surfaces = NULL;
+    dpy->contexts = NULL;
+    dpy->support_surfaceless = false;
     return dpy;
 }
 
@@ -247,8 +251,9 @@ link_list_t **
 cached_gl_surfaces (EGLDisplay display)
 {
     link_list_t **dpys = cached_gl_displays ();
-    if (! *dpys)
-        return NULL;
+    if (! *dpys) {
+        return &null_list;
+    }
 
     link_list_t *dpy = *dpys;
     while (dpy) {
@@ -259,7 +264,7 @@ cached_gl_surfaces (EGLDisplay display)
         dpy = dpy->next;
     }
 
-    return NULL;
+    return &null_list;
 }
 
 void
@@ -316,7 +321,7 @@ cached_gl_contexts (EGLDisplay display)
 {
     link_list_t **dpys = cached_gl_displays ();
     if (! *dpys)
-        return NULL;
+        return &null_list;
 
     link_list_t *dpy = *dpys;
     while (dpy) {
@@ -326,8 +331,7 @@ cached_gl_contexts (EGLDisplay display)
 
         dpy = dpy->next;
     }
-
-    return NULL;
+    return &null_list;
 }
 
 void
@@ -379,21 +383,21 @@ void cached_gl_context_destroy (EGLDisplay display, EGLContext context)
         link_list_delete_first_entry_matching_data (&(matched_dpy->contexts), (void *)context);
 }
 
-bool
+display_ctxs_surfaces_t *
 cached_gl_display_find (EGLDisplay display)
 {
     if (display == EGL_NO_DISPLAY)
-        return false;
+        return NULL;
 
     link_list_t **dpys = cached_gl_displays();
     link_list_t *dpy = *dpys;
     while (dpy) {
         display_ctxs_surfaces_t *d = (display_ctxs_surfaces_t *)dpy->data;
         if (d->display == display)
-            return false;
+            return d;
         dpy = dpy->next;
     }
-    return false;
+    return NULL;
 }
 
 bool
@@ -407,8 +411,12 @@ cached_gl_find_display_context_surface_matching (EGLDisplay display,
     EGLConfig ctx_config = 0;
     EGLConfig draw_config = 0;
     EGLConfig read_config = 0;
+    display_ctxs_surfaces_t *dpy;
 
     if (! ctxs || !surfaces)
+        return false;
+
+    if ((dpy = cached_gl_display_find (display)) == NULL)
         return false;
 
     link_list_t *lt = *ctxs;
@@ -423,6 +431,9 @@ cached_gl_find_display_context_surface_matching (EGLDisplay display,
 
     if (ctx_config == 0)
         return false;
+
+    if (dpy->support_surfaceless && !read && !draw)
+        return true;
 
     lt = *surfaces;
     bool find_read = false;

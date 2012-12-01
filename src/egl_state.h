@@ -269,6 +269,7 @@ struct egl_state {
 
 typedef struct display_ctxs_surfaces {
     EGLDisplay display;
+    bool support_surfaceless;
     link_list_t *surfaces;
     link_list_t *contexts;
 } display_ctxs_surfaces_t;
@@ -328,7 +329,7 @@ cached_gl_context_add (EGLDisplay display, EGLConfig config, EGLContext context)
 private void
 cached_gl_context_destroy (EGLDisplay display, EGLContext context);
 
-private bool
+private display_ctxs_surfaces_t *
 cached_gl_display_find (EGLDisplay display);
 
 private bool

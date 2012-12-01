@@ -96,7 +96,7 @@ link_list_clear (link_list_t** list)
 bool
 link_list_match (link_list_t **list, void *data)
 {
-    if (!*list)
+    if (!*list || !data)
         return false;
 
     link_list_t *current = *list;
