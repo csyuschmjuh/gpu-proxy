@@ -3598,10 +3598,33 @@ caching_client_eglGetDisplay (void *client,
 {
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
 
-    if (result != EGL_NO_DISPLAY && !cached_gl_display_find (result)) {
+    if (result != EGL_NO_DISPLAY && cached_gl_display_find (result) == NULL) {
         display_ctxs_surfaces_t *dpy = cached_gl_display_new (result);
         link_list_t **dpys = cached_gl_displays ();
         link_list_append (dpys, (void *)dpy, destroy_dpy);
+    }
+    return result;
+}
+
+static char const *
+caching_client_eglQueryString (void *client, EGLDisplay display,  EGLint name)
+{
+    const char *result = CACHING_CLIENT(client)->super_dispatch.eglQueryString (client, display, name);
+
+    if (name == EGL_EXTENSIONS) {
+        if (strstr (result, "EGL_KHR_surfaceless_context") ||
+            strstr (result, "EGL_KHR_surfaceless_opengl")) {
+            link_list_t **dpys = cached_gl_displays ();
+            link_list_t *dpy = *dpys;
+            while (dpy) {
+                display_ctxs_surfaces_t *d = (display_ctxs_surfaces_t *)dpy->data;
+                if (d->display == display) {
+                    d->support_surfaceless = true;
+                    break;
+                }
+                dpy = dpy->next;
+            }
+        }
     }
     return result;
 }
