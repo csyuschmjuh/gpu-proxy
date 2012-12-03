@@ -34,6 +34,8 @@ name_handler_alloc_names (GLsizei n,
 
     int i = 0;
     while (i < n) {
+        if (buffers[i] == 0)
+            continue;
         unsigned next_name = 0;
         if (name_handler.reusable_names != NULL) {
             next_name = * ((GLuint *) name_handler.reusable_names->data);
