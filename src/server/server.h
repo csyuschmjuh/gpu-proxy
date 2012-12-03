@@ -12,6 +12,7 @@ typedef struct _server server_t;
 #include "thread_private.h"
 #include "types_private.h"
 #include <pthread.h>
+#include <semaphore.h>
 
 typedef void (*command_handler_t)(server_t *server, command_t *command);
 
@@ -28,10 +29,8 @@ struct _server {
 
     void (*command_post_hook)(server_t *server, command_t *command);
 
-    mutex_t* server_signal_mutex;
-    signal_t* server_signal;
-    mutex_t* client_signal_mutex;
-    signal_t* client_signal;
+    sem_t *server_signal;
+    sem_t *client_signal;
 };
 
 private void
