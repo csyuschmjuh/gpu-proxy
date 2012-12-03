@@ -226,7 +226,7 @@ static void
 caching_client_glSetError (void* client, GLenum error)
 {
     egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-    if (egl_state->active && egl_state->error == GL_NO_ERROR)
+    if (egl_state && egl_state->active && egl_state->error == GL_NO_ERROR)
         egl_state->error = error;
 }
 
@@ -240,6 +240,9 @@ caching_client_glActiveTexture (void* client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
+
     if (state->active_texture == texture)
         return;
     if (texture > GL_TEXTURE31 || texture < GL_TEXTURE0) {
@@ -278,6 +281,8 @@ caching_client_glBindBuffer (void* client, GLenum target, GLuint buffer)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (target == GL_ARRAY_BUFFER) {
         if (state->array_buffer_binding == buffer)
             return;
@@ -311,6 +316,8 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (target == GL_FRAMEBUFFER &&
         state->framebuffer_binding == framebuffer)
             return;
@@ -332,6 +339,9 @@ static void
 caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuffer)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
 
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -341,7 +351,6 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
     /* FIXME: should we save it, it will be invalid if the
      * renderbuffer is invalid 
      */
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     state->renderbuffer_binding = renderbuffer;
 }
 
@@ -351,6 +360,8 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (target == GL_TEXTURE_2D &&
         state->texture_binding[0] == texture)
         return;
@@ -393,6 +404,8 @@ caching_client_glBlendColor (void* client, GLclampf red,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->blend_color[0] == red &&
         state->blend_color[1] == green &&
         state->blend_color[2] == blue &&
@@ -413,6 +426,8 @@ caching_client_glBlendEquation (void* client, GLenum mode)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->blend_equation[0] == mode &&
         state->blend_equation[1] == mode)
         return;
@@ -434,6 +449,8 @@ caching_client_glBlendEquationSeparate (void* client, GLenum modeRGB, GLenum mod
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->blend_equation[0] == modeRGB &&
         state->blend_equation[1] == modeAlpha)
         return;
@@ -455,6 +472,8 @@ caching_client_glBlendFunc (void* client, GLenum sfactor, GLenum dfactor)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->blend_src[0] == sfactor &&
         state->blend_src[1] == sfactor &&
         state->blend_dst[0] == dfactor &&
@@ -479,6 +498,8 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->blend_src[0] == srcRGB &&
         state->blend_src[1] == srcAlpha &&
         state->blend_dst[0] == dstRGB &&
@@ -503,6 +524,9 @@ static GLenum
 caching_client_glCheckFramebufferStatus (void* client, GLenum target)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return GL_FRAMEBUFFER_UNSUPPORTED;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -516,6 +540,9 @@ static void
 caching_client_glClear (void* client, GLbitfield mask)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! (mask & GL_COLOR_BUFFER_BIT ||
            mask & GL_DEPTH_BUFFER_BIT ||
@@ -534,6 +561,8 @@ caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->color_clear_value[0] == red &&
         state->color_clear_value[1] == green &&
         state->color_clear_value[2] == blue &&
@@ -554,6 +583,8 @@ caching_client_glClearDepthf (void* client, GLclampf depth)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->depth_clear_value == depth)
         return;
 
@@ -568,6 +599,8 @@ caching_client_glClearStencil (void* client, GLint s)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->stencil_clear_value == s)
         return;
 
@@ -582,6 +615,8 @@ caching_client_glColorMask (void* client, GLboolean red, GLboolean green,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->color_writemask[0] == red &&
         state->color_writemask[1] == green &&
         state->color_writemask[2] == blue &&
@@ -600,8 +635,10 @@ static GLuint
 caching_client_glCreateProgram (void* client)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     GLuint result = 0;
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return 0;
 
     name_handler_alloc_names (1, &result);
     CLIENT (client)->generated_result_id = result;
@@ -625,6 +662,8 @@ caching_client_glDeleteProgram (void *client,
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
 
     program_t *cached_program = egl_state_lookup_cached_program (state, program);
     if (!cached_program) {
@@ -646,6 +685,9 @@ static GLuint
 caching_client_glCreateShader (void* client, GLenum shaderType)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return 0;
 
     if (! is_valid_ShaderType (shaderType)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -673,6 +715,8 @@ caching_client_glCullFace (void* client, GLenum mode)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     if (state->cull_face_mode == mode)
         return;
 
@@ -694,6 +738,8 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -735,6 +781,8 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -758,6 +806,9 @@ static void
 caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *renderbuffers)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -773,6 +824,9 @@ static void
 caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -790,6 +844,8 @@ caching_client_glDepthFunc (void* client, GLenum func)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->depth_func == func)
         return;
 
@@ -808,6 +864,8 @@ caching_client_glDepthMask (void* client, GLboolean flag)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->depth_writemask == flag)
         return;
 
@@ -821,6 +879,8 @@ caching_client_glDepthRangef (void* client, GLclampf nearVal, GLclampf farVal)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->depth_range[0] == nearVal &&
         state->depth_range[1] == farVal)
         return;
@@ -839,6 +899,8 @@ caching_client_glSetCap (void* client, GLenum cap, GLboolean enable)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     switch (cap) {
     case GL_BLEND:
         if (state->blend != enable) {
@@ -1046,6 +1108,8 @@ caching_client_glDisableVertexAttribArray (void* client, GLuint index)
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glSetVertexAttribArray (client, index, state, GL_FALSE);
 }
 
@@ -1054,6 +1118,8 @@ caching_client_glEnableVertexAttribArray (void* client, GLuint index)
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glSetVertexAttribArray (client, index, state, GL_TRUE);
 }
 
@@ -1087,6 +1153,8 @@ static void
 caching_client_clear_attribute_list_data (client_t *client)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
 
     int i = -1;
@@ -1098,6 +1166,8 @@ static bool
 client_has_vertex_attrib_array_set (client_t *client)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return false;
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
@@ -1114,6 +1184,8 @@ caching_client_vertex_attribs_array_size (client_t *client,
                                           size_t count)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return 0;
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
 
     vertex_attrib_t *last_pointer = attrib_list->last_index_pointer;
@@ -1141,6 +1213,8 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
     vertex_attrib_t *attribs = attrib_list->attribs;
 
@@ -1225,6 +1299,9 @@ caching_client_glDrawArrays (void* client,
                              GLsizei count)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -1245,7 +1322,6 @@ caching_client_glDrawArrays (void* client,
 
     /* If vertex array binding is 0 and we have not bound a vertex attrib pointer, we
      * don't need to do anything. */
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1396,6 +1472,11 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (! is_valid_DrawMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
@@ -1419,7 +1500,6 @@ caching_client_glDrawElements (void* client,
     }
 
     /* If we have not bound any attribute data then do not actually execute anything. */
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state->vertex_array_binding && ! client_has_vertex_attrib_array_set (CLIENT (client))) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -1470,6 +1550,9 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
                                           GLenum renderbuffer)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -1491,6 +1574,9 @@ caching_client_glFramebufferTexture2D (void* client,
                                        GLint level)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -1507,6 +1593,8 @@ caching_client_glFrontFace (void* client, GLenum mode)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->front_face == mode)
         return;
 
@@ -1523,6 +1611,11 @@ static void
 caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state) {
+        memset (buffers, 0, sizeof (GLuint) * n);
+        return;
+    }
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1540,6 +1633,11 @@ static void
 caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state) {
+        memset (framebuffers, 0, sizeof (GLuint) * n);
+        return;
+    }
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1557,6 +1655,11 @@ static void
 caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffers)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state) {
+        memset (renderbuffers, 0, sizeof (GLuint) * n);
+        return;
+    }
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1576,6 +1679,10 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state) {
+        memset (textures, 0, sizeof (GLuint) * n);
+        return;
+    }
 
     if (n < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1598,6 +1705,9 @@ static void
 caching_client_glGenerateMipmap (void* client, GLenum target)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_TextureBindTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -1617,6 +1727,9 @@ static void caching_client_glGetActiveAttrib (void *client,
                                               GLchar *name)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     CACHING_CLIENT(client)->super_dispatch.glGetActiveAttrib (client, program, index, bufsize,
                                                               length, size, type, name);
@@ -1635,6 +1748,9 @@ static void caching_client_glGetActiveUniform (void *client,
                                                GLchar *name)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     CACHING_CLIENT(client)->super_dispatch.glGetActiveUniform (client, program, index, bufsize,
                                                                length, size, type, name);
@@ -1650,6 +1766,8 @@ caching_client_glGetAttribLocation (void* client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return 0;
     program_t *saved_program = egl_state_lookup_cached_program (state, program);
     if (!saved_program)
         return -1;
@@ -1676,6 +1794,8 @@ caching_client_glLinkProgram (void* client,
                               GLuint program)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     program_t *saved_program = egl_state_lookup_cached_program (state, program);
     if (!saved_program) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -1693,6 +1813,8 @@ caching_client_glGetUniformLocation (void* client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return 0;
     program_t *saved_program = egl_state_lookup_cached_program (state, program);
     if (!saved_program)
         return -1;
@@ -1720,6 +1842,8 @@ caching_client_glGetBooleanv (void* client, GLenum pname, GLboolean *params)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     switch (pname) {
     case GL_BLEND:
         *params = state->blend;
@@ -1769,6 +1893,8 @@ caching_client_glGetFloatv (void* client, GLenum pname, GLfloat *params)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     switch (pname) {
     case GL_BLEND_COLOR:
         memcpy (params, state->blend_color, sizeof (GLfloat) * 4);
@@ -1825,6 +1951,8 @@ caching_client_glGetIntegerv (void* client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2010,6 +2138,8 @@ caching_client_glGetError (void* client)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return GL_INVALID_OPERATION;
     if (! state->need_get_error) {
         error = state->error;
         state->error = GL_NO_ERROR;
@@ -2034,6 +2164,9 @@ caching_client_glGetFramebufferAttachmentParameteriv (void* client,
     GLint original_params = params[0];
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2055,6 +2188,9 @@ caching_client_glGetRenderbufferParameteriv (void* client, GLenum target,
     GLint original_params = params[0];
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2073,13 +2209,15 @@ caching_client_glGetString (void* client, GLenum name)
     int length = 0;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return NULL;
 
     if (! is_valid_StringType (name)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return NULL;
     }
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (name) {
     case GL_VENDOR:
         if (state->vendor_string)
@@ -2152,6 +2290,9 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
     int target_index;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_GetTexParamTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2163,7 +2304,6 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         return;
     }
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     active_texture_index = state->active_texture - GL_TEXTURE0;
     if (target == GL_TEXTURE_2D)
         target_index = 0;
@@ -2188,6 +2328,9 @@ static void
 caching_client_glGetTexParameterfv (void* client, GLenum target, GLenum pname, GLfloat *params)
 {
     GLint paramsi;
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     caching_client_glGetTexParameteriv (client, target, pname, &paramsi);
     *params = paramsi;
@@ -2200,6 +2343,9 @@ caching_client_glGetUniformfv (void* client, GLuint program,
     GLfloat original_params = *params;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     command_t *command = client_get_space_for_command (COMMAND_GLGETUNIFORMFV);
     command_glgetuniformfv_init (command, program, location, params);
@@ -2216,6 +2362,9 @@ caching_client_glGetUniformiv (void* client, GLuint program,
     GLint original_params = *params;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     CACHING_CLIENT(client)->super_dispatch.glGetUniformiv (client, program, location, params);
 
@@ -2235,6 +2384,8 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2316,6 +2467,10 @@ caching_client_glGetVertexAttribiv (void* client, GLuint index, GLenum pname, GL
 {
     GLfloat paramsf[4];
     int i;
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     caching_client_glGetVertexAttribfv (client, index, pname, paramsf);
 
@@ -2340,6 +2495,8 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
     *pointer = 0;
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -2377,6 +2534,8 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (target == GL_GENERATE_MIPMAP_HINT && state->generate_mipmap_hint == mode)
         return;
 
@@ -2402,6 +2561,8 @@ caching_client_glIsEnabled (void* client, GLenum cap)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return result;
     switch (cap) {
     case GL_BLEND:
         result = state->blend;
@@ -2443,6 +2604,8 @@ caching_client_glLineWidth (void* client, GLfloat width)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->line_width == width)
         return;
 
@@ -2460,6 +2623,8 @@ caching_client_glIsTexture (void *client, GLuint texture)
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return GL_FALSE;
     return egl_state_lookup_cached_texture (state, texture) ? GL_TRUE : GL_FALSE;
 }
 
@@ -2469,6 +2634,8 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if ((pname == GL_PACK_ALIGNMENT && state->pack_alignment == param) ||
         (pname == GL_UNPACK_ALIGNMENT && state->unpack_alignment == param))
         return;
@@ -2500,6 +2667,8 @@ caching_client_glPolygonOffset (void* client, GLfloat factor, GLfloat units)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->polygon_offset_factor == factor &&
         state->polygon_offset_units == units)
         return;
@@ -2516,6 +2685,8 @@ caching_client_glSampleCoverage (void* client, GLclampf value, GLboolean invert)
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (value == state->sample_coverage_value &&
         invert == state->sample_coverage_invert)
         return;
@@ -2532,6 +2703,8 @@ caching_client_glScissor (void* client, GLint x, GLint y, GLsizei width, GLsizei
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (x == state->scissor_box[0]     &&
         y == state->scissor_box[1]     &&
         width == state->scissor_box[2] &&
@@ -2560,6 +2733,8 @@ caching_client_glStencilFuncSeparate (void* client, GLenum face, GLenum func,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (! is_valid_FaceType (face)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
@@ -2617,6 +2792,9 @@ static void
 caching_client_glStencilFunc (void* client, GLenum func, GLint ref, GLuint mask)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glStencilFuncSeparate (client, GL_FRONT_AND_BACK, func, ref, mask);
 }
 
@@ -2624,13 +2802,15 @@ static void
 caching_client_glStencilMaskSeparate (void* client, GLenum face, GLuint mask)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_FaceType (face)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     bool needs_call = false;
     switch (face) {
     case GL_FRONT:
@@ -2663,6 +2843,9 @@ static void
 caching_client_glStencilMask (void* client, GLuint mask)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glStencilMaskSeparate (client, GL_FRONT_AND_BACK, mask);
 }
 
@@ -2673,6 +2856,9 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
     bool needs_call = false;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_FaceType (face) ||
         ! is_valid_StencilOp (sfail) ||
@@ -2682,7 +2868,6 @@ caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
         return;
     }
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     switch (face) {
     case GL_FRONT:
         if (sfail != state->stencil_fail             ||
@@ -2730,6 +2915,9 @@ static void
 caching_client_glStencilOp (void* client, GLenum sfail, GLenum dpfail, GLenum dppass)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glStencilOpSeparate (client, GL_FRONT_AND_BACK, sfail, dpfail, dppass);
 }
 
@@ -2737,6 +2925,9 @@ static void
 caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint param)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (! is_valid_GetTexParamTarget (target)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -2751,7 +2942,6 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
     else
         target_index = 2;
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     int active_texture_index = state->active_texture - GL_TEXTURE0;
 
     if (pname == GL_TEXTURE_MAG_FILTER) {
@@ -2803,6 +2993,9 @@ caching_client_glTexParameterf (void* client, GLenum target, GLenum pname, GLflo
     GLint parami = param;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     caching_client_glTexParameteri (client, target, pname, parami);
 }
 
@@ -2881,6 +3074,8 @@ caching_client_glTexSubImage2D (void* client,
 {
     GLuint tex_id;
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     INSTRUMENT();
 
@@ -2952,6 +3147,9 @@ caching_client_glUniformMatrix2fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (count < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -2969,6 +3167,9 @@ caching_client_glUniformMatrix3fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (count < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -2985,6 +3186,9 @@ caching_client_glUniformMatrix4fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (count < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3000,6 +3204,8 @@ caching_client_glUseProgram (void* client,
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->current_program == program_id)
         return;
     if (program_id < 0) {
@@ -3035,6 +3241,9 @@ static void
 caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3048,6 +3257,9 @@ static void
 caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat v1)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3062,6 +3274,9 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
                                  GLfloat v1, GLfloat v2)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3076,6 +3291,9 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
                                  GLfloat v2, GLfloat v3)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3089,6 +3307,9 @@ static void
 caching_client_glVertexAttrib1fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3101,6 +3322,9 @@ static void
 caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3113,6 +3337,9 @@ static void
 caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3125,6 +3352,9 @@ static void
 caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (caching_client_does_index_overflow (client, index)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3145,6 +3375,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     GLint bound_buffer = 0;
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     attrib_list = &state->vertex_attribs;
     attribs = attrib_list->attribs;
     count = attrib_list->count;
@@ -3260,6 +3492,8 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->viewport[0] == x     &&
         state->viewport[1] == y     &&
         state->viewport[2] == width &&
@@ -3383,6 +3617,8 @@ caching_client_glBindVertexArrayOES (void* client, GLuint array)
 
     /* FIXME: should we save this ? */
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
     if (state->vertex_array_binding == array)
         return;
     state->vertex_array_binding = array;
@@ -3394,6 +3630,9 @@ static void
 caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *arrays)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (n <= 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
@@ -3403,7 +3642,6 @@ caching_client_glDeleteVertexArraysOES (void* client, GLsizei n, const GLuint *a
     CACHING_CLIENT(client)->super_dispatch.glDeleteVertexArraysOES (client, n, arrays);
 
     /* matching vertex_array_binding ? */
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     int i;
     for (i = 0; i < n; i++) {
         if (arrays[i] == state->vertex_array_binding) {
@@ -3432,10 +3670,12 @@ caching_client_glIsVertexArrayOES (void* client, GLuint array)
     GLboolean result = GL_FALSE;
 
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return GL_FALSE;
 
     result = CACHING_CLIENT(client)->super_dispatch.glIsVertexArrayOES (client, array);
 
-    egl_state_t *state = client_get_current_state (CLIENT (client));
     if (result == GL_FALSE && 
         state->vertex_array_binding == array)
         state->vertex_array_binding = 0;

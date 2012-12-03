@@ -110,8 +110,11 @@ HashLookup_unlocked (HashTable *table, GLuint key)
     GLuint pos;
     const struct HashEntry *entry;
 
+    if (! key)
+        return NULL;
+
     assert (table);
-    assert (key);
+    /* key can be 0 */
 
     pos = HASH_FUNC (key);
     entry = table->Table[pos];
@@ -201,7 +204,7 @@ HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete)
     struct HashEntry *entry, *prev;
 
     assert (table);
-    assert (key);
+    /* key can be zero */
 
     /* HashRemove illegally called from HashDeleteAll callback function */
     assert (!table->InDeleteAll);

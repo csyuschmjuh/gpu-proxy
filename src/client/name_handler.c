@@ -34,8 +34,6 @@ name_handler_alloc_names (GLsizei n,
 
     int i = 0;
     while (i < n) {
-        if (buffers[i] == 0)
-            continue;
         unsigned next_name = 0;
         if (name_handler.reusable_names != NULL) {
             next_name = * ((GLuint *) name_handler.reusable_names->data);
@@ -60,6 +58,8 @@ name_handler_delete_names (GLsizei n,
 
     int i;
     for (i = 0; i < n; i++) {
+        if (buffers[i] == 0)
+            continue;
         GLuint *reusable_name = malloc (sizeof (GLuint));
         *reusable_name = buffers[i];
         link_list_append (&name_handler.reusable_names, reusable_name, free);
