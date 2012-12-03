@@ -11,15 +11,6 @@
 static void
 server_fill_command_handler_table (server_t *server);
 
-static inline void
-sleep_nanoseconds (int num_nanoseconds)
-{
-    struct timespec spec;
-    spec.tv_sec = 0;
-    spec.tv_nsec = num_nanoseconds;
-    nanosleep (&spec, NULL);
-}
-
 void
 server_start_work_loop (server_t *server)
 {
@@ -37,16 +28,10 @@ server_start_work_loop (server_t *server)
          }*/
 
         /* We ran out of hot cycles, try a more lackadaisical approach. */
-        if (! read_command) {
-            pthread_mutex_lock (server->server_signal_mutex);
+        while (! read_command) {
+            sem_wait (server->server_signal);
             read_command = (command_t *) buffer_read_address (server->buffer,
-                                                               &data_left_to_read);
-            while (! read_command) {
-                pthread_cond_wait (server->server_signal, server->server_signal_mutex);
-                read_command = (command_t *) buffer_read_address (server->buffer,
-                                                                   &data_left_to_read);
-            }
-            pthread_mutex_unlock (server->server_signal_mutex);
+                                                              &data_left_to_read);
         }
 
         if (read_command->type == COMMAND_SHUTDOWN)
@@ -55,13 +40,10 @@ server_start_work_loop (server_t *server)
         server->handler_table[read_command->type](server, read_command);
         buffer_read_advance (server->buffer, read_command->size);
 
-        /*if (read_command->token) {
-            pthread_mutex_lock (server->client_signal_mutex);
-            pthread_cond_signal (server->client_signal);
-            pthread_mutex_unlock (server->client_signal_mutex);
-        }*/
-        if (read_command->token)
+        if (read_command->token) {
             server->buffer->last_token = read_command->token;
+            sem_post (server->client_signal);
+        }
     }
 }
 

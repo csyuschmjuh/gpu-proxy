@@ -8,6 +8,7 @@ typedef struct _client client_t;
 #include "ring_buffer.h"
 #include "server.h"
 #include "types_private.h"
+#include <semaphore.h>
 
 #define CLIENT(object) ((client_t *) (object))
 
@@ -51,10 +52,8 @@ struct _client {
     int  last_16k_index;
     int  last_32k_index;
 
-    mutex_t server_signal_mutex;
-    signal_t server_signal;
-    mutex_t client_signal_mutex;
-    signal_t client_signal;
+    sem_t server_signal;
+    sem_t client_signal;
     GLuint generated_result_id;
 };
 
