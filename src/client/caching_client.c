@@ -1515,15 +1515,15 @@ caching_client_glDrawElements (void* client,
         return;
     }
 
-    size_t elements_count = _get_elements_count (type, indices, count);
     link_list_t *arrays_to_free = NULL;
-    caching_client_setup_vertex_attrib_pointer_if_necessary (
-        CLIENT (client), elements_count, &arrays_to_free);
 
     char* indices_to_pass = (char*) indices;
     command_gldrawelements_t *command = NULL;
 
     if (copy_indices) {
+        size_t elements_count = _get_elements_count (type, indices, count);
+        caching_client_setup_vertex_attrib_pointer_if_necessary (
+            CLIENT (client), elements_count, &arrays_to_free);
         command = (command_gldrawelements_t *)
             client_try_get_space_for_command_with_extra_space (COMMAND_GLDRAWELEMENTS,
                                                                index_array_size);
