@@ -41,6 +41,12 @@ typedef struct _texture {
     GLsizei                 width;
     GLsizei                 height;
     GLenum                  data_type;
+
+    GLint                   texture_mag_filter;        /* initial GL_LINEAR */
+    GLint                   texture_min_filter;        /* initial GL_NEAREST_MIPMAP_LINEAR */
+    GLint                   texture_wrap_s;            /* initial GL_REPEAT */
+    GLint                   texture_wrap_t;            /* initial GL_REPEAT */
+    GLint                   texture_3d_wrap_r;         /* initial GL_REPEAT */
 } texture_t;
 
 typedef struct egl_state  egl_state_t;
@@ -231,13 +237,6 @@ struct egl_state {
     GLubyte       renderer[256];
     GLubyte       extensions[4096];                  /* too large or short? */
     GLubyte       shading_language_version[128];
-
-    /* glGetTextureParameter() */
-    /* used */
-    GLint         texture_mag_filter[32][3];        /* initial GL_LINEAR */
-    GLint         texture_min_filter[32][3];        /* initial GL_NEAREST_MIPMAP_LINEAR */
-    GLint         texture_wrap_s[32][3];            /* initial GL_REPEAT */
-    GLint         texture_wrap_t[32][3];            /* initial GL_REPEAT */
 
     /* glGetBufferParameter() */
     GLint         buffer_size[2];                   /* initial 0 */        

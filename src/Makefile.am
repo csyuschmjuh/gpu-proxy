@@ -5,7 +5,6 @@ libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
 	$(EGL_CFLAGS) \
 	$(GL_CFLAGS) \
-	-DENABLE_PROFILING \
 	-Werror \
 	-Wall \
 	-Igenerated \

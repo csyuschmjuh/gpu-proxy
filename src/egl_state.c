@@ -138,19 +138,6 @@ egl_state_init (egl_state_t *state,
 
     memset (state->viewport, 0, sizeof (GLint) * 4);
 
-    for (i = 0; i < 32; i++) {
-        int j;
-        for (j = 0; j < 3; j++) {
-            state->texture_mag_filter[i][j] = GL_LINEAR;
-            state->texture_mag_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
-            state->texture_min_filter[i][j] = GL_LINEAR;
-            state->texture_min_filter[i][j] = GL_NEAREST_MIPMAP_LINEAR;
-            state->texture_wrap_s[i][j] = GL_REPEAT;
-            state->texture_wrap_t[i][j] = GL_REPEAT;
-        }
-        state->texture_3d_wrap_r[i] = GL_REPEAT;
-    }
-
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable(free);
@@ -492,6 +479,11 @@ _create_texture (GLuint id)
     tex->height = 0;
     tex->data_type = GL_UNSIGNED_BYTE;
     tex->internal_format = GL_RGBA;
+    tex->texture_mag_filter = GL_LINEAR;        /* initial GL_LINEAR */
+    tex->texture_min_filter = GL_NEAREST_MIPMAP_LINEAR;      /* initial GL_NEAREST_MIPMAP_LINEAR */
+    tex->texture_wrap_s = GL_REPEAT;          /* initial GL_REPEAT */
+    tex->texture_wrap_t = GL_REPEAT;            /* initial GL_REPEAT */
+    tex->texture_3d_wrap_r = GL_REPEAT;         /* initial GL_REPEAT */
     return tex;
 }
 void

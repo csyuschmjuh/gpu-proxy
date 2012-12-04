@@ -17,6 +17,26 @@
 
 mutex_static_init (cached_gl_states_mutex);
 
+static texture_t *
+caching_client_get_default_texture ()
+{
+    static texture_t tex;
+    static bool initialized = false;
+
+    if (! initialized) {
+        tex.id = 0;
+        tex.data_type = GL_UNSIGNED_BYTE;
+        tex.internal_format = GL_RGBA;
+        tex.texture_mag_filter = GL_LINEAR;
+        tex.texture_min_filter = GL_NEAREST_MIPMAP_LINEAR;
+        tex.texture_wrap_s = GL_REPEAT;
+        tex.texture_wrap_t = GL_REPEAT;
+        tex.texture_3d_wrap_r = GL_REPEAT;
+        initialized = true;
+    }
+
+    return &tex;
+}
 static void
 caching_client_glSetError (void* client, GLenum error)
 {
@@ -234,8 +254,6 @@ static void
 caching_client_glActiveTexture (void* client,
                                 GLenum texture)
 {
-    int texture_offset = texture - GL_TEXTURE0;
-
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -254,23 +272,10 @@ caching_client_glActiveTexture (void* client,
          * invalid object, we save here to save time in glGetError() 
          */
         state->active_texture = texture;
-        state->texture_binding[0] = -1;
-        state->texture_binding[1] = -1;
-        state->texture_binding_3d = -1;
-
-        state->texture_mag_filter[texture_offset][0] = -1;
-        state->texture_mag_filter[texture_offset][1] = -1;
-        state->texture_mag_filter[texture_offset][2] = -1;
-        state->texture_min_filter[texture_offset][0] = -1;
-        state->texture_min_filter[texture_offset][1] = -1;
-        state->texture_min_filter[texture_offset][2] = -1;
-        state->texture_wrap_s[texture_offset][0] = -1;
-        state->texture_wrap_s[texture_offset][1] = -1;
-        state->texture_wrap_s[texture_offset][2] = -1;
-        state->texture_wrap_t[texture_offset][0] = -1;
-        state->texture_wrap_t[texture_offset][1] = -1;
-        state->texture_wrap_t[texture_offset][2] = -1;
-        state->texture_3d_wrap_r[texture_offset] = -1;
+        /* reset texture binding */
+        state->texture_binding[0] = 0;
+        state->texture_binding[1] = 0;
+        state->texture_binding_3d = 0;
     }
 }
 
@@ -2309,8 +2314,8 @@ static void
 caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname, 
                                      GLint *params)
 {
-    int active_texture_index;
-    int target_index;
+    GLuint tex_id;
+    texture_t *texture;
 
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -2327,24 +2332,27 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         return;
     }
 
-    active_texture_index = state->active_texture - GL_TEXTURE0;
     if (target == GL_TEXTURE_2D)
-        target_index = 0;
+        tex_id = state->texture_binding[0];
     else if (target == GL_TEXTURE_CUBE_MAP)
-        target_index = 1;
+        tex_id = state->texture_binding[1];
     else
-        target_index = 2;
+        tex_id = state->texture_binding_3d;
+    
+    texture = egl_state_lookup_cached_texture (state, tex_id);
+    if (! texture)
+        texture = caching_client_get_default_texture ();
 
     if (pname == GL_TEXTURE_MAG_FILTER)
-        *params = state->texture_mag_filter[active_texture_index][target_index];
+        *params = texture->texture_mag_filter;
     else if (pname == GL_TEXTURE_MIN_FILTER)
-        *params = state->texture_min_filter[active_texture_index][target_index];
+        *params = texture->texture_min_filter;
     else if (pname == GL_TEXTURE_WRAP_S)
-        *params = state->texture_wrap_s[active_texture_index][target_index];
+        *params = texture->texture_wrap_s;
     else if (pname == GL_TEXTURE_WRAP_T)
-        *params = state->texture_wrap_t[active_texture_index][target_index];
+        *params = texture->texture_wrap_t;
     else if (pname == GL_TEXTURE_WRAP_R_OES)
-        *params = state->texture_3d_wrap_r[active_texture_index];
+        *params = texture->texture_3d_wrap_r;
 }
 
 static void
@@ -2946,6 +2954,10 @@ static void
 caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint param)
 {
     INSTRUMENT();
+    texture_t *texture = NULL;
+    GLuint tex_id;
+    bool needs_call = false;
+
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
@@ -2955,47 +2967,19 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         return;
     }
 
-    int target_index;
-    if (target == GL_TEXTURE_2D)
-        target_index = 0;
-    else if (target == GL_TEXTURE_CUBE_MAP)
-        target_index = 1;
-    else
-        target_index = 2;
-
-    int active_texture_index = state->active_texture - GL_TEXTURE0;
-
-    if (pname == GL_TEXTURE_MAG_FILTER) {
-        if (state->texture_mag_filter[active_texture_index][target_index] != param) {
-            state->texture_mag_filter[active_texture_index][target_index] = param;
-        } else
-            return;
-    } else if (pname == GL_TEXTURE_MIN_FILTER) {
-        if (state->texture_min_filter[active_texture_index][target_index] != param) {
-            state->texture_min_filter[active_texture_index][target_index] = param;
-        } else
-            return;
-    } else if (pname == GL_TEXTURE_WRAP_S) {
-        if (state->texture_wrap_s[active_texture_index][target_index] != param) {
-            state->texture_wrap_s[active_texture_index][target_index] = param;
-        } else
-            return;
-    } else if (pname == GL_TEXTURE_WRAP_T) {
-        if (state->texture_wrap_t[active_texture_index][target_index] != param) {
-            state->texture_wrap_t[active_texture_index][target_index] = param;
-        } else
-            return;
-    } else if (pname == GL_TEXTURE_WRAP_R_OES) {
-        if (state->texture_3d_wrap_r[active_texture_index] != param) {
-            state->texture_3d_wrap_r[active_texture_index] = param;
-        } else
-            return;
-    }
-
     if (! is_valid_TextureParameter (pname)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+
+    if (target == GL_TEXTURE_2D)
+        tex_id = state->texture_binding[0];
+    else if (target == GL_TEXTURE_CUBE_MAP)
+        tex_id = state->texture_binding[1];
+    else
+        tex_id = state->texture_binding_3d;
+    
+    texture = egl_state_lookup_cached_texture (state, tex_id);
 
     if ((pname == GL_TEXTURE_MAG_FILTER && ! is_valid_TextureMagFilterMode (param)) ||
         (pname == GL_TEXTURE_MIN_FILTER && ! is_valid_TextureMinFilterMode (param)) ||
@@ -3005,7 +2989,39 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         return;
     }
 
-    CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
+    if (! texture) {
+        CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
+        return;
+    }
+
+    if (pname == GL_TEXTURE_MAG_FILTER && 
+        texture->texture_mag_filter != param) {
+        texture->texture_mag_filter = param;
+        needs_call = true;
+    }
+    else if (pname == GL_TEXTURE_MIN_FILTER &&
+             texture->texture_min_filter != param) {
+        texture->texture_min_filter = param;
+        needs_call = true;
+    }
+    else if (pname == GL_TEXTURE_WRAP_S &&
+             texture->texture_wrap_s != param) {
+        texture->texture_wrap_s = param;
+        needs_call = true;
+    }
+    else if (pname == GL_TEXTURE_WRAP_T &&
+             texture->texture_wrap_t != param) {
+        texture->texture_wrap_t = param;
+        needs_call = true;
+    }
+    else if (pname == GL_TEXTURE_WRAP_R_OES &&
+        texture->texture_3d_wrap_r != param) {
+        texture->texture_3d_wrap_r = param;
+        needs_call = true;
+    }
+  
+    if (needs_call)
+        CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
 }
 
 static void
