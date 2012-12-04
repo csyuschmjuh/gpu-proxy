@@ -17,24 +17,31 @@
 
 mutex_static_init (cached_gl_states_mutex);
 
+static void
+caching_client_glSetError (void* client, GLenum error)
+{
+    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
+    if (egl_state && egl_state->active && egl_state->error == GL_NO_ERROR)
+        egl_state->error = error;
+}
+
 static bool
 caching_client_does_index_overflow (void* client,
                                     GLuint index)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (state->max_vertex_attribs_queried)
+        goto FINISH;
+
+    CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
+                                                          &state->max_vertex_attribs);
+    state->max_vertex_attribs_queried = true;
+
+FINISH:
     if (index <= state->max_vertex_attribs)
         return false;
 
-    if (! state->max_vertex_attribs_queried) {
-        CACHING_CLIENT(client)->super_dispatch.glGetIntegerv (client, GL_MAX_VERTEX_ATTRIBS,
-                                                              &state->max_vertex_attribs);
-        state->max_vertex_attribs_queried = true;
-    }
-
-    if (index <= state->max_vertex_attribs)
-        return false;
-    if (state->error == GL_NO_ERROR)
-        state->error = GL_INVALID_VALUE;
+    caching_client_glSetError (client, GL_INVALID_VALUE);
     return true;
 }
 
@@ -220,14 +227,6 @@ _set_vertex_pointers (vertex_attrib_list_t *list,
         list->first_index_pointer = new_attrib;
     if ( ! list->last_index_pointer || pointer > list->last_index_pointer->pointer)
         list->last_index_pointer = new_attrib;
-}
-
-static void
-caching_client_glSetError (void* client, GLenum error)
-{
-    egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-    if (egl_state && egl_state->active && egl_state->error == GL_NO_ERROR)
-        egl_state->error = error;
 }
 
 /* GLES2 core profile API */
@@ -2420,9 +2419,8 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
     }
 
     /* check index is too large */
-    if (caching_client_does_index_overflow (client, index)) {
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     /* we cannot use client state */
     if (state->vertex_array_binding) {
@@ -2531,9 +2529,8 @@ caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pna
     }
 
     /* XXX: check index validity */
-    if (caching_client_does_index_overflow (client, index)) {
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     /* we cannot use client state */
     if (state->vertex_array_binding) {
@@ -3269,10 +3266,8 @@ caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib1f (client, index, v0);
 }
@@ -3285,10 +3280,8 @@ caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2f (client, index, v0, v1);
 }
@@ -3302,10 +3295,8 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3f (client, index, v0, v1, v2);
 }
@@ -3319,10 +3310,8 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4f (client, index, v0, v1, v2, v3);
 }
@@ -3350,10 +3339,9 @@ caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
+
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2fv (client, index, v);
 }
 
@@ -3365,10 +3353,9 @@ caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
+
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3fv (client, index, v);
 }
 
@@ -3380,10 +3367,9 @@ caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
+
     CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4fv (client, index, v);
 }
 
@@ -3419,10 +3405,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     }
 
     /* check max_vertex_attribs */
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    if (caching_client_does_index_overflow (client, index))
         return;
-    }
 
     if (state->vertex_array_binding) {
         CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, index, size,
