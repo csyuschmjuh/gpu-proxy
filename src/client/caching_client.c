@@ -1332,7 +1332,7 @@ caching_client_glDrawArrays (void* client,
         return;
     }
 
-    if (count < 0) {
+    if ((count < 0) || (first < 0)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
