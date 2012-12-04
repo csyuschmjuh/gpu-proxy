@@ -2640,6 +2640,7 @@ class GLGenerator(object):
             file.Write("    if (state)\n");
             file.Write("        state->need_get_error = false;\n\n");
 
+        file.Write("    INSTRUMENT();\n");
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
 
         header = "    command_%s_init (" % func.name.lower()
