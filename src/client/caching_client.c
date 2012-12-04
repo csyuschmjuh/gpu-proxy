@@ -380,7 +380,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
     }
 
     /* look up in cache */
-    if (!egl_state_lookup_cached_texture (state, texture)) {
+    if (texture != 0 && !egl_state_lookup_cached_texture (state, texture)) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
