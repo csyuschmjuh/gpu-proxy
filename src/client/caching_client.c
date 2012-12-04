@@ -380,7 +380,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
     }
 
     /* look up in cache */
-    if (texture == 0 || !egl_state_lookup_cached_texture (state, texture)) {
+    if (!egl_state_lookup_cached_texture (state, texture)) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
     }
@@ -818,11 +818,20 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
     name_handler_delete_names (n, renderbuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
+    int i;
+    for (i = 0; i < n; i++) {
+        if (state->renderbuffer_binding == renderbuffers[i]) {
+            state->renderbuffer_binding = 0;
+            break;
+        }
+    }
 }
 
 static void
 caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures)
 {
+    int i;
+
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (!state)
@@ -836,6 +845,19 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
 
     name_handler_delete_names (n, textures);
+
+    for (i = 0; i < n; i++) {
+        if (textures[i] == 0)
+            continue;
+        if (state->texture_binding[0] == textures[i])
+            state->texture_binding[0] = 0;
+        else if (state->texture_binding[1] == textures[i])
+            state->texture_binding[1] = 0;
+        else if (state->texture_binding_3d == textures[i])
+            state->texture_binding_3d = 0;
+        if (state->active_texture == textures[i])
+            state->active_texture = 0;
+    }
 }
 
 static void
