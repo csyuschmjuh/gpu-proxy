@@ -3414,7 +3414,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         return;
     }
     else if (size > 4 || size < 1 || stride < 0) {
-        caching_client_glSetError (client, GL_INVALID_ENUM);
+        caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
 
