@@ -1534,9 +1534,9 @@ caching_client_glDrawElements (void* client,
     }
 
     /* If we aren't actually passing any indices then do not execute anything. */
-    bool copy_indices = !state->vertex_array_binding && state->element_array_buffer_binding == 0;
+    bool copy_indices = !state->vertex_array_binding && !state->element_array_buffer_binding;
     size_t index_array_size = calculate_index_array_size (type, count);
-    if (! indices || (copy_indices && ! index_array_size)) {
+    if ((! state->element_array_buffer_binding && ! indices) || (copy_indices && ! index_array_size)) {
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
     }
@@ -1546,6 +1546,10 @@ caching_client_glDrawElements (void* client,
     char* indices_to_pass = (char*) indices;
     command_gldrawelements_t *command = NULL;
 
+    /* FIXME:  We do not handle where indices is in element_array_buffer
+       while vertex attribs are not in array_buffer, because in
+       this case, we could not compute the number of vertex attrib
+       elements */
     if (copy_indices) {
         size_t elements_count = _get_elements_count (type, indices, count);
         caching_client_setup_vertex_attrib_pointer_if_necessary (
@@ -1718,6 +1722,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
     }
 
     name_handler_alloc_names (n, textures);
+
     GLuint *server_textures = (GLuint *)malloc (n * sizeof (GLuint));
     memcpy (server_textures, textures, n * sizeof (GLuint));
 
@@ -3019,7 +3024,7 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         texture->texture_3d_wrap_r = param;
         needs_call = true;
     }
-  
+
     if (needs_call)
         CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
 }
