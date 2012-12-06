@@ -54,7 +54,6 @@ struct _client {
 
     sem_t server_signal;
     sem_t client_signal;
-    GLuint generated_result_id;
 };
 
 private client_t *

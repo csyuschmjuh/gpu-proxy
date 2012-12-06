@@ -641,15 +641,17 @@ caching_client_glCreateProgram (void* client)
     INSTRUMENT();
     GLuint result = 0;
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    command_t *command = NULL;
+
     if (!state)
         return 0;
 
     name_handler_alloc_names (1, &result);
-    CLIENT (client)->generated_result_id = result;
+    command = client_get_space_for_command (COMMAND_GLCREATEPROGRAM);
+    command_glcreateprogram_init (command);
+    ((command_glcreateprogram_t *)command)->result = result;
 
-    CACHING_CLIENT(client)->super_dispatch.glCreateProgram (client);
-
-    CLIENT (client)->generated_result_id = 0;
+    client_run_command_async (command);
 
     if (result == 0) {
         caching_client_set_needs_get_error (CLIENT (client));
@@ -699,13 +701,13 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
     }
 
     GLuint result = 0;
+    command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
 
     name_handler_alloc_names (1, &result);
-    CLIENT (client)->generated_result_id = result;
+    command_glcreateshader_init (command, shaderType);
+    ((command_glcreateshader_t *)command)->result = result;
 
-    CACHING_CLIENT(client)->super_dispatch.glCreateShader (client, shaderType);
-
-    CLIENT (client)->generated_result_id = 0;
+    client_run_command_async (command);
 
     if (result == 0)
         caching_client_set_needs_get_error (CLIENT (client));
