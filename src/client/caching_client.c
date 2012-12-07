@@ -1548,36 +1548,10 @@ caching_client_glDrawElements (void* client,
     char* indices_to_pass = (char*) indices;
     command_gldrawelements_t *command = NULL;
 
-    /* XXX:  if indices is in element_array_buffer
-       while vertex attribs are not in array_buffer, we make sync call
-       because in this case, we could not compute the number of vertex 
-       attrib elements */
-    if (state->element_array_buffer_binding && !state->vertex_array_binding) {
-        vertex_attrib_list_t *attrib_list = &state->vertex_attribs;
-        vertex_attrib_t *attribs = attrib_list->attribs;
-        int count = attrib_list->count;
-        int i;
-
-        for (i = 0; i < count; i++) {
-            if (attribs[i].array_enabled && !attribs[i].array_buffer_binding) {
-                CACHING_CLIENT(client)->super_dispatch.glVertexAttribPointer (client, 
-                    attribs[i].index, 
-                    attribs[i].size,
-                    attribs[i].type, 
-                    attribs[i].array_normalized, 
-                    attribs[i].stride, 
-                    attribs[i].pointer);
-            }
-        }
-        command_t *drawelements_command = client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
-        command_gldrawelements_init (drawelements_command, mode, count, type, indices);
-        ((command_gldrawelements_t *) drawelements_command)->arrays_to_free = NULL;
-        client_run_command (drawelements_command);
-        caching_client_set_needs_get_error (CLIENT (client));
-        caching_client_clear_attribute_list_data (CLIENT(client));
-        return;
-    }
-
+    /* FIXME:  We do not handle where indices is in element_array_buffer
+       while vertex attribs are not in array_buffer, because in
+       this case, we could not compute the number of vertex attrib
+       elements */
     if (copy_indices) {
         size_t elements_count = _get_elements_count (type, indices, count);
         caching_client_setup_vertex_attrib_pointer_if_necessary (
