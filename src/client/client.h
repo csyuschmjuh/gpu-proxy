@@ -66,6 +66,10 @@ private int
 client_get_unpack_alignment ();
 
 private command_t *
+client_get_space_for_size (client_t *client,
+                           size_t size);
+
+private command_t *
 client_get_space_for_command (command_type_t command_type);
 
 private command_t *
