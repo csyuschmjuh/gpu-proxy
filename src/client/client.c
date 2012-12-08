@@ -191,7 +191,7 @@ client_try_get_space_for_command_with_extra_space (command_type_t command_type,
     return command;
 }
 
-static command_t *
+command_t *
 client_get_space_for_size (client_t *client,
                            size_t size)
 {
