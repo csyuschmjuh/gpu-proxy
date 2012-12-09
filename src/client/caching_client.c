@@ -138,7 +138,7 @@ _caching_client_get_or_create_state (EGLDisplay dpy,
 /* we should call real eglMakeCurrent() before, and wait for result
  * if eglMakeCurrent() returns EGL_TRUE, then we call this
  */
-static void 
+static void
 _caching_client_make_current (client_t *client,
                               EGLDisplay display,
                               EGLSurface drawable,
@@ -194,7 +194,7 @@ _caching_client_make_current (client_t *client,
 
 static void
 _caching_client_destroy_surface (client_t *client,
-                                 EGLDisplay display, 
+                                 EGLDisplay display,
                                  EGLSurface surface)
 {
     egl_state_t *state;
@@ -220,16 +220,16 @@ _caching_client_destroy_surface (client_t *client,
                 state->destroy_draw = true;
 
             if (state->active == false) {
-                if (state->readable == surface && 
+                if (state->readable == surface &&
                     state->destroy_read == true)
                     state->readable = EGL_NO_SURFACE;
-                if (state->drawable == surface && 
+                if (state->drawable == surface &&
                     state->destroy_draw == true)
                     state->drawable = EGL_NO_SURFACE;
 
                 cached_gl_surface_destroy (display, surface);
             }
-            
+
         }
     }
 
@@ -268,8 +268,8 @@ caching_client_glActiveTexture (void* client,
 
     } else {
         CACHING_CLIENT(client)->super_dispatch.glActiveTexture (client, texture);
-        /* FIXME: this maybe not right because this texture may be 
-         * invalid object, we save here to save time in glGetError() 
+        /* FIXME: this maybe not right because this texture may be
+         * invalid object, we save here to save time in glGetError()
          */
         state->active_texture = texture;
         /* reset texture binding */
@@ -332,7 +332,7 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
 
     CACHING_CLIENT(client)->super_dispatch.glBindFramebuffer (client, target, framebuffer);
     /* FIXME: should we save it, it will be invalid if the
-     * framebuffer is invalid 
+     * framebuffer is invalid
      */
     state->framebuffer_binding = framebuffer;
 
@@ -353,7 +353,7 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
 
     CACHING_CLIENT(client)->super_dispatch.glBindRenderbuffer (client, target, renderbuffer);
     /* FIXME: should we save it, it will be invalid if the
-     * renderbuffer is invalid 
+     * renderbuffer is invalid
      */
     state->renderbuffer_binding = renderbuffer;
 }
@@ -401,7 +401,7 @@ caching_client_glBindTexture (void* client, GLenum target, GLuint texture)
 }
 
 static void
-caching_client_glBlendColor (void* client, GLclampf red, 
+caching_client_glBlendColor (void* client, GLclampf red,
                              GLclampf green,
                              GLclampf blue, GLclampf alpha)
 {
@@ -1034,7 +1034,7 @@ caching_client_glSetVertexAttribArray (void* client,
         }
         return;
     }
- 
+
     /* look into client state */
     for (i = 0; i < count; i++) {
         if (attribs[i].index == index) {
@@ -1119,9 +1119,9 @@ caching_client_glSetVertexAttribArray (void* client,
         attrib_list->attribs = new_attribs;
         attrib_list->count ++;
     }
-}   
+}
 
-static inline int 
+static inline int
 _get_data_size (GLenum type)
 {
     if (type == GL_BYTE || type == GL_UNSIGNED_BYTE)
@@ -1178,7 +1178,7 @@ _create_data_array (vertex_attrib_t *attrib, int count)
         for (i = 0; i < count; i++)
             memcpy (data + i * attrib->size * size, attrib->pointer + attrib->stride * i, attrib->size * size);
     }
- 
+
     return data;
 }
 
@@ -1402,7 +1402,7 @@ union __short_result {
     unsigned short shorts[8];
 };
 
-static size_t 
+static size_t
 _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 {
     uint8x16_t *char_indices;
@@ -1417,7 +1417,7 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
     int j;
 
     union __short_result short_result = { {0, 0, 0, 0,
-                                           0, 0, 0, 0} }; 
+                                           0, 0, 0, 0} };
     union __char_result char_result = { {0, 0, 0, 0,
                                         0, 0, 0, 0,
                                         0, 0, 0, 0,
@@ -1437,7 +1437,7 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
     if (type == GL_UNSIGNED_BYTE) {
         char_indices = (uint8x16_t *)indices;
         for (i = 0; i < num ; i++) {
-            char_result.result = vmaxq_u8 (*(char_indices + i), 
+            char_result.result = vmaxq_u8 (*(char_indices + i),
                                            char_result.result);
         }
         char_idx = (unsigned char *)char_result.chars;
@@ -1454,7 +1454,7 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
     else {
         short_indices = (uint16x8_t *)indices;
         for (i = 0; i < num ; i++) {
-            short_result.result = vmaxq_u16 (*(short_indices + i), 
+            short_result.result = vmaxq_u16 (*(short_indices + i),
                                              short_result.result);
         }
         short_idx = (unsigned short *)short_result.shorts;
@@ -1472,7 +1472,7 @@ _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
     return elements_count + 1;
 }
 #else
-static size_t 
+static size_t
 _get_elements_count (GLenum type, const GLvoid *indices, GLsizei count)
 {
     unsigned char *char_indices = NULL;
@@ -1989,7 +1989,7 @@ caching_client_glGetFloatv (void* client, GLenum pname, GLfloat *params)
         break;
     case GL_POLYGON_OFFSET_FACTOR:
         *params = state->polygon_offset_factor;
-        break; 
+        break;
     default:
         CACHING_CLIENT(client)->super_dispatch.glGetFloatv (client, pname, params);
         break;
@@ -2230,7 +2230,7 @@ caching_client_glGetFramebufferAttachmentParameteriv (void* client,
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
-    
+
     CACHING_CLIENT(client)->super_dispatch.glGetFramebufferAttachmentParameteriv (client, target,
                                                                                   attachment, pname,
                                                                                   params);
@@ -2249,7 +2249,7 @@ caching_client_glGetRenderbufferParameteriv (void* client, GLenum target,
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
-    
+
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
@@ -2341,7 +2341,7 @@ caching_client_glGetString (void* client, GLenum name)
 }
 
 static void
-caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname, 
+caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
                                      GLint *params)
 {
     GLuint tex_id;
@@ -2368,7 +2368,7 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         tex_id = state->texture_binding[1];
     else
         tex_id = state->texture_binding_3d;
-    
+
     texture = egl_state_lookup_cached_texture (state, tex_id);
     if (! texture)
         texture = caching_client_get_default_texture ();
@@ -2434,7 +2434,7 @@ caching_client_glGetUniformiv (void* client, GLuint program,
 }
 
 static void
-caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname, 
+caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
                                      GLfloat *params)
 {
     vertex_attrib_list_t *attrib_list;
@@ -2527,7 +2527,7 @@ caching_client_glGetVertexAttribiv (void* client, GLuint index, GLenum pname, GL
 {
     GLfloat paramsf[4];
     int i;
-    
+
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
@@ -2542,7 +2542,7 @@ caching_client_glGetVertexAttribiv (void* client, GLuint index, GLenum pname, GL
 }
 
 static void
-caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pname, 
+caching_client_glGetVertexAttribPointerv (void* client, GLuint index, GLenum pname,
                                             GLvoid **pointer)
 {
     vertex_attrib_list_t *attrib_list;
@@ -2909,7 +2909,7 @@ caching_client_glStencilMask (void* client, GLuint mask)
 }
 
 static void
-caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail, 
+caching_client_glStencilOpSeparate (void* client, GLenum face, GLenum sfail,
                                      GLenum dpfail, GLenum dppass)
 {
     bool needs_call = false;
@@ -3008,7 +3008,7 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         tex_id = state->texture_binding[1];
     else
         tex_id = state->texture_binding_3d;
-    
+
     texture = egl_state_lookup_cached_texture (state, tex_id);
 
     if ((pname == GL_TEXTURE_MAG_FILTER && ! is_valid_TextureMagFilterMode (param)) ||
@@ -3024,7 +3024,7 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         return;
     }
 
-    if (pname == GL_TEXTURE_MAG_FILTER && 
+    if (pname == GL_TEXTURE_MAG_FILTER &&
         texture->texture_mag_filter != param) {
         texture->texture_mag_filter = param;
         needs_call = true;
@@ -3107,7 +3107,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         return;
     }
 
-    /* FIXME: we need more checks on max width/height and level */ 
+    /* FIXME: we need more checks on max width/height and level */
     if (target == GL_TEXTURE_2D)
         tex_id = state->texture_binding[0];
     else
@@ -3194,7 +3194,7 @@ caching_client_glTexSubImage2D (void* client,
         }
     }
 
-    /* if internal format does not match format, we need to set 
+    /* if internal format does not match format, we need to set
        needs_get_error = true
      */
     if (texture->internal_format != format)
@@ -3259,7 +3259,7 @@ caching_client_glUniformMatrix4fv (void* client,
 
     if (count < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
-        return; 
+        return;
     }
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix4fv (client, location, count, transpose, value);
 }
@@ -3333,7 +3333,7 @@ caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat
 }
 
 static void
-caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0, 
+caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
                                  GLfloat v1, GLfloat v2)
 {
     INSTRUMENT();
@@ -3348,7 +3348,7 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
 }
 
 static void
-caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat v1, 
+caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat v1,
                                  GLfloat v2, GLfloat v3)
 {
     INSTRUMENT();
@@ -3588,7 +3588,7 @@ caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglI
     CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
 }
 
-static void* 
+static void*
 caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
 {
     void *result = NULL;
@@ -3664,13 +3664,13 @@ caching_client_glFramebufferTexture3DOES (void* client,
 }
 
 /* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
- * spec says it generates GL_INVALID_OPERATION if 
+ * spec says it generates GL_INVALID_OPERATION if
  * (1) array is not generated by glGenVertexArrayOES()
  * (2) the array object has been deleted by glDeleteVertexArrayOES()
- * 
+ *
  * SPECIAL ATTENTION:
  * this call also affect glVertexAttribPointer() and glDrawXXXX(),
- * if there is a vertex_array_binding, instead of using client state, 
+ * if there is a vertex_array_binding, instead of using client state,
  * we pass them to client.
  */
 static void
@@ -3739,7 +3739,7 @@ caching_client_glIsVertexArrayOES (void* client, GLuint array)
 
     result = CACHING_CLIENT(client)->super_dispatch.glIsVertexArrayOES (client, array);
 
-    if (result == GL_FALSE && 
+    if (result == GL_FALSE &&
         state->vertex_array_binding == array)
         state->vertex_array_binding = 0;
     return result;
@@ -3777,27 +3777,27 @@ caching_client_glMultiDrawArraysEXT (void* client,
                                      GLsizei primcount)
 {
     /* FIXME: things a little complicated here.  We cannot simply
-     * turn this into a sync call, because, we have not called 
+     * turn this into a sync call, because, we have not called
      * glVertexAttribPointer() yet
      */
     caching_client_glSetError (client, GL_INVALID_OPERATION);
 }
 
-void 
+void
 caching_client_glMultiDrawElementsEXT (void* client, GLenum mode, const GLsizei *count, GLenum type,
                              const GLvoid **indices, GLsizei primcount)
 {
     /* FIXME: things a little complicated here.  We cannot simply
-     * turn this into a sync call, because, we have not called 
+     * turn this into a sync call, because, we have not called
      * glVertexAttribPointer() yet
      */
     caching_client_glSetError (client, GL_INVALID_OPERATION);
 }
 
 static void
-caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target, 
+caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target,
                                             GLenum attachment,
-                                            GLenum textarget, 
+                                            GLenum textarget,
                                             GLuint texture,
                                             GLint level, GLsizei samples)
 {
@@ -3813,9 +3813,9 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
 }
 
 static void
-caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target, 
+caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target,
                                                      GLenum attachment,
-                                                     GLenum textarget, 
+                                                     GLenum textarget,
                                                      GLuint texture,
                                                      GLint level, GLsizei samples)
 {
@@ -3868,7 +3868,7 @@ caching_client_glTestFenceNV (void* client, GLuint fence)
     return result;
 }
 
-static void 
+static void
 caching_client_glGetFenceivNV (void* client, GLuint fence, GLenum pname, int *params)
 {
     int original_params = *params;
@@ -3895,9 +3895,9 @@ caching_client_glCoverageOperationNV (void* client, GLenum operation)
     CACHING_CLIENT(client)->super_dispatch.glCoverageOperationNV (client, operation);
 }
 
-static EGLDisplay 
+static EGLDisplay
 caching_client_eglGetDisplay (void *client,
-                              NativeDisplayType native_display) 
+                              NativeDisplayType native_display)
 {
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
 
@@ -3966,7 +3966,7 @@ caching_client_eglTerminate (void* client,
         egl_state->destroy_dpy = true; /* Queue destroy later. */
     else
         cached_gl_display_destroy (display);
-        
+
     mutex_unlock (cached_gl_states_mutex);
     return EGL_TRUE;
 }
@@ -4108,7 +4108,7 @@ caching_client_eglCreatePbufferSurface (void *client,
                                         EGLConfig config,
                                         EGLint const *attrib_list)
 {
-    EGLSurface result = 
+    EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreatePbufferSurface (client,
                                                             display,
                                                             config,
@@ -4127,7 +4127,7 @@ caching_client_eglCreatePixmapSurface (void *client,
                                        NativePixmapType native_pixmap,
                                        EGLint const *attrib_list)
 {
-    EGLSurface result = 
+    EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreatePixmapSurface (client,
                                                             display,
                                                             config,
@@ -4147,7 +4147,7 @@ caching_client_eglCreateWindowSurface (void *client,
                                        NativeWindowType native_window,
                                        EGLint const *attrib_list)
 {
-    EGLSurface result = 
+    EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreateWindowSurface (client,
                                                             display,
                                                             config,
@@ -4209,12 +4209,12 @@ caching_client_eglMakeCurrent (void* client,
     link_list_t **surfaces = cached_gl_surfaces (display);
     egl_state_t *matching_state = NULL;
     bool find_draw, find_read;
-    
+
     bool display_and_context_match = current_state &&
                                      current_state->display == display &&
                                      current_state->context == ctx;
     if (display_and_context_match) {
-        if (current_state->drawable == draw && 
+        if (current_state->drawable == draw &&
             current_state->readable == read) {
             return EGL_TRUE;
         }
@@ -4271,12 +4271,12 @@ caching_client_eglMakeCurrent (void* client,
         client_run_command_async (command);
     }
     else if (cached_gl_find_display_context_surface_matching (display,
-                                                              ctx, 
+                                                              ctx,
                                                               draw,
                                                               read)) {
-       /* we have not found in other cached states, but we might cached 
+       /* we have not found in other cached states, but we might cached
           them, if that is the case and the context/draw/read surfaces
-          are compatible, we can make it async 
+          are compatible, we can make it async
         */
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
