@@ -1254,34 +1254,9 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
     char *one_array_data = NULL;
     bool fits_in_one_array = array_size < ATTRIB_BUFFER_SIZE;
     if (fits_in_one_array) {
-        if (array_size <= 1024 && client->last_1k_index < MEM_1K_SIZE) {
-            one_array_data = client->pre_1k_mem[client->last_1k_index];
-            client->last_1k_index++;
-        }
-        else if (array_size <= 2048 && client->last_2k_index < MEM_2K_SIZE) {
-            one_array_data = client->pre_2k_mem[client->last_2k_index];
-            client->last_2k_index++;
-        }
-        else if (array_size <= 4096 && client->last_4k_index < MEM_4K_SIZE) {
-            one_array_data = client->pre_4k_mem[client->last_4k_index];
-            client->last_4k_index++;
-        }
-        else if (array_size <= 8192 && client->last_8k_index < MEM_8K_SIZE) {
-            one_array_data = client->pre_8k_mem[client->last_8k_index];
-            client->last_8k_index++;
-        }
-        else if (array_size <= 16384 && client->last_16k_index < MEM_16K_SIZE) {
-            one_array_data = client->pre_16k_mem[client->last_16k_index];
-            client->last_16k_index++;
-        }
-        else if (array_size <= 32768 && client->last_32k_index < MEM_32K_SIZE) {
-            one_array_data = client->pre_32k_mem[client->last_32k_index];
-            client->last_32k_index++;
-        }
-        else {
-            one_array_data = (char *)malloc (array_size);
-            link_list_prepend (allocated_data_arrays, one_array_data, free);
-        }
+        one_array_data = (char *)malloc (array_size);
+        link_list_prepend (allocated_data_arrays, one_array_data, free);
+
         memcpy (one_array_data,
                 attrib_list->first_index_pointer->pointer,
                 array_size);
@@ -4073,12 +4048,6 @@ caching_client_eglSwapBuffers (void* client,
         return EGL_FALSE;
 
     EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
-    CLIENT(client)->last_1k_index = 0;
-    CLIENT(client)->last_2k_index = 0;
-    CLIENT(client)->last_4k_index = 0;
-    CLIENT(client)->last_8k_index = 0;
-    CLIENT(client)->last_16k_index = 0;
-    CLIENT(client)->last_32k_index = 0;
     return result;
 }
 
