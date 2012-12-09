@@ -166,25 +166,6 @@ client_destroy_thread_local ()
 }
 
 command_t *
-client_try_get_space_for_command_with_extra_space (command_type_t command_type,
-                                                   size_t extra)
-{
-    client_t *client = client_get_thread_local ();
-
-    size_t available_space;
-    command_t *command = (command_t *) buffer_write_address (&client->buffer,
-                                                             &available_space);
-    size_t command_size = command_get_size (command_type) + extra;
-    if (! command || available_space < command_size);
-        return NULL;
-
-    command->type = command_type;
-    command->size = command_size;
-    command->token = 0;
-    return command;
-}
-
-command_t *
 client_get_space_for_size (client_t *client,
                            size_t size)
 {
