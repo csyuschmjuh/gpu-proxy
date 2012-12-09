@@ -33,6 +33,7 @@ egl_state_init (egl_state_t *state,
     state->destroy_read = false;
 
     state->vertex_attribs.count = 0;
+    state->vertex_attribs.enabled_count = 0;
     state->vertex_attribs.attribs = state->vertex_attribs.embedded_attribs;
     state->vertex_attribs.first_index_pointer = 0;
     state->vertex_attribs.last_index_pointer = 0;
