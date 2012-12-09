@@ -29,6 +29,7 @@ typedef struct vertex_attrib
 typedef struct vertex_attrib_list
 {
     int                 count;          /* initial 0 */
+    int                 enabled_count;  /* initial 0 */
     vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
     vertex_attrib_t     *attribs;
     vertex_attrib_t     *first_index_pointer;
