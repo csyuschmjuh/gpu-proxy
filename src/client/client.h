@@ -58,10 +58,6 @@ client_get_space_for_size (client_t *client,
 private command_t *
 client_get_space_for_command (command_type_t command_type);
 
-private command_t *
-client_try_get_space_for_command_with_extra_space (command_type_t command_type,
-                                                   size_t extra);
-
 private void
 client_run_command_async (command_t *command);
 
