@@ -631,6 +631,224 @@ FUNCTIONS_GENERATING_ERRORS = [
  'glEndTilingQCOM',
 ]
 
+_GL_GET_TYPE_INFO_FUNC = {
+  'glGetBooleanv': { 'type': 'GLboolean'},
+  'glGetFloatv': { 'type': 'GLfloat'},
+  'glGetIntegerv': { 'type': 'GLint'}
+}
+
+_GL_GET_TYPE_INFO = {
+  'GL_BLEND': {
+    'var':'blend'
+  },
+  'GL_COLOR_WRITEMASK': {
+    'var': 'color_writemask',
+    'size': 4
+  },
+  'GL_CULL_FACE': {
+    'var': 'cull_face'
+  },
+  'GL_DEPTH_TEST': {
+    'var': 'depth_test'
+  },
+  'GL_DEPTH_WRITEMASK': {
+    'var': 'depth_writemask'
+  },
+  'GL_DITHER': {
+    'var': 'dither'
+  },
+  'GL_POLYGON_OFFSET_FILL': {
+    'var': 'polygon_offset_fill'
+  },
+  'GL_SAMPLE_ALPHA_TO_COVERAGE': {
+    'var': 'sample_alpha_to_coverage'
+  },
+  'GL_SAMPLE_COVERAGE': {
+    'var': 'sample_coverage'
+  },
+  'GL_SCISSOR_TEST': {
+    'var': 'scissor_test'
+  },
+  'GL_SHADER_COMPILER': {
+    'var': 'shader_compiler'
+  },
+  'GL_STENCIL_TEST': {
+    'var': 'stencil_test'
+  },
+  'GL_BLEND_COLOR': {
+    'var': 'blend_color',
+    'size': 4
+  },
+  'GL_BLEND_DST_ALPHA': {
+    'var': 'blend_dst',
+    'index': 1
+  },
+  'GL_BLEND_DST_RGB': {
+    'var': 'blend_dst',
+    'index': 0
+  },
+  'GL_BLEND_EQUATION_ALPHA': {
+    'var': 'blend_equation',
+    'index': 1
+  },
+  'GL_BLEND_EQUATION_RGB': {
+    'var': 'blend_equation',
+    'index': 0
+  },
+  'GL_BLEND_SRC_ALPHA': {
+    'var': 'blend_src',
+    'index': 1
+  },
+  'GL_BLEND_SRC_RGB': {
+    'var': 'blend_src',
+    'index': 0
+  },
+  'GL_COLOR_CLEAR_VALUE': {
+    'var': 'color_clear_value',
+    'size': 4
+  },
+  'GL_DEPTH_CLEAR_VALUE': {
+    'var': 'depth_clear_value',
+  },
+  'GL_DEPTH_RANGE': {
+    'var': 'depth_range',
+    'size': 2
+  },
+  'GL_LINE_WIDTH': {
+    'var': 'line_width'
+  },
+  'GL_POLYGON_OFFSET_FACTOR': {
+    'var': 'polygon_offset_factor'
+  },
+  'GL_ACTIVE_TEXTURE': {
+    'var': 'active_texture'
+  },
+  'GL_CURRENT_PROGRAM': {
+    'var': 'current_program'
+  },
+  'GL_DEPTH_CLEAR_VALUE': {
+    'var': 'depth_clear_value'
+  },
+  'GL_DEPTH_FUNC': {
+    'var': 'depth_func'
+  },
+  'GL_DEPTH_RANGE': {
+    'var': 'depth_range',
+    'size': 2
+  },
+  'GL_GENERATE_MIPMAP_HINT': {
+    'var': 'generate_mipmap_hint'
+  },
+  'GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS': {
+    'var': 'max_combined_texture_image_units',
+    'has_cache': True
+  },
+  'GL_MAX_CUBE_MAP_TEXTURE_SIZE': {
+    'var': 'max_cube_map_texture_size',
+    'has_cache': True
+  },
+  'GL_MAX_FRAGMENT_UNIFORM_VECTORS': {
+    'var': 'max_fragment_uniform_vectors',
+    'has_cache': True
+  },
+  'GL_MAX_RENDERBUFFER_SIZE': {
+    'var': 'max_renderbuffer_size',
+    'has_cache': True
+  },
+  'GL_MAX_TEXTURE_IMAGE_UNITS': {
+    'var': 'max_texture_image_units',
+    'has_cache': True
+  },
+  'GL_MAX_VARYING_VECTORS': {
+    'var': 'max_varying_vectors',
+    'has_cache': True
+  },
+  'GL_MAX_TEXTURE_SIZE': {
+    'var': 'max_texture_size',
+    'has_cache': True
+  },
+  'GL_MAX_VERTEX_ATTRIBS': {
+    'var': 'max_vertex_attribs',
+    'has_cache': True
+  },
+  'GL_MAX_VERTEX_TEXTURE_IMAGE_UNITS': {
+    'var': 'max_vertex_texture_image_units',
+    'has_cache': True
+  },
+  'GL_MAX_VERTEX_UNIFORM_VECTORS': {
+    'var': 'max_vertex_uniform_vectors',
+    'has_cache': True
+  },
+  'GL_POLYGON_OFFSET_UNITS': {
+    'var': 'polygon_offset_units'
+  },
+  'GL_SCISSOR_BOX': {
+    'var': 'scissor_box',
+    'size': 4
+  },
+  'GL_STENCIL_BACK_FAIL': {
+    'var': 'stencil_back_fail'
+  },
+  'GL_STENCIL_BACK_FUNC': {
+    'var': 'stencil_back_func'
+  },
+  'GL_STENCIL_BACK_PASS_DEPTH_FAIL': {
+    'var': 'stencil_back_pass_depth_fail'
+  },
+  'GL_STENCIL_BACK_PASS_DEPTH_PASS': {
+    'var': 'stencil_back_pass_depth_pass'
+  },
+  'GL_STENCIL_BACK_REF': {
+    'var': 'stencil_ref'
+  },
+  'GL_STENCIL_BACK_VALUE_MASK': {
+    'var': 'stencil_value_mask'
+  },
+  'GL_STENCIL_CLEAR_VALUE': {
+    'var': 'stencil_clear_value'
+  },
+  'GL_STENCIL_FAIL': {
+    'var': 'stencil_fail'
+  },
+  'GL_STENCIL_FUNC': {
+    'var': 'stencil_func'
+  },
+  'GL_STENCIL_PASS_DEPTH_FAIL': {
+    'var': 'stencil_pass_depth_fail'
+  },
+  'GL_STENCIL_PASS_DEPTH_PASS': {
+    'var': 'stencil_pass_depth_pass'
+  },
+  'GL_STENCIL_REF': {
+    'var': 'stencil_ref'
+  },
+  'GL_STENCIL_VALUE_MASK': {
+    'var': 'stencil_value_mask'
+  },
+  'GL_STENCIL_WRITEMASK': {
+    'var': 'stencil_writemask'
+  },
+  'GL_STENCIL_BACK_WRITEMASK': {
+    'var': 'stencil_back_writemask'
+  },
+  'GL_VIEWPORT': {
+    'var': 'viewport',
+    'size': 4
+  },
+  'GL_ARRAY_BUFFER_BINDING': {
+    'var': 'array_buffer_binding',
+    'fetch_server_data': True
+  },
+  'GL_ELEMENT_ARRAY_BUFFER_BINDING': {
+    'var': 'array_buffer_binding',
+    'fetch_server_data': True
+  },
+  'GL_VERTEX_ARRAY_BINDING_OES': {
+    'var': 'vertex_array_binding',
+    'fetch_server_data': True
+  }
+}
+
 # This string is copied directly out of the gl2.h file from GLES2.0
 #
 # Edits:
@@ -2894,17 +3112,79 @@ class GLGenerator(object):
     file.Write("}\n")
     file.Close()
 
+  def WriteGLGetType(self, filename):
+    """Writes the glGet* functions for the client-side"""
+
+    file = CWriter(filename)
+
+    for func in _GL_GET_TYPE_INFO_FUNC:
+        func_info = _GL_GET_TYPE_INFO_FUNC[func]
+        file.Write("static void\n")
+        file.Write("caching_client_%s (void* client, GLenum pname, %s *params)\n" % (func, func_info['type']))
+        file.Write("{\n")
+        file.Write("    INSTRUMENT();\n\n");
+
+        file.Write("    egl_state_t *state = client_get_current_state (CLIENT (client));\n")
+        file.Write("    if (! state)\n")
+        file.Write("        return;\n\n")
+
+        file.Write("    switch (pname) {\n")
+        for enum_name in _GL_GET_TYPE_INFO:
+            file.Write("    case %s:\n" % enum_name)
+            info = _GL_GET_TYPE_INFO[enum_name]
+            if 'size' in info:
+                for i in range(info['size']):
+                    file.Write("        params[%s] = state->%s[%s];\n" % (i, info['var'], i))
+
+            elif 'index' in info:
+                file.Write("       *params = state->%s[%s];\n" % (info['var'], info['index']))
+
+            elif 'has_cache' in info:
+                file.Write("       if (! state->%s_queried) {\n" % info['var'])
+                file.Write("           CACHING_CLIENT(client)->super_dispatch.%s (client, pname, params);\n" % func)
+                file.Write("           state->%s = *params;\n" % info['var'])
+                file.Write("           state->%s_queried = true;\n" % info['var'])
+                file.Write("       } else \n")
+                file.Write("           *params = state->%s;\n" % info['var'])
+
+            elif 'fetch_server_data':
+                file.Write("       CACHING_CLIENT(client)->super_dispatch.%s (client, pname, params);\n" % func)
+                file.Write("       state->%s = *params;\n" % info['var'])
+
+            else:
+                file.Write("       *params = state->%s;\n" % info['var'])
+
+            file.Write("        break;\n")
+
+        file.Write("    default:\n")
+        file.Write("        CACHING_CLIENT(client)->super_dispatch.%s (client, pname, params);\n" % func)
+        file.Write("        break;\n")
+        file.Write("    }\n")
+
+        file.Write("    if (pname == GL_ARRAY_BUFFER_BINDING) {\n")
+        file.Write("        vertex_attrib_list_t *attrib_list = &state->vertex_attribs;\n")
+        file.Write("        vertex_attrib_t *attribs = attrib_list->attribs;\n")
+        file.Write("        int count = attrib_list->count;\n")
+
+        file.Write("        int i;\n")
+        file.Write("        for (i = 0; i < count; i++) {\n")
+        file.Write("            attribs[i].array_buffer_binding = *params;\n")
+        file.Write("        }\n")
+        file.Write("    }\n")
+        file.Write("}\n\n")
+
+    file.Close()
+
   def WriteCachingClientDispatchTableImplementation(self, filename):
     caching_client_text = open(os.path.join('..', 'client', 'caching_client.c')).read()
     file = CWriter(filename)
 
     for func in self.functions:
         caching_func_name = "caching_client_%s " % func.name
-        if caching_client_text.find(caching_func_name) == -1:
+        if caching_client_text.find(caching_func_name) == -1 and func.name not in _GL_GET_TYPE_INFO_FUNC:
             continue
         file.Write('    client->super.dispatch.%s = %s;\n' % (func.name, caching_func_name))
     file.Close()
-
 
   def WriteCommandEnum(self, filename):
     """Writes the command format"""
@@ -2969,6 +3249,7 @@ def main(argv):
   gen.WriteCommandInitilizationAndSizeFunction("command_autogen.c")
   gen.WriteClientEntryPoints("client_entry_points.c")
   gen.WriteBaseClient("client_autogen.c")
+  gen.WriteGLGetType("caching_client_glget.c")
   gen.WriteCachingClientDispatchTableImplementation("caching_client_dispatch_autogen.c")
 
   # These are used on the server-side.
