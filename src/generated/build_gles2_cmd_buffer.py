@@ -846,6 +846,10 @@ _GL_GET_TYPE_INFO = {
   'GL_VERTEX_ARRAY_BINDING_OES': {
     'var': 'vertex_array_binding',
     'fetch_server_data': True
+  },
+  'GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT': {
+    'var': 'max_texture_max_anisotropy',
+    'has_cache': True
   }
 }
 
@@ -1327,6 +1331,7 @@ _ENUM_LISTS = {
       'GL_TEXTURE_WRAP_S',
       'GL_TEXTURE_WRAP_T',
       'GL_TEXTURE_WRAP_R_OES',
+      'GL_TEXTURE_MAX_ANISOTROPY_EXT',
     ],
     'invalid': [
       'GL_GENERATE_MIPMAP',

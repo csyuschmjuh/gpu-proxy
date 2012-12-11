@@ -48,6 +48,7 @@ typedef struct _texture {
     GLint                   texture_wrap_s;            /* initial GL_REPEAT */
     GLint                   texture_wrap_t;            /* initial GL_REPEAT */
     GLint                   texture_3d_wrap_r;         /* initial GL_REPEAT */
+    GLfloat                 texture_max_anisotropy;    /* initial 1.0 */
 } texture_t;
 
 typedef struct egl_state  egl_state_t;
@@ -171,6 +172,8 @@ struct egl_state {
     GLint         max_vertex_texture_image_units;   /* may be 0 */
     bool          max_vertex_texture_image_units_queried;
     GLint         max_viewport_dims;                /* as large as visible */
+    bool          max_texture_max_anisotropy_queried; /* false */
+    GLfloat       max_texture_max_anisotropy;       /* at least 2.0 */
     /* used all */
     GLint         num_compressed_texture_formats;   /* min is 0 */
     GLint         num_shader_binary_formats;        /* min is 0 */

@@ -53,6 +53,8 @@ egl_state_init (egl_state_t *state,
     state->max_varying_vectors = 8;
     state->max_vertex_uniform_vectors = 128;
     state->max_vertex_texture_image_units = 0;
+    state->max_texture_max_anisotropy_queried = false;
+    state->max_texture_max_anisotropy = 2.0;
 
     state->error = GL_NO_ERROR;
     state->need_get_error = false;
