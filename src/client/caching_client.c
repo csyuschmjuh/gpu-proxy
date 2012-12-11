@@ -2046,11 +2046,28 @@ caching_client_glGetString (void* client, GLenum name)
     return result;
 }
 
+static texture_t*
+caching_client_lookup_cached_texture (egl_state_t *state, GLenum target)
+{
+    GLuint tex_id;
+    texture_t *texture;
+
+    if (target == GL_TEXTURE_2D)
+        tex_id = state->texture_binding[0];
+    else if (target == GL_TEXTURE_CUBE_MAP)
+        tex_id = state->texture_binding[1];
+    else
+        tex_id = state->texture_binding_3d;
+
+    texture = egl_state_lookup_cached_texture (state, tex_id);
+
+    return texture;
+}
+
 static void
 caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
                                      GLint *params)
 {
-    GLuint tex_id;
     texture_t *texture;
 
     INSTRUMENT();
@@ -2068,14 +2085,7 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         return;
     }
 
-    if (target == GL_TEXTURE_2D)
-        tex_id = state->texture_binding[0];
-    else if (target == GL_TEXTURE_CUBE_MAP)
-        tex_id = state->texture_binding[1];
-    else
-        tex_id = state->texture_binding_3d;
-
-    texture = egl_state_lookup_cached_texture (state, tex_id);
+    texture = caching_client_lookup_cached_texture (state, target);
     if (! texture)
         texture = caching_client_get_default_texture ();
 
@@ -2089,6 +2099,8 @@ caching_client_glGetTexParameteriv (void* client, GLenum target, GLenum pname,
         *params = texture->texture_wrap_t;
     else if (pname == GL_TEXTURE_WRAP_R_OES)
         *params = texture->texture_3d_wrap_r;
+    else if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT)
+        *params = texture->texture_max_anisotropy;
 }
 
 static void
@@ -2098,6 +2110,29 @@ caching_client_glGetTexParameterfv (void* client, GLenum target, GLenum pname, G
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
+
+    /* XXX: GL_TEXTURE_MAX_ANISOTROPY_EXT returns a float,
+     * we can not use caching_client_glGetTexParameteriv
+     */
+
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+        texture_t *texture;
+        if (! is_valid_GetTexParamTarget (target)) {
+            caching_client_glSetError (client, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (! is_valid_TextureParameter (pname)) {
+            caching_client_glSetError (client, GL_INVALID_ENUM);
+            return;
+        }
+
+        texture = caching_client_lookup_cached_texture (state, target);
+        if (! texture)
+            texture = caching_client_get_default_texture ();
+
+        *params = texture->texture_max_anisotropy;
+    }
 
     caching_client_glGetTexParameteriv (client, target, pname, &paramsi);
     *params = paramsi;
@@ -2691,7 +2726,6 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
 {
     INSTRUMENT();
     texture_t *texture = NULL;
-    GLuint tex_id;
     bool needs_call = false;
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -2708,20 +2742,18 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         return;
     }
 
-    if (target == GL_TEXTURE_2D)
-        tex_id = state->texture_binding[0];
-    else if (target == GL_TEXTURE_CUBE_MAP)
-        tex_id = state->texture_binding[1];
-    else
-        tex_id = state->texture_binding_3d;
-
-    texture = egl_state_lookup_cached_texture (state, tex_id);
+    texture = caching_client_lookup_cached_texture (state, target);
 
     if ((pname == GL_TEXTURE_MAG_FILTER && ! is_valid_TextureMagFilterMode (param)) ||
         (pname == GL_TEXTURE_MIN_FILTER && ! is_valid_TextureMinFilterMode (param)) ||
         ((pname == GL_TEXTURE_WRAP_S || pname == GL_TEXTURE_WRAP_T || pname == GL_TEXTURE_WRAP_R_OES) &&
             ! is_valid_TextureWrapMode (param))) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if ((pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) && param < 1) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
 
@@ -2755,6 +2787,11 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         texture->texture_3d_wrap_r = param;
         needs_call = true;
     }
+    else if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT &&
+             texture->texture_max_anisotropy != param) {
+        texture->texture_max_anisotropy = param;
+        needs_call = true;
+    }
 
     if (needs_call)
         CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
@@ -2769,6 +2806,45 @@ caching_client_glTexParameterf (void* client, GLenum target, GLenum pname, GLflo
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
+
+    /* XXX: GL_TEXTURE_MAX_ANISOTROPY_EXT sets a float,
+     * we can not use caching_client_glTexParameteri
+     */
+
+    if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+        texture_t *texture;
+        bool needs_call = false;
+
+        if (! is_valid_GetTexParamTarget (target)) {
+            caching_client_glSetError (client, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (! is_valid_TextureParameter (pname)) {
+            caching_client_glSetError (client, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (param < 1.0) {
+            caching_client_glSetError (client, GL_INVALID_VALUE);
+            return;
+        }
+
+        texture = caching_client_lookup_cached_texture (state, target);
+        if (! texture) {
+            CACHING_CLIENT(client)->super_dispatch.glTexParameterf (client, target, pname, param);
+            return;
+        }
+
+        if (texture->texture_max_anisotropy != param) {
+            texture->texture_max_anisotropy = param;
+            needs_call = true;
+        }
+
+        if (needs_call)
+            CACHING_CLIENT(client)->super_dispatch.glTexParameterf (client, target, pname, param);
+    }
+
     caching_client_glTexParameteri (client, target, pname, parami);
 }
 
