@@ -3152,7 +3152,7 @@ class GLGenerator(object):
                 file.Write("       } else \n")
                 file.Write("           *params = state->%s;\n" % info['var'])
 
-            elif 'fetch_server_data':
+            elif 'fetch_server_data' in info:
                 file.Write("       CACHING_CLIENT(client)->super_dispatch.%s (client, pname, params);\n" % func)
                 file.Write("       state->%s = *params;\n" % info['var'])
 
