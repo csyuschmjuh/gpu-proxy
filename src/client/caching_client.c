@@ -2440,15 +2440,11 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
         (pname == GL_UNPACK_ALIGNMENT && state->unpack_alignment == param))
         return;
 
-    if (! (param == 1 ||
-           param == 2 ||
-           param == 4 ||
-           param == 8)) {
+    if (! is_valid_PixelStoreAlignment(param)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    else if (! (pname == GL_PACK_ALIGNMENT ||
-                pname == GL_UNPACK_ALIGNMENT)) {
+    else if (! is_valid_PixelStore(pname)) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
