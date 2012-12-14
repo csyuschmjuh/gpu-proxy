@@ -1496,6 +1496,7 @@ _ENUM_LISTS = {
       'GL_LUMINANCE_ALPHA',
       'GL_RGB',
       'GL_RGBA',
+      'GL_BGRA_EXT',
     ],
     'invalid': [
       'GL_BGRA',
