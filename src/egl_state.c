@@ -498,6 +498,14 @@ egl_state_create_cached_texture (egl_state_t *egl_state,
 
 }
 
+void
+egl_state_delete_cached_texture (egl_state_t *egl_state,
+                                  GLuint texture_id)
+{
+    if (texture_id != 0)
+        HashRemove (egl_state_get_texture_cache (egl_state), texture_id);
+}
+
 static link_list_t **
 egl_state_get_program_list (egl_state_t *egl_state)
 {
