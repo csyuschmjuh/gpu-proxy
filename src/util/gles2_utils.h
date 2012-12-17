@@ -6,7 +6,11 @@
 private void
 copy_rect_to_buffer (const void *pixels,
                      void *buffer,
+                     int format,
+                     int type,
                      uint32_t height,
+                     uint32_t unpack_skip_pixels,
+                     uint32_t unpack_skip_rows,
                      uint32_t unpadded_row_size,
                      uint32_t pixels_padded_row_size,
                      uint32_t buffer_padded_row_size);
@@ -17,6 +21,8 @@ compute_image_data_sizes (int width,
                           int format,
                           int type,
                           int unpack_alignment,
+                          int unpack_row_length,
+                          int unpack_skip_rows,
                           uint32_t *size,
                           uint32_t *ret_unpadded_row_size,
                           uint32_t *ret_padded_row_size);
