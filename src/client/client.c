@@ -243,6 +243,36 @@ client_get_unpack_alignment ()
     return client->active_state->unpack_alignment;
 }
 
+int
+client_get_unpack_row_length ()
+{
+    client_t *client = client_get_thread_local ();
+    if (!client->active_state)
+        return 0;
+
+    return client->active_state->unpack_row_length;
+}
+
+int
+client_get_unpack_skip_pixels ()
+{
+    client_t *client = client_get_thread_local ();
+    if (!client->active_state)
+        return 0;
+
+    return client->active_state->unpack_skip_pixels;
+}
+
+int
+client_get_unpack_skip_rows ()
+{
+    client_t *client = client_get_thread_local ();
+    if (!client->active_state)
+        return 0;
+
+    return client->active_state->unpack_skip_rows;
+}
+
 bool
 client_has_valid_state (client_t *client)
 {
