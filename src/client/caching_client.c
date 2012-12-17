@@ -2437,23 +2437,43 @@ caching_client_glPixelStorei (void* client, GLenum pname, GLint param)
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
+
     if ((pname == GL_PACK_ALIGNMENT && state->pack_alignment == param) ||
-        (pname == GL_UNPACK_ALIGNMENT && state->unpack_alignment == param))
+        (pname == GL_UNPACK_ALIGNMENT && state->unpack_alignment == param) ||
+        (pname == GL_UNPACK_ROW_LENGTH && state->unpack_row_length == param) ||
+        (pname == GL_UNPACK_SKIP_ROWS && state->unpack_skip_rows == param) ||
+        (pname == GL_UNPACK_SKIP_PIXELS && state->unpack_skip_pixels == param))
         return;
 
-    if (! is_valid_PixelStoreAlignment(param)) {
+    if (! is_valid_PixelStoreAlignment(param) &&
+        (pname == GL_PACK_ALIGNMENT || pname == GL_UNPACK_ALIGNMENT)) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    } else if (param < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
-    else if (! is_valid_PixelStore(pname)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
-        return;
-    }
 
-    if (pname == GL_PACK_ALIGNMENT)
+    switch (pname) {
+    case GL_PACK_ALIGNMENT:
        state->pack_alignment = param;
-    else
+       break;
+    case GL_UNPACK_ALIGNMENT:
        state->unpack_alignment = param;
+       break;
+    case GL_UNPACK_ROW_LENGTH:
+       state->unpack_row_length = param;
+       return;
+    case GL_UNPACK_SKIP_ROWS:
+       state->unpack_skip_rows = param;
+       return;
+    case GL_UNPACK_SKIP_PIXELS:
+       state->unpack_skip_pixels = param;
+       return;
+    default:
+       caching_client_glSetError (client, GL_INVALID_VALUE);
+       return;
+    }
 
     CACHING_CLIENT(client)->super_dispatch.glPixelStorei (client, pname, param);
 }

@@ -850,6 +850,15 @@ _GL_GET_TYPE_INFO = {
   'GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT': {
     'var': 'max_texture_max_anisotropy',
     'has_cache': True
+  },
+  'GL_UNPACK_ROW_LENGTH': {
+    'var': 'unpack_row_length'
+  },
+  'GL_UNPACK_SKIP_ROWS': {
+    'var': 'unpack_skip_rows'
+  },
+  'GL_UNPACK_SKIP_PIXELS': {
+    'var': 'unpack_skip_pixels'
   }
 }
 
@@ -1412,6 +1421,9 @@ _ENUM_LISTS = {
     'valid': [
       'GL_PACK_ALIGNMENT',
       'GL_UNPACK_ALIGNMENT',
+      'GL_UNPACK_ROW_LENGTH',
+      'GL_UNPACK_SKIP_ROWS',
+      'GL_UNPACK_SKIP_PIXELS'
     ],
     'invalid': [
       'GL_PACK_SWAP_BYTES',
