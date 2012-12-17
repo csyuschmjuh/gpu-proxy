@@ -31,12 +31,15 @@ command_glteximage2d_init (command_t *abstract_command,
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
     uint32_t unpack_alignment = client_get_unpack_alignment ();
+    uint32_t unpack_row_length = client_get_unpack_row_length ();
+    uint32_t unpack_skip_pixels = client_get_unpack_skip_pixels ();
+    uint32_t unpack_skip_rows = client_get_unpack_skip_rows ();
 
     if (! pixels)
         return;
 
     if (!compute_image_data_sizes (width, height, format, type,
-                                   unpack_alignment, &dest_size,
+                                   unpack_alignment, unpack_row_length, unpack_skip_rows, &dest_size,
                                    &unpadded_row_size, &padded_row_size)) {
         /* TODO: Set an error on the client-side.
          SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
@@ -44,8 +47,9 @@ command_glteximage2d_init (command_t *abstract_command,
     }
 
     command->pixels = malloc (dest_size);
-    copy_rect_to_buffer (pixels, command->pixels, height, unpadded_row_size,
-                         padded_row_size, padded_row_size);
+    copy_rect_to_buffer (pixels, command->pixels, format, type, height,
+                         unpack_skip_pixels, unpack_skip_rows,
+                         unpadded_row_size, padded_row_size, padded_row_size);
 }
 
 void
@@ -75,9 +79,12 @@ command_gltexsubimage2d_init (command_t *abstract_command,
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
     uint32_t unpack_alignment = client_get_unpack_alignment ();
+    uint32_t unpack_row_length = client_get_unpack_row_length ();
+    uint32_t unpack_skip_pixels = client_get_unpack_skip_pixels ();
+    uint32_t unpack_skip_rows = client_get_unpack_skip_rows ();
 
     if (! compute_image_data_sizes (width, height, format,
-                                    type, unpack_alignment,
+                                    type, unpack_alignment, unpack_skip_rows, unpack_row_length,
                                     &dest_size, &unpadded_row_size,
                                     &padded_row_size)) {
         /* XXX: Set a GL error on the client side here. */
@@ -86,8 +93,9 @@ command_gltexsubimage2d_init (command_t *abstract_command,
     }
 
     command->pixels = malloc (dest_size);
-    copy_rect_to_buffer (pixels, command->pixels, height, unpadded_row_size,
-                         padded_row_size, padded_row_size);
+    copy_rect_to_buffer (pixels, command->pixels, format, type, height,
+                         unpack_skip_pixels, unpack_skip_rows,
+                         unpadded_row_size, padded_row_size, padded_row_size);
 }
 
 void

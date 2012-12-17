@@ -68,13 +68,21 @@ safe_add (uint32_t a,
 void
 copy_rect_to_buffer (const void *pixels,
                      void *buffer,
+                     int format,
+                     int type,
                      uint32_t height,
+                     uint32_t unpack_skip_pixels,
+                     uint32_t unpack_skip_rows,
                      uint32_t unpadded_row_size,
                      uint32_t pixels_padded_row_size,
                      uint32_t buffer_padded_row_size)
 {
-    const char *source = (const char *) pixels;
+    uint32_t skip_elements = unpack_skip_pixels * compute_image_group_size(format, type);
+    const char *source = (const char *) pixels +
+                         unpack_skip_rows * pixels_padded_row_size +
+                         skip_elements;
     char *dest = (char *) buffer;
+    /* XXX: We need to handle unpack values when pixels_padded_row_size != buffer_padded_row_size */
     if (pixels_padded_row_size != buffer_padded_row_size) {
         // The last row is copied unpadded at the end.
         for (; height > 1; --height) {
@@ -84,27 +92,40 @@ copy_rect_to_buffer (const void *pixels,
             source += pixels_padded_row_size;
         }
         memcpy(dest, source, unpadded_row_size);
-  } else {
-      uint32_t size = (height - 1) * pixels_padded_row_size + unpadded_row_size;
-      memcpy(dest, source, size);
+    } else {
+        int i;
+        for (i = 0; i < height - unpack_skip_rows - 1; i++) {
+            memcpy (dest, source, pixels_padded_row_size);
+	    source += pixels_padded_row_size + skip_elements;
+	    dest += pixels_padded_row_size;
+        }
+        memcpy(dest, source, unpadded_row_size);
   }
 }
 
 // Returns the amount of data glTexImage2D or glTexSubImage2D will access.
 bool
-compute_image_data_sizes (int width, 
+compute_image_data_sizes (int width,
                           int height,
                           int format,
                           int type,
                           int unpack_alignment,
+                          int unpack_row_length,
+                          int unpack_skip_rows,
                           uint32_t *size,
                           uint32_t *ret_unpadded_row_size,
                           uint32_t *ret_padded_row_size)
 {
     uint32_t bytes_per_group = compute_image_group_size(format, type);
     uint32_t row_size;
-    if (! safe_multiply (width, bytes_per_group, &row_size))
-        return false;
+
+    if (unpack_row_length > 0) {
+        if (! safe_multiply (unpack_row_length, bytes_per_group, &row_size))
+            return false;
+    } else {
+        if (! safe_multiply (width, bytes_per_group, &row_size))
+            return false;
+    }
 
     if (height > 1) {
         uint32_t temp;
@@ -113,7 +134,7 @@ compute_image_data_sizes (int width,
         uint32_t padded_row_size = (temp / unpack_alignment) * unpack_alignment;
         uint32_t size_of_all_but_last_row;
 
-        if (! safe_multiply ((height - 1), padded_row_size, &size_of_all_but_last_row))
+        if (! safe_multiply ((height - unpack_skip_rows - 1), padded_row_size, &size_of_all_but_last_row))
             return false;
 
         if (! safe_add (size_of_all_but_last_row, row_size, size))
@@ -122,7 +143,7 @@ compute_image_data_sizes (int width,
         if (ret_padded_row_size)
             *ret_padded_row_size = padded_row_size;
     } else {
-        if (! safe_multiply (height, row_size, size))
+        if (! safe_multiply (height - unpack_skip_rows, row_size, size))
             return false;
 
         if (ret_padded_row_size)
