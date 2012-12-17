@@ -850,11 +850,12 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteTextures (client, n, textures);
 
-    name_handler_delete_names (n, textures);
-
     for (i = 0; i < n; i++) {
         if (textures[i] == 0)
             continue;
+
+        egl_state_delete_cached_texture (state, textures[i]);
+
         if (state->texture_binding[0] == textures[i])
             state->texture_binding[0] = 0;
         else if (state->texture_binding[1] == textures[i])
