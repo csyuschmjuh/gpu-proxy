@@ -51,6 +51,15 @@ client_destroy_thread_local ();
 private int
 client_get_unpack_alignment ();
 
+private int
+client_get_unpack_row_length ();
+
+private int
+client_get_unpack_skip_pixels ();
+
+private int
+client_get_unpack_skip_rows ();
+
 private command_t *
 client_get_space_for_size (client_t *client,
                            size_t size);
