@@ -9,7 +9,6 @@ copy_rect_to_buffer (const void *pixels,
                      uint32_t height,
                      uint32_t unpadded_row_size,
                      uint32_t pixels_padded_row_size,
-                     bool flip_y,
                      uint32_t buffer_padded_row_size);
 
 private bool

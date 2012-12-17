@@ -71,22 +71,15 @@ copy_rect_to_buffer (const void *pixels,
                      uint32_t height,
                      uint32_t unpadded_row_size,
                      uint32_t pixels_padded_row_size,
-                     bool flip_y,
                      uint32_t buffer_padded_row_size)
 {
     const char *source = (const char *) pixels;
     char *dest = (char *) buffer;
-    if (flip_y || pixels_padded_row_size != buffer_padded_row_size) {
-        if (flip_y)
-            dest += buffer_padded_row_size * (height - 1);
-
+    if (pixels_padded_row_size != buffer_padded_row_size) {
         // The last row is copied unpadded at the end.
         for (; height > 1; --height) {
             memcpy(dest, source, buffer_padded_row_size);
-            if (flip_y)
-                dest -= buffer_padded_row_size;
-            else
-                dest += buffer_padded_row_size;
+            dest += buffer_padded_row_size;
 
             source += pixels_padded_row_size;
         }
