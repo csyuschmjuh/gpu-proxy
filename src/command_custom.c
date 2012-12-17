@@ -45,7 +45,7 @@ command_glteximage2d_init (command_t *abstract_command,
 
     command->pixels = malloc (dest_size);
     copy_rect_to_buffer (pixels, command->pixels, height, unpadded_row_size,
-                         padded_row_size, false /* flip y */, padded_row_size);
+                         padded_row_size, padded_row_size);
 }
 
 void
@@ -87,7 +87,7 @@ command_gltexsubimage2d_init (command_t *abstract_command,
 
     command->pixels = malloc (dest_size);
     copy_rect_to_buffer (pixels, command->pixels, height, unpadded_row_size,
-                         padded_row_size, false /* flip y */, padded_row_size);
+                         padded_row_size, padded_row_size);
 }
 
 void
