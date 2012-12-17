@@ -180,6 +180,9 @@ struct egl_state {
     /* used all */
     GLint         pack_alignment;                   /* initial is 4 */
     GLint         unpack_alignment;                 /* initial is 4 */
+    GLint         unpack_row_length;                /* initial is 0 */
+    GLint         unpack_skip_rows;                 /* initial is 0 */
+    GLint         unpack_skip_pixels;               /* initial is 0 */
     /* used */
     GLfloat       polygon_offset_factor;            /* initial 0 */
     /* used */

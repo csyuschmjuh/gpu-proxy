@@ -107,6 +107,10 @@ egl_state_init (egl_state_t *state,
     state->pack_alignment = 4; 
     state->unpack_alignment = 4;
 
+    state->unpack_row_length = 0;
+    state->unpack_skip_pixels = 0;
+    state->unpack_skip_rows = 0;
+
     state->polygon_offset_factor = 0;
     state->polygon_offset_fill = GL_FALSE;
     state->polygon_offset_units = 0;
