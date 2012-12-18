@@ -657,7 +657,7 @@ caching_client_glCopyTexImage2D (void *client,
                                  GLsizei height,
                                  GLint border)
 {
-    GLuint tex;
+    GLuint tex = 0;
     texture_t *texture = NULL;
     framebuffer_t *framebuffer = NULL;
 
@@ -706,7 +706,7 @@ caching_client_glCompressedTexImage2D (void *client,
                                        GLsizei imageSize,
                                        const GLvoid *data)
 {
-    GLuint tex;
+    GLuint tex = 0;
     texture_t *texture = NULL;
     framebuffer_t *framebuffer = NULL;
 
@@ -949,8 +949,8 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 {
     int i;
 
-    texture_t *tex;
-    framebuffer_t *framebuffer;
+    texture_t *tex = NULL;
+    framebuffer_t *framebuffer = NULL;
 
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
