@@ -527,6 +527,8 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
 static GLenum
 caching_client_glCheckFramebufferStatus (void* client, GLenum target)
 {
+    GLenum result;
+
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (!state)
@@ -537,7 +539,16 @@ caching_client_glCheckFramebufferStatus (void* client, GLenum target)
         return GL_INVALID_ENUM;
     }
 
-    return CACHING_CLIENT(client)->super_dispatch.glCheckFramebufferStatus (client, target);
+    result = CACHING_CLIENT(client)->super_dispatch.glCheckFramebufferStatus (client, target);
+
+    /* update framebuffer in cache */
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer)
+            framebuffer->complete = (result == GL_FRAMEBUFFER_COMPLETE)? FRAMEBUFFER_COMPLETE: FRAMEBUFFER_INCOMPLETE;
+    }
+
+    return result;
 }
 
 static void
@@ -633,6 +644,106 @@ caching_client_glColorMask (void* client, GLboolean red, GLboolean green,
     state->color_writemask[3] = alpha;
 
     CACHING_CLIENT(client)->super_dispatch.glColorMask (client, red, green, blue, alpha);
+}
+
+static void 
+caching_client_glCopyTexImage2D (void *client,
+                                 GLenum target,
+                                 GLint level,
+                                 GLenum internalformat,
+                                 GLint x,
+                                 GLint y,
+                                 GLsizei width,
+                                 GLsizei height,
+                                 GLint border)
+{
+    GLuint tex;
+    texture_t *texture = NULL;
+    framebuffer_t *framebuffer = NULL;
+
+    INSTRUMENT();
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+
+    /* call dispatch */
+    CACHING_CLIENT(client)->super_dispatch.glCopyTexImage2D (client, 
+                                                              target,
+                                                              level,
+                                                              internalformat,
+                                                              x, y,
+                                                              width, height,
+                                                              border);
+    caching_client_set_needs_get_error (CLIENT (client));
+
+    if (target == GL_TEXTURE_2D)
+        tex = state->texture_binding[0];
+    else if (target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X ||
+             target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ||
+             target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+        tex = state->texture_binding[1];
+
+    if (tex) 
+        texture = egl_state_lookup_cached_texture (state, tex);
+
+    if (texture)
+        framebuffer = egl_state_lookup_cached_framebuffer (state, texture->framebuffer_id);
+
+    if (framebuffer && framebuffer->id)
+        framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+}
+
+static void 
+caching_client_glCompressedTexImage2D (void *client,
+                                       GLenum target,
+                                       GLint level,
+                                       GLenum internalformat,
+                                       GLsizei width,
+                                       GLsizei height,
+                                       GLint border,
+                                       GLsizei imageSize,
+                                       const GLvoid *data)
+{
+    GLuint tex;
+    texture_t *texture = NULL;
+    framebuffer_t *framebuffer = NULL;
+
+    INSTRUMENT();
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+
+    /* call dispatch */
+    CACHING_CLIENT(client)->super_dispatch.glCompressedTexImage2D (client, 
+                                                           target,
+                                                           level,
+                                                           internalformat,
+                                                           width, height,
+                                                           border,
+                                                           imageSize,
+                                                           data);
+    caching_client_set_needs_get_error (CLIENT (client));
+
+    if (target == GL_TEXTURE_2D)
+        tex = state->texture_binding[0];
+    else if (target == GL_TEXTURE_CUBE_MAP_POSITIVE_X ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_X ||
+             target == GL_TEXTURE_CUBE_MAP_POSITIVE_Y ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Y ||
+             target == GL_TEXTURE_CUBE_MAP_POSITIVE_Z ||
+             target == GL_TEXTURE_CUBE_MAP_NEGATIVE_Z)
+        tex = state->texture_binding[1];
+
+    if (tex) 
+        texture = egl_state_lookup_cached_texture (state, tex);
+
+    if (texture)
+        framebuffer = egl_state_lookup_cached_framebuffer (state, texture->framebuffer_id);
+
+    if (framebuffer && framebuffer->id)
+        framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+
 }
 
 static GLuint
@@ -838,6 +949,9 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
 {
     int i;
 
+    texture_t *tex;
+    framebuffer_t *framebuffer;
+
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (!state)
@@ -854,6 +968,12 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
         if (textures[i] == 0)
             continue;
 
+            tex = egl_state_lookup_cached_texture (state, textures[i]);
+        if (tex) 
+            framebuffer = egl_state_lookup_cached_framebuffer (state, tex->framebuffer_id);
+        if (framebuffer && tex->framebuffer_id)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+
         egl_state_delete_cached_texture (state, textures[i]);
 
         if (state->texture_binding[0] == textures[i])
@@ -864,6 +984,7 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
             state->texture_binding_3d = 0;
         if (state->active_texture == textures[i])
             state->active_texture = 0;
+
     }
 }
 
@@ -1334,6 +1455,8 @@ caching_client_glDrawArrays (void* client,
                              GLint first,
                              GLsizei count)
 {
+    framebuffer_t *framebuffer = NULL;
+
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
@@ -1362,6 +1485,15 @@ caching_client_glDrawArrays (void* client,
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
     }
+    
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_clear_attribute_list_data (CLIENT(client));
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
 
     link_list_t *arrays_to_free = NULL;
     command_t *command = NULL;
@@ -1389,6 +1521,8 @@ caching_client_glDrawArrays (void* client,
      client_run_command_async (command);
 
     caching_client_clear_attribute_list_data (CLIENT(client));
+    if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_COMPLETE_UNKNOWN)
+        caching_client_set_needs_get_error (CLIENT (client));
 }
 
 #ifdef __ARM_NEON__
@@ -1520,6 +1654,8 @@ caching_client_glDrawElements (void* client,
                                GLenum type,
                                const GLvoid *indices)
 {
+    framebuffer_t *framebuffer = NULL;
+
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -1553,12 +1689,21 @@ caching_client_glDrawElements (void* client,
         return;
     }
 
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_clear_attribute_list_data (CLIENT(client));
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
+
     /* If we aren't actually passing any indices then do not execute anything. */
     bool copy_indices = !state->vertex_array_binding && !state->element_array_buffer_binding;
     size_t index_array_size = calculate_index_array_size (type, count);
     if ((! state->element_array_buffer_binding && ! indices) || (copy_indices && ! index_array_size)) {
         caching_client_clear_attribute_list_data (CLIENT(client));
-        return;
+        goto finish;
     }
 
     link_list_t *arrays_to_free = NULL;
@@ -1599,7 +1744,10 @@ caching_client_glDrawElements (void* client,
     ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
     client_run_command_async (&command->header);
 
+finish:
     caching_client_clear_attribute_list_data (CLIENT(client));
+    if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_COMPLETE_UNKNOWN)
+        caching_client_set_needs_get_error (CLIENT (client));
 }
 
 static void
@@ -1621,6 +1769,13 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
     }
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferRenderbuffer (client, target, attachment, renderbuffertarget, renderbuffer);
+    
+    /* update framebuffer in cache */
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 static void
@@ -1631,6 +1786,9 @@ caching_client_glFramebufferTexture2D (void* client,
                                        GLuint texture,
                                        GLint level)
 {
+    texture_t *tex; 
+    GLuint framebuffer_id;
+
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
@@ -1643,6 +1801,16 @@ caching_client_glFramebufferTexture2D (void* client,
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2D (client, target, attachment,
                                                                    textarget, texture, level);
+
+    /* get cached texture */
+    tex = egl_state_lookup_cached_texture (state, texture);
+    framebuffer_id = tex->framebuffer_id;
+    /* update framebuffer in cache */
+    if (framebuffer_id) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 static void
@@ -1707,6 +1875,11 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
     memcpy (server_framebuffers, framebuffers, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, server_framebuffers);
+    
+    /* add framebuffers to cache */
+    int i;
+    for (i = 0; i < n; i++)
+        egl_state_create_cached_framebuffer (state, framebuffers[i]);
 }
 
 static void
@@ -2924,6 +3097,13 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
 
     CACHING_CLIENT(client)->super_dispatch.glTexImage2D (client, target, level, internalformat,
                                                          width, height, border, format, type, pixels);
+    
+    /* update framebuffer in cache */
+    if (texture->framebuffer_id) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, texture->framebuffer_id);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 static void
@@ -3348,6 +3528,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     }
 }
 
+/*FIXME: glRenderbufferStorage */
+
 static void
 caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsizei height)
 {
@@ -3451,15 +3633,33 @@ caching_client_glFramebufferTexture3DOES (void* client,
                                           GLint level,
                                           GLint zoffset)
 {
+    texture_t *tex = NULL;
+    framebuffer_t *framebuffer = NULL;
+    GLuint framebuffer_id;
+
     INSTRUMENT();
 
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture3DOES (client, target, attachment,
                                                                       textarget, texture, level, zoffset);
+    
+    /* get cached texture */
+    tex = egl_state_lookup_cached_texture (state, texture);
+    framebuffer_id = tex->framebuffer_id;
+    /* update framebuffer in cache */
+    if (framebuffer_id) {
+        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 /* spec: http://www.hhronos.org/registry/gles/extensions/OES/OES_vertex_array_object.txt
@@ -3600,7 +3800,15 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
                                             GLuint texture,
                                             GLint level, GLsizei samples)
 {
+    texture_t *tex = NULL;
+    framebuffer_t *framebuffer = NULL;
+    GLuint framebuffer_id;
+
     INSTRUMENT();
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
 
     if (target != GL_FRAMEBUFFER) {
        caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -3609,6 +3817,16 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleEXT (
         client, target, attachment, textarget, texture, level, samples);
+    
+    /* get cached texture */
+    tex = egl_state_lookup_cached_texture (state, texture);
+    framebuffer_id = tex->framebuffer_id;
+    /* update framebuffer in cache */
+    if (framebuffer_id) {
+        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 static void
@@ -3618,7 +3836,16 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
                                                      GLuint texture,
                                                      GLint level, GLsizei samples)
 {
+    texture_t *tex = NULL;
+    framebuffer_t *framebuffer = NULL;
+    GLuint framebuffer_id;
+    
     INSTRUMENT();
+    
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
 
     if (target != GL_FRAMEBUFFER) {
        caching_client_glSetError (client, GL_INVALID_ENUM);
@@ -3627,6 +3854,16 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
 
     CACHING_CLIENT(client)->super_dispatch.glFramebufferTexture2DMultisampleIMG (
         client, target, attachment, textarget, texture, level, samples);
+    
+    /* get cached texture */
+    tex = egl_state_lookup_cached_texture (state, texture);
+    framebuffer_id = tex->framebuffer_id;
+    /* update framebuffer in cache */
+    if (framebuffer_id) {
+        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+        if (framebuffer)
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
 }
 
 static void

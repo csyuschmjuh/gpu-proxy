@@ -148,6 +148,7 @@ egl_state_init (egl_state_t *state,
     state->buffer_size[0] = state->buffer_size[1] = 0;
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable(free);
+    state->framebuffer_cache = NewHashTable (free);
 }
 
 egl_state_t *
@@ -167,6 +168,14 @@ delete_texture_from_name_handler (GLuint key,
 }
 
 void
+delete_framebuffer_from_name_handler (GLuint key,
+                                  void *data,
+                                  void *userData)
+{
+    name_handler_delete_names (1, data);
+}
+
+void
 egl_state_destroy (void *abstract_state)
 {
     egl_state_t *state = abstract_state;
@@ -178,6 +187,10 @@ egl_state_destroy (void *abstract_state)
      * here because we don't want to delete a sharing context's state. */
     HashWalk (state->texture_cache, delete_texture_from_name_handler, NULL);
     DeleteHashTable (state->texture_cache);
+
+    HashWalk (state->framebuffer_cache, delete_framebuffer_from_name_handler, NULL);
+    DeleteHashTable (state->framebuffer_cache);
+
     link_list_clear (&state->programs);
 
     if (state->vendor_string)
@@ -481,6 +494,7 @@ static texture_t *
 _create_texture (GLuint id)
 {
     texture_t *tex = (texture_t *) malloc (sizeof (texture_t));
+    tex->framebuffer_id = 0;
     tex->id = id;
     tex->width = 0;
     tex->height = 0;
@@ -508,6 +522,46 @@ egl_state_delete_cached_texture (egl_state_t *egl_state,
 {
     if (texture_id != 0)
         HashRemove (egl_state_get_texture_cache (egl_state), texture_id);
+}
+
+static HashTable *
+egl_state_get_framebuffer_cache (egl_state_t *egl_state)
+{
+    if (egl_state->share_context)
+        return egl_state->share_context->framebuffer_cache;
+    return egl_state->framebuffer_cache;
+}
+
+framebuffer_t *
+egl_state_lookup_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id)
+{
+    return (framebuffer_t *) HashLookup (egl_state_get_framebuffer_cache (egl_state), framebuffer_id);
+}
+
+static framebuffer_t *
+_create_framebuffer (GLuint id)
+{
+    framebuffer_t *framebuffer = (framebuffer_t *) malloc (sizeof (framebuffer_t));
+    framebuffer->id = id;
+    framebuffer->complete = FRAMEBUFFER_COMPLETE;
+    return framebuffer; 
+}
+void
+egl_state_create_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id)
+{
+    HashInsert (egl_state_get_framebuffer_cache (egl_state),
+                framebuffer_id, _create_framebuffer (framebuffer_id));
+
+}
+
+void
+egl_state_delete_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id)
+{
+    if (framebuffer_id != 0)
+        HashRemove (egl_state_get_texture_cache (egl_state), framebuffer_id);
 }
 
 static link_list_t **
