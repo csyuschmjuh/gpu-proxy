@@ -37,6 +37,7 @@ typedef struct vertex_attrib_list
 } vertex_attrib_list_t;
 
 typedef struct _texture {
+    GLuint                  framebuffer_id;
     GLuint                  id;
     GLenum                  internal_format;
     GLsizei                 width;
@@ -50,6 +51,19 @@ typedef struct _texture {
     GLint                   texture_3d_wrap_r;         /* initial GL_REPEAT */
     GLfloat                 texture_max_anisotropy;    /* initial 1.0 */
 } texture_t;
+
+typedef enum _framebuffer_status
+{
+    FRAMEBUFFER_COMPLETE = 0,
+    FRAMEBUFFER_INCOMPLETE,
+    FRAMEBUFFER_COMPLETE_UNKNOWN
+} framebuffer_status_t;
+
+typedef struct _framebuffer
+{
+    GLuint id;
+    framebuffer_status_t complete;
+} framebuffer_t;
 
 typedef struct egl_state  egl_state_t;
 struct egl_state {
@@ -271,6 +285,7 @@ struct egl_state {
     GLint        texture_max_level;
 
     HashTable    *texture_cache;
+    HashTable    *framebuffer_cache;
 };
 
 typedef struct display_ctxs_surfaces {
@@ -355,6 +370,18 @@ egl_state_create_cached_texture (egl_state_t *egl_state,
 private void
 egl_state_delete_cached_texture (egl_state_t *egl_state,
                                  GLuint texture_id);
+
+private framebuffer_t *
+egl_state_lookup_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id);
+
+private void
+egl_state_create_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id);
+
+private void
+egl_state_delete_cached_framebuffer (egl_state_t *egl_state,
+                                     GLuint framebuffer_id);
 
 private program_t *
 egl_state_lookup_cached_program (egl_state_t *egl_state,
