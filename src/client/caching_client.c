@@ -968,7 +968,7 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
         if (textures[i] == 0)
             continue;
 
-            tex = egl_state_lookup_cached_texture (state, textures[i]);
+        tex = egl_state_lookup_cached_texture (state, textures[i]);
         if (tex) 
             framebuffer = egl_state_lookup_cached_framebuffer (state, tex->framebuffer_id);
         if (framebuffer && tex->framebuffer_id)
@@ -1804,12 +1804,15 @@ caching_client_glFramebufferTexture2D (void* client,
 
     /* get cached texture */
     tex = egl_state_lookup_cached_texture (state, texture);
-    framebuffer_id = tex->framebuffer_id;
-    /* update framebuffer in cache */
-    if (framebuffer_id) {
-        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-        if (framebuffer)
-            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    if (tex) {
+        tex->framebuffer_id = state->framebuffer_binding;
+        framebuffer_id = tex->framebuffer_id;
+        /* update framebuffer in cache */
+        if (framebuffer_id) {
+            framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+            if (framebuffer)
+                framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+        }
     }
 }
 
@@ -3099,7 +3102,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
                                                          width, height, border, format, type, pixels);
     
     /* update framebuffer in cache */
-    if (texture->framebuffer_id) {
+    if (texture && texture->framebuffer_id) {
         framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, texture->framebuffer_id);
         if (framebuffer)
             framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
@@ -3653,12 +3656,15 @@ caching_client_glFramebufferTexture3DOES (void* client,
     
     /* get cached texture */
     tex = egl_state_lookup_cached_texture (state, texture);
-    framebuffer_id = tex->framebuffer_id;
-    /* update framebuffer in cache */
-    if (framebuffer_id) {
-        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-        if (framebuffer)
-            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    if (tex) {
+        tex->framebuffer_id = state->framebuffer_binding;
+        framebuffer_id = tex->framebuffer_id;
+        /* update framebuffer in cache */
+        if (framebuffer_id) {
+            framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+            if (framebuffer)
+                framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+        }
     }
 }
 
@@ -3820,12 +3826,15 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
     
     /* get cached texture */
     tex = egl_state_lookup_cached_texture (state, texture);
-    framebuffer_id = tex->framebuffer_id;
-    /* update framebuffer in cache */
-    if (framebuffer_id) {
-        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-        if (framebuffer)
-            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    if (tex) {
+        tex->framebuffer_id = state->framebuffer_binding;
+        framebuffer_id = tex->framebuffer_id;
+        /* update framebuffer in cache */
+        if (framebuffer_id) {
+            framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+            if (framebuffer)
+                framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+        }
     }
 }
 
@@ -3857,12 +3866,15 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
     
     /* get cached texture */
     tex = egl_state_lookup_cached_texture (state, texture);
-    framebuffer_id = tex->framebuffer_id;
-    /* update framebuffer in cache */
-    if (framebuffer_id) {
-        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-        if (framebuffer)
-            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    if (tex) {
+        tex->framebuffer_id = state->framebuffer_binding;
+        framebuffer_id = tex->framebuffer_id;
+        /* update framebuffer in cache */
+        if (framebuffer_id) {
+            framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
+            if (framebuffer)
+                framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+        }
     }
 }
 
