@@ -1,0 +1,15 @@
+GPU-Proxy is a "virtual" OpenGL ES 2.0 driver.  It exposes all GLES/EGL
+to applications.  
+
+Feature lists
+1. Caching partial GL/EGL states such that GLES/EGL blocking calls
+can return quickly.
+2. To maximize both CPU and GPU execution, most APIs are non-blocking.
+3. Non-blocking eglMakeCurrent() under certain conditions allows fast
+context switch.
+4. portable and works for all GLES 2.0 drivers
+
+Build and installation
+1. run "./autogen.sh --prefix=/installation_directly",
+2. "make" and "make install"
+3. for ARM platform, you can optimize by CFLAGS="-O2 -mfpu=neon"
