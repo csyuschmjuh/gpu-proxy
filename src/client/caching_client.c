@@ -3423,7 +3423,8 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
            type == GL_UNSIGNED_BYTE        ||
            type == GL_SHORT                ||
            type == GL_UNSIGNED_SHORT       ||
-           type == GL_FLOAT)) {
+           type == GL_FLOAT                ||
+           type == GL_FIXED)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
@@ -3476,7 +3477,6 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         attribs[found_index].stride = stride;
         attribs[found_index].type = type;
         attribs[found_index].array_normalized = normalized;
-        attribs[found_index].pointer = (GLvoid *)pointer;
         attribs[found_index].array_buffer_binding = bound_buffer;
 
         if (attrib_list->last_index_pointer == &attribs[found_index])
@@ -3484,6 +3484,7 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         if (attrib_list->first_index_pointer == &attribs[found_index])
             attrib_list->first_index_pointer = 0;
 
+        attribs[found_index].pointer = (GLvoid *)pointer;
         attrib_list->enabled_count = 0;
         for (i = 0; i < attrib_list->count; i++) {
             if (attribs[i].array_enabled && !attribs[i].array_buffer_binding) {
