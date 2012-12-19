@@ -52,6 +52,12 @@ typedef struct _texture {
     GLfloat                 texture_max_anisotropy;    /* initial 1.0 */
 } texture_t;
 
+typedef struct _renderbuffer
+{
+    GLuint id;
+    GLuint framebuffer_id;
+} renderbuffer_t;
+
 typedef enum _framebuffer_status
 {
     FRAMEBUFFER_COMPLETE = 0,
@@ -62,6 +68,10 @@ typedef enum _framebuffer_status
 typedef struct _framebuffer
 {
     GLuint id;
+    GLuint attached_image;
+    GLuint attached_color_buffer;
+    GLuint attached_depth_buffer;
+    GLuint attached_stencil_buffer;
     framebuffer_status_t complete;
 } framebuffer_t;
 
@@ -286,6 +296,7 @@ struct egl_state {
 
     HashTable    *texture_cache;
     HashTable    *framebuffer_cache;
+    HashTable    *renderbuffer_cache;
 
     bool         supports_element_index_uint;     /* GL_OES_element_index_uint */
 };
@@ -384,6 +395,18 @@ egl_state_create_cached_framebuffer (egl_state_t *egl_state,
 private void
 egl_state_delete_cached_framebuffer (egl_state_t *egl_state,
                                      GLuint framebuffer_id);
+
+private renderbuffer_t *
+egl_state_lookup_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id);
+
+private void
+egl_state_create_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id);
+
+private void
+egl_state_delete_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id);
 
 private program_t *
 egl_state_lookup_cached_program (egl_state_t *egl_state,

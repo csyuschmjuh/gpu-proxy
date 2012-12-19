@@ -895,6 +895,10 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 static void
 caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *framebuffers)
 {
+    framebuffer_t *framebuffer = NULL;
+    texture_t *texture = NULL;
+    renderbuffer_t *renderbuffer = NULL;
+
     INSTRUMENT();
 
     egl_state_t *state = client_get_current_state (CLIENT (client));
@@ -912,9 +916,39 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
 
     int i;
     for (i = 0; i < n; i++) {
+        if (framebuffers[i] == 0)
+            continue;
+
+        framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffers[i]);
+        if (framebuffer) {
+            if (! framebuffer->attached_image) {
+                texture = egl_state_lookup_cached_texture (state, 
+                                                           framebuffer->attached_image);
+                if (texture)
+                    texture->framebuffer_id = 0;
+            }
+
+            if (! framebuffer->attached_color_buffer) {
+                renderbuffer = egl_state_lookup_cached_renderbuffer (state,
+                                       framebuffer->attached_color_buffer);
+                if (renderbuffer)
+                    renderbuffer->framebuffer_id = 0;
+            }
+            if (framebuffer->attached_stencil_buffer != framebuffer->attached_color_buffer && framebuffer->attached_stencil_buffer) {
+                renderbuffer = egl_state_lookup_cached_renderbuffer (state,
+                                       framebuffer->attached_stencil_buffer);
+                if (renderbuffer)
+                    renderbuffer->framebuffer_id = 0;
+            }
+            if (framebuffer->attached_depth_buffer != framebuffer->attached_depth_buffer && framebuffer->attached_depth_buffer) {
+                renderbuffer = egl_state_lookup_cached_renderbuffer (state,
+                                       framebuffer->attached_depth_buffer);
+                if (renderbuffer)
+                    renderbuffer->framebuffer_id = 0;
+            }
+        }
         if (state->framebuffer_binding == framebuffers[i]) {
             state->framebuffer_binding = 0;
-            break;
         }
     }
 }
@@ -922,6 +956,8 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
 static void
 caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *renderbuffers)
 {
+    renderbuffer_t *renderbuffer = NULL;
+    framebuffer_t *framebuffer = NULL;
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (!state)
@@ -937,9 +973,24 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
     int i;
     for (i = 0; i < n; i++) {
+        if (renderbuffers[i] == 0)
+            continue;
+
+        renderbuffer = egl_state_lookup_cached_renderbuffer (state, renderbuffers[i]);
+        if (renderbuffer) 
+            framebuffer = egl_state_lookup_cached_framebuffer (state, renderbuffer->framebuffer_id);
+        if (framebuffer && renderbuffer->framebuffer_id) {
+            framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+            if (framebuffer->attached_color_buffer == renderbuffers[i])
+                framebuffer->attached_color_buffer = 0;
+            if (framebuffer->attached_stencil_buffer == renderbuffers[i])
+                framebuffer->attached_stencil_buffer = 0;
+            if (framebuffer->attached_depth_buffer == renderbuffers[i])
+                framebuffer->attached_depth_buffer = 0;
+        }
+
         if (state->renderbuffer_binding == renderbuffers[i]) {
             state->renderbuffer_binding = 0;
-            break;
         }
     }
 }
@@ -971,8 +1022,10 @@ caching_client_glDeleteTextures (void* client, GLsizei n, const GLuint *textures
         tex = egl_state_lookup_cached_texture (state, textures[i]);
         if (tex) 
             framebuffer = egl_state_lookup_cached_framebuffer (state, tex->framebuffer_id);
-        if (framebuffer && tex->framebuffer_id)
+        if (framebuffer && tex->framebuffer_id) {
             framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+            framebuffer->attached_image = 0;
+        }
 
         egl_state_delete_cached_texture (state, textures[i]);
 
@@ -1775,9 +1828,21 @@ caching_client_glFramebufferRenderbuffer (void* client, GLenum target, GLenum at
     /* update framebuffer in cache */
     if (state->framebuffer_binding) {
         framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
-        if (framebuffer)
+        if (framebuffer) {
             framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+            
+            if (attachment == GL_COLOR_ATTACHMENT0)
+                framebuffer->attached_color_buffer = renderbuffer;
+            else if (attachment == GL_DEPTH_ATTACHMENT)
+                framebuffer->attached_depth_buffer = renderbuffer;
+            else if (attachment == GL_STENCIL_ATTACHMENT)
+                framebuffer->attached_stencil_buffer = renderbuffer;
+        }
     }
+    /* update renderbuffer cache */
+    renderbuffer_t *rb = egl_state_lookup_cached_renderbuffer (state, renderbuffer);
+    if (rb)
+        rb->framebuffer_id = state->framebuffer_binding;
 }
 
 static void
@@ -1812,8 +1877,10 @@ caching_client_glFramebufferTexture2D (void* client,
         /* update framebuffer in cache */
         if (framebuffer_id) {
             framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-            if (framebuffer)
+            if (framebuffer) {
+                framebuffer->attached_image = texture;
                 framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+            }
         }
     }
 }
@@ -1907,6 +1974,11 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
     memcpy (server_renderbuffers, renderbuffers, n * sizeof (GLuint));
 
     CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, server_renderbuffers);
+    
+    /* add renderbuffers to cache */
+    int i;
+    for (i = 0; i < n; i++)
+        egl_state_create_cached_renderbuffer (state, renderbuffers[i]);
 }
 
 static void
@@ -3537,6 +3609,36 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
 }
 
 /*FIXME: glRenderbufferStorage */
+static void
+caching_client_glRenderbufferStorage (void *client, GLenum target,
+                                      GLenum internalformat,
+                                      GLsizei width, GLsizei height)
+{
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if (state->framebuffer_binding) {
+        framebuffer_t *fb = egl_state_lookup_cached_framebuffer (state, 
+                                              state->framebuffer_binding);
+        if (fb)
+            fb->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glRenderbufferStorage (client,
+                                                                  target,
+                                                                  internalformat,
+                                                                  width,
+                                                                  height);
+    caching_client_set_needs_get_error (CLIENT (client));
+}
 
 static void
 caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsizei height)
@@ -3667,8 +3769,10 @@ caching_client_glFramebufferTexture3DOES (void* client,
         /* update framebuffer in cache */
         if (framebuffer_id) {
             framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-            if (framebuffer)
+            if (framebuffer) {
                 framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+                framebuffer->attached_image = texture;
+            }
         }
     }
 }
@@ -3837,8 +3941,10 @@ caching_client_glFramebufferTexture2DMultisampleEXT (void* client, GLenum target
         /* update framebuffer in cache */
         if (framebuffer_id) {
             framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-            if (framebuffer)
+            if (framebuffer) {
                 framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+                framebuffer->attached_image = texture;
+            }
         }
     }
 }
@@ -3877,8 +3983,10 @@ caching_client_glFramebufferTexture2DMultisampleIMG (void* client, GLenum target
         /* update framebuffer in cache */
         if (framebuffer_id) {
             framebuffer = egl_state_lookup_cached_framebuffer (state, framebuffer_id);
-            if (framebuffer)
+            if (framebuffer) {
                 framebuffer->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+                framebuffer->attached_image = texture;
+            }
         }
     }
 }
