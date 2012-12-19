@@ -149,6 +149,7 @@ egl_state_init (egl_state_t *state,
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable(free);
     state->framebuffer_cache = NewHashTable (free);
+    state->renderbuffer_cache = NewHashTable (free);
 
     state->supports_element_index_uint = false;
 }
@@ -171,8 +172,16 @@ delete_texture_from_name_handler (GLuint key,
 
 void
 delete_framebuffer_from_name_handler (GLuint key,
-                                  void *data,
-                                  void *userData)
+                                      void *data,
+                                      void *userData)
+{
+    name_handler_delete_names (1, data);
+}
+
+void
+delete_renderbuffer_from_name_handler (GLuint key,
+                                       void *data,
+                                       void *userData)
 {
     name_handler_delete_names (1, data);
 }
@@ -192,6 +201,9 @@ egl_state_destroy (void *abstract_state)
 
     HashWalk (state->framebuffer_cache, delete_framebuffer_from_name_handler, NULL);
     DeleteHashTable (state->framebuffer_cache);
+    
+    HashWalk (state->renderbuffer_cache, delete_renderbuffer_from_name_handler, NULL);
+    DeleteHashTable (state->renderbuffer_cache);
 
     link_list_clear (&state->programs);
 
@@ -547,6 +559,10 @@ _create_framebuffer (GLuint id)
     framebuffer_t *framebuffer = (framebuffer_t *) malloc (sizeof (framebuffer_t));
     framebuffer->id = id;
     framebuffer->complete = FRAMEBUFFER_COMPLETE;
+    framebuffer->attached_image = 0;
+    framebuffer->attached_color_buffer = 0;
+    framebuffer->attached_stencil_buffer = 0;
+    framebuffer->attached_depth_buffer = 0;
     return framebuffer; 
 }
 void
@@ -564,6 +580,46 @@ egl_state_delete_cached_framebuffer (egl_state_t *egl_state,
 {
     if (framebuffer_id != 0)
         HashRemove (egl_state_get_texture_cache (egl_state), framebuffer_id);
+}
+
+static HashTable *
+egl_state_get_renderbuffer_cache (egl_state_t *egl_state)
+{
+    if (egl_state->share_context)
+        return egl_state->share_context->renderbuffer_cache;
+    return egl_state->renderbuffer_cache;
+}
+
+renderbuffer_t *
+egl_state_lookup_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id)
+{
+    return (renderbuffer_t *) HashLookup (egl_state_get_renderbuffer_cache (egl_state), renderbuffer_id);
+}
+
+static renderbuffer_t *
+_create_renderbuffer (GLuint id)
+{
+    renderbuffer_t *renderbuffer = (renderbuffer_t *) malloc (sizeof (renderbuffer_t));
+    renderbuffer->id = id;
+    renderbuffer->framebuffer_id = 0;
+    return renderbuffer; 
+}
+void
+egl_state_create_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id)
+{
+    HashInsert (egl_state_get_renderbuffer_cache (egl_state),
+                renderbuffer_id, _create_renderbuffer (renderbuffer_id));
+
+}
+
+void
+egl_state_delete_cached_renderbuffer (egl_state_t *egl_state,
+                                      GLuint renderbuffer_id)
+{
+    if (renderbuffer_id != 0)
+        HashRemove (egl_state_get_texture_cache (egl_state), renderbuffer_id);
 }
 
 static link_list_t **
