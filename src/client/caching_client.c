@@ -3608,7 +3608,6 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
     }
 }
 
-/*FIXME: glRenderbufferStorage */
 static void
 caching_client_glRenderbufferStorage (void *client, GLenum target,
                                       GLenum internalformat,
