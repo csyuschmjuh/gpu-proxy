@@ -124,11 +124,25 @@ command_glshadersource_init (command_t *abstract_command,
     command->string = malloc (sizeof (GLchar *) * count);
 
     unsigned i = 0;
+    bool null_terminated = false;
     for (i = 0; i < count; i++) {
         size_t string_length = length ? length[i] : strlen (string[i]);
-        command->string[i] = malloc (string_length + 1);
+        if (string_length < 0)
+            string_length = strlen (string[i]);
+
+        if (!length || length[i] < 0)
+            null_terminated = true;
+        else
+            null_terminated = false;
+        
+        if (null_terminated)
+            command->string[i] = malloc (string_length + 1);
+        else
+            command->string[i] = malloc (string_length);
+
         memcpy (command->string[i], string[i], string_length);
-        command->string[i][string_length] = 0;
+        if (null_terminated)
+            command->string[i][string_length] = 0;
     }
 }
 
