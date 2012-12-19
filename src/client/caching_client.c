@@ -3640,6 +3640,142 @@ caching_client_glRenderbufferStorage (void *client, GLenum target,
 }
 
 static void
+caching_client_glRenderbufferStorageMultisampleANGLE (void *client, 
+                                      GLenum target,
+                                      GLsizei samples,
+                                      GLenum internalformat,
+                                      GLsizei width, GLsizei height)
+{
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if (state->framebuffer_binding) {
+        framebuffer_t *fb = egl_state_lookup_cached_framebuffer (state, 
+                                              state->framebuffer_binding);
+        if (fb)
+            fb->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glRenderbufferStorageMultisampleANGLE (client,
+                                                                  target,
+                                                                  samples,
+                                                                  internalformat,
+                                                                  width,
+                                                                  height);
+    caching_client_set_needs_get_error (CLIENT (client));
+}
+
+static void
+caching_client_glRenderbufferStorageMultisampleAPPLE (void *client, 
+                                      GLenum target,
+                                      GLsizei samples, 
+                                      GLenum internalformat,
+                                      GLsizei width, GLsizei height)
+{
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if (state->framebuffer_binding) {
+        framebuffer_t *fb = egl_state_lookup_cached_framebuffer (state, 
+                                              state->framebuffer_binding);
+        if (fb)
+            fb->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glRenderbufferStorageMultisampleAPPLE (client,
+                                                                  target,
+                                                                  samples,
+                                                                  internalformat,
+                                                                  width,
+                                                                  height);
+    caching_client_set_needs_get_error (CLIENT (client));
+}
+
+static void
+caching_client_glRenderbufferStorageMultisampleEXT (void *client, 
+                                      GLenum target,
+                                      GLsizei samples,
+                                      GLenum internalformat,
+                                      GLsizei width, GLsizei height)
+{
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if (state->framebuffer_binding) {
+        framebuffer_t *fb = egl_state_lookup_cached_framebuffer (state, 
+                                              state->framebuffer_binding);
+        if (fb)
+            fb->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glRenderbufferStorageMultisampleEXT (client,
+                                                                  target,
+                                                                  samples, 
+                                                                  internalformat,
+                                                                  width,
+                                                                  height);
+    caching_client_set_needs_get_error (CLIENT (client));
+}
+
+static void
+caching_client_glRenderbufferStorageMultisampleIMG (void *client, 
+                                      GLenum target,
+                                      GLsizei samples,
+                                      GLenum internalformat,
+                                      GLsizei width, GLsizei height)
+{
+    INSTRUMENT();
+
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+
+    if (state->framebuffer_binding) {
+        framebuffer_t *fb = egl_state_lookup_cached_framebuffer (state, 
+                                              state->framebuffer_binding);
+        if (fb)
+            fb->complete = FRAMEBUFFER_COMPLETE_UNKNOWN;
+    }
+    
+    CACHING_CLIENT(client)->super_dispatch.glRenderbufferStorageMultisampleIMG (client,
+                                                                  target,
+                                                                  samples,
+                                                                  internalformat,
+                                                                  width,
+                                                                  height);
+    caching_client_set_needs_get_error (CLIENT (client));
+}
+
+static void
 caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsizei height)
 {
     INSTRUMENT();
