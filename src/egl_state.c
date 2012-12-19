@@ -149,6 +149,8 @@ egl_state_init (egl_state_t *state,
     state->buffer_usage[0] = state->buffer_usage[1] = GL_STATIC_DRAW;
     state->texture_cache = NewHashTable(free);
     state->framebuffer_cache = NewHashTable (free);
+
+    state->supports_element_index_uint = false;
 }
 
 egl_state_t *

@@ -286,6 +286,8 @@ struct egl_state {
 
     HashTable    *texture_cache;
     HashTable    *framebuffer_cache;
+
+    bool         supports_element_index_uint;     /* GL_OES_element_index_uint */
 };
 
 typedef struct display_ctxs_surfaces {

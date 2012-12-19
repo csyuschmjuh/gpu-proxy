@@ -1666,7 +1666,9 @@ caching_client_glDrawElements (void* client,
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
     }
-    if (! (type == GL_UNSIGNED_BYTE  || type == GL_UNSIGNED_SHORT)) {
+    if (! (type == GL_UNSIGNED_BYTE  || 
+           type == GL_UNSIGNED_SHORT ||
+           (state->supports_element_index_uint && type == GL_UNSIGNED_INT))) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         caching_client_clear_attribute_list_data (CLIENT(client));
         return;
@@ -2215,6 +2217,8 @@ caching_client_glGetString (void* client, GLenum name)
         state->extensions_string = (char *)malloc (sizeof (char) * (length+1));
         memcpy (state->extensions_string, result, length);
         state->extensions_string[length] = 0;
+
+        state->supports_element_index_uint = strstr (state->extensions_string, "GL_OES_element_index_uint") ? true : false;
         break;
     default:
         break;
