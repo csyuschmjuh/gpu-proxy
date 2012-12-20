@@ -98,6 +98,8 @@ command_gltexsubimage2d_init (command_t *abstract_command,
                          unpadded_row_size, padded_row_size, padded_row_size);
 }
 
+/* XXX: command_glshadersource_init: could be auto generated, however it will break the logic */
+/* in the python code */
 void
 command_glshadersource_init (command_t *abstract_command,
                              GLuint shader,
@@ -107,43 +109,10 @@ command_glshadersource_init (command_t *abstract_command,
 {
     command_glshadersource_t *command =
         (command_glshadersource_t *) abstract_command;
-    command->shader = shader;
-    command->count = count;
-    command->string = NULL;
-    command->length = NULL;
-
-    if (count <= 0 || ! string)
-        return;
-
-    if (length != NULL) {
-        size_t lengths_size = sizeof (GLint *) * count;
-        command->length = malloc (lengths_size);
-        memcpy (command->length, length, lengths_size);
-    }
-
-    command->string = malloc (sizeof (GLchar *) * count);
-
-    unsigned i = 0;
-    bool null_terminated = false;
-    for (i = 0; i < count; i++) {
-        size_t string_length = length ? length[i] : strlen (string[i]);
-        if (string_length < 0)
-            string_length = strlen (string[i]);
-
-        if (!length || length[i] < 0)
-            null_terminated = true;
-        else
-            null_terminated = false;
-        
-        if (null_terminated)
-            command->string[i] = malloc (string_length + 1);
-        else
-            command->string[i] = malloc (string_length);
-
-        memcpy (command->string[i], string[i], string_length);
-        if (null_terminated)
-            command->string[i][string_length] = 0;
-    }
+    command->shader = (GLuint) shader;
+    command->count = (GLsizei) count;
+    command->string = ( char**) string;
+    command->length = ( GLint*) length;
 }
 
 void
