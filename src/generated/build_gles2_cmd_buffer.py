@@ -581,7 +581,6 @@ FUNCTIONS_GENERATING_ERRORS = [
  'glReleaseShaderCompiler',
  'glRenderbufferStorage',
  'glShaderBinary',
- 'glShaderSource',
  'glValidateProgram',
  'glVertexAttribPointer',
  'glBindVertexArrayOES',

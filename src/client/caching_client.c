@@ -827,6 +827,65 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
 }
 
 static void
+caching_client_glShaderSource (void *client, GLuint shader, GLsizei count,
+                               const GLchar **string, const GLint *length)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+	return;
+
+    if (count <= 0 || ! string) {
+	caching_client_glSetError (client, GL_INVALID_VALUE);
+	return;
+    }
+
+    GLint *caching_client_length = NULL;
+    if (length != NULL) {
+        size_t lengths_size = sizeof (GLint *) * count;
+        caching_client_length = malloc (lengths_size);
+        memcpy (caching_client_length, length, lengths_size);
+    }
+
+    char **caching_client_string;
+    caching_client_string = malloc (sizeof (GLchar *) * count);
+
+    unsigned i = 0;
+    bool null_terminated = false;
+
+    for (i = 0; i < count; i++) {
+        if (! string[i]) {
+            caching_client_glSetError (client, GL_INVALID_VALUE);
+	    return;
+        }
+
+        size_t string_length = length ? length[i] : strlen (string[i]);
+        if (string_length < 0)
+            string_length = strlen (string[i]);
+
+        if (!length || length[i] < 0)
+            null_terminated = true;
+        else
+            null_terminated = false;
+
+        if (null_terminated)
+            caching_client_string[i] = malloc (string_length + 1);
+        else
+            caching_client_string[i] = malloc (string_length);
+
+        memcpy (caching_client_string[i], string[i], string_length);
+        if (null_terminated)
+            caching_client_string[i][string_length] = 0;
+    }
+
+    caching_client_set_needs_get_error (CLIENT (client));
+
+    CACHING_CLIENT(client)->super_dispatch.glShaderSource(client, shader, count,
+                                                          (const char **)caching_client_string,
+                                                          caching_client_length);
+}
+
+static void
 caching_client_glCullFace (void* client, GLenum mode)
 {
     INSTRUMENT();
