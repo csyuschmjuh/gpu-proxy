@@ -1,3 +1,6 @@
+#define _GNU_SOURCE
+#include <sched.h>
+
 #include "config.h"
 #include "client.h"
 
@@ -7,8 +10,8 @@
 #include "name_handler.h"
 
 #include <sys/prctl.h>
-#include <sched.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -66,12 +69,47 @@ start_server_thread_func (void *ptr)
     prctl (PR_SET_TIMERSLACK, 1);
 
     pthread_t id = pthread_self ();
+    
+    int online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
+    int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
+
+    if (available_cpus > 1) {
+        while (online_cpus < 2) {
+            system ("echo 1 > /sys/devices/systems/cpu/cpu1/online");
+            online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
+        }
+   
+        cpu_set_t cpu_set;
+        CPU_ZERO (&cpu_set);
+        if (pthread_getaffinity_np (id, sizeof (cpu_set_t), &cpu_set) == 0) {
+
+            /* find first cpu to run on */
+            int cpu = 0;
+            int i;
+            for (i = 1; i < available_cpus; i++) {
+                if (CPU_ISSET (i, &cpu_set)) {
+                    cpu = i;
+                    break;
+                }
+            }
+            if (cpu != 0) {
+                for (i = 0; i < available_cpus; i++) {
+                    if (i != cpu)
+                        CPU_CLR (i, &cpu_set);
+                }
+                CPU_SET (cpu, &cpu_set);
+                pthread_setaffinity_np (id, sizeof (cpu_set_t), &cpu_set);
+            }
+        }
+    }
+
     //int scheduler = sched_getscheduler (pid);
-    struct sched_param param;
+    /*struct sched_param param;
     param.sched_priority = 99;
     pthread_setschedparam (id, SCHED_FIFO, (const struct sched_param *)&param);
     int priority = sched_get_priority_max (SCHED_FIFO);
     pthread_setschedprio (pthread_self(), priority);
+    */
     server_start_work_loop (server);
 
     server_destroy(server);
@@ -86,6 +124,17 @@ client_start_server (client_t *client)
     pthread_create (&client->server_thread, NULL, start_server_thread_func, client);
     mutex_lock (client->server_started_mutex);
     mutex_destroy (client->server_started_mutex);
+    
+    /* FIXME: we always pin this thread to the first CPU */
+    int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
+
+    if (available_cpus > 1) {
+        pthread_t id = pthread_self ();
+        cpu_set_t cpu_set;
+        CPU_ZERO (&cpu_set);
+        CPU_SET (0, &cpu_set);
+        pthread_setaffinity_np (id, sizeof (cpu_set_t), &cpu_set);
+    }
 }
 
 client_t *
@@ -118,7 +167,7 @@ client_init (client_t *client)
     sem_init (&client->client_signal, 0, 0);
 
     client->active_state = NULL;
-
+   
     client_start_server (client);
     initializing_client = false;
 }
