@@ -112,11 +112,18 @@ client_start_server (client_t *client)
     pthread_create (&client->server_thread, NULL, start_server_thread_func, client);
     mutex_lock (client->server_started_mutex);
     mutex_destroy (client->server_started_mutex);
-    
-    /* FIXME: we always pin this thread to the first CPU */
+   
+    /* FIXME:
+     * We did some experiments, If on PC with quard core (show 8 CPUs)
+     * without pin client thread is faster, we can see client thread
+     * being scheduled on different cores, except the core server thread
+     * is running, but on ARM with hotplug, it seems that the kernel
+     * will sometime schedule the client and server to run on the same core
+     * which slows down the performance.  So here is the HACK 
+     */
     int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
 
-    if (available_cpus > 1) {
+    if (available_cpus <= 4) {
         pthread_t id = pthread_self ();
         cpu_set_t cpu_set;
         CPU_ZERO (&cpu_set);
