@@ -73,12 +73,7 @@ start_server_thread_func (void *ptr)
     int online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
     int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
 
-    if (available_cpus > 1) {
-        while (online_cpus < 2) {
-            system ("echo 1 > /sys/devices/systems/cpu/cpu1/online");
-            online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
-        }
-   
+    if (online_cpus > 1) {
         cpu_set_t cpu_set;
         CPU_ZERO (&cpu_set);
         if (pthread_getaffinity_np (id, sizeof (cpu_set_t), &cpu_set) == 0) {
@@ -103,13 +98,6 @@ start_server_thread_func (void *ptr)
         }
     }
 
-    //int scheduler = sched_getscheduler (pid);
-    /*struct sched_param param;
-    param.sched_priority = 99;
-    pthread_setschedparam (id, SCHED_FIFO, (const struct sched_param *)&param);
-    int priority = sched_get_priority_max (SCHED_FIFO);
-    pthread_setschedprio (pthread_self(), priority);
-    */
     server_start_work_loop (server);
 
     server_destroy(server);
