@@ -103,6 +103,12 @@ buffer_num_entries(buffer_t *buffer)
     return buffer->fill_count;
 }
 
+size_t
+buffer_size(buffer_t *buffer)
+{
+    return buffer->length;
+}
+
 void *
 buffer_write_address (buffer_t *buffer,
                      size_t *writable_bytes)

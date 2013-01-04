@@ -216,6 +216,9 @@ client_get_space_for_size (client_t *client,
     size_t available_space;
     command_t *write_location;
 
+    if (size > buffer_size (&client->buffer))
+        return NULL;
+
     write_location = (command_t *) buffer_write_address (&client->buffer,
                                                          &available_space);
     while (! write_location || available_space < size) {
@@ -235,6 +238,7 @@ client_get_space_for_command (command_type_t command_type)
     client_t *client = client_get_thread_local ();
     size_t command_size = command_get_size (command_type);
     command_t *command = client_get_space_for_size (client, command_size);
+    /* Command size is never bigger than the buffer, no NULL check. */
     command->type = command_type;
     command->size = command_size;
     command->token = 0;

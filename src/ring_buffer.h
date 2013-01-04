@@ -30,6 +30,9 @@ buffer_free(buffer_t *buffer);
 private size_t
 buffer_num_entries(buffer_t *buffer);
 
+private size_t
+buffer_size(buffer_t *buffer);
+
 private void *
 buffer_write_address(buffer_t *buffer, size_t *writable_bytes);
 

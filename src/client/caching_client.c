@@ -1532,6 +1532,8 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
 
     command_t *glDraw_command = NULL;
     *command = client_get_space_for_size (client, commands_size + index_array_size);
+    if (! *command)
+        goto BIG_DATA;
 
     glDraw_command = (command_t *)((char*)*command +
                                    command_get_size (COMMAND_GLVERTEXATTRIBPOINTER) *
@@ -1556,7 +1558,10 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
         *array_size += chunk_size;
 
         /* Wait again for the new required space in the buffer. */
-        client_get_space_for_size (client, commands_size + *array_size + index_array_size);
+        command_t *buffer_space = client_get_space_for_size (client, commands_size + *array_size + index_array_size - command_get_size (COMMAND_GLVERTEXATTRIBPOINTER) * attrib_count);
+
+        if (! buffer_space)
+            goto BIG_DATA;
 
         char *chunk_location = (char *)*command + commands_size + *array_size - chunk_size;
         memcpy (chunk_location, first->pointer, chunk_size);
@@ -1585,11 +1590,13 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
             last = last->next_enabled;
             attrib_count++;
         }
-
-        /* FIXME: Check if the buffer is big enough to handle the data. */
     }
 
     *command = glDraw_command;
+
+BIG_DATA:
+    /* FIXME: Send big data using the buffer. */
+    return;
 }
 
 static void
