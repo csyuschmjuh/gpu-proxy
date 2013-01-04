@@ -11,8 +11,10 @@
 #define NUM_EMBEDDED 32
 #define ATTRIB_BUFFER_SIZE (1024 * 512)
 
+typedef struct vertex_attrib vertex_attrib_t;
+
 /* these are client state */
-typedef struct vertex_attrib
+struct vertex_attrib
 {
     GLuint        index;
     GLint         array_buffer_binding;   /* initial is 0 */
@@ -24,7 +26,12 @@ typedef struct vertex_attrib
     GLboolean     array_normalized;       /* initial is GL_FALSE */
     GLfloat       current_attrib[4];      /* initial is (0, 0, 0, 1) */
     char          *data;
-} vertex_attrib_t;
+
+    /* Linked list of memory chunks to handle buffer memory
+     * allocation. */
+    vertex_attrib_t *next_enabled;
+    GLuint chunk;
+};
 
 typedef struct vertex_attrib_list
 {
@@ -32,8 +39,7 @@ typedef struct vertex_attrib_list
     int                 enabled_count;  /* initial 0 */
     vertex_attrib_t     embedded_attribs[NUM_EMBEDDED];
     vertex_attrib_t     *attribs;
-    vertex_attrib_t     *first_index_pointer;
-    vertex_attrib_t     *last_index_pointer;
+    vertex_attrib_t     *enabled_attribs;
 } vertex_attrib_list_t;
 
 typedef struct _texture {
