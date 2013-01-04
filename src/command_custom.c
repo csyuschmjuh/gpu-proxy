@@ -160,18 +160,6 @@ command_gltexparameterfv_init (command_t *abstract_command,
 }
 
 void
-command_gldrawelements_destroy_arguments (command_gldrawelements_t *command)
-{
-    link_list_clear (&command->arrays_to_free);
-}
-
-void
-command_gldrawarrays_destroy_arguments (command_gldrawarrays_t *command)
-{
-    link_list_clear (&command->arrays_to_free);
-}
-
-void
 command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t *command)
 
 {

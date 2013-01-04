@@ -1509,7 +1509,6 @@ caching_client_vertex_chunk_size (vertex_attrib_t *first,
 static void
 caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                                          size_t count,
-                                                         link_list_t **allocated_data_arrays,
                                                          command_t **command,
                                                          size_t *array_size,
                                                          size_t index_array_size)
@@ -1645,14 +1644,12 @@ caching_client_glDrawArrays (void* client,
         }
     }
 
-    link_list_t *arrays_to_free = NULL;
     command_t *command = NULL;
     size_t array_size = 0;
     if (! state->vertex_array_binding) {
         size_t true_count = first > 0 ? first + count : count;
         caching_client_setup_vertex_attrib_pointer_if_necessary (CLIENT(client),
                                                                  true_count,
-                                                                 &arrays_to_free,
                                                                  &command,
                                                                  &array_size,
                                                                  0);
@@ -1667,8 +1664,7 @@ caching_client_glDrawArrays (void* client,
     }
 
     command_gldrawarrays_init (command, mode, first, count);
-    ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
-     client_run_command_async (command);
+    client_run_command_async (command);
 
     caching_client_clear_attribute_list_data (CLIENT(client));
     if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_COMPLETE_UNKNOWN)
@@ -1858,8 +1854,6 @@ caching_client_glDrawElements (void* client,
         goto finish;
     }
 
-    link_list_t *arrays_to_free = NULL;
-
     char* indices_to_pass = (char*) indices;
     command_gldrawelements_t *command = NULL;
     size_t array_size = 0;
@@ -1872,7 +1866,7 @@ caching_client_glDrawElements (void* client,
         size_t elements_count = _get_elements_count (type, indices, count);
         caching_client_setup_vertex_attrib_pointer_if_necessary (
             CLIENT (client),
-            elements_count, &arrays_to_free,
+            elements_count,
             (command_t **)&command,
             &array_size,
             index_array_size);
@@ -1882,10 +1876,9 @@ caching_client_glDrawElements (void* client,
             ((command_t *)command)->size = command_get_size (COMMAND_GLDRAWELEMENTS) + array_size + index_array_size;
             ((command_t *)command)->token = 0;
             indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS) + array_size;
-        } else {
+        } else
             indices_to_pass = malloc (index_array_size);
-            link_list_prepend (&arrays_to_free, indices_to_pass, free);
-        }
+
         memcpy (indices_to_pass, indices, index_array_size);
     }
 
@@ -1893,7 +1886,6 @@ caching_client_glDrawElements (void* client,
         command = (command_gldrawelements_t *) client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
 
     command_gldrawelements_init (&command->header, mode, count, type, indices_to_pass);
-    ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
     client_run_command_async (&command->header);
 
 finish:
