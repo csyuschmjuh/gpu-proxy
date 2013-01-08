@@ -251,10 +251,10 @@ _remove_from_enabled_attrib_list (vertex_attrib_list_t *list,
         list->enabled_attribs = enabled_attrib->next_enabled;
         enabled_attrib->next_enabled = NULL;
         return;
-    } else
-        enabled_attrib = enabled_attrib->next_enabled;
+    }
 
     vertex_attrib_t *previous_attrib = enabled_attrib;
+    enabled_attrib = enabled_attrib->next_enabled;
 
     while (enabled_attrib) {
         if (enabled_attrib == new_attrib) {
