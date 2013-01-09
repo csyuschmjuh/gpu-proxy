@@ -147,7 +147,7 @@ client_init (client_t *client)
     prctl (PR_SET_TIMERSLACK, 1);
     initializing_client = true;
 
-    buffer_create (&client->buffer, 512, "command");
+    buffer_create (&client->buffer, 1024, "command");
 
     // We initialize the base dispatch table synchronously here, so that we
     // don't have to worry about the server thread trying to initialize it
