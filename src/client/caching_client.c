@@ -932,11 +932,17 @@ caching_client_glShaderSource (void *client, GLuint shader, GLsizei count,
     caching_client_string = malloc (sizeof (GLchar *) * count);
 
     unsigned i = 0;
+    int n;
     bool null_terminated = false;
 
     for (i = 0; i < count; i++) {
         if (! string[i]) {
-            caching_client_glSetError (client, GL_INVALID_VALUE);
+            if (caching_client_length)
+                free (caching_client_length);
+            for (n = 0; n < i; n++)
+                free (caching_client_string[n]);
+            free (caching_client_string);
+            caching_client_glSetError (client, GL_INVALID_OPERATION);
 	    return;
         }
 
