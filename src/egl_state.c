@@ -229,10 +229,12 @@ cached_gl_displays ()
 }
 
 display_ctxs_surfaces_t *
-cached_gl_display_new (EGLDisplay display)
+cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display)
 {
     display_ctxs_surfaces_t *dpy = malloc (sizeof (display_ctxs_surfaces_t));
     dpy->display = display;
+    dpy->native_display = native_display;
+    dpy->native_display_locked = false;
     dpy->surfaces = NULL;
     dpy->contexts = NULL;
     dpy->support_surfaceless = false;

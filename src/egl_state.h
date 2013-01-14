@@ -77,6 +77,7 @@ typedef struct _framebuffer
 
 typedef struct egl_state  egl_state_t;
 struct egl_state {
+    NativeDisplayType    native_display;
     EGLContext           context;        /* active context, initial EGL_NO_CONTEXT */
     EGLDisplay           display;        /* active display, initial EGL_NO_SURFACE */
     EGLSurface           drawable;        /* active draw drawable, initial EGL_NO_SURFACE */
@@ -302,6 +303,8 @@ struct egl_state {
 };
 
 typedef struct display_ctxs_surfaces {
+    NativeDisplayType native_display;
+    bool native_display_locked;
     EGLDisplay display;
     bool support_surfaceless;
     link_list_t *surfaces;
@@ -337,7 +340,7 @@ private link_list_t **
 cached_gl_displays ();
 
 private display_ctxs_surfaces_t *
-cached_gl_display_new (EGLDisplay display);
+cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display);
 
 private void
 destroy_dpy (void *abstract_dpy);
