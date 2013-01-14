@@ -4286,7 +4286,7 @@ caching_client_eglGetDisplay (void *client,
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
 
     if (result != EGL_NO_DISPLAY && cached_gl_display_find (result) == NULL) {
-        display_ctxs_surfaces_t *dpy = cached_gl_display_new (result);
+        display_ctxs_surfaces_t *dpy = cached_gl_display_new (native_display, result);
         link_list_t **dpys = cached_gl_displays ();
         link_list_append (dpys, (void *)dpy, destroy_dpy);
     }
