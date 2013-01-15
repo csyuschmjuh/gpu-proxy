@@ -2873,7 +2873,7 @@ class GLGenerator(object):
         if func.name in FUNCTIONS_GENERATING_ERRORS:
             file.Write("    egl_state_t *state = client_get_current_state (CLIENT (object));\n");
             file.Write("    if (state)\n");
-            file.Write("        state->need_get_error = false;\n\n");
+            file.Write("        state->need_get_error = true;\n\n");
 
         file.Write("    INSTRUMENT();\n");
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
