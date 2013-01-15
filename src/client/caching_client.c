@@ -3310,6 +3310,7 @@ caching_client_glTexSubImage2D (void* client,
     texture_t *texture = egl_state_lookup_cached_texture (state, tex_id);
     if (! texture) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
     } else {
         if (xoffset + width > texture->width || yoffset + height > texture->height) {
             caching_client_glSetError (client, GL_INVALID_VALUE);
