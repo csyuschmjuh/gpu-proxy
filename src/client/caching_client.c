@@ -2521,6 +2521,7 @@ caching_client_glGetVertexAttribfv (void* client, GLuint index, GLenum pname,
 
     /* we cannot use client state */
     if (state->vertex_array_binding) {
+        caching_client_set_needs_get_error (CLIENT (client));
         CACHING_CLIENT(client)->super_dispatch.glGetVertexAttribfv (client, index, pname, params);
         return;
     }
