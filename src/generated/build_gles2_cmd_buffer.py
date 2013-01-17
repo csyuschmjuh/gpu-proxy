@@ -564,8 +564,6 @@ FUNCTIONS_GENERATING_ERRORS = [
  'glDeleteProgram',
  'glDeleteShader',
  'glDetachShader',
- 'glDisableVertexAttribArray',
- 'glEnableVertexAttribArray',
  'glFramebufferRenderbuffer',
  'glFramebufferTexture2D',
  'glGenerateMipmap',
