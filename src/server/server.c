@@ -323,6 +323,9 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
 
     if (shader)
         server->dispatch.glDeleteShader (server, *shader);
+    else
+        /*XXX: This call should return INVALID_VALUE */
+        server->dispatch.glDeleteShader (server, 0xffffffff);
 
     command_gldeleteshader_destroy_arguments (command);
 }
