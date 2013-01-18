@@ -2175,8 +2175,10 @@ caching_client_glGetAttribLocation (void* client,
     if (! state)
         return 0;
     program_t *saved_program = egl_state_lookup_cached_program (state, program);
-    if (!saved_program)
+    if (!saved_program) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
         return -1;
+    }
 
     GLuint *location = (GLuint *)hash_lookup (saved_program->attrib_location_cache,
                                               hash_str (name));
