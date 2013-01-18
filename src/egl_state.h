@@ -300,6 +300,7 @@ struct egl_state {
     HashTable    *renderbuffer_cache;
 
     bool         supports_element_index_uint;     /* GL_OES_element_index_uint */
+    bool	 supports_bgra;	                  /* GL_EXT_texture_format_BGRA8888 */
 };
 
 typedef struct display_ctxs_surfaces {

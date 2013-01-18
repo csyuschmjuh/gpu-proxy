@@ -2356,6 +2356,7 @@ caching_client_glGetString (void* client, GLenum name)
         state->extensions_string[length] = 0;
 
         state->supports_element_index_uint = strstr (state->extensions_string, "GL_OES_element_index_uint") ? true : false;
+        state->supports_bgra = strstr (state->extensions_string, "GL_EXT_texture_format_BGRA8888") ? true : false;
         break;
     default:
         break;
@@ -3190,6 +3191,7 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
                              GLenum type, const void *pixels)
 {
     GLuint tex_id;
+
     egl_state_t *state = client_get_current_state (CLIENT (client));
 
     INSTRUMENT();
@@ -3217,11 +3219,21 @@ caching_client_glTexImage2D (void* client, GLenum target, GLint level,
         return;
     }
 
+    /* check we support GL_EXT_texture_format_BGRA888 */
+    if (! state->extensions_string) {
+	caching_client_glGetString (client, GL_EXTENSIONS);
+    }
+
     if ((type == GL_UNSIGNED_SHORT_4_4_4_4 ||
          type == GL_UNSIGNED_SHORT_5_5_5_1) &&
          format != GL_RGBA) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return;
+    }
+
+    if (! state->supports_bgra && format == GL_BGRA_EXT) {
+	caching_client_glSetError (client, GL_INVALID_OPERATION);
+	return;
     }
 
     /* FIXME: we need more checks on max width/height and level */
