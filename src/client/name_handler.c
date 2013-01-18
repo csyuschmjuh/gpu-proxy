@@ -17,9 +17,12 @@ name_handler_init ()
         return;
 
     mutex_lock (name_handler_mutex);
-    if (name_handler.initialized)
+    if (name_handler.initialized) {
+	mutex_unlock (name_handler_mutex);
         return;
+    }
 
+    name_handler.initialized = true;
     name_handler.reusable_names = NULL;
     name_handler.last_name = 0;
 
