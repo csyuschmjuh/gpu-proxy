@@ -3037,7 +3037,7 @@ class GLGenerator(object):
         for mapped_name in mapped_names:
           file.Write("    if (command->%s) {\n" % mapped_name)
           file.Write("        mutex_lock (name_mapping_mutex);\n")
-          file.Write("        GLuint *%s = HashLookup (name_mapping, command->%s);\n" % (mapped_name, mapped_name))
+          file.Write("        GLuint *%s = hash_lookup (name_mapping, command->%s);\n" % (mapped_name, mapped_name))
           file.Write("        mutex_unlock (name_mapping_mutex);\n")
           file.Write("        if (!%s)\n" % mapped_name)
           file.Write("            return;\n")

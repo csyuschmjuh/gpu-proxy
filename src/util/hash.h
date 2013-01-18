@@ -51,62 +51,62 @@ typedef struct _HashTable {
     hash_delete_function_t delete_function;
 } HashTable;
 
-HashTable *NewHashTable (hash_delete_function_t delete_function);
+HashTable *new_hash_table (hash_delete_function_t delete_function);
 
 private void
-DeleteHashTable (HashTable *table);
+delete_hash_table (HashTable *table);
 
 private void *
-HashLookup (HashTable *table,
-            GLuint key);
+hash_lookup (HashTable *table,
+             GLuint key);
 
 private void
-HashInsert (HashTable *table,
-            GLuint key,
-            void *data);
+hash_insert (HashTable *table,
+             GLuint key,
+             void *data);
 
 private void
-HashRemove (HashTable *table,
-            GLuint key);
+hash_remove (HashTable *table,
+             GLuint key);
 
 private void *
-HashTake (HashTable *table,
-          GLuint key);
+hash_take (HashTable *table,
+           GLuint key);
 
 private void
-HashDeleteAll (HashTable *table,
-               void (*callback) (GLuint key, void *data, void *userData),
-               void *userData);
+hash_delete_all (HashTable *table,
+                 void (*callback) (GLuint key, void *data, void *userData),
+                 void *userData);
 
 private void
-HashWalk (const HashTable *table,
+hash_walk (const HashTable *table,
           void (*callback) (GLuint key, void *data, void *userData),
           void *userData);
 
 private GLuint
-HashFirstEntry (HashTable *table);
+hash_first_entry (HashTable *table);
 
 private GLuint
-HashNextEntry (const HashTable *table,
-               GLuint key);
+hash_next_entry (const HashTable *table,
+                 GLuint key);
 
 private void
-HashPrint (const HashTable *table);
+hash_print (const HashTable *table);
 
 private GLuint
-HashFindFreeKeyBlock (HashTable *table,
-                      GLuint numKeys);
+hash_find_free_key_block (HashTable *table,
+                          GLuint numKeys);
 
 private GLuint
-HashNumEntries (const HashTable *table);
+has_num_entries (const HashTable *table);
 
 private void
-FreeDataCallback (GLuint key,
-                  void *data,
-                  void *userData);
+free_data_callback (GLuint key,
+                    void *data,
+                    void *userData);
 
 private GLuint
-HashStr (const void *v);
+hash_str (const void *v);
 
 private void
 test_hash_functions (void);
