@@ -46,7 +46,7 @@
 #define HASH_FUNC(K)  ((K) % TABLE_SIZE)
 
 static void
-HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete);
+hash_remove_with_deletion (HashTable *table, GLuint key, bool delete);
 
 /**
  * An entry in the hash table.
@@ -63,7 +63,7 @@ struct HashEntry {
  * \return pointer to a new, empty hash table.
  */
 HashTable *
-NewHashTable (hash_delete_function_t delete_function)
+new_hash_table (hash_delete_function_t delete_function)
 {
     HashTable *table = (HashTable *) calloc (1, sizeof (HashTable));
     table->delete_function = delete_function;
@@ -81,7 +81,7 @@ NewHashTable (hash_delete_function_t delete_function)
  * \param table the hash table to delete.
  */
 void
-DeleteHashTable (HashTable *table)
+delete_hash_table (HashTable *table)
 {
     GLuint pos;
     assert (table);
@@ -105,7 +105,7 @@ DeleteHashTable (HashTable *table)
  * \sa HashLookup
  */
 static inline void *
-HashLookup_unlocked (HashTable *table, GLuint key)
+hash_lookup_unlocked (HashTable *table, GLuint key)
 {
     GLuint pos;
     const struct HashEntry *entry;
@@ -137,20 +137,20 @@ HashLookup_unlocked (HashTable *table, GLuint key)
  * \return pointer to user's data or NULL if key not in table
  */
 void *
-HashLookup (HashTable *table, GLuint key)
+hash_lookup (HashTable *table, GLuint key)
 {
     void *res;
     assert (table);
-    res = HashLookup_unlocked (table, key);
+    res = hash_lookup_unlocked (table, key);
     return res;
 }
 
 void *
-HashTake (HashTable *table, GLuint key)
+hash_take (HashTable *table, GLuint key)
 {
     assert (table);
-    void *res = HashLookup_unlocked (table, key);
-    HashRemoveWithDeletion (table, key, false);
+    void *res = hash_lookup_unlocked (table, key);
+    hash_remove_with_deletion (table, key, false);
     return res;
 }
 
@@ -163,7 +163,7 @@ HashTake (HashTable *table, GLuint key)
  * \param data pointer to user data.
  */
 void
-HashInsert (HashTable *table, GLuint key, void *data)
+hash_insert (HashTable *table, GLuint key, void *data)
 {
     /* search for existing entry with this key */
     GLuint pos;
@@ -198,7 +198,7 @@ HashInsert (HashTable *table, GLuint key, void *data)
 }
 
 static void
-HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete)
+hash_remove_with_deletion (HashTable *table, GLuint key, bool delete)
 {
     GLuint pos;
     struct HashEntry *entry, *prev;
@@ -242,9 +242,9 @@ HashRemoveWithDeletion (HashTable *table, GLuint key, bool delete)
  * key and unlinks it.
  */
 void
-HashRemove (HashTable *table, GLuint key)
+hash_remove (HashTable *table, GLuint key)
 {
-    HashRemoveWithDeletion (table, key, true);
+    hash_remove_with_deletion (table, key, true);
 }
 
 
@@ -259,7 +259,7 @@ HashRemove (HashTable *table, GLuint key)
  *                  (this is typically a struct gl_context pointer)
  */
 void
-HashDeleteAll (HashTable *table,
+hash_delete_all (HashTable *table,
                void (*callback)(GLuint key, void *data, void *userData),
                void *userData)
 {
@@ -288,7 +288,7 @@ HashDeleteAll (HashTable *table,
  *                  (this is typically a struct gl_context pointer)
  */
 void
-HashWalk (const HashTable *table,
+hash_walk (const HashTable *table,
           void (*callback)(GLuint key, void *data, void *userData),
           void *userData)
 {
@@ -315,7 +315,7 @@ HashWalk (const HashTable *table,
  * \return key for the "first" entry in the hash table.
  */
 GLuint
-HashFirstEntry (HashTable *table)
+hash_first_entry (HashTable *table)
 {
     GLuint pos;
     assert (table);
@@ -335,7 +335,7 @@ HashFirstEntry (HashTable *table)
  * \return next hash key or 0 if end of table.
  */
 GLuint
-HashNextEntry (const HashTable *table, GLuint key)
+hash_next_entry (const HashTable *table, GLuint key)
 {
     const struct HashEntry *entry;
     GLuint pos;
@@ -380,7 +380,7 @@ HashNextEntry (const HashTable *table, GLuint key)
  * \param table the hash table.
  */
 void
-HashPrint (const HashTable *table)
+hash_print (const HashTable *table)
 {
     GLuint pos;
     assert (table);
@@ -409,7 +409,7 @@ HashPrint (const HashTable *table)
  * allowable key range.
  */
 GLuint
-HashFindFreeKeyBlock (HashTable *table, GLuint numKeys)
+hash_find_free_key_block (HashTable *table, GLuint numKeys)
 {
     const GLuint maxKey = ~((GLuint) 0);
     if (maxKey - numKeys > table->MaxKey) {
@@ -422,7 +422,7 @@ HashFindFreeKeyBlock (HashTable *table, GLuint numKeys)
         GLuint freeStart = 1;
         GLuint key;
         for (key = 1; key != maxKey; key++) {
-            if (HashLookup_unlocked (table, key)) {
+            if (hash_lookup_unlocked (table, key)) {
                 /* darn, this key is already in use */
                 freeCount = 0;
                 freeStart = key+1;
@@ -444,7 +444,7 @@ HashFindFreeKeyBlock (HashTable *table, GLuint numKeys)
  * Return the number of entries in the hash table.
  */
 GLuint
-HashNumEntries (const HashTable *table)
+hash_num_entries (const HashTable *table)
 {
     GLuint pos, count = 0;
 
@@ -459,7 +459,7 @@ HashNumEntries (const HashTable *table)
 }
 
 void
-FreeDataCallback (GLuint key,
+free_data_callback (GLuint key,
                   void *data,
                   void *userData)
 {
@@ -474,7 +474,7 @@ FreeDataCallback (GLuint key,
  * signed value of each byte.
  */
 GLuint
-HashStr (const void *v)
+hash_str (const void *v)
 {
   const signed char *p;
   unsigned int h = 5381;

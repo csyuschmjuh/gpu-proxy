@@ -2146,8 +2146,8 @@ caching_client_glGetAttribLocation (void* client,
     if (!saved_program)
         return -1;
 
-    GLuint *location = (GLuint *)HashLookup (saved_program->attrib_location_cache,
-                                            HashStr (name));
+    GLuint *location = (GLuint *)hash_lookup (saved_program->attrib_location_cache,
+                                              hash_str (name));
     if (location)
         return *location;
 
@@ -2159,7 +2159,7 @@ caching_client_glGetAttribLocation (void* client,
 
     GLuint *data = (GLuint *)malloc (sizeof (GLuint));
     *data = result;
-    HashInsert (saved_program->attrib_location_cache, HashStr(name), data);
+    hash_insert (saved_program->attrib_location_cache, hash_str(name), data);
     return result;
 }
 
@@ -2193,8 +2193,8 @@ caching_client_glGetUniformLocation (void* client,
     if (!saved_program)
         return -1;
 
-    GLuint *location = (GLuint *)HashLookup (saved_program->uniform_location_cache,
-                                            HashStr (name));
+    GLuint *location = (GLuint *)hash_lookup (saved_program->uniform_location_cache,
+                                              hash_str (name));
     if (location)
         return *location;
 
@@ -2206,7 +2206,7 @@ caching_client_glGetUniformLocation (void* client,
 
     GLuint *data = (GLuint *)malloc (sizeof (GLuint));
     *data = result;
-    HashInsert (saved_program->uniform_location_cache, HashStr(name), data);
+    hash_insert (saved_program->uniform_location_cache, hash_str(name), data);
     return result;
 }
 

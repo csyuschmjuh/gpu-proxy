@@ -82,7 +82,7 @@ server_handle_glgenbuffers (server_t *server,
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_buffers[i];
-        HashInsert (name_mapping, command->buffers[i], data);
+        hash_insert (name_mapping, command->buffers[i], data);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -101,7 +101,7 @@ server_handle_gldeletebuffers (server_t *server, command_t *abstract_command)
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        GLuint *entry = HashTake (name_mapping, command->buffers[i]);
+        GLuint *entry = hash_take (name_mapping, command->buffers[i]);
         if (entry) {
             command->buffers[i] = *entry;
             free (entry);
@@ -130,7 +130,7 @@ server_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_framebuffers[i];
-        HashInsert (name_mapping, command->framebuffers[i], data);
+        hash_insert (name_mapping, command->framebuffers[i], data);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -149,7 +149,7 @@ server_handle_gldeleteframebuffers (server_t *server, command_t *abstract_comman
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        GLuint *entry = HashTake (name_mapping, command->framebuffers[i]);
+        GLuint *entry = hash_take (name_mapping, command->framebuffers[i]);
         if (entry) {
             command->framebuffers[i] = *entry;
             free (entry);
@@ -178,7 +178,7 @@ server_handle_glgentextures (server_t *server, command_t *abstract_command)
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_textures[i];
-        HashInsert (name_mapping, command->textures[i], data);
+        hash_insert (name_mapping, command->textures[i], data);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -197,7 +197,7 @@ server_handle_gldeletetextures (server_t *server, command_t *abstract_command)
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        GLuint *entry = HashTake (name_mapping, command->textures[i]);
+        GLuint *entry = hash_take (name_mapping, command->textures[i]);
         if (entry) {
             command->textures[i] = *entry;
             free (entry);
@@ -227,7 +227,7 @@ server_handle_glgenrenderbuffers (server_t *server,
     for (i = 0; i < command->n; i++) {
         GLuint *data = (GLuint *)malloc (sizeof (GLuint));
         *data = server_renderbuffers[i];
-        HashInsert (name_mapping, command->renderbuffers[i], data);
+        hash_insert (name_mapping, command->renderbuffers[i], data);
     }
     mutex_unlock (name_mapping_mutex);
 
@@ -246,7 +246,7 @@ server_handle_gldeleterenderbuffers (server_t *server, command_t *abstract_comma
     int i;
     mutex_lock (name_mapping_mutex);
     for (i = 0; i < command->n; i++) {
-        GLuint *entry = HashTake (name_mapping, command->renderbuffers[i]);
+        GLuint *entry = hash_take (name_mapping, command->renderbuffers[i]);
         if (entry) {
             command->renderbuffers[i] = *entry;
             free (entry);
@@ -270,7 +270,7 @@ server_handle_glcreateprogram (server_t *server, command_t *abstract_command)
     *program = server->dispatch.glCreateProgram (server);
 
     mutex_lock (name_mapping_mutex);
-    HashInsert (name_mapping, command->result, program);
+    hash_insert (name_mapping, command->result, program);
     mutex_unlock (name_mapping_mutex);
 
 }
@@ -284,7 +284,7 @@ server_handle_gldeleteprogram (server_t *server, command_t *abstract_command)
             (command_gldeleteprogram_t *)abstract_command;
 
     mutex_lock (name_mapping_mutex);
-    GLuint *program = HashTake (name_mapping, command->program);
+    GLuint *program = hash_take (name_mapping, command->program);
     mutex_unlock (name_mapping_mutex);
 
     if (program)
@@ -305,7 +305,7 @@ server_handle_glcreateshader (server_t *server, command_t *abstract_command)
     *shader = server->dispatch.glCreateShader (server, command->type);
 
     mutex_lock (name_mapping_mutex);
-    HashInsert (name_mapping, command->result, shader);
+    hash_insert (name_mapping, command->result, shader);
     mutex_unlock (name_mapping_mutex);
 }
 
@@ -318,7 +318,7 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
             (command_gldeleteshader_t *)abstract_command;
 
     mutex_lock (name_mapping_mutex);
-    GLuint *shader = HashTake (name_mapping, command->shader);
+    GLuint *shader = hash_take (name_mapping, command->shader);
     mutex_unlock (name_mapping_mutex);
 
     if (shader)
@@ -371,7 +371,7 @@ server_init (server_t *server,
 	mutex_unlock (name_mapping_mutex);
         return;
     }
-    name_mapping = NewHashTable(free);
+    name_mapping = new_hash_table(free);
     mutex_unlock (name_mapping_mutex);
 }
 
