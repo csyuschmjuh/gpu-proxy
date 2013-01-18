@@ -151,6 +151,7 @@ egl_state_init (egl_state_t *state,
     state->renderbuffer_cache = NewHashTable (free);
 
     state->supports_element_index_uint = false;
+    state->supports_bgra = false;
 }
 
 egl_state_t *
