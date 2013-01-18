@@ -367,8 +367,10 @@ server_init (server_t *server,
         server_handle_gldeleteshader;
 
     mutex_lock (name_mapping_mutex);
-    if (name_mapping)
+    if (name_mapping) {
+	mutex_unlock (name_mapping_mutex);
         return;
+    }
     name_mapping = NewHashTable(free);
     mutex_unlock (name_mapping_mutex);
 }
