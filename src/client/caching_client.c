@@ -646,6 +646,14 @@ caching_client_glClear (void* client, GLbitfield mask)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+    
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
 
     CACHING_CLIENT(client)->super_dispatch.glClear (client, mask);
 }
@@ -664,6 +672,14 @@ caching_client_glClearColor (void* client, GLclampf red, GLclampf green,
         state->color_clear_value[2] == blue &&
         state->color_clear_value[3] == alpha)
         return;
+    
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
 
     state->color_clear_value[0] = red;
     state->color_clear_value[1] = green;
@@ -683,6 +699,14 @@ caching_client_glClearDepthf (void* client, GLclampf depth)
         return;
     if (state->depth_clear_value == depth)
         return;
+    
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
 
     state->depth_clear_value = depth;
 
@@ -699,6 +723,14 @@ caching_client_glClearStencil (void* client, GLint s)
         return;
     if (state->stencil_clear_value == s)
         return;
+    
+    if (state->framebuffer_binding) {
+        framebuffer_t *framebuffer = egl_state_lookup_cached_framebuffer (state, state->framebuffer_binding);
+        if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_INCOMPLETE) {
+            caching_client_glSetError (client, GL_INVALID_FRAMEBUFFER_OPERATION);
+            return;
+        }
+    }
 
     state->stencil_clear_value = s;
     CACHING_CLIENT(client)->super_dispatch.glClearStencil (client, s);
