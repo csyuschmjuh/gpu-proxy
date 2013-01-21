@@ -1366,7 +1366,6 @@ caching_client_glSetVertexAttribArray (void* client,
         attribs[i].array_normalized = GL_FALSE;
         attribs[i].pointer = NULL;
         attribs[i].data = NULL;
-        memset ((void *)attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
         attribs[i].array_buffer_binding = bound_buffer;
         attrib_list->count ++;
     }
@@ -1387,7 +1386,6 @@ caching_client_glSetVertexAttribArray (void* client,
         new_attribs[count].pointer = NULL;
         new_attribs[count].data = NULL;
         new_attribs[count].array_buffer_binding = bound_buffer;
-        memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
         attrib_list->attribs = new_attribs;
         attrib_list->count ++;
     }
@@ -3476,9 +3474,13 @@ caching_client_glUseProgram (void* client,
 }
 
 static void
-caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
+caching_client_set_current_vertex_attrib (void* client, GLuint index, void *curr_attrib)
 {
-    INSTRUMENT();
+    GLfloat *current_attrib = curr_attrib;
+    vertex_attrib_list_t *attrib_list;
+    vertex_attrib_t *attribs;
+    int i, found_index = -1;
+    int count;
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
@@ -3486,7 +3488,55 @@ caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
     if (caching_client_does_index_overflow (client, index))
         return;
 
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib1f (client, index, v0);
+    attrib_list = &state->vertex_attribs;
+    attribs = attrib_list->attribs;
+    count = attrib_list->count;
+
+    /* check existing client state */
+    for (i = 0; i < count; i++) {
+        if (attribs[i].index == index)
+	    found_index = i;
+    }
+
+    if (found_index != -1) {
+	for (i = 0; i < 4; ++i)
+	    attribs[found_index].current_attrib[i] = current_attrib[i];
+        return;
+    }
+
+    /* we have not found index */
+    if (i < NUM_EMBEDDED) {
+        int j;
+	for (j = 0; j < 4; ++j)
+	    attribs[i].current_attrib[j] = current_attrib[j];
+
+        attrib_list->count ++;
+    } else {
+        vertex_attrib_t *new_attribs = (vertex_attrib_t *)malloc (sizeof (vertex_attrib_t) * (count + 1));
+
+        memcpy (new_attribs, attribs, (count+1) * sizeof (vertex_attrib_t));
+        if (attribs != attrib_list->embedded_attribs)
+            free (attribs);
+
+	for (i = 0; i < 4; ++i)
+	    attribs[count].current_attrib[i] = current_attrib[i];
+
+        attrib_list->attribs = new_attribs;
+        attrib_list->count ++;
+    }
+}
+
+
+static void
+caching_client_glVertexAttrib1f (void* client, GLuint index, GLfloat v0)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    GLfloat v[4] = {v0, 0, 0, 0};
+    if (! state)
+        return;
+
+    caching_client_set_current_vertex_attrib (client, index, &v);
 }
 
 static void
@@ -3494,13 +3544,11 @@ caching_client_glVertexAttrib2f (void* client, GLuint index, GLfloat v0, GLfloat
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    GLfloat v[4] = {v0, v1, 0, 0};
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2f (client, index, v0, v1);
+    caching_client_set_current_vertex_attrib (client, index, &v);
 }
 
 static void
@@ -3509,13 +3557,11 @@ caching_client_glVertexAttrib3f (void* client, GLuint index, GLfloat v0,
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    GLfloat v[4] = {v0, v1, v2, 0};
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3f (client, index, v0, v1, v2);
+    caching_client_set_current_vertex_attrib (client, index, &v);
 }
 
 static void
@@ -3524,70 +3570,40 @@ caching_client_glVertexAttrib4f (void* client, GLuint index, GLfloat v0, GLfloat
 {
     INSTRUMENT();
     egl_state_t *state = client_get_current_state (CLIENT (client));
+    GLfloat v[4] = {v0, v1, v2, v3};
     if (! state)
         return;
 
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4f (client, index, v0, v1, v2, v3);
+    caching_client_set_current_vertex_attrib (client, index, &v);
 }
 
 static void
 caching_client_glVertexAttrib1fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
-        return;
-
-    if (caching_client_does_index_overflow (client, index)) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
-        return;
-    }
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib1fv (client, index, v);
+    caching_client_glVertexAttrib1f(client, index, v[0]);
 }
 
 static void
 caching_client_glVertexAttrib2fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
-        return;
+    caching_client_glVertexAttrib2f(client, index, v[0], v[1]);
 
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib2fv (client, index, v);
 }
 
 static void
 caching_client_glVertexAttrib3fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
-        return;
-
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib3fv (client, index, v);
+    caching_client_glVertexAttrib3f(client, index, v[0], v[1], v[2]);
 }
 
 static void
 caching_client_glVertexAttrib4fv (void* client, GLuint index, const GLfloat *v)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
-        return;
-
-    if (caching_client_does_index_overflow (client, index))
-        return;
-
-    CACHING_CLIENT(client)->super_dispatch.glVertexAttrib4fv (client, index, v);
+    caching_client_glVertexAttrib4f(client, index, v[0], v[1], v[2], v[3]);
 }
 
 static void
@@ -3695,7 +3711,6 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         attribs[i].data = NULL;
         attribs[i].array_enabled = GL_FALSE;
         attribs[i].array_buffer_binding = bound_buffer;
-        memset (attribs[i].current_attrib, 0, sizeof (GLfloat) * 4);
         attrib_list->count ++;
     }
     else {
@@ -3714,7 +3729,6 @@ caching_client_glVertexAttribPointer (void* client, GLuint index, GLint size,
         new_attribs[count].data = NULL;
         new_attribs[count].array_enabled = GL_FALSE;
         new_attribs[count].array_buffer_binding = bound_buffer;
-        memset (new_attribs[count].current_attrib, 0, sizeof (GLfloat) * 4);
 
         attrib_list->attribs = new_attribs;
         attrib_list->count ++;
