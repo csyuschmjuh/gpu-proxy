@@ -167,13 +167,29 @@ command_gltexparameteriv_init (command_t *abstract_command,
                                GLenum pname,
                                const GLint *params)
 {
+    size_t params_size = sizeof (GLint);
+    size_t command_size = 0;
+
+    if (params) {
+        client_t *client = client_get_thread_local ();
+
+        command_size = command_get_size (COMMAND_GLTEXPARAMETERIV);
+
+        abstract_command = client_get_space_for_size (client, command_size + params_size);
+        abstract_command->type = COMMAND_GLTEXPARAMETERIV;
+        abstract_command->size = command_size + params_size;
+        abstract_command->token = 0;
+    }
+
     command_gltexparameteriv_t *command =
         (command_gltexparameteriv_t *) abstract_command;
     command->target = target;
     command->pname = pname;
 
-    size_t params_size = sizeof (GLint);
-    command->params = malloc (params_size);
+    if (!params)
+        return;
+
+    command->params = (GLint *)((char *)command + command_size);
     memcpy (command->params, params, params_size);
 }
 
@@ -183,13 +199,29 @@ command_gltexparameterfv_init (command_t *abstract_command,
                                GLenum pname,
                                const GLfloat *params)
 {
+    size_t params_size = sizeof (GLfloat);
+    size_t command_size = 0;
+
+    if (params) {
+        client_t *client = client_get_thread_local ();
+
+        command_size = command_get_size (COMMAND_GLTEXPARAMETERFV);
+
+        abstract_command = client_get_space_for_size (client, command_size + params_size);
+        abstract_command->type = COMMAND_GLTEXPARAMETERFV;
+        abstract_command->size = command_size + params_size;
+        abstract_command->token = 0;
+    }
+
     command_gltexparameterfv_t *command =
         (command_gltexparameterfv_t *) abstract_command;
     command->target = target;
     command->pname = pname;
 
-    size_t params_size = sizeof (GLfloat);
-    command->params = malloc (params_size);
+    if (!params)
+        return;
+
+    command->params = (GLfloat *)((char *)command + command_size);
     memcpy (command->params, params, params_size);
 }
 
