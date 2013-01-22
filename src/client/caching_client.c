@@ -3916,7 +3916,7 @@ caching_client_glViewport (void* client, GLint x, GLint y, GLsizei width, GLsize
         state->viewport[3] == height)
         return;
 
-    if (x < 0 || y < 0) {
+    if (width < 0 || height < 0) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
     }
