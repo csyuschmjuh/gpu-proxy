@@ -3406,6 +3406,118 @@ caching_client_glTexSubImage2D (void* client,
 }
 
 static void
+caching_client_glUniform1f (void *client, GLint location, GLfloat v0)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform1f (client, location, v0);
+}
+
+static void
+caching_client_glUniform2f (void *client,
+                             GLint location, 
+                             GLfloat v0,
+                             GLfloat v1)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform2f (client, location, v0, v1);
+}
+
+static void
+caching_client_glUniform3f (void *client,
+                             GLint location, 
+                             GLfloat v0,
+                             GLfloat v1,
+                             GLfloat v2)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform3f (client, location, v0, v1, v2);
+}
+
+static void
+caching_client_glUniform4f (void *client,
+                             GLint location, 
+                             GLfloat v0,
+                             GLfloat v1,
+                             GLfloat v2,
+                             GLfloat v3)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform4f (client, location, v0, v1, v2, v3);
+}
+
+static void
+caching_client_glUniform1i (void *client, GLint location, GLint v0)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform1i (client, location, v0);
+}
+
+static void
+caching_client_glUniform2i (void *client,
+                             GLint location, 
+                             GLint v0,
+                             GLint v1)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform2i (client, location, v0, v1);
+}
+
+static void
+caching_client_glUniform3i (void *client,
+                             GLint location, 
+                             GLint v0,
+                             GLint v1,
+                             GLint v2)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform3i (client, location, v0, v1, v2);
+}
+
+static void
+caching_client_glUniform4i (void *client,
+                             GLint location, 
+                             GLint v0,
+                             GLint v1,
+                             GLint v2,
+                             GLint v3)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform4i (client, location, v0, v1, v2, v3);
+}
+
+static void
 caching_client_glUniformMatrix2fv (void* client,
                                    GLint location,
                                    GLsizei count,
