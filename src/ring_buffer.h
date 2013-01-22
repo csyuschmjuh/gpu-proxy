@@ -19,10 +19,11 @@ typedef struct buffer
     size_t head;
     unsigned int last_token;
     volatile size_t fill_count;
+    size_t info_length;
 } buffer_t;
 
-private void
-buffer_create(buffer_t *buffer, int size, const char *buffer_name);
+private buffer_t *
+buffer_create(int size, const char *buffer_name);
 
 private void
 buffer_free(buffer_t *buffer);

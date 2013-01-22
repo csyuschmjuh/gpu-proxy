@@ -140,8 +140,7 @@ setup (void)
     EGLBoolean result;
     XVisualInfo *vinfo;
 
-    buffer_t *buffer = malloc (sizeof (buffer_t));
-    buffer_create (buffer, 512, "command_buffer");
+    buffer_t *buffer = buffer_create (512, "command_buffer");
     server = (server_t *) server_new (buffer);
 
     first_test_info.dpy = XOpenDisplay (NULL);

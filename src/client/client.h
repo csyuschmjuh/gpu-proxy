@@ -29,7 +29,7 @@ typedef struct _client client_t;
 struct _client {
     dispatch_table_t dispatch;
 
-    buffer_t buffer;
+    buffer_t *buffer;
     unsigned int token;
 
     egl_state_t *active_state;

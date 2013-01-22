@@ -64,7 +64,7 @@ start_server_thread_func (void *ptr)
 {
     client_thread = false;
     client_t *client = (client_t *)ptr;
-    server_t *server = server_new (&client->buffer);
+    server_t *server = server_new (client->buffer);
 
     server->server_signal = &client->server_signal;
     server->client_signal = &client->client_signal;
@@ -154,7 +154,7 @@ client_init (client_t *client)
     prctl (PR_SET_TIMERSLACK, 1);
     initializing_client = true;
 
-    buffer_create (&client->buffer, 1024, "command");
+    client->buffer = buffer_create (1024, "command");
 
     // We initialize the base dispatch table synchronously here, so that we
     // don't have to worry about the server thread trying to initialize it
@@ -187,7 +187,7 @@ client_destroy (client_t *client)
 {
     client_shutdown_server (client);
 
-    buffer_free (&client->buffer);
+    buffer_free (client->buffer);
 
     sem_destroy (&client->server_signal);
     sem_destroy (&client->client_signal);
@@ -223,14 +223,14 @@ client_get_space_for_size (client_t *client,
     size_t available_space;
     command_t *write_location;
 
-    if (size > buffer_size (&client->buffer))
+    if (size > buffer_size (client->buffer))
         return NULL;
 
-    write_location = (command_t *) buffer_write_address (&client->buffer,
+    write_location = (command_t *) buffer_write_address (client->buffer,
                                                          &available_space);
     while (! write_location || available_space < size) {
         sched_yield ();
-        write_location = (command_t *) buffer_write_address (&client->buffer,
+        write_location = (command_t *) buffer_write_address (client->buffer,
                                                              &available_space);
     }
 
@@ -265,7 +265,7 @@ client_run_command (command_t *command)
     command->token = token;
     client_run_command_async (command);
 
-    while (client->buffer.last_token < token) {
+    while (client->buffer->last_token < token) {
         sem_wait (&client->client_signal);
     }
 }
@@ -275,9 +275,9 @@ client_run_command_async (command_t *command)
 {
     client_t *client = client_get_thread_local ();
 
-    buffer_write_advance (&client->buffer, command->size);
+    buffer_write_advance (client->buffer, command->size);
 
-    if (client->buffer.fill_count == command->size) {
+    if (client->buffer->fill_count == command->size) {
         sem_post (&client->server_signal);
     }
 }
