@@ -15,6 +15,37 @@ command_glteximage2d_init (command_t *abstract_command,
                            GLenum type,
                            const void* pixels)
 {
+    uint32_t dest_size;
+    uint32_t unpadded_row_size;
+    uint32_t padded_row_size;
+    uint32_t unpack_alignment = client_get_unpack_alignment ();
+    uint32_t unpack_row_length = client_get_unpack_row_length ();
+    uint32_t unpack_skip_pixels = client_get_unpack_skip_pixels ();
+    uint32_t unpack_skip_rows = client_get_unpack_skip_rows ();
+
+    if (!compute_image_data_sizes (width, height, format, type,
+                                   unpack_alignment, unpack_row_length, unpack_skip_rows, &dest_size,
+                                   &unpadded_row_size, &padded_row_size)) {
+        /* TODO: Set an error on the client-side.
+         SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
+        return;
+    }
+
+
+    size_t command_size = 0;
+
+    if (pixels) {
+        client_t *client = client_get_thread_local ();
+
+        command_size = command_get_size (COMMAND_GLTEXIMAGE2D);
+
+        abstract_command = client_get_space_for_size (client, command_size + dest_size);
+        abstract_command->type = COMMAND_GLTEXIMAGE2D;
+        abstract_command->size = command_size + dest_size;
+        abstract_command->token = 0;
+
+    }
+
     command_glteximage2d_t *command =
         (command_glteximage2d_t *) abstract_command;
     command->target = (GLenum) target;
@@ -27,24 +58,8 @@ command_glteximage2d_init (command_t *abstract_command,
     command->type = (GLenum) type;
     command->pixels = NULL;
 
-    uint32_t dest_size;
-    uint32_t unpadded_row_size;
-    uint32_t padded_row_size;
-    uint32_t unpack_alignment = client_get_unpack_alignment ();
-    uint32_t unpack_row_length = client_get_unpack_row_length ();
-    uint32_t unpack_skip_pixels = client_get_unpack_skip_pixels ();
-    uint32_t unpack_skip_rows = client_get_unpack_skip_rows ();
-
     if (! pixels)
         return;
-
-    if (!compute_image_data_sizes (width, height, format, type,
-                                   unpack_alignment, unpack_row_length, unpack_skip_rows, &dest_size,
-                                   &unpadded_row_size, &padded_row_size)) {
-        /* TODO: Set an error on the client-side.
-         SetGLError(GL_INVALID_VALUE, "glTexImage2D", "dimension < 0"); */
-        return;
-    }
 
     command->pixels = malloc (dest_size);
     copy_rect_to_buffer (pixels, command->pixels, format, type, height,
@@ -64,17 +79,6 @@ command_gltexsubimage2d_init (command_t *abstract_command,
                               GLenum type,
                               const void* pixels)
 {
-    command_gltexsubimage2d_t *command =
-        (command_gltexsubimage2d_t *) abstract_command;
-    command->target = (GLenum) target;
-    command->level = (GLint) level;
-    command->xoffset = (GLint) xoffset;
-    command->yoffset = (GLint) yoffset;
-    command->width = (GLsizei) width;
-    command->height = (GLsizei) height;
-    command->format = (GLenum) format;
-    command->type = (GLenum) type;
-
     uint32_t dest_size;
     uint32_t unpadded_row_size;
     uint32_t padded_row_size;
@@ -92,7 +96,37 @@ command_gltexsubimage2d_init (command_t *abstract_command,
         return;
     }
 
-    command->pixels = malloc (dest_size);
+
+    size_t command_size = 0;
+
+    if (pixels) {
+        client_t *client = client_get_thread_local ();
+
+        command_size = command_get_size (COMMAND_GLTEXSUBIMAGE2D);
+
+        abstract_command = client_get_space_for_size (client, command_size + dest_size);
+        abstract_command->type = COMMAND_GLTEXSUBIMAGE2D;
+        abstract_command->size = command_size + dest_size;
+        abstract_command->token = 0;
+
+    }
+
+    command_gltexsubimage2d_t *command =
+        (command_gltexsubimage2d_t *) abstract_command;
+    command->target = (GLenum) target;
+    command->level = (GLint) level;
+    command->xoffset = (GLint) xoffset;
+    command->yoffset = (GLint) yoffset;
+    command->width = (GLsizei) width;
+    command->height = (GLsizei) height;
+    command->format = (GLenum) format;
+    command->type = (GLenum) type;
+
+    if (!pixels)
+        return;
+
+    command->pixels = pixels ? (char*)command + command_size : NULL;
+
     copy_rect_to_buffer (pixels, command->pixels, format, type, height,
                          unpack_skip_pixels, unpack_skip_rows,
                          unpadded_row_size, padded_row_size, padded_row_size);
@@ -165,4 +199,19 @@ command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t
 {
     /* This command is asynchronous, but we don't want to free the pointer
      * until after glDraw(Elements/Arrays). */
+}
+
+void
+command_gltexsubimage2d_destroy_arguments (command_gltexsubimage2d_t *command)
+{
+    /* This command is asynchronous, but we are using the buffer to handle
+     the texture information. */
+}
+
+void
+command_glteximage2d_destroy_arguments (command_glteximage2d_t *command)
+
+{
+    /* This command is asynchronous, but we are using the buffer to handle
+     the texture information. */
 }
