@@ -13,6 +13,7 @@ typedef struct _server server_t;
 #include "types_private.h"
 #include <pthread.h>
 #include <semaphore.h>
+#include <X11/Xlib.h>
 
 typedef void (*command_handler_t)(server_t *server, command_t *command);
 
@@ -31,6 +32,8 @@ struct _server {
 
     sem_t *server_signal;
     sem_t *client_signal;
+
+    Display *display;
 };
 
 private void

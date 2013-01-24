@@ -406,6 +406,17 @@ server_handle_eglquerycontext (server_t *server, command_t *abstract_command)
                                       command->value);
 }
 
+static void
+server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglgetdisplay_t *command =
+        (command_eglgetdisplay_t *)abstract_command;
+
+    command->result = server->dispatch.eglGetDisplay (server, server->display);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -449,6 +460,8 @@ server_init (server_t *server,
         server_handle_eglgetconfigattrib;
     server->handler_table[COMMAND_EGLQUERYCONTEXT] =
         server_handle_eglquerycontext;
+    server->handler_table[COMMAND_EGLGETDISPLAY] =
+        server_handle_eglgetdisplay;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {
@@ -462,7 +475,10 @@ server_init (server_t *server,
 bool
 server_destroy (server_t *server)
 {
+    XCloseDisplay(server->display);
+
     free (server);
+
     return true;
 }
 

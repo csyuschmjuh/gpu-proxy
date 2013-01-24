@@ -4870,6 +4870,21 @@ caching_client_eglCreateWindowSurface (void *client,
                                        NativeWindowType native_window,
                                        EGLint const *attrib_list)
 {
+    /* Make sure the events are sent to the server before trying to
+     * create the surface in the other process or the window could not
+     * be still created. */
+    link_list_t **dpys = cached_gl_displays ();
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_ctxs_surfaces_t *cached_display = (display_ctxs_surfaces_t *)dpy->data;
+        if (cached_display->display == display) {
+            XSync(cached_display->native_display, False);
+            break;
+        }
+
+        dpy = dpy->next;
+    }
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreateWindowSurface (client,
                                                             display,

@@ -34,12 +34,11 @@ struct _client {
 
     egl_state_t *active_state;
 
-    mutex_t server_started_mutex;
     thread_t server_thread;
     bool initializing;
 
-    sem_t server_signal;
-    sem_t client_signal;
+    sem_t *server_signal;
+    sem_t *client_signal;
 };
 
 private client_t *

@@ -9,9 +9,13 @@
 #include "command.h"
 #include "name_handler.h"
 
+#include <fcntl.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+#define SERVER_SIGNAL "/serversignal"
+#define CLIENT_SIGNAL "/clientsignal"
 
 __thread client_t* thread_local_client
     __attribute__(( tls_model ("initial-exec"))) = NULL;
@@ -60,20 +64,22 @@ should_use_base_dispatch ()
 }
 
 void *
-start_server_thread_func (void *ptr)
+start_server_process_func (client_t *client)
 {
-    client_thread = false;
-    client_t *client = (client_t *)ptr;
     server_t *server = server_new (client->buffer);
 
-    server->server_signal = &client->server_signal;
-    server->client_signal = &client->client_signal;
+    server->server_signal = sem_open(SERVER_SIGNAL, 0);
+    if (server->server_signal == SEM_FAILED)
+        abort();
 
-    mutex_unlock (client->server_started_mutex);
+    server->client_signal = sem_open(CLIENT_SIGNAL, 0);
+    if (server->client_signal == SEM_FAILED)
+        abort();
+
     prctl (PR_SET_TIMERSLACK, 1);
 
     pthread_t id = pthread_self ();
-    
+
     int online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
     int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
 
@@ -105,21 +111,32 @@ start_server_thread_func (void *ptr)
         }
     }
 
+    /* FIXME: pass a real display name is necessary. */
+    server->display = XOpenDisplay(NULL);
+    if (!server->display)
+        abort();
+
     server_start_work_loop (server);
 
-    server_destroy(server);
+    server_destroy (server);
+
+    exit (0);
     return NULL;
 }
 
 void
 client_start_server (client_t *client)
 {
-    mutex_init (client->server_started_mutex);
-    mutex_lock (client->server_started_mutex);
-    pthread_create (&client->server_thread, NULL, start_server_thread_func, client);
-    mutex_lock (client->server_started_mutex);
-    mutex_destroy (client->server_started_mutex);
-   
+    pid_t child_pid;
+
+    child_pid = fork();
+
+    if(child_pid < 0)
+        abort();
+
+    if(child_pid == 0) /* Child process. */
+        start_server_process_func (client);
+
     /* FIXME:
      * We did some experiments, If on PC with quard core (show 8 CPUs)
      * without pin client thread is faster, we can see client thread
@@ -165,11 +182,16 @@ client_init (client_t *client)
 
     client->token = 0;
 
-    sem_init (&client->server_signal, 0, 0);
-    sem_init (&client->client_signal, 0, 0);
+    client->server_signal = sem_open(SERVER_SIGNAL, O_CREAT, 0644, 0);
+    if (client->server_signal == SEM_FAILED)
+        abort();
+
+    client->client_signal = sem_open(CLIENT_SIGNAL, O_CREAT, 0644, 0);
+    if (client->client_signal == SEM_FAILED)
+        abort();
 
     client->active_state = NULL;
-   
+
     client_start_server (client);
     initializing_client = false;
 }
@@ -189,8 +211,10 @@ client_destroy (client_t *client)
 
     buffer_free (client->buffer);
 
-    sem_destroy (&client->server_signal);
-    sem_destroy (&client->client_signal);
+    sem_close (client->server_signal);
+    sem_close (client->client_signal);
+    sem_unlink (SERVER_SIGNAL);
+    sem_unlink (CLIENT_SIGNAL);
 
     free (client);
 
@@ -266,7 +290,7 @@ client_run_command (command_t *command)
     client_run_command_async (command);
 
     while (client->buffer->last_token < token) {
-        sem_wait (&client->client_signal);
+        sem_wait (client->client_signal);
     }
 }
 
@@ -278,7 +302,7 @@ client_run_command_async (command_t *command)
     buffer_write_advance (client->buffer, command->size);
 
     if (client->buffer->fill_count == command->size) {
-        sem_post (&client->server_signal);
+        sem_post (client->server_signal);
     }
 }
 
