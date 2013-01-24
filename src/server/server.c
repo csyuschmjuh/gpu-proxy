@@ -381,6 +381,8 @@ server_handle_eglgetconfigattrib (
     command_eglgetconfigattrib_t *command =
         (command_eglgetconfigattrib_t *)abstract_command;
 
+    command->value = server->buffer->result;
+
     command->result =
         server->dispatch.eglGetConfigAttrib (server, command->dpy,
                                              command->config,

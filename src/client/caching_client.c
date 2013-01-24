@@ -4605,11 +4605,16 @@ caching_client_eglGetConfigAttrib (void* object,
                                      dpy,
                                      config,
                                      attribute,
-                                     value);
+                                     NULL);
 
     client_run_command (command);
 
-    return ((command_eglgetconfigattrib_t *)command)->result;
+    command_eglgetconfigattrib_t *get_config_command =
+        (command_eglgetconfigattrib_t *)command;
+
+    memcpy (value, get_config_command->value, sizeof (GLint));
+
+    return get_config_command->result;
 
 }
 
