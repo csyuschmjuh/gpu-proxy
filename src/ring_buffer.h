@@ -20,6 +20,8 @@ typedef struct buffer
     unsigned int last_token;
     volatile size_t fill_count;
     size_t info_length;
+    void *result;
+    size_t result_max_size;
 } buffer_t;
 
 private buffer_t *

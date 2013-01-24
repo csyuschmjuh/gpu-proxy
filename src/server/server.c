@@ -330,6 +330,28 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
     command_gldeleteshader_destroy_arguments (command);
 }
 
+static void
+server_handle_eglquerystring (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglquerystring_t *command =
+        (command_eglquerystring_t *)abstract_command;
+
+    const char *result;
+    size_t result_size;
+
+    result = server->dispatch.eglQueryString (server, command->dpy, command->name);
+    result_size = strlen (result);
+
+    /* FIXME: Increase size in this cases. */
+    if (result_size > server->buffer->result_max_size - 1)
+        result_size = server->buffer->result_max_size - 1;
+
+    memcpy (server->buffer->result, result, result_size + 1);
+    command->result = server->buffer->result;
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -365,6 +387,8 @@ server_init (server_t *server,
         server_handle_glcreateshader;
     server->handler_table[COMMAND_GLDELETESHADER] =
         server_handle_gldeleteshader;
+    server->handler_table[COMMAND_EGLQUERYSTRING] =
+        server_handle_eglquerystring;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

@@ -4536,6 +4536,7 @@ caching_client_eglGetDisplay (void *client,
 static char const *
 caching_client_eglQueryString (void *client, EGLDisplay display,  EGLint name)
 {
+    /* FIXME: we have to copy the strings now and store them. */
     const char *result = CACHING_CLIENT(client)->super_dispatch.eglQueryString (client, display, name);
 
     if (name == EGL_EXTENSIONS) {

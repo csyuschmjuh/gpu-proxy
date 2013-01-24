@@ -9,6 +9,7 @@
 #include "ring_buffer.h"
 
 #define TEMP_FILE_FORMAT  "-XXXXXX"
+#define RESULTS_SPACE 1024 * 32;
 
 private void
 report_exceptional_condition(const char* error)
@@ -80,7 +81,8 @@ buffer_create(int size, const char *buffer_name)
     if (status)
         report_exceptional_condition("Could not truncate.");
 
-    size_t info_length = ((sizeof (buffer_t) + page_size - 1) / page_size) * page_size;
+    size_t info_buffer_size = sizeof (buffer_t) + RESULTS_SPACE;
+    size_t info_length = ((info_buffer_size + page_size - 1) / page_size) * page_size;
     status = ftruncate(buffer_info_file_descriptor, info_length);
     if (status)
         report_exceptional_condition("Could not truncate.");
@@ -95,6 +97,8 @@ buffer_create(int size, const char *buffer_name)
     buffer->last_token = 0;
     buffer->length = length;
     buffer->info_length = info_length;
+    buffer->result = (char *)buffer + sizeof (buffer_t);
+    buffer->result_max_size = info_length - sizeof (buffer_t);
 
     buffer->address = mmap (NULL, length << 1, PROT_NONE,
                             MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
