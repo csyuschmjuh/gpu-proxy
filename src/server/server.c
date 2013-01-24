@@ -390,6 +390,22 @@ server_handle_eglgetconfigattrib (
                                              command->value);
 }
 
+static void
+server_handle_eglquerycontext (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglquerycontext_t *command =
+            (command_eglquerycontext_t *)abstract_command;
+
+    command->value = server->buffer->result;
+
+    server->dispatch.eglQueryContext (server, command->dpy,
+                                      command->ctx,
+                                      command->attribute,
+                                      command->value);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -431,6 +447,8 @@ server_init (server_t *server,
         server_handle_eglchooseconfig;
     server->handler_table[COMMAND_EGLGETCONFIGATTRIB] =
         server_handle_eglgetconfigattrib;
+    server->handler_table[COMMAND_EGLQUERYCONTEXT] =
+        server_handle_eglquerycontext;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

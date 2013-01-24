@@ -4751,6 +4751,34 @@ caching_client_eglGetCurrentDisplay (void* client)
     return state->display;
 }
 
+static EGLBoolean
+caching_client_eglQueryContext (void* object,
+                                EGLDisplay dpy,
+                                EGLContext ctx,
+                                EGLint attribute,
+                                EGLint* value)
+{
+    INSTRUMENT();
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLQUERYCONTEXT);
+
+    command_eglquerycontext_init (command,
+                                  dpy,
+                                  ctx,
+                                  attribute,
+                                  NULL);
+
+    client_run_command (command);
+
+    command_eglquerycontext_t *query_context_command =
+        (command_eglquerycontext_t *) command;
+
+    memcpy (value, query_context_command->value, sizeof (GLint));
+
+    return query_context_command->result;
+}
+
 static EGLSurface
 caching_client_eglGetCurrentSurface (void* client,
                           EGLint readdraw)
