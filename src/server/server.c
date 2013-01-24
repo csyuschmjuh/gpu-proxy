@@ -352,6 +352,42 @@ server_handle_eglquerystring (server_t *server, command_t *abstract_command)
     command->result = server->buffer->result;
 }
 
+static void
+server_handle_eglchooseconfig (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglchooseconfig_t *command =
+        (command_eglchooseconfig_t *)abstract_command;
+
+    command->configs = server->buffer->result;
+    command->num_config = (EGLint *)((char *)server->buffer->result +
+                                     sizeof (EGLConfig) * command->config_size);
+
+    command->result =
+        server->dispatch.eglChooseConfig (server, command->dpy,
+                                          command->attrib_list,
+                                          command->configs,
+                                          command->config_size,
+                                          command->num_config);
+}
+
+static void
+server_handle_eglgetconfigattrib (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglgetconfigattrib_t *command =
+        (command_eglgetconfigattrib_t *)abstract_command;
+
+    command->result =
+        server->dispatch.eglGetConfigAttrib (server, command->dpy,
+                                             command->config,
+                                             command->attribute,
+                                             command->value);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -389,6 +425,10 @@ server_init (server_t *server,
         server_handle_gldeleteshader;
     server->handler_table[COMMAND_EGLQUERYSTRING] =
         server_handle_eglquerystring;
+    server->handler_table[COMMAND_EGLCHOOSECONFIG] =
+        server_handle_eglchooseconfig;
+    server->handler_table[COMMAND_EGLGETCONFIGATTRIB] =
+        server_handle_eglgetconfigattrib;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

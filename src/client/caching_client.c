@@ -4560,6 +4560,60 @@ caching_client_eglQueryString (void *client, EGLDisplay display,  EGLint name)
 }
 
 static EGLBoolean
+caching_client_eglChooseConfig (void* object,
+    EGLDisplay dpy,
+    const EGLint* attrib_list,
+    EGLConfig* configs,
+    EGLint config_size,
+    EGLint* num_config)
+{
+    INSTRUMENT();
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLCHOOSECONFIG);
+
+    command_eglchooseconfig_init (command,
+                                  dpy,
+                                  attrib_list,
+                                  NULL,
+                                  config_size,
+                                  NULL);
+
+    client_run_command (command);
+
+    command_eglchooseconfig_t *choose_config_command =
+        (command_eglchooseconfig_t *)command;
+
+    memcpy (num_config, choose_config_command->num_config, sizeof (GLint));
+    memcpy (configs, choose_config_command->configs, sizeof (EGLConfig) * *num_config);
+
+    return choose_config_command->result;
+
+}
+
+static EGLBoolean
+caching_client_eglGetConfigAttrib (void* object,
+    EGLDisplay dpy,
+    EGLConfig config,
+    EGLint attribute,
+    EGLint* value)
+{
+    INSTRUMENT();
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLGETCONFIGATTRIB);
+    command_eglgetconfigattrib_init (command,
+                                     dpy,
+                                     config,
+                                     attribute,
+                                     value);
+
+    client_run_command (command);
+
+    return ((command_eglgetconfigattrib_t *)command)->result;
+
+}
+
+static EGLBoolean
 caching_client_eglTerminate (void* client,
                              EGLDisplay display)
 {
