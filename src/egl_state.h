@@ -364,6 +364,9 @@ cached_gl_surface_add (EGLDisplay display, EGLConfig config, EGLSurface surface)
 private void
 cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface);
 
+private bool 
+cached_gl_surface_match (link_list_t **surfaces, EGLSurface egl_surface);
+
 private link_list_t **
 cached_gl_contexts (EGLDisplay display);
 
