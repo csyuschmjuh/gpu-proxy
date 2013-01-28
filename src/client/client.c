@@ -91,6 +91,9 @@ start_server_thread_func (void *ptr)
                     break;
                 }
             }
+            /* force server to run on cpu1 */
+            if (cpu == 0)
+                cpu = 1;
             if (cpu != 0) {
                 for (i = 0; i < available_cpus; i++) {
                     if (i != cpu)
