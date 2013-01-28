@@ -4754,65 +4754,20 @@ caching_client_eglMakeCurrent (void* client,
             return EGL_TRUE;
         }
         matching_state = current_state;
-        find_draw = link_list_match (surfaces, draw);
+        find_draw = cached_gl_surface_match (surfaces, draw);
         if (! find_draw)
             matching_state = NULL;
-        else {
-            find_read = link_list_match (surfaces, read);
-            if (! find_read)
-                matching_state = NULL;
-        }
-    }
 
-    /* TODO: This should really go somewhere else. */
-    if (!display_and_context_match && current_state)
-        current_state->active = false;
-
-    /* We aren't switching to none and we aren't switch to the same context
-     * with different surfaces. We can do this asynchronous if we know that
-     * the last time we used this context we used the same surfaces. */
-
-    if (!display_and_context_match && !switching_to_none) {
-        matching_state = find_state_with_display_and_context (display, ctx, true);
-
-        /* We cannot activate this context asynchronously if we are switching
-         * read or write surfaces, if it's an active context or if we have
-         * queued destroying its display. */
-        if (matching_state &&
-            (  matching_state->active ||
-              matching_state->destroy_dpy)) {
+        find_read = cached_gl_surface_match (surfaces, read);
+        if (! find_read)
             matching_state = NULL;
-        }
-        else if (matching_state &&
-            ( matching_state->drawable != draw ||
-              matching_state->readable != read)) {
-            find_draw = link_list_match (surfaces, draw);
-            if (! find_draw)
-                matching_state = NULL;
-            else {
-                find_read = link_list_match (surfaces, read);
-                if (! find_read)
-                    matching_state = NULL;
-             }
-         }
     }
 
-    /* If we are switching to none or we have previously activated this context
-     * with this pair of surfaces, we can safely do this operation asynchronously.
-     * We know it will succeed */
-    if (switching_to_none || matching_state != NULL) {
-        command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
-        command_eglmakecurrent_init (command, display, draw, read, ctx);
-        client_run_command_async (command);
-    }
-    else if (cached_gl_find_display_context_surface_matching (display,
-                                                              ctx,
-                                                              draw,
-                                                              read)) {
-       /* we have not found in other cached states, but we might cached
-          them, if that is the case and the context/draw/read surfaces
-          are compatible, we can make it async
-        */
+    /* We have found previously used draw and read surface.  Because
+     * the display and context are matching, it means we are not
+     * releasing the context in the thread, we can do async
+     */
+    if (display_and_context_match && matching_state) {
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);

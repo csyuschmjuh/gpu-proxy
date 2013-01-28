@@ -340,6 +340,27 @@ void cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface)
         link_list_delete_first_entry_matching_data (&(matched_dpy->surfaces), (void *)surface);
 }
 
+bool
+cached_gl_surface_match (link_list_t **surfaces, EGLSurface egl_surface)
+{
+    if (egl_surface == EGL_NO_SURFACE)
+        return true;
+
+    if (! *surfaces)
+        return false;
+
+    link_list_t *current = *surfaces;
+
+    while (current) {
+        surface_t *surface = (surface_t *)current->data;
+        if (surface->surface == egl_surface)
+            return true;
+
+        current = current->next;
+    }
+    return false;
+}
+
 link_list_t **
 cached_gl_contexts (EGLDisplay display)
 {
