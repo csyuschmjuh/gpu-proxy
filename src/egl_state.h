@@ -75,6 +75,7 @@ typedef struct _framebuffer
     framebuffer_status_t complete;
 } framebuffer_t;
 
+
 typedef struct egl_state  egl_state_t;
 struct egl_state {
     NativeDisplayType    native_display;
@@ -101,7 +102,7 @@ struct egl_state {
 
     GLenum                  error;             /* initial is GL_NO_ERROR */
     bool                    need_get_error;
-    link_list_t           *programs;         /* initial is NULL */
+    link_list_t           *shader_objects;         /* initial is NULL */
     vertex_attrib_list_t  vertex_attribs;    /* client states */
 
 /* GL states from glGet () */
@@ -415,15 +416,19 @@ private void
 egl_state_delete_cached_renderbuffer (egl_state_t *egl_state,
                                       GLuint renderbuffer_id);
 
-private program_t *
-egl_state_lookup_cached_program (egl_state_t *egl_state,
-                                 GLuint program_id);
+private shader_object_t *
+egl_state_lookup_cached_shader_object (egl_state_t *egl_state,
+                                       GLuint shader_object_id);
 
 private void
 egl_state_create_cached_program (egl_state_t *egl_state,
                                  GLuint program_id);
 private void
-egl_state_destroy_cached_program (egl_state_t *egl_state,
-                                  program_t *program);
+egl_state_create_cached_shader (egl_state_t *egl_state,
+                                GLuint shader_id);
+
+private void
+egl_state_destroy_cached_shader_object (egl_state_t *egl_state,
+                                        shader_object_t *shader_object);
 
 #endif /* GPUPROCESS_EGL_STATE_H */
