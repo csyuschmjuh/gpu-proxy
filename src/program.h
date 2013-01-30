@@ -2,11 +2,22 @@
 #define GPUPROCESS_PROGRAM_H
 
 #include "hash.h"
-#include "program.h"
 #include "thread_private.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <stdbool.h>
+
+enum _shader_object_type {
+    SHADER_OBJECT_PROGRAM = 0,
+    SHADER_OBJECT_SHADER
+};
+
+typedef struct _shader_object shader_object_t;
+
+struct _shader_object {
+    GLuint id;
+    int type;
+};
 
 typedef struct v_program_status {
     GLboolean    delete_status;
@@ -52,10 +63,10 @@ typedef struct v_program {
 } v_program_t;
 
 typedef struct _program {
-    GLuint       id;
-    bool         mark_for_deletion;
-    HashTable    *attrib_location_cache;
-    HashTable    *uniform_location_cache;
+    shader_object_t base;
+    bool            mark_for_deletion;
+    HashTable       *attrib_location_cache;
+    HashTable       *uniform_location_cache;
 } program_t;
 
 private program_t *
