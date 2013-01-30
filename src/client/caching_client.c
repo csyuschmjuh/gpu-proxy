@@ -886,6 +886,28 @@ caching_client_glCreateProgram (void* client)
     return result;
 }
 
+static program_t *
+egl_state_lookup_cached_program_err (void *client,
+                                     GLuint shader_object_id)
+{
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return 0;
+
+    program_t *cached_program = (program_t*) egl_state_lookup_cached_shader_object (state, shader_object_id);
+    if (!cached_program) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return 0;
+    }
+
+    if (cached_program->base.type != SHADER_OBJECT_PROGRAM) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return 0;
+    }
+
+    return cached_program;
+}
+
 static void
 caching_client_glDeleteProgram (void *client,
                                 GLuint program)
@@ -895,7 +917,7 @@ caching_client_glDeleteProgram (void *client,
     if (!state)
         return;
 
-    program_t *cached_program = egl_state_lookup_cached_program (state, program);
+    program_t *cached_program = (program_t*) egl_state_lookup_cached_shader_object (state, program);
     if (!cached_program) {
         caching_client_glSetError (client, GL_INVALID_VALUE);
         return;
@@ -903,12 +925,12 @@ caching_client_glDeleteProgram (void *client,
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteProgram (client, program);
 
-    if (cached_program->id == state->current_program) {
+    if (cached_program->base.id == state->current_program) {
         cached_program->mark_for_deletion = true;
         return;
     }
 
-    egl_state_destroy_cached_program (state, cached_program);
+    egl_state_destroy_cached_shader_object (state, &cached_program->base);
 }
 
 static GLuint
@@ -935,6 +957,8 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
 
     if (result == 0)
         caching_client_set_needs_get_error (CLIENT (client));
+    else
+        egl_state_create_cached_shader (state, result);
 
     return result;
 }
@@ -2202,11 +2226,10 @@ caching_client_glGetAttribLocation (void* client,
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return 0;
-    program_t *saved_program = egl_state_lookup_cached_program (state, program);
-    if (!saved_program) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
+    if (!saved_program)
         return -1;
-    }
 
     GLuint *location = (GLuint *)hash_lookup (saved_program->attrib_location_cache,
                                               hash_str (name));
@@ -2232,11 +2255,10 @@ caching_client_glLinkProgram (void* client,
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return;
-    program_t *saved_program = egl_state_lookup_cached_program (state, program);
-    if (!saved_program) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
+    if (!saved_program)
         return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glLinkProgram (client, program);
 }
@@ -2251,7 +2273,8 @@ caching_client_glGetUniformLocation (void* client,
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
         return 0;
-    program_t *saved_program = egl_state_lookup_cached_program (state, program);
+
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
     if (!saved_program)
         return -1;
 
@@ -3598,20 +3621,18 @@ caching_client_glUseProgram (void* client,
     if (program_id) {
         /* this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
-        program_t *new_program = egl_state_lookup_cached_program (state, program_id);
-        if (!new_program) {
-            caching_client_glSetError (client, GL_INVALID_OPERATION);
+        program_t *new_program = egl_state_lookup_cached_program_err (client, program_id);
+        if (!new_program)
             return;
-        }
     }
 
     CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program_id);
 
     /* this maybe not right because this program may be invalid
      * object, we save here to save time in glGetError() */
-    program_t *current_program = egl_state_lookup_cached_program (state, state->current_program);
+    program_t *current_program = (program_t *) egl_state_lookup_cached_shader_object (state, state->current_program);
     if (current_program && current_program->mark_for_deletion)
-        egl_state_destroy_cached_program (state, current_program);
+        egl_state_destroy_cached_shader_object (state, &current_program->base);
     state->current_program = program_id;
 }
 
