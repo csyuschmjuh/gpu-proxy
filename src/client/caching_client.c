@@ -3632,17 +3632,13 @@ caching_client_set_current_vertex_attrib (void* client, GLuint index, void *curr
     }
 
     if (found_index != -1) {
-	for (i = 0; i < 4; ++i)
-	    attribs[found_index].current_attrib[i] = current_attrib[i];
+	memcpy (attribs[found_index].current_attrib, current_attrib, 4 * sizeof (GLfloat));
         return;
     }
 
     /* we have not found index */
     if (i < NUM_EMBEDDED) {
-        int j;
-	for (j = 0; j < 4; ++j)
-	    attribs[i].current_attrib[j] = current_attrib[j];
-
+	memcpy (attribs[i].current_attrib, current_attrib, 4 * sizeof (GLfloat));
         attrib_list->count ++;
     } else {
         vertex_attrib_t *new_attribs = (vertex_attrib_t *)malloc (sizeof (vertex_attrib_t) * (count + 1));
@@ -3651,8 +3647,7 @@ caching_client_set_current_vertex_attrib (void* client, GLuint index, void *curr
         if (attribs != attrib_list->embedded_attribs)
             free (attribs);
 
-	for (i = 0; i < 4; ++i)
-	    attribs[count].current_attrib[i] = current_attrib[i];
+	memcpy (attribs[i].current_attrib, current_attrib, 4 * sizeof (GLfloat));
 
         attrib_list->attribs = new_attribs;
         attrib_list->count ++;
