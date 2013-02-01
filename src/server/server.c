@@ -417,6 +417,23 @@ server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
     command->result = server->dispatch.eglGetDisplay (server, server->display);
 }
 
+static void
+server_handle_eglquerysurface (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglquerysurface_t *command =
+        (command_eglquerysurface_t *)abstract_command;
+
+    command->value = server->buffer->result;
+
+    command->result =
+        server->dispatch.eglQuerySurface (server, command->dpy,
+                                          command->surface,
+                                          command->attribute,
+                                          command->value);
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -462,6 +479,8 @@ server_init (server_t *server,
         server_handle_eglquerycontext;
     server->handler_table[COMMAND_EGLGETDISPLAY] =
         server_handle_eglgetdisplay;
+    server->handler_table[COMMAND_EGLQUERYSURFACE] =
+        server_handle_eglquerysurface;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

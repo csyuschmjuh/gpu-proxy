@@ -4680,6 +4680,35 @@ caching_client_eglDestroySurface (void* client,
 }
 
 static EGLBoolean
+caching_client_eglQuerySurface (void* object,
+                                EGLDisplay dpy,
+                                EGLSurface surface,
+                                EGLint attribute,
+                                EGLint* value)
+{
+    INSTRUMENT();
+
+    command_t *command =
+        client_get_space_for_command (COMMAND_EGLQUERYSURFACE);
+
+    command_eglquerysurface_init (command,
+                                  dpy,
+                                  surface,
+                                  attribute,
+                                  value);
+
+    client_run_command (command);
+
+    command_eglquerysurface_t *query_surface_command =
+        (command_eglquerysurface_t *) command;
+
+    memcpy (value, query_surface_command->value, sizeof (GLint));
+
+    return query_surface_command->result;
+
+}
+
+static EGLBoolean
 caching_client_eglReleaseThread (void* client)
 {
     INSTRUMENT();
