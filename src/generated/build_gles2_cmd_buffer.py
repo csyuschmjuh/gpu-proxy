@@ -1842,6 +1842,7 @@ class TypeHandler(object):
     file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
 
   def WriteCommandInit(self, func, file):
+    file.Write ("inline ")
     self.WriteInitSignature(func, file)
     file.Write("\n{\n")
 

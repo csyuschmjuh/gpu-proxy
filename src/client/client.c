@@ -270,7 +270,7 @@ client_run_command (command_t *command)
     }
 }
 
-void
+inline void
 client_run_command_async (command_t *command)
 {
     client_t *client = client_get_thread_local ();
