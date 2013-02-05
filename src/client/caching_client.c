@@ -4747,18 +4747,17 @@ caching_client_eglCreateContext (void *client,
                                                                  config,
                                                                  share_context,
                                                                  attrib_list);
-    if (share_context == EGL_NO_CONTEXT) {
-        if (result == EGL_NO_CONTEXT)
-            return result;
-        else {
-            cached_gl_context_add (dpy, config, result);
-            return result;
-        }
-    }
 
-    egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
-    new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
-    new_state->share_context->contexts_sharing++;
+    if (result == EGL_NO_CONTEXT)
+        return result;
+
+    cached_gl_context_add (dpy, config, result);
+
+    if (share_context != EGL_NO_CONTEXT) {
+        egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
+        new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
+        new_state->share_context->contexts_sharing++;
+    }
     return result;
 }
 
