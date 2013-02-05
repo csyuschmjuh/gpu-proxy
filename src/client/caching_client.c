@@ -16,6 +16,7 @@
 #include <string.h>
 
 mutex_static_init (cached_gl_states_mutex);
+mutex_static_init (cached_gl_display_list_mutex);
 
 static texture_t *
 caching_client_get_default_texture ()
@@ -98,27 +99,19 @@ _caching_client_destroy_state (client_t* client,
 
 static egl_state_t *
 find_state_with_display_and_context (EGLDisplay display,
-                                     EGLContext context,
-                                     bool hold_mutex)
+                                     EGLContext context)
 {
-    if (hold_mutex)
-        mutex_lock (cached_gl_states_mutex);
-
     link_list_t **states = cached_gl_states ();
 
     link_list_t *current = *states;
     while (current) {
         egl_state_t *state = (egl_state_t *)current->data;
         if (state->context == context && state->display == display) {
-            if (hold_mutex)
-                mutex_unlock (cached_gl_states_mutex);
             return current->data;
         }
         current = current->next;
     }
 
-    if (hold_mutex)
-        mutex_unlock (cached_gl_states_mutex);
     return NULL;
 }
 
@@ -127,7 +120,7 @@ _caching_client_get_or_create_state (EGLDisplay dpy,
                                      EGLContext ctx)
 {
     /* We should already be holding the cached states mutex. */
-    egl_state_t *state = find_state_with_display_and_context(dpy, ctx, false);
+    egl_state_t *state = find_state_with_display_and_context(dpy, ctx);
     if (!state) {
         state = egl_state_new (dpy, ctx);
         link_list_append (cached_gl_states (), state, egl_state_destroy);
@@ -168,6 +161,7 @@ _caching_client_make_current (client_t *client,
 
     /* Deactivate the old surface and clean up any previously destroyed bits of it. */
     if (current_state) {
+        mutex_lock (cached_gl_display_list_mutex);
         current_state->active = false;
         EGLSurface temp = current_state->readable;
 
@@ -187,6 +181,7 @@ _caching_client_make_current (client_t *client,
         if (current_state->destroy_ctx)
             cached_gl_context_destroy (current_state->display,
                                        current_state->context);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
 
     mutex_unlock (cached_gl_states_mutex);
@@ -227,7 +222,9 @@ _caching_client_destroy_surface (client_t *client,
                     state->destroy_draw == true)
                     state->drawable = EGL_NO_SURFACE;
 
+                mutex_lock (cached_gl_display_list_mutex);
                 cached_gl_surface_destroy (display, surface);
+                mutex_unlock (cached_gl_display_list_mutex);
             }
 
         }
@@ -4476,9 +4473,11 @@ caching_client_eglGetDisplay (void *client,
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
 
     if (result != EGL_NO_DISPLAY && cached_gl_display_find (result) == NULL) {
+        mutex_lock (cached_gl_display_list_mutex);
         display_ctxs_surfaces_t *dpy = cached_gl_display_new (native_display, result);
         link_list_t **dpys = cached_gl_displays ();
         link_list_append (dpys, (void *)dpy, destroy_dpy);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
     return result;
 }
@@ -4491,6 +4490,7 @@ caching_client_eglQueryString (void *client, EGLDisplay display,  EGLint name)
     if (name == EGL_EXTENSIONS) {
         if (strstr (result, "EGL_KHR_surfaceless_context") ||
             strstr (result, "EGL_KHR_surfaceless_opengl")) {
+            mutex_lock (cached_gl_display_list_mutex);
             link_list_t **dpys = cached_gl_displays ();
             link_list_t *dpy = *dpys;
             while (dpy) {
@@ -4501,6 +4501,7 @@ caching_client_eglQueryString (void *client, EGLDisplay display,  EGLint name)
                 }
                 dpy = dpy->next;
             }
+            mutex_unlock (cached_gl_display_list_mutex);
         }
     }
     return result;
@@ -4538,8 +4539,11 @@ caching_client_eglTerminate (void* client,
     egl_state_t *egl_state = client_get_current_state (CLIENT (client));
     if (egl_state && egl_state->display == display)
         egl_state->destroy_dpy = true; /* Queue destroy later. */
-    else
+    else {
+        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_display_destroy (display);
+        mutex_unlock (cached_gl_display_list_mutex);
+    }
 
     mutex_unlock (cached_gl_states_mutex);
     return EGL_TRUE;
@@ -4593,7 +4597,7 @@ caching_client_eglDestroyContext (void* client,
     /* Destroy our cached version of this context. */
     mutex_lock (cached_gl_states_mutex);
 
-    egl_state_t *state = find_state_with_display_and_context (dpy, ctx, false);
+    egl_state_t *state = find_state_with_display_and_context (dpy, ctx);
     if (!state) {
         mutex_unlock (cached_gl_states_mutex);
         return EGL_TRUE;
@@ -4601,7 +4605,9 @@ caching_client_eglDestroyContext (void* client,
 
     if (! state->active) {
         _caching_client_destroy_state (client, state);
+        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_context_destroy (dpy, ctx);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
     else
         state->destroy_ctx = true;
@@ -4688,7 +4694,9 @@ caching_client_eglCreatePbufferSurface (void *client,
                                                             config,
                                                             attrib_list);
     if (result) {
+        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
 
     return result;
@@ -4708,7 +4716,9 @@ caching_client_eglCreatePixmapSurface (void *client,
                                                             native_pixmap,
                                                             attrib_list);
     if (result) {
+        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
 
     return result;
@@ -4728,7 +4738,9 @@ caching_client_eglCreateWindowSurface (void *client,
                                                             native_window,
                                                             attrib_list);
     if (result) {
+        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
+        mutex_unlock (cached_gl_display_list_mutex);
     }
 
     return result;
@@ -4751,12 +4763,16 @@ caching_client_eglCreateContext (void *client,
     if (result == EGL_NO_CONTEXT)
         return result;
 
+    mutex_lock (cached_gl_display_list_mutex);
     cached_gl_context_add (dpy, config, result);
+    mutex_unlock (cached_gl_display_list_mutex);
 
     if (share_context != EGL_NO_CONTEXT) {
+	mutex_lock (cached_gl_states_mutex);
         egl_state_t *new_state = _caching_client_get_or_create_state (dpy, result);
         new_state->share_context = _caching_client_get_or_create_state (dpy, share_context);
         new_state->share_context->contexts_sharing++;
+	mutex_unlock (cached_gl_states_mutex);
     }
     return result;
 }
@@ -4779,7 +4795,6 @@ caching_client_eglMakeCurrent (void* client,
         return EGL_TRUE;
 
     /* Everything matches, so this is a no-op. */
-    link_list_t **surfaces = cached_gl_surfaces (display);
     egl_state_t *matching_state = NULL;
     bool find_draw, find_read;
 
@@ -4791,6 +4806,11 @@ caching_client_eglMakeCurrent (void* client,
             current_state->readable == read) {
             return EGL_TRUE;
         }
+
+        mutex_lock (cached_gl_states_mutex);
+ 
+        link_list_t **surfaces = cached_gl_surfaces (display);
+
         matching_state = current_state;
         find_draw = cached_gl_surface_match (surfaces, draw);
         if (! find_draw)
@@ -4799,6 +4819,8 @@ caching_client_eglMakeCurrent (void* client,
         find_read = cached_gl_surface_match (surfaces, read);
         if (! find_read)
             matching_state = NULL;
+
+        mutex_unlock (cached_gl_states_mutex);
     }
 
     /* We have found previously used draw and read surface.  Because
