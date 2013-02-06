@@ -4,7 +4,22 @@
 #include "ring_buffer.h"
 #include "dispatch_table.h"
 #include "thread_private.h"
+#include "server_state.h"
 #include <time.h>
+
+__thread EGLDisplay current_display
+    __attribute__(( tls_model ("initial-exec"))) = EGL_NO_DISPLAY;
+
+__thread EGLContext current_context
+    __attribute__(( tls_model ("initial-exec"))) = EGL_NO_CONTEXT;
+
+__thread EGLSurface current_draw
+    __attribute__(( tls_model ("initial-exec"))) = EGL_NO_SURFACE;
+
+__thread EGLSurface current_read_
+    __attribute__(( tls_model ("initial-exec"))) = EGL_NO_SURFACE;
+
+mutex_static_init (shared_resources_mutex);
 
 /* This method is auto-generated into server_autogen.c
  * and included at the end of this file. */
@@ -330,6 +345,108 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
     command_gldeleteshader_destroy_arguments (command);
 }
 
+static void
+server_handle_eglcreatecontext (server_t *server,
+                                command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglcreatecontext_t *command = 
+        (command_eglcreatecontext_t *) abstract_command;
+
+    command->result = server->dispatch.eglCreateContext (server,
+                                                         command->dpy,
+                                                         command->config,
+                                                         command->share_context,
+                                                         command->attrib_list);
+    if (command->result != EGL_NO_CONTEXT &&
+        command->share_context != EGL_NO_CONTEXT) {
+        mutex_lock (shared_resources_mutex);
+        _server_shared_contexts_add (command->dpy, (EGLContext) command->result);
+        _server_shared_contexts_add (command->dpy, (EGLContext) command->share_context);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_eglcreatewindowsurface (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglcreatewindowsurface_t *command = 
+        (command_eglcreatewindowsurface_t *) abstract_command;
+
+    command->result = server->dispatch.eglCreateWindowSurface (server,
+                                                               command->dpy,
+                                                               command->config,
+                                                               command->win,
+                                                               command->attrib_list);
+
+    if (command->result != EGL_NO_SURFACE) {
+        mutex_lock (shared_resources_mutex);
+        _server_shared_surfaces_add (command->dpy, (EGLSurface) command->result);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_eglcreatepixmapsurface (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglcreatepixmapsurface_t *command = 
+        (command_eglcreatepixmapsurface_t *) abstract_command;
+
+    command->result = server->dispatch.eglCreatePixmapSurface (server,
+                                                               command->dpy,
+                                                               command->config,
+                                                               command->pixmap,
+                                                               command->attrib_list);
+
+    if (command->result != EGL_NO_SURFACE) {
+        mutex_lock (shared_resources_mutex);
+        _server_shared_surfaces_add (command->dpy, (EGLSurface) command->result);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_egldestroysurface (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egldestroysurface_t *command =
+        (command_egldestroysurface_t *)abstract_command;
+
+    command->result = server->dispatch.eglDestroySurface (server,
+                                                          command->dpy,
+                                                          command->surface);
+
+    if (command->result == EGL_TRUE) {
+        mutex_lock (shared_resources_mutex);
+        _server_shared_surfaces_remove (command->dpy, (EGLSurface) command->surface);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_egldestroycontext (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egldestroycontext_t *command =
+        (command_egldestroycontext_t *)abstract_command;
+
+    command->result = server->dispatch.eglDestroyContext (server,
+                                                          command->dpy,
+                                                          command->ctx);
+
+    if (command->result == EGL_TRUE) {
+        mutex_lock (shared_resources_mutex);
+        _server_shared_contexts_remove (command->dpy, (EGLContext) command->ctx);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -365,6 +482,17 @@ server_init (server_t *server,
         server_handle_glcreateshader;
     server->handler_table[COMMAND_GLDELETESHADER] =
         server_handle_gldeleteshader;
+
+    server->handler_table[COMMAND_EGLCREATECONTEXT] = 
+        server_handle_eglcreatecontext;
+    server->handler_table[COMMAND_EGLCREATEWINDOWSURFACE] = 
+        server_handle_eglcreatewindowsurface;
+    server->handler_table[COMMAND_EGLCREATEPIXMAPSURFACE] = 
+        server_handle_eglcreatepixmapsurface;
+    server->handler_table[COMMAND_EGLDESTROYSURFACE] = 
+        server_handle_egldestroysurface;
+    server->handler_table[COMMAND_EGLDESTROYCONTEXT] = 
+        server_handle_egldestroycontext;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

@@ -30,6 +30,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/ring_buffer.h \
 	$(rootsrcdir)/src/server/server.c \
 	$(rootsrcdir)/src/server/server.h \
+	$(rootsrcdir)/src/server/server_state.c \
+	$(rootsrcdir)/src/server/server_state.h \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command_custom.c \
