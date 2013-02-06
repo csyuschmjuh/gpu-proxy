@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <X11/Xlib.h>
+
 mutex_static_init (cached_gl_states_mutex);
 mutex_static_init (cached_gl_display_list_mutex);
 
@@ -4709,6 +4711,12 @@ caching_client_eglCreatePixmapSurface (void *client,
                                        NativePixmapType native_pixmap,
                                        EGLint const *attrib_list)
 {
+    mutex_lock (cached_gl_display_list_mutex);
+    Display *native_dpy = (Display *)cached_gl_get_native_display (display);
+    if (native_dpy)
+        XSync (native_dpy, False);
+    mutex_unlock (cached_gl_display_list_mutex);
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreatePixmapSurface (client,
                                                             display,
@@ -4731,6 +4739,12 @@ caching_client_eglCreateWindowSurface (void *client,
                                        NativeWindowType native_window,
                                        EGLint const *attrib_list)
 {
+    mutex_lock (cached_gl_display_list_mutex);
+    Display *native_dpy = (Display *)cached_gl_get_native_display (display);
+    if (native_dpy)
+        XSync (native_dpy, False);
+    mutex_unlock (cached_gl_display_list_mutex);
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreateWindowSurface (client,
                                                             display,
@@ -4833,6 +4847,7 @@ caching_client_eglMakeCurrent (void* client,
         client_run_command_async (command);
     } else {
         /* Otherwise we must do this synchronously. */
+	printf ("sync eglMakecurrnt\n");
         if (CACHING_CLIENT(client)->super_dispatch.eglMakeCurrent (client, display,
                                                                    draw, read, ctx) == EGL_FALSE)
             return EGL_FALSE; /* Don't do anything else if we fail. */

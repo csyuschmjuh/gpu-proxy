@@ -347,6 +347,9 @@ cached_gl_states ();
 private link_list_t **
 cached_gl_displays ();
 
+private NativeDisplayType 
+cached_gl_get_native_display (EGLDisplay egl_display);
+
 private display_ctxs_surfaces_t *
 cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display);
 

@@ -228,6 +228,22 @@ cached_gl_displays ()
     return &displays;
 }
 
+NativeDisplayType
+cached_gl_get_native_display (EGLDisplay egl_display)
+{
+    link_list_t **dpys = cached_gl_displays();
+    link_list_t *head = *dpys;
+
+    while (head) {
+        display_ctxs_surfaces_t *dpy = (display_ctxs_surfaces_t *)head->data;
+        if (dpy->display == egl_display)
+            return dpy->native_display;
+        head = head->next;
+    }
+
+    return (NativeDisplayType) NULL;
+}
+
 display_ctxs_surfaces_t *
 cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display)
 {
