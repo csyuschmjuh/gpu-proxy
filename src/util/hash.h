@@ -83,6 +83,11 @@ hash_walk (const HashTable *table,
           void (*callback) (GLuint key, void *data, void *userData),
           void *userData);
 
+bool
+hash_has_element (const HashTable *table,
+                  const void *userData,
+                  bool (*callback)(const void *data, const void *userData));
+
 private GLuint
 hash_first_entry (HashTable *table);
 
