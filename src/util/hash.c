@@ -305,6 +305,29 @@ hash_walk (const HashTable *table,
     }
 }
 
+bool
+hash_has_element (const HashTable *table,
+                  const void *userData,
+                  bool (*callback)(const void *data, const void *userData))
+{
+    GLuint pos;
+    assert (table);
+    assert (callback);
+
+    for (pos = 0; pos < TABLE_SIZE; ++pos) {
+        struct HashEntry *entry, *next;
+        for (entry = table->Table[pos]; entry; entry = next) {
+            bool result;
+            next = entry->Next;
+            result = callback (entry->Data, userData);
+            if (result)
+               return true;
+        }
+    }
+
+    return false;
+}
+
 
 /**
  * Return the key of the "first" entry in the hash table.
