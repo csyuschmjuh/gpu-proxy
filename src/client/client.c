@@ -29,6 +29,7 @@ mutex_static_init (client_thread_mutex);
 
 static buffer_t pilot_buffer;
 static bool pilot_buffer_created = false;
+static mutex_t pilot_command_mutex;
 
 static sem_t *
 get_pilot_server_signal ()
@@ -257,6 +258,7 @@ client_init (client_t *client)
     /* initialize share pilot channel */
     if (pilot_buffer_created == false) {
 	buffer_create (&pilot_buffer, 512, "pilot");
+        mutex_init (pilot_command_mutex);
         pilot_buffer_created = true;
     }
 
@@ -429,6 +431,114 @@ egl_state_t *
 client_get_current_state (client_t *client)
 {
     return client->active_state;
+}
+
+command_t *
+client_get_register_space_for_size (client_t *client,
+                                    size_t size)
+{
+    size_t available_space;
+    command_t *write_location;
+
+    if (size > buffer_size (&pilot_buffer))
+        return NULL;
+
+    write_location = (command_t *) buffer_write_address (&pilot_buffer,
+                                                         &available_space);
+    while (! write_location || available_space < size) {
+        sched_yield ();
+        write_location = (command_t *) buffer_write_address (&pilot_buffer,
+                                                             &available_space);
+    }
+
+    return write_location;
+}
+
+command_t *
+client_get_register_space_for_command (command_type_t command_type)
+{
+    assert (command_type >= 0 && command_type < COMMAND_MAX_COMMAND);
+
+    client_t *client = client_get_thread_local ();
+    size_t command_size = command_get_size (command_type);
+    command_t *command = client_get_register_space_for_size (client, command_size);
+    /* Command size is never bigger than the buffer, no NULL check. */
+    command->type = command_type;
+    command->size = command_size;
+    command->token = 0;
+    return command;
+}
+
+command_t *
+client_get_space_for_register_command (command_type_t command_type)
+{
+    assert (command_type >= 0 && command_type < COMMAND_MAX_COMMAND);
+
+    client_t *client = client_get_thread_local ();
+    size_t command_size = command_get_size (command_type);
+    command_t *command = client_get_register_space_for_size (client, command_size);
+    /* Command size is never bigger than the buffer, no NULL check. */
+    command->type = command_type;
+    command->size = command_size;
+    command->token = 0;
+    return command;
+}
+
+static inline void
+client_run_register_command_async (command_t *command)
+{
+    client_t *client = client_get_thread_local ();
+
+    buffer_write_advance (&pilot_buffer, command->size);
+
+    if (pilot_buffer.fill_count == command->size) {
+        sem_post (&client->server_signal);
+    }
+}
+
+static void
+client_run_register_command (command_t *command)
+{
+    client_t *client = client_get_thread_local ();
+    unsigned int token = ++client->token;
+
+    /* Overflow case */
+    if (token == 0)
+        token = 1;
+
+    command->token = token;
+    client_run_register_command_async (command);
+
+    while (pilot_buffer.last_token < token) {
+        sched_yield ();
+    }
+}
+
+bool
+client_register_lock_surface (client_t *client, EGLDisplay display, EGLSurface surface)
+{
+    command_t *command = client_get_register_space_for_command (COMMAND_REGISTERSURFACE);
+    command_registersurface_init (command, display, surface);
+    client_run_register_command (command);
+    return ((command_registersurface_t *)command)->result;
+}
+
+bool
+client_register_lock_context (client_t *client, EGLDisplay display, EGLContext context)
+{
+    command_t *command = client_get_register_space_for_command (COMMAND_REGISTERCONTEXT);
+    command_registersurface_init (command, display, context);
+    client_run_register_command (command);
+    return ((command_registercontext_t *)command)->result;
+}
+
+bool
+client_register_lock_image (client_t *client, EGLDisplay display, EGLImageKHR image)
+{
+    command_t *command = client_get_register_space_for_command (COMMAND_REGISTERIMAGE);
+    command_registerimage_init (command, display, image);
+    client_run_register_command (command);
+    return ((command_registerimage_t *)command)->result;
 }
 
 #include "client_autogen.c"

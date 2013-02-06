@@ -166,3 +166,30 @@ command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t
     /* This command is asynchronous, but we don't want to free the pointer
      * until after glDraw(Elements/Arrays). */
 }
+
+void
+command_registersurface_init (command_t *command,
+                              EGLDisplay display, EGLSurface surface)
+{
+    command_registersurface_t *c = (command_registersurface_t *)command;
+    c->dpy = display;
+    c->surface = surface;
+}
+ 
+void
+command_registercontext_init (command_t *command,
+                              EGLDisplay display, EGLContext context)
+{
+    command_registercontext_t *c = (command_registercontext_t *)command;
+    c->dpy = display;
+    c->context = context;
+}
+
+void
+command_registerimage_init (command_t *command,
+                              EGLDisplay display, EGLImageKHR image)
+{
+    command_registerimage_t *c = (command_registerimage_t *)command;
+    c->dpy = display;
+    c->image = image;
+}

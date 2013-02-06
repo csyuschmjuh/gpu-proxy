@@ -101,4 +101,16 @@ client_has_valid_state (client_t *client);
 private egl_state_t *
 client_get_current_state (client_t *client);
 
+private bool
+client_register_lock_surface (client_t *client, EGLDisplay display, 
+                                                EGLSurface surface);
+
+private bool
+client_register_lock_context (client_t *client, EGLDisplay display,
+                                                EGLContext context);
+
+private bool
+client_register_lock_image (client_t *client, EGLDisplay display,
+                                              EGLImageKHR image);
+
 #endif /* CLIENT_H */

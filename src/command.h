@@ -14,6 +14,9 @@
 typedef enum command_type {
     COMMAND_NO_OP,
     COMMAND_SHUTDOWN,
+    COMMAND_REGISTERCONTEXT,
+    COMMAND_REGISTERSURFACE,
+    COMMAND_REGISTERIMAGE,
 
 #include "generated/command_types_autogen.h"
 
