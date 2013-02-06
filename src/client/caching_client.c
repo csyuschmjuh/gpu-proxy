@@ -3426,12 +3426,45 @@ caching_client_glTexSubImage2D (void* client,
                                                             width, height, format, type, pixels);
 }
 
+static bool
+_check_uniform_value (const void *data, const void *user_data)
+{
+    GLint uniform_cached_data = *(GLint*) data;
+    GLint uniform_user_data = *(GLint*) user_data;
+
+    return uniform_cached_data != uniform_user_data ? false : true;
+}
+
+static bool
+_synthesize_uniform_error(void *client,
+                          GLint location,
+                          GLenum program_error)
+{
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (! state)
+        return false;
+
+    program_t *saved_program = egl_state_lookup_cached_program_err (client,
+                                                                    state->current_program,
+                                                                    GL_INVALID_OPERATION);
+    if (!saved_program)
+        return false;
+
+    if (!hash_has_element (saved_program->uniform_location_cache, &location, _check_uniform_value)) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return false;
+    }
+
+    return true;
+}
+
 static void
 caching_client_glUniform1f (void *client, GLint location, GLfloat v0)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1f (client, location, v0);
@@ -3444,8 +3477,9 @@ caching_client_glUniform2f (void *client,
                              GLfloat v1)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2f (client, location, v0, v1);
@@ -3459,8 +3493,9 @@ caching_client_glUniform3f (void *client,
                              GLfloat v2)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform3f (client, location, v0, v1, v2);
@@ -3475,8 +3510,9 @@ caching_client_glUniform4f (void *client,
                              GLfloat v3)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform4f (client, location, v0, v1, v2, v3);
@@ -3486,8 +3522,9 @@ static void
 caching_client_glUniform1i (void *client, GLint location, GLint v0)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1i (client, location, v0);
@@ -3500,8 +3537,9 @@ caching_client_glUniform2i (void *client,
                              GLint v1)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2i (client, location, v0, v1);
@@ -3515,8 +3553,9 @@ caching_client_glUniform3i (void *client,
                              GLint v2)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform3i (client, location, v0, v1, v2);
@@ -3535,7 +3574,28 @@ caching_client_glUniform4i (void *client,
     if (! state)
         return;
 
+    if (! _synthesize_uniform_error (client,
+                                     location,
+                                     GL_INVALID_OPERATION))
+        return;
+
     CACHING_CLIENT(client)->super_dispatch.glUniform4i (client, location, v0, v1, v2, v3);
+}
+
+bool
+_synthesize_uniform_matrix_error(void *client,
+                                 GLint location,
+                                 GLsizei count,
+                                 GLenum program_error)
+{
+    if (count < 0) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return false;
+    }
+
+    return _synthesize_uniform_error (client,
+                                      location,
+                                      GL_INVALID_OPERATION);
 }
 
 static void
@@ -3546,14 +3606,11 @@ caching_client_glUniformMatrix2fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_matrix_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
         return;
-
-    if (count < 0) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
-        return;
-    }
 
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix2fv (client, location, count, transpose, value);
 }
@@ -3566,14 +3623,12 @@ caching_client_glUniformMatrix3fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_matrix_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
         return;
 
-    if (count < 0) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
-        return;
-    }
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix3fv (client, location, count, transpose, value);
 }
 
@@ -3585,14 +3640,12 @@ caching_client_glUniformMatrix4fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    egl_state_t *state = client_get_current_state (CLIENT (client));
-    if (! state)
+    if (! _synthesize_uniform_matrix_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
         return;
 
-    if (count < 0) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
-        return;
-    }
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix4fv (client, location, count, transpose, value);
 }
 
