@@ -446,6 +446,50 @@ server_handle_egldestroycontext (server_t *server, command_t *abstract_command)
     }
 }
 
+static void
+server_handle_eglterminate (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglterminate_t *command =
+        (command_eglterminate_t *) abstract_command;
+
+    command->result = server->dispatch.eglTerminate (server, command->dpy);
+
+    if (command->result == EGL_TRUE) {
+        mutex_lock (shared_resources_mutex);
+        Display *dpy = _server_get_display (command->dpy);
+        _server_display_remove (dpy, command->dpy);
+        _server_destroy_display (command->dpy);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglgetdisplay_t *command =
+        (command_eglgetdisplay_t *)abstract_command;
+
+    /* open a separate display */
+    Display *display = XOpenDisplay (NULL);
+    if (display == NULL)
+        command->result = EGL_NO_DISPLAY;
+
+    command->display_id = display;
+
+    command->result = server->dispatch.eglGetDisplay (server, command->display_id);
+    if (command->result == EGL_NO_DISPLAY) {
+        XCloseDisplay (display);
+        return;
+    }
+
+    mutex_lock (shared_resources_mutex);
+    _server_display_add (display, command->result);
+    mutex_unlock (shared_resources_mutex);
+}
 
 void
 server_init (server_t *server,
@@ -493,6 +537,10 @@ server_init (server_t *server,
         server_handle_egldestroysurface;
     server->handler_table[COMMAND_EGLDESTROYCONTEXT] = 
         server_handle_egldestroycontext;
+    server->handler_table[COMMAND_EGLTERMINATE] = 
+        server_handle_eglterminate;
+    server->handler_table[COMMAND_EGLGETDISPLAY] = 
+        server_handle_eglgetdisplay;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {

@@ -7,6 +7,8 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
+#include <X11/Xlib.h>
+
 typedef struct _server_eglimage {
     EGLDisplay display;
     EGLImageKHR image;
@@ -22,8 +24,33 @@ typedef struct _server_surface {
     EGLDisplay display;
     EGLSurface surface;
 } server_surface_t;
-    
 
+typedef struct _server_display {
+    Display *dpy;
+    EGLDisplay egl_dpy;
+} server_display_t;
+
+private Display *
+_server_get_display (EGLDisplay egl_display);
+
+private void
+_destroy_display (void *abstract_display);
+
+private link_list_t **
+_server_displays ();
+
+private server_display_t *
+_server_display_create (Display *dpy, EGLDisplay egl_dpy);
+
+private void
+_server_display_add (Display *dpy, EGLDisplay egl_dpy);
+
+private void
+_server_display_remove (Display *dpy, EGLDisplay egl_dpy);
+
+private void
+_server_destroy_display (EGLDisplay display);
+    
 private void
 _destroy_eglimage (void *abstract_image);
 
