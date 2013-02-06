@@ -12,3 +12,18 @@ typedef struct _command_gldrawarrays {
     GLint first;
     GLsizei count;
 } command_gldrawarrays_t;
+
+typedef struct _command_registercontext {
+    command_t header;
+    EGLContext context;
+} command_registercontext_t;
+
+typedef struct _command_registersurface {
+    command_t header;
+    EGLSurface surface;
+} command_registersurface_t;
+
+typedef struct _command_registereglimage {
+    command_t header;
+    EGLImageKHR eglimage;
+} command_registereglimage_t;

@@ -32,6 +32,8 @@ server_test_SOURCES = \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/server/server_state.c \
 	$(rootsrcdir)/src/server/server_state.h \
+	$(rootsrcdir)/src/server/pilot_server.c \
+	$(rootsrcdir)/src/server/pilot_server.h \
 	$(rootsrcdir)/src/command.c \
 	$(rootsrcdir)/src/command.h \
 	$(rootsrcdir)/src/command_custom.c \

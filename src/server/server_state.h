@@ -12,7 +12,7 @@
 typedef struct _server_eglimage {
     EGLDisplay display;
     EGLImageKHR image;
-    EGLSurface surface;
+    EGLContext context;
 } server_eglimage_t;
 
 typedef struct _server_context {
@@ -64,7 +64,7 @@ private void
 _server_eglimage_remove (EGLDisplay display, EGLImageKHR image);
 
 private void
-_server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLSurface);
+_server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLContext context);
 
 private link_list_t **
 _server_shared_contexts ();

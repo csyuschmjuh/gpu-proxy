@@ -275,13 +275,13 @@ _server_eglimages ()
 }
 
 server_eglimage_t *
-_server_eglimage_create (EGLDisplay display, EGLImageKHR image, EGLSurface surface)
+_server_eglimage_create (EGLDisplay display, EGLImageKHR image, EGLContext context)
 {
     server_eglimage_t *eglimage = (server_eglimage_t *) malloc (sizeof (server_eglimage_t));
 
     eglimage->display = display;
     eglimage->image = image;
-    eglimage->surface = surface;
+    eglimage->context = context;
     return eglimage;
 }
 
@@ -306,7 +306,7 @@ _server_eglimage_remove (EGLDisplay display, EGLImageKHR image)
 }
 
 void
-_server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLSurface surface)
+_server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLContext context)
 {
     link_list_t **eglimages = _server_eglimages ();
     server_eglimage_t *eglimage;
@@ -317,12 +317,12 @@ _server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLSurface surface)
 
         if (eglimage->display == display &&
             eglimage->image == image &&
-            eglimage->surface == surface)
+            eglimage->context == context)
             return;
 
         head = head->next;
     }
-    eglimage = _server_eglimage_create (display, image, surface);
+    eglimage = _server_eglimage_create (display, image, context);
     link_list_append (eglimages, (void *) eglimage, _destroy_eglimage);
 }
 

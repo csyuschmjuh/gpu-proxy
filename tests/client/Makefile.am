@@ -37,6 +37,8 @@ client_test_SOURCES = \
 	$(rootsrcdir)/src/server/server.h \
 	$(rootsrcdir)/src/server/server_state.c \
 	$(rootsrcdir)/src/server/server_state.h \
+	$(rootsrcdir)/src/server/pilot_server.c \
+	$(rootsrcdir)/src/server/pilot_server.h \
 	$(rootsrcdir)/tests/server/gpuprocess_test.c \
 	$(rootsrcdir)/tests/server/gpuprocess_test.h \
 	basic_test.c \

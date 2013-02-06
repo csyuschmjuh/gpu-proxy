@@ -38,6 +38,8 @@ libGPUProcess_la_SOURCES = \
 	server/server.c \
 	server/server_state.h \
 	server/server_state.c \
+	server/pilot_server.h \
+	server/pilot_server.c \
 	thread_private.h \
 	types_private.h \
 	types_private.c \

@@ -27,6 +27,87 @@ __thread bool initialized
 
 mutex_static_init (client_thread_mutex);
 
+static buffer_t pilot_buffer;
+static bool pilot_buffer_created = false;
+
+static sem_t *
+get_pilot_server_signal ()
+{
+    static sem_t signal; 
+    static bool sem_initialized = false;
+    
+    if ( sem_initialized == false) {
+        sem_init (&signal, 0, 0);
+        sem_initialized = true;
+    }
+
+    return &signal;
+}
+
+static thread_t
+get_pilot_server ()
+{
+    static thread_t pilot_thread = 0;
+    return pilot_thread;
+}
+
+void *
+start_pilot_server_thread_func (void *ptr)
+{
+    client_thread = false;
+    pilot_server_t *server = pilot_server_new (&pilot_buffer);
+    server->server_signal = get_pilot_server_signal ();
+
+    prctl (PR_SET_TIMERSLACK, 1);
+
+    pthread_t id = pthread_self ();
+    
+    int online_cpus = sysconf (_SC_NPROCESSORS_ONLN);
+    int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
+
+    if (online_cpus > 1) {
+        cpu_set_t cpu_set;
+        CPU_ZERO (&cpu_set);
+        if (pthread_getaffinity_np (id, sizeof (cpu_set_t), &cpu_set) == 0) {
+
+            /* find first cpu to run on */
+            int cpu = 0;
+            int i;
+            for (i = 1; i < available_cpus; i++) {
+                if (CPU_ISSET (i, &cpu_set)) {
+                    cpu = i;
+                    break;
+                }
+            }
+            /* force server to run on cpu1 */
+            if (cpu == 0)
+                cpu = 1;
+            if (cpu != 0) {
+                for (i = 0; i < available_cpus; i++) {
+                    if (i != cpu)
+                        CPU_CLR (i, &cpu_set);
+                }
+                CPU_SET (cpu, &cpu_set);
+                pthread_setaffinity_np (id, sizeof (cpu_set_t), &cpu_set);
+            }
+        }
+    }
+
+    pilot_server_start_work_loop (server);
+
+    pilot_server_destroy(server);
+    return NULL;
+}
+
+void
+client_start_pilot_server (client_t *client)
+{
+    thread_t pilot_thread = get_pilot_server ();
+    if (pilot_thread == 0) {
+        pthread_create (&pilot_thread, NULL, start_pilot_server_thread_func, client);
+    }
+}
+
 static void
 client_fill_dispatch_table (dispatch_table_t *client);
 
@@ -172,6 +253,16 @@ client_init (client_t *client)
    
     client_start_server (client);
     initializing_client = false;
+
+    /* initialize share pilot channel */
+    if (pilot_buffer_created == false) {
+	buffer_create (&pilot_buffer, 512, "pilot");
+        pilot_buffer_created = true;
+    }
+
+    thread_t pilot_server = get_pilot_server ();
+    if (! pilot_server)
+        client_start_pilot_server (client);
 }
 
 static void

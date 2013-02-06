@@ -7,6 +7,7 @@ typedef struct _client client_t;
 #include "egl_state.h"
 #include "ring_buffer.h"
 #include "server.h"
+#include "pilot_server.h"
 #include "types_private.h"
 #include <semaphore.h>
 
@@ -83,7 +84,7 @@ private void
 client_start_server (client_t *client);
 
 private void
-client_start_server (client_t *client);
+client_start_pilot_server (client_t *client);
 
 private client_t *
 client_new ();

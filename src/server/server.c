@@ -491,6 +491,37 @@ server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
     mutex_unlock (shared_resources_mutex);
 }
 
+static void
+server_handle_egldestroyimagekhr (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egldestroyimagekhr_t *command = 
+        (command_egldestroyimagekhr_t *)abstract_command;
+
+    command->result = server->dispatch.eglDestroyImageKHR (server, command->dpy, command->image);
+
+    if (command->result == EGL_TRUE) {
+        mutex_lock (shared_resources_mutex);
+        _server_eglimage_remove (command->dpy, (EGLImageKHR) command->image);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+server_handle_eglcreateimagekhr (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglcreateimagekhr_t *command =
+            (command_eglcreateimagekhr_t *)abstract_command;
+    command->result = server->dispatch.eglCreateImageKHR (server, command->dpy, command->ctx, command->target, command->buffer, command->attrib_list);
+
+    if (command->result != EGL_NO_IMAGE_KHR) {
+        mutex_lock (shared_resources_mutex);
+        _server_eglimage_add (command->dpy, (EGLImageKHR) command->result, command->ctx);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
 void
 server_init (server_t *server,
              buffer_t *buffer)
@@ -541,6 +572,10 @@ server_init (server_t *server,
         server_handle_eglterminate;
     server->handler_table[COMMAND_EGLGETDISPLAY] = 
         server_handle_eglgetdisplay;
+    server->handler_table[COMMAND_EGLDESTROYIMAGEKHR] = 
+        server_handle_egldestroyimagekhr;
+    server->handler_table[COMMAND_EGLCREATEIMAGEKHR] = 
+        server_handle_eglcreateimagekhr;
 
     mutex_lock (name_mapping_mutex);
     if (name_mapping) {
