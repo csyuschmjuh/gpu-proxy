@@ -804,7 +804,8 @@ caching_client_glCreateProgram (void* client)
 
 static program_t *
 egl_state_lookup_cached_program_err (void *client,
-                                     GLuint shader_object_id)
+                                     GLuint shader_object_id,
+                                     GLenum program_error)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (!state)
@@ -812,7 +813,7 @@ egl_state_lookup_cached_program_err (void *client,
 
     program_t *cached_program = (program_t*) egl_state_lookup_cached_shader_object (state, shader_object_id);
     if (!cached_program) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+        caching_client_glSetError (client, program_error);
         return 0;
     }
 
@@ -2194,7 +2195,7 @@ caching_client_glGetAttribLocation (void* client,
     if (! state)
         return 0;
 
-    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program, GL_INVALID_OPERATION);
     if (!saved_program)
         return -1;
 
@@ -2223,7 +2224,7 @@ caching_client_glLinkProgram (void* client,
     if (! state)
         return;
 
-    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
     if (!saved_program)
         return;
 
@@ -2241,7 +2242,7 @@ caching_client_glGetUniformLocation (void* client,
     if (! state)
         return 0;
 
-    program_t *saved_program = egl_state_lookup_cached_program_err (client, program);
+    program_t *saved_program = egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
     if (!saved_program)
         return -1;
 
@@ -3588,7 +3589,7 @@ caching_client_glUseProgram (void* client,
     if (program_id) {
         /* this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
-        program_t *new_program = egl_state_lookup_cached_program_err (client, program_id);
+        program_t *new_program = egl_state_lookup_cached_program_err (client, program_id, GL_INVALID_VALUE);
         if (!new_program)
             return;
     }
