@@ -2924,8 +2924,9 @@ class GLGenerator(object):
             if parameterNumber > 0:
                 parametersSize = " + " + " + ".join(previousParametersSize)
             file.Write("    ((command_%s_t *)command)->%s = (%s)((char *)command + command_size%s);\n" % (func.name.lower(), arg.name, type, parametersSize))
+            file.Write("    if (%s)\n" % arg.name)
+            file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s%s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber], nullTermination))
             if not arg.name in func.info.out_arguments:
-                  file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s%s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber], nullTermination))
                   file.Write("    }\n")
             previousParametersSize.append(bufferAllocatedParametersSize[parameterNumber])
 
