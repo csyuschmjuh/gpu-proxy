@@ -37,6 +37,7 @@ struct _client {
 
     mutex_t server_started_mutex;
     thread_t server_thread;
+    thread_t client_thread;
     bool initializing;
 
     sem_t server_signal;
@@ -112,5 +113,11 @@ client_register_lock_context (client_t *client, EGLDisplay display,
 private bool
 client_register_lock_image (client_t *client, EGLDisplay display,
                                               EGLImageKHR image);
+
+private void
+client_lock_pilot_mutex ();
+
+private void
+client_unlock_pilot_mutex ();
 
 #endif /* CLIENT_H */

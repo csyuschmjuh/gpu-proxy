@@ -169,27 +169,33 @@ command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t
 
 void
 command_registersurface_init (command_t *command,
-                              EGLDisplay display, EGLSurface surface)
+                              EGLDisplay display, EGLSurface surface,
+                              thread_t client_id)
 {
     command_registersurface_t *c = (command_registersurface_t *)command;
     c->dpy = display;
     c->surface = surface;
+    c->client_id = client_id;
 }
  
 void
 command_registercontext_init (command_t *command,
-                              EGLDisplay display, EGLContext context)
+                              EGLDisplay display, EGLContext context,
+                              thread_t client_id)
 {
     command_registercontext_t *c = (command_registercontext_t *)command;
     c->dpy = display;
     c->context = context;
+    c->client_id = client_id;
 }
 
 void
 command_registerimage_init (command_t *command,
-                              EGLDisplay display, EGLImageKHR image)
+                              EGLDisplay display, EGLImageKHR image,
+                              thread_t client_id)
 {
     command_registerimage_t *c = (command_registerimage_t *)command;
     c->dpy = display;
     c->image = image;
+    c->client_id = client_id;
 }

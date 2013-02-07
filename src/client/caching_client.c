@@ -4800,6 +4800,8 @@ caching_client_eglMakeCurrent (void* client,
 {
     INSTRUMENT();
 
+    bool can_async = true;
+
     /* First detect situations where we are not changing the context. */
     egl_state_t *current_state = client_get_current_state (CLIENT(client));
 
@@ -4807,6 +4809,21 @@ caching_client_eglMakeCurrent (void* client,
     bool switching_to_none = display == EGL_NO_DISPLAY || ctx == EGL_NO_CONTEXT;
     if (switching_to_none && ! current_state)
         return EGL_TRUE;
+
+    /* request to lock mutex */
+    if (display != EGL_NO_DISPLAY) {
+        client_lock_pilot_mutex ();
+        if (ctx != EGL_NO_CONTEXT)
+            can_async = client_register_lock_context (client, display, ctx);
+
+        if (can_async) {
+            if (draw != EGL_NO_SURFACE)
+                can_async = client_register_lock_surface (client, display, draw);
+            if (read != EGL_NO_SURFACE)
+                can_async &= client_register_lock_surface (client, display, read);
+        }
+        client_unlock_pilot_mutex ();
+    }
 
     /* Everything matches, so this is a no-op. */
     egl_state_t *matching_state = NULL;

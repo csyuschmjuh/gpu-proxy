@@ -25,6 +25,7 @@ struct _server {
     mutex_t thread_started_mutex;
     buffer_t *buffer;
     thread_t thread;
+    thread_t client_thread;
     bool threaded;
 
     void (*command_post_hook)(server_t *server, command_t *command);

@@ -331,3 +331,13 @@ _destroy_eglimage (void *abstract_image)
 {
     free (abstract_image);
 }
+
+link_list_t **
+_registered_lock_requests ()
+{
+    static link_list_t *requests = NULL;
+
+    return &requests;
+}
+
+

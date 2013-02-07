@@ -30,6 +30,7 @@ mutex_static_init (client_thread_mutex);
 static buffer_t pilot_buffer;
 static bool pilot_buffer_created = false;
 static mutex_t pilot_command_mutex;
+static unsigned int pilot_token = 0;
 
 static sem_t *
 get_pilot_server_signal ()
@@ -147,6 +148,7 @@ start_server_thread_func (void *ptr)
     client_thread = false;
     client_t *client = (client_t *)ptr;
     server_t *server = server_new (&client->buffer);
+    server->client_thread = client->client_thread;
 
     server->server_signal = &client->server_signal;
     server->client_signal = &client->client_signal;
@@ -265,6 +267,8 @@ client_init (client_t *client)
     thread_t pilot_server = get_pilot_server ();
     if (! pilot_server)
         client_start_pilot_server (client);
+
+    client->client_thread = pthread_self ();
 }
 
 static void
@@ -487,29 +491,27 @@ client_get_space_for_register_command (command_type_t command_type)
 static inline void
 client_run_register_command_async (command_t *command)
 {
-    client_t *client = client_get_thread_local ();
-
     buffer_write_advance (&pilot_buffer, command->size);
 
     if (pilot_buffer.fill_count == command->size) {
-        sem_post (&client->server_signal);
+        sem_t *pilot_signal = get_pilot_server_signal ();
+        sem_post (pilot_signal);
     }
 }
 
 static void
 client_run_register_command (command_t *command)
 {
-    client_t *client = client_get_thread_local ();
-    unsigned int token = ++client->token;
+    pilot_token ++;
 
     /* Overflow case */
-    if (token == 0)
-        token = 1;
+    if (pilot_token == 0)
+        pilot_token = 1;
 
-    command->token = token;
+    command->token = pilot_token;
     client_run_register_command_async (command);
 
-    while (pilot_buffer.last_token < token) {
+    while (pilot_buffer.last_token < pilot_token) {
         sched_yield ();
     }
 }
@@ -518,7 +520,7 @@ bool
 client_register_lock_surface (client_t *client, EGLDisplay display, EGLSurface surface)
 {
     command_t *command = client_get_register_space_for_command (COMMAND_REGISTERSURFACE);
-    command_registersurface_init (command, display, surface);
+    command_registersurface_init (command, display, surface, client->client_thread);
     client_run_register_command (command);
     return ((command_registersurface_t *)command)->result;
 }
@@ -527,18 +529,31 @@ bool
 client_register_lock_context (client_t *client, EGLDisplay display, EGLContext context)
 {
     command_t *command = client_get_register_space_for_command (COMMAND_REGISTERCONTEXT);
-    command_registersurface_init (command, display, context);
+    command_registersurface_init (command, display, context, client->client_thread);
     client_run_register_command (command);
-    return ((command_registercontext_t *)command)->result;
+    return  ((command_registercontext_t *)command)->result;
 }
 
 bool
 client_register_lock_image (client_t *client, EGLDisplay display, EGLImageKHR image)
 {
+    mutex_lock (pilot_command_mutex);
     command_t *command = client_get_register_space_for_command (COMMAND_REGISTERIMAGE);
-    command_registerimage_init (command, display, image);
+    command_registerimage_init (command, display, image, client->client_thread);
     client_run_register_command (command);
     return ((command_registerimage_t *)command)->result;
+}
+
+void
+client_lock_pilot_mutex ()
+{
+    mutex_lock (pilot_command_mutex);
+}
+
+void
+client_unlock_pilot_mutex ()
+{
+    mutex_unlock (pilot_command_mutex);
 }
 
 #include "client_autogen.c"

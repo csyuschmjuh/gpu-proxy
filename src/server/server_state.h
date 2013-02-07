@@ -13,6 +13,7 @@ typedef struct _server_eglimage {
     EGLDisplay display;
     EGLImageKHR image;
     EGLContext context;
+    unsigned int tex;
 } server_eglimage_t;
 
 typedef struct _server_context {
@@ -23,6 +24,7 @@ typedef struct _server_context {
 typedef struct _server_surface {
     EGLDisplay display;
     EGLSurface surface;
+    void *native_surface;
 } server_surface_t;
 
 typedef struct _server_display {
@@ -95,6 +97,9 @@ _server_shared_surfaces_remove (EGLDisplay display, EGLSurface surface);
 
 private void
 _destroy_surface (void *abstract_surface);
+
+private link_list_t **
+_registered_lock_requests ();
 
 #endif
 
