@@ -1643,7 +1643,10 @@ def GetArgumentSize(func, arg):
   if arg.name in func.info.argument_size_from_function:
       components.append("%s (%s)" % (func.info.argument_size_from_function[arg.name], arg.name))
   if arg.type.find("void*") == -1:
-      components.append("sizeof (%s)" % arg.type)
+      components.append("sizeof (%s)" % arg.type.replace("*","", 1))
+  else:
+      if arg.name in func.info.out_arguments:
+          components.append("sizeof (void *)")
   return " * ".join(components)
 
 class CWriter(object):
@@ -2874,12 +2877,15 @@ class GLGenerator(object):
                 bufferAllocatedParametersName.append(arg.name)
                 bufferAllocatedParametersSize.append(GetArgumentSize(func, arg))
             else:
-                if arg.type.find("char*") != -1 and arg.type.find("char**") == -1:
+                if arg.name in func.info.out_arguments:
                     bufferAllocatedParameters.append(arg)
                     bufferAllocatedParametersName.append(arg.name)
-                    bufferAllocatedParametersSize.append("strlen(%s)" % arg.name)
-
-
+                    bufferAllocatedParametersSize.append(GetArgumentSize(func, arg))
+                else:
+                    if arg.type.find("char*") != -1 and arg.type.find("char**") == -1:
+                        bufferAllocatedParameters.append(arg)
+                        bufferAllocatedParametersName.append(arg.name)
+                        bufferAllocatedParametersSize.append("strlen(%s)" % arg.name)
 
         if bufferAllocatedParameters:
             file.Write("    size_t command_size = 0;\n")
@@ -2906,23 +2912,33 @@ class GLGenerator(object):
         file.Write(");\n\n")
 
         previousParametersSize = []
-        parameterNumber = 0
+        parameterNumber = -1
         parametersSize = ""
         for arg in bufferAllocatedParameters:
+            parameterNumber = parameterNumber + 1
             type = arg.type.replace("const", "")
-            file.Write("    if (%s) {\n" % arg.name)
+            if not arg.name in func.info.out_arguments:
+                file.Write("    if (%s) {\n    " % arg.name)
             if parameterNumber > 0:
                 parametersSize = " + " + " + ".join(previousParametersSize)
-            file.Write("        ((command_%s_t *)command)->%s = (%s)((char *)command + command_size%s);\n" % (func.name.lower(), arg.name, type, parametersSize))
-            file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber]))
-            file.Write("    }\n")
+            file.Write("    ((command_%s_t *)command)->%s = (%s)((char *)command + command_size%s);\n" % (func.name.lower(), arg.name, type, parametersSize))
+            if not arg.name in func.info.out_arguments:
+                  file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber]))
+                  file.Write("    }\n")
             previousParametersSize.append(bufferAllocatedParametersSize[parameterNumber])
-            parameterNumber = parameterNumber + 1
 
         if func.IsSynchronous():
             file.Write("    client_run_command (command);\n");
         else:
             file.Write("    client_run_command_async (command);\n");
+
+        parameterNumber = -1
+        for arg in bufferAllocatedParameters:
+            parameterNumber = parameterNumber + 1
+            if not arg.name in func.info.out_arguments:
+                continue;
+            file.Write("    if (%s) \n" % arg.name)
+            file.Write("    memcpy (%s, ((command_%s_t *)command)->%s, %s);\n" % (arg.name, func.name.lower(), arg.name, bufferAllocatedParametersSize[parameterNumber]))
 
         if func.HasReturnValue():
           file.Write("\n")
