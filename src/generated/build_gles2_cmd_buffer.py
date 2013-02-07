@@ -1636,6 +1636,19 @@ def ToUnderscore(input_string):
   return Lower(words)
 
 
+def GetArgumentSize(func, arg):
+  """gets the string calculating the size of the function argument."""
+  components = []
+  if arg.name in func.info.argument_has_size:
+      components.append(func.info.argument_has_size[arg.name])
+  if arg.name in func.info.argument_element_size:
+      components.append("%i" % func.info.argument_element_size[arg.name])
+  if arg.name in func.info.argument_size_from_function:
+      components.append("%s (%s)" % (func.info.argument_size_from_function[arg.name], arg.name))
+  if arg.type.find("void*") == -1:
+      components.append("sizeof (%s)" % arg.type)
+  return " * ".join(components)
+
 class CWriter(object):
   """Writes to a file formatting it for Google's style guidelines."""
 
@@ -1804,37 +1817,11 @@ class TypeHandler(object):
     file.Write(");")
 
   def WriteCommandInitArgumentCopy(self, func, arg, file):
-    # FIXME: Handle constness more gracefully.
-    if func.IsSynchronous():
-      type = arg.type.replace("const", "")
-      file.Write("    command->%s = (%s) %s;\n" % (arg.name, type, arg.name))
-      return
-
-    if arg.type.find("char*") != -1:
-      file.Write("    command->%s = strdup (%s);\n" % (arg.name, arg.name))
-      return
-
-    # We only need to copy arguments if the function is asynchronous.
-    if  (arg.name in func.info.argument_has_size or \
-         arg.name in func.info.argument_element_size or \
-         arg.name in func.info.argument_size_from_function):
-
-      components = []
-      if arg.name in func.info.argument_has_size:
-          components.append(func.info.argument_has_size[arg.name])
-      if arg.name in func.info.argument_element_size:
-          components.append("%i" % func.info.argument_element_size[arg.name])
-      if arg.name in func.info.argument_size_from_function:
-          components.append("%s (%s)" % (func.info.argument_size_from_function[arg.name], arg.name))
-      if arg.type.find("void*") == -1:
-          components.append("sizeof (%s)" % arg.type)
-      arg_size = " * ".join(components)
-
-      file.Write("    if (%s) {\n" % (arg.name))
-      file.Write("        command->%s = malloc (%s);\n" % (arg.name, arg_size))
-      file.Write("        memcpy (command->%s, %s, %s);\n" % (arg.name, arg.name, arg_size))
-      file.Write("    } else\n")
-      file.Write("        command->%s = 0;\n" % (arg.name))
+    if (arg.type.find("char*") != -1 or \
+        arg.name in func.info.argument_has_size or \
+        arg.name in func.info.argument_element_size or \
+        arg.name in func.info.argument_size_from_function):
+      file.Write("    command->%s = 0;\n" % (arg.name))
       return
 
     # FIXME: Handle constness more gracefully.
@@ -2861,6 +2848,8 @@ class GLGenerator(object):
     file = CWriter(filename)
     self.WriteGLHeaders(file)
 
+    file.Write('#include "gles2_utils.h"\n\n')
+
     for func in self.functions:
         file.Write("static %s\n" % func.return_type)
         file.Write("client_dispatch_%s (void* object" % func.name.lower())
@@ -2869,13 +2858,47 @@ class GLGenerator(object):
 
         file.Write("{\n")
 
+        file.Write("    command_t *command = NULL;\n");
         if func.name in FUNCTIONS_GENERATING_ERRORS:
             file.Write("    egl_state_t *state = client_get_current_state (CLIENT (object));\n");
             file.Write("    if (state)\n");
             file.Write("        state->need_get_error = true;\n\n");
 
         file.Write("    INSTRUMENT();\n");
-        file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
+
+        bufferAllocatedParameters = []
+        bufferAllocatedParametersName = []
+        bufferAllocatedParametersSize = []
+        for arg in func.GetOriginalArgs():
+            if  (arg.name in func.info.argument_has_size or \
+                 arg.name in func.info.argument_element_size or \
+                 arg.name in func.info.argument_size_from_function):
+                bufferAllocatedParameters.append(arg)
+                bufferAllocatedParametersName.append(arg.name)
+                bufferAllocatedParametersSize.append(GetArgumentSize(func, arg))
+            else:
+                if arg.type.find("char*") != -1 and arg.type.find("char**") == -1:
+                    bufferAllocatedParameters.append(arg)
+                    bufferAllocatedParametersName.append(arg.name)
+                    bufferAllocatedParametersSize.append("strlen(%s)" % arg.name)
+
+
+
+        if bufferAllocatedParameters:
+            file.Write("    size_t command_size = 0;\n")
+            file.Write("    if (%s) {\n" % " || ".join(bufferAllocatedParametersName))
+            file.Write("        size_t parameters_size = 0;\n")
+            file.Write("        client_t *client = client_get_thread_local ();\n\n")
+            file.Write("        command_size = command_get_size (COMMAND_%s);\n" % func.name.upper())
+            file.Write("        parameters_size = %s;\n\n" % " + ".join(bufferAllocatedParametersSize))
+            file.Write("        command = client_get_space_for_size (client, command_size + parameters_size);\n")
+            file.Write("        command->type = COMMAND_%s;\n" % func.name.upper())
+            file.Write("        command->size = command_size + parameters_size;\n")
+            file.Write("        command->token = 0;\n")
+            file.Write("    }\n")
+            file.Write("    else\n")
+
+        file.Write("    command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
 
         header = "    command_%s_init (" % func.name.lower()
         indent = " " * len(header)
@@ -2884,6 +2907,20 @@ class GLGenerator(object):
         if args:
             file.Write(args)
         file.Write(");\n\n")
+
+        previousParametersSize = []
+        parameterNumber = 0
+        parametersSize = ""
+        for arg in bufferAllocatedParameters:
+            type = arg.type.replace("const", "")
+            file.Write("    if (%s) {\n" % arg.name)
+            if parameterNumber > 0:
+                parametersSize = " + " + " + ".join(previousParametersSize)
+            file.Write("        ((command_%s_t *)command)->%s = (%s)((char *)command + command_size%s);\n" % (func.name.lower(), arg.name, type, parametersSize))
+            file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber]))
+            file.Write("    }\n")
+            previousParametersSize.append(bufferAllocatedParametersSize[parameterNumber])
+            parameterNumber = parameterNumber + 1
 
         if func.IsSynchronous():
             file.Write("    client_run_command (command);\n");
@@ -3030,7 +3067,7 @@ class GLGenerator(object):
         file.Write("    INSTRUMENT ();\n")
 
         need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
-        if need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
+        if len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
           file.Write("    command_%s_t *command =\n" % func.name.lower())
           file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
@@ -3057,8 +3094,6 @@ class GLGenerator(object):
           file.Write("command->%s" % arg.name)
         file.Write(");\n")
 
-        if need_destructor_call:
-          file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
         file.Write("}\n\n")
 
     file.Write("static void\n")
