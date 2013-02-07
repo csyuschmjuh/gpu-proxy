@@ -334,6 +334,9 @@ _FUNCTION_INFO = {
     'out_arguments': ['length', 'source'],
     'mapped_names': ['shader']
   },
+  'glShaderSource': {
+    'mapped_names': ['shader']
+  },
   'glGetShaderiv': {
     'out_arguments': ['params'],
     'mapped_names': ['shader']
