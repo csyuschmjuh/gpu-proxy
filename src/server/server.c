@@ -87,7 +87,6 @@ server_handle_glgenbuffers (server_t *server,
     mutex_unlock (name_mapping_mutex);
 
     free (server_buffers);
-    command_glgenbuffers_destroy_arguments (command);
 }
 
 static void
@@ -110,8 +109,6 @@ server_handle_gldeletebuffers (server_t *server, command_t *abstract_command)
     mutex_unlock (name_mapping_mutex);
 
     server->dispatch.glDeleteBuffers (server, command->n, command->buffers);
-
-    command_gldeletebuffers_destroy_arguments (command);
 }
 
 static void
@@ -135,7 +132,6 @@ server_handle_glgenframebuffers (server_t *server, command_t *abstract_command)
     mutex_unlock (name_mapping_mutex);
 
     free (server_framebuffers);
-    command_glgenframebuffers_destroy_arguments (command);
 }
 
 static void
@@ -158,8 +154,6 @@ server_handle_gldeleteframebuffers (server_t *server, command_t *abstract_comman
     mutex_unlock (name_mapping_mutex);
 
     server->dispatch.glDeleteFramebuffers (server, command->n, command->framebuffers);
-
-    command_gldeleteframebuffers_destroy_arguments (command);
 }
 
 static void
@@ -183,7 +177,6 @@ server_handle_glgentextures (server_t *server, command_t *abstract_command)
     mutex_unlock (name_mapping_mutex);
 
     free (server_textures);
-    command_glgentextures_destroy_arguments (command);
 }
 
 static void
@@ -206,8 +199,6 @@ server_handle_gldeletetextures (server_t *server, command_t *abstract_command)
     mutex_unlock (name_mapping_mutex);
 
     server->dispatch.glDeleteTextures (server, command->n, command->textures);
-
-    command_gldeletetextures_destroy_arguments (command);
 }
 
 static void
@@ -232,7 +223,6 @@ server_handle_glgenrenderbuffers (server_t *server,
     mutex_unlock (name_mapping_mutex);
 
     free (server_renderbuffers);
-    command_glgenrenderbuffers_destroy_arguments (command);
 }
 
 static void
@@ -255,7 +245,6 @@ server_handle_gldeleterenderbuffers (server_t *server, command_t *abstract_comma
     mutex_unlock (name_mapping_mutex);
 
     server->dispatch.glDeleteBuffers (server, command->n, command->renderbuffers);
-    command_gldeleterenderbuffers_destroy_arguments (command);
 }
 
 static void
@@ -289,8 +278,6 @@ server_handle_gldeleteprogram (server_t *server, command_t *abstract_command)
 
     if (program)
         server->dispatch.glDeleteProgram (server, *program);
-
-    command_gldeleteprogram_destroy_arguments (command);
 }
 
 static void
@@ -326,8 +313,6 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
     else
         /*XXX: This call should return INVALID_VALUE */
         server->dispatch.glDeleteShader (server, 0xffffffff);
-
-    command_gldeleteshader_destroy_arguments (command);
 }
 
 static void
