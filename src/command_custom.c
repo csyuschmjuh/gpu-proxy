@@ -141,24 +141,64 @@ command_glshadersource_init (command_t *abstract_command,
                              const GLchar **string,
                              const GLint *length)
 {
+    /* FIXME: Add the situation where count is more than 1. */
+    size_t command_size = 0;
+    size_t string_size = 0;
+
+    if (string) {
+        size_t parameters_size = 0;
+        size_t length_size = 0;
+        client_t *client = client_get_thread_local ();
+
+        command_size = command_get_size (COMMAND_GLSHADERSOURCE);
+
+        if (length)
+            length_size = sizeof (GLint);
+
+        if (*string) {
+            if (length)
+                string_size = sizeof (GLchar *) + *length * sizeof (GLchar);
+            else
+                string_size = sizeof (GLchar *) + strlen (*string) + 1;
+        } else
+            string_size = sizeof (GLchar *);
+
+        parameters_size =  string_size + length_size;
+
+        abstract_command = client_get_space_for_size (client, command_size + parameters_size);
+        abstract_command->type = COMMAND_GLSHADERSOURCE;
+        abstract_command->size = command_size + parameters_size;
+        abstract_command->token = 0;
+    }
+
     command_glshadersource_t *command =
         (command_glshadersource_t *) abstract_command;
     command->shader = (GLuint) shader;
     command->count = (GLsizei) count;
-    command->string = ( char**) string;
-    command->length = ( GLint*) length;
+
+    if (string) {
+        command->string = (GLchar**)((char *)command + command_size);
+        if (*string) {
+            *command->string = (char *)command->string + sizeof (GLchar *);
+            memcpy (*command->string, *string, string_size - sizeof (GLchar *));
+            *((char*)(*command->string) + string_size) = 0;
+        } else
+            command->string = NULL;
+    } else
+        command->string = NULL;
+
+    if (length) {
+        command->length = (GLint*)((char *)command + command_size + string_size);
+        memcpy (command->length, length, sizeof(GLint));
+    } else
+        command->length = NULL;
 }
 
 void
 command_glshadersource_destroy_arguments (command_glshadersource_t *command)
 {
-    if (command->count <= 0)
-        return;
-
-    unsigned i = 0;
-    for (i = 0; i < command->count; i++)
-        free (command->string[i]);
-    free (command->string);
+    /* This command is asynchronous, but we are using the buffer to handle
+     the texture information. */
 }
 
 void

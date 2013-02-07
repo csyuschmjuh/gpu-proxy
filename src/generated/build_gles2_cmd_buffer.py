@@ -545,9 +545,6 @@ _FUNCTION_INFO = {
   'glIsShader' : {
     'mapped_names': ['shader']
   },
-  'glShaderSource' : {
-    'mapped_names': ['shader']
-  },
 }
 
 FUNCTIONS_GENERATING_ERRORS = [
