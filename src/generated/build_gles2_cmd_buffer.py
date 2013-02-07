@@ -2869,6 +2869,7 @@ class GLGenerator(object):
         bufferAllocatedParameters = []
         bufferAllocatedParametersName = []
         bufferAllocatedParametersSize = []
+        nullTermination = ""
         for arg in func.GetOriginalArgs():
             if  (arg.name in func.info.argument_has_size or \
                  arg.name in func.info.argument_element_size or \
@@ -2886,6 +2887,7 @@ class GLGenerator(object):
                         bufferAllocatedParameters.append(arg)
                         bufferAllocatedParametersName.append(arg.name)
                         bufferAllocatedParametersSize.append("strlen(%s)" % arg.name)
+                        nullTermination = " + 1"
 
         if bufferAllocatedParameters:
             file.Write("    size_t command_size = 0;\n")
@@ -2893,7 +2895,7 @@ class GLGenerator(object):
             file.Write("        size_t parameters_size = 0;\n")
             file.Write("        client_t *client = client_get_thread_local ();\n\n")
             file.Write("        command_size = command_get_size (COMMAND_%s);\n" % func.name.upper())
-            file.Write("        parameters_size = %s;\n\n" % " + ".join(bufferAllocatedParametersSize))
+            file.Write("        parameters_size = %s%s;\n\n" % (" + ".join(bufferAllocatedParametersSize), nullTermination))
             file.Write("        command = client_get_space_for_size (client, command_size + parameters_size);\n")
             file.Write("        command->type = COMMAND_%s;\n" % func.name.upper())
             file.Write("        command->size = command_size + parameters_size;\n")
@@ -2923,7 +2925,7 @@ class GLGenerator(object):
                 parametersSize = " + " + " + ".join(previousParametersSize)
             file.Write("    ((command_%s_t *)command)->%s = (%s)((char *)command + command_size%s);\n" % (func.name.lower(), arg.name, type, parametersSize))
             if not arg.name in func.info.out_arguments:
-                  file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber]))
+                  file.Write("        memcpy (((command_%s_t *)command)->%s, %s, %s%s);\n" % (func.name.lower(), arg.name, arg.name, bufferAllocatedParametersSize[parameterNumber], nullTermination))
                   file.Write("    }\n")
             previousParametersSize.append(bufferAllocatedParametersSize[parameterNumber])
 
