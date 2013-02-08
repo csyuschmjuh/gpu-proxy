@@ -162,29 +162,48 @@ _caching_client_make_current (client_t *client,
     CLIENT(client)->active_state = new_state;
 
     /* Deactivate the old surface and clean up any previously destroyed bits of it. */
+    mutex_lock (cached_gl_display_list_mutex);
+    /* increase reference count on new state */
+    display_list_t *new_dpy = cached_gl_display_find (display);
+    if (new_dpy)
+        new_dpy->ref_count++;
+    
+    surface_t *new_surface = cached_gl_surface_find (display, drawable);
+    if (new_surface)
+        new_surface->ref_count++;
+
+    if (drawable != readable) {
+        new_surface = cached_gl_surface_find (display, readable);
+        if (new_surface)
+            new_surface->ref_count++;
+    }
+
+    /* destroy or reduce ref_count on old resources */
     if (current_state) {
-        mutex_lock (cached_gl_display_list_mutex);
         current_state->active = false;
         EGLSurface temp = current_state->readable;
 
+        /* reduce ref_count on current state display */
+        cached_gl_display_destroy (display);
+
+        /* destroy current state context */
+        cached_gl_context_destroy (current_state->display, current_state->context);
+        /* destroy read, draw surfaces */
+        cached_gl_surface_destroy (current_state->display, current_state->readable);
+        cached_gl_surface_destroy (current_state->display, current_state->drawable);
+        
         if (current_state->destroy_read) {
-            cached_gl_surface_destroy (display, current_state->readable);
             current_state->readable = EGL_NO_SURFACE;
         }
         if (current_state->destroy_draw) {
-            if (temp != current_state->drawable)
-                cached_gl_surface_destroy (display, current_state->drawable);
             current_state->drawable = EGL_NO_SURFACE;
         }
 
         if (current_state->destroy_dpy || current_state->destroy_ctx)
             _caching_client_destroy_state (client, current_state);
-
-        if (current_state->destroy_ctx)
-            cached_gl_context_destroy (current_state->display,
-                                       current_state->context);
-        mutex_unlock (cached_gl_display_list_mutex);
     }
+
+    mutex_unlock (cached_gl_display_list_mutex);
 
     mutex_unlock (cached_gl_states_mutex);
 }
@@ -223,14 +242,16 @@ _caching_client_destroy_surface (client_t *client,
                 if (state->drawable == surface &&
                     state->destroy_draw == true)
                     state->drawable = EGL_NO_SURFACE;
-
-                mutex_lock (cached_gl_display_list_mutex);
-                cached_gl_surface_destroy (display, surface);
-                mutex_unlock (cached_gl_display_list_mutex);
             }
-
         }
     }
+
+    mutex_lock (cached_gl_display_list_mutex);
+    surface_t *surf = cached_gl_surface_find (display, surface);
+    if (surf)
+        surf->mark_for_deletion = true;
+    cached_gl_surface_destroy (display, surface);
+    mutex_unlock (cached_gl_display_list_mutex);
 
     mutex_unlock (cached_gl_states_mutex);
 }
@@ -4541,11 +4562,13 @@ caching_client_eglTerminate (void* client,
     egl_state_t *egl_state = client_get_current_state (CLIENT (client));
     if (egl_state && egl_state->display == display)
         egl_state->destroy_dpy = true; /* Queue destroy later. */
-    else {
-        mutex_lock (cached_gl_display_list_mutex);
-        cached_gl_display_destroy (display);
-        mutex_unlock (cached_gl_display_list_mutex);
-    }
+
+    mutex_lock (cached_gl_display_list_mutex);
+    display_list_t *dpy_list = cached_gl_display_find (display);
+    if (dpy_list)
+        dpy_list->mark_for_deletion = true;
+    cached_gl_display_destroy (display);
+    mutex_unlock (cached_gl_display_list_mutex);
 
     mutex_unlock (cached_gl_states_mutex);
     return EGL_TRUE;
@@ -4605,15 +4628,19 @@ caching_client_eglDestroyContext (void* client,
         return EGL_TRUE;
     }
 
+    mutex_lock (cached_gl_display_list_mutex);
+    context_t *context = cached_gl_context_find (dpy, ctx);
+    if (context)
+        context->mark_for_deletion = true;
+
     if (! state->active) {
         _caching_client_destroy_state (client, state);
-        mutex_lock (cached_gl_display_list_mutex);
         cached_gl_context_destroy (dpy, ctx);
-        mutex_unlock (cached_gl_display_list_mutex);
     }
     else
         state->destroy_ctx = true;
 
+    mutex_unlock (cached_gl_display_list_mutex);
     mutex_unlock (cached_gl_states_mutex);
     return EGL_TRUE;
 }

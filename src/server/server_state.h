@@ -57,7 +57,7 @@ typedef struct _server_display {
 typedef struct _server_context {
     EGLDisplay          egl_display;
     EGLContext          egl_context;
-    bool                mark_for_deletion     /* called by out-of-order
+    bool                mark_for_deletion;    /* called by out-of-order
                                                * eglDestroySurface
                                                */
     unsigned int        ref_count;            /* initial 0 by
@@ -78,11 +78,11 @@ typedef struct _server_surface {
     bool                   mark_for_deletion; /* marked by out-of-order
                                                * eglDestroySurface
                                                */
-    unsigned int           ref_count          /* initial 0, increase by
-                                                 eglMakeCurrent, 
-                                                 eglBindTexImage,
-                                                 decrease by eglMakecurrent,
-                                                 eglReleaseTexImage
+    unsigned int           ref_count;         /* initial 0, increase by
+                                               * eglMakeCurrent, 
+                                               * eglBindTexImage,
+                                               * decrease by eglMakecurrent,
+                                               * eglReleaseTexImage
                                                */
     link_list_t           *surface_bindings;  /* a list of server_binding_t
                                                * only for pbuffer
@@ -218,7 +218,7 @@ _server_image_add (EGLDisplay egl_display, EGLImageKHR egl_image,
 
 /* remove an eglimage, called by in-order eglDestroyImageKHR */
 private void
-_server_image_remove (EGLDisplay egl_display, EGLimageKHR egl_image);
+_server_image_remove (EGLDisplay egl_display, EGLImageKHR egl_image);
 
 /* mark deletion for EGLImage, called by out-of-order eglDestroyImageKHR */
 private void
@@ -274,51 +274,6 @@ _server_native_surface_add (EGLDisplay egl_display, void *native_surface);
 _server_native_surface_mark_for_deletion (EGLDisplay egl_display,
                                           void *native_surface);
     
-private void
-_destroy_eglimage (void *abstract_image);
-
-private link_list_t **
-_server_eglimages ();
-
-private server_eglimage_t *
-_server_eglimage_create (EGLDisplay display, EGLImageKHR image, EGLSurface surface, void *native_surface);
-
-private void
-_server_eglimage_remove (EGLDisplay display, EGLImageKHR image);
-
-private void
-_server_eglimage_add (EGLDisplay display, EGLImageKHR image, EGLContext context);
-
-private link_list_t **
-_server_shared_contexts ();
-
-private server_context_t *
-_server_context_create (EGLDisplay display, EGLContext context);
-
-private void
-_server_shared_contexts_add (EGLDisplay, EGLSurface context);
-
-private void
-_server_shared_contexts_remove (EGLDisplay display, EGLContext context);
-
-private void
-_destroy_context (void *abstract_context);
-
-private link_list_t **
-_server_shared_surfaces ();
-
-private server_surface_t *
-_server_surface_create (EGLDisplay display, EGLSurface surface);
-
-private void
-_server_shared_surfaces_add (EGLDisplay display, EGLSurface surface);
-
-private void
-_server_shared_surfaces_remove (EGLDisplay display, EGLSurface surface);
-
-private void
-_destroy_surface (void *abstract_surface);
-
 private link_list_t **
 _registered_lock_requests ();
 

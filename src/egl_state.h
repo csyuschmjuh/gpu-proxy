@@ -310,23 +310,28 @@ struct egl_state {
     bool	 supports_bgra;	                  /* GL_EXT_texture_format_BGRA8888 */
 };
 
-typedef struct display_ctxs_surfaces {
+typedef struct display_list {
     NativeDisplayType native_display;
-    bool native_display_locked;
-    EGLDisplay display;
-    bool support_surfaceless;
-    link_list_t *surfaces;
-    link_list_t *contexts;
-} display_ctxs_surfaces_t;
+    bool              native_display_locked;
+    EGLDisplay        display;
+    bool              support_surfaceless;
+    link_list_t      *surfaces;
+    link_list_t      *contexts;
+    bool              mark_for_deletion;
+    unsigned int      ref_count;
+} display_list_t;
 
 typedef struct egl_surface {
-    EGLConfig config;
-    EGLSurface surface;
+    EGLConfig        config;
+    EGLSurface       surface;
+    unsigned int     ref_count;
+    bool             mark_for_deletion;
 } surface_t;
 
 typedef struct egl_context {
-    EGLConfig config;
-    EGLContext context;
+    EGLConfig       config;
+    EGLContext      context;
+    bool            mark_for_deletion;
 } context_t;
 
 private void
@@ -350,7 +355,7 @@ cached_gl_displays ();
 private NativeDisplayType 
 cached_gl_get_native_display (EGLDisplay egl_display);
 
-private display_ctxs_surfaces_t *
+private display_list_t *
 cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display);
 
 private void
@@ -368,6 +373,9 @@ cached_gl_surface_add (EGLDisplay display, EGLConfig config, EGLSurface surface)
 private void
 cached_gl_surface_destroy (EGLDisplay display, EGLSurface surface);
 
+private surface_t *
+cached_gl_surface_find (EGLDisplay display, EGLSurface surface);
+
 private bool 
 cached_gl_surface_match (link_list_t **surfaces, EGLSurface egl_surface);
 
@@ -380,7 +388,10 @@ cached_gl_context_add (EGLDisplay display, EGLConfig config, EGLContext context)
 private void
 cached_gl_context_destroy (EGLDisplay display, EGLContext context);
 
-private display_ctxs_surfaces_t *
+private context_t *
+cached_gl_context_find (EGLDisplay display, EGLContext context);
+
+private display_list_t *
 cached_gl_display_find (EGLDisplay display);
 
 private bool
