@@ -172,7 +172,8 @@ _server_display_add (Display *server_display,
                      Display *client_display,
                      EGLDisplay egl_display);
 
-/* remove a server_display_t from cache, called by eglTerminate */
+/* remove a server_display_t from cache, called by eglTerminate and
+ * eglMakeCurrent  */
 private void
 _server_display_remove (Display *server_display, EGLDisplay egl_display);
 
@@ -191,6 +192,10 @@ _server_display_mark_for_deletion (EGLDisplay egl_display);
  */
 private void
 _server_destroy_display (Display *client_display);
+
+/* get the pointer to the display */
+private server_display_t *
+_server_display_find (EGLDisplay egl_display);
 
 /* delete function called by link_list_delete_element from
  * _destroy_image
@@ -255,6 +260,10 @@ _server_image_unbind_buffer_and_unlock (EGLDisplay egl_display,
                                         server_binding_type_t type,
                                         unsigned int buffer,
                                         thread_t server);
+
+private server_image_t *
+_server_image_find (EGLImageKHR egl_image);
+
 /* get cached native surfaces */
 private link_list_t **
 _server_native_surfaces ();

@@ -140,7 +140,17 @@ _caching_client_make_current (client_t *client,
                               EGLSurface readable,
                               EGLContext context)
 {
+    surface_t *new_surface;
     mutex_lock (cached_gl_states_mutex);
+    
+    egl_state_t *current_state = (egl_state_t *) CLIENT(client)->active_state;
+    EGLSurface current_draw = EGL_NO_SURFACE;
+    EGLSurface current_read = EGL_NO_SURFACE;
+
+    if (current_state) {
+        current_draw = current_state->drawable;
+        current_read = current_state->readable;
+    }
 
     /* If we aren't switching to the "none" context, the new_state isn't null. */
     egl_state_t *new_state = NULL;
@@ -153,10 +163,31 @@ _caching_client_make_current (client_t *client,
 
     /* We aren't switching contexts, so do nothing. Note that we may have
      * still updated the read and write surfaces above. */
-    egl_state_t *current_state = (egl_state_t *) CLIENT(client)->active_state;
     if (current_state == new_state) {
-        mutex_unlock (cached_gl_states_mutex);
-        return;
+        if (current_draw == drawable &&
+            current_read == readable) {
+            mutex_unlock (cached_gl_states_mutex);
+            return;
+        }
+        else {
+            /* one of the surfaces have changed */
+            mutex_lock (cached_gl_display_list_mutex);
+  
+            if (current_draw != drawable) {
+                cached_gl_surface_destroy (current_state->display, current_draw);
+                new_surface = cached_gl_surface_find (display, drawable);
+                if (new_surface)
+                    new_surface->ref_count++;
+            }
+            if (current_read != readable) { 
+                cached_gl_surface_destroy (current_state->display, current_read);
+                new_surface = cached_gl_surface_find (display, readable);
+                if (new_surface)
+                    new_surface->ref_count++;
+            }
+            mutex_unlock (cached_gl_display_list_mutex);
+            return;
+        }
     }
 
     CLIENT(client)->active_state = new_state;
@@ -174,9 +205,10 @@ _caching_client_make_current (client_t *client,
 
     if (drawable != readable) {
         new_surface = cached_gl_surface_find (display, readable);
-        if (new_surface)
-            new_surface->ref_count++;
     }
+
+    if (new_surface)
+        new_surface->ref_count++;
 
     /* destroy or reduce ref_count on old resources */
     if (current_state) {

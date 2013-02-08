@@ -451,6 +451,7 @@ cached_gl_context_add (EGLDisplay display, EGLConfig config, EGLContext context)
         c->config = config;
         c->context = context;
         c->mark_for_deletion = false;
+        c->ref_count = 0;
         link_list_append (&(matched_dpy->contexts), (void *)c, free);
     }
 }
@@ -463,9 +464,14 @@ void cached_gl_context_destroy (EGLDisplay display, EGLContext context)
     while (head) {
         context_t *context = (context_t *) head->data;
 
-        if (context->context == context &&
-            context->mark_for_deletion == true) {
-            link_list_delete_element (contexts, head);
+        if (context->context == context) {
+            if (context->ref_count > 0)
+                context->ref_count --;
+
+            if (context->mark_for_deletion == true &&
+                context->ref_count == 0) {
+                link_list_delete_element (contexts, head);
+            }
             return;
         }
         head = head->next;

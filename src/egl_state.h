@@ -332,6 +332,7 @@ typedef struct egl_context {
     EGLConfig       config;
     EGLContext      context;
     bool            mark_for_deletion;
+    unsigned int    ref_count;
 } context_t;
 
 private void

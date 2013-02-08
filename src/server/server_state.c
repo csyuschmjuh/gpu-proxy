@@ -82,7 +82,8 @@ _server_display_add (Display *server_display, Display *client_display,
     link_list_append (dpys, (void *)server_dpy, _destroy_display);
 }
 
-/* remove a server_display from cache, called by eglTerminate */
+/* remove a server_display from cache, called by eglTerminate and
+ * eglMakeCurrent */
 void
 _server_display_remove (Display *server_display, EGLDisplay egl_display)
 {
@@ -272,6 +273,20 @@ _server_destroy_display_mark_for_deletion (EGLDisplay egl_display)
     }
 
     return has_resources;
+}
+
+server_display_t *
+_server_display_find (EGLDisplay egl_display)
+{
+    link_list_t **dpys = _server_displays ();
+    link_list_t *head = *dpy;
+
+    while (head) {
+        server_display_t *dpy = (server_display_t *) head->data;
+        if (dpy->egl_display == egl_display)
+            return dpy;
+
+        head = head->next;
 }
 
 void
@@ -685,6 +700,22 @@ _server_image_unbind_buffer_and_unlock (EGLDisplay egl_display,
 
             return;
         }
+
+        head = head->next;
+    }
+}
+
+server_image_t *
+_server_image_find (EGLImageKHR image)
+{
+    link_list_t **images = _server_images ();
+    link_list_t *head = *images;
+
+    while (head) {
+        server_image_t *img = (server_image_t *) head->data;
+
+        if (img->egl_image == image)
+            return img;
 
         head = head->next;
     }
