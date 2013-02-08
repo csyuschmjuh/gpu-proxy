@@ -33,28 +33,9 @@ typedef enum _server_surface_type {
     PBUFFER_SURFACE
 } server_surface_type_t;
 
-/* server data strcture for display.
- * server will open a new display to X server because
- * almost all calls, except few are async.  In order to
- * eliminate contention to Xlib calls, we need a separate
- * display from client
- */
-typedef struct _server_display {
-    Display            *client_display;
-    Display            *server_display;
-    EGLDisplay          egl_display;
-    bool                mark_for_deletion;   /* called by eglTerminate
-                                              * from out-of-order buffer
-                                              */
-    unsigned int        ref_count;           /* set 0 by eglGetDisplay
-                                              * from out-of-order buffer,
-                                              * increase 1 by out-of-order
-                                              * eglMakeCurrent, decrease
-                                              * by out-of-order eglTerminate
-                                              */
-} server_display_t;
+typedef struct _server_context  server_context_t;
 
-typedef struct _server_context {
+struct _server_context {
     EGLDisplay          egl_display;
     EGLContext          egl_context;
     bool                mark_for_deletion;    /* called by out-of-order
@@ -63,8 +44,9 @@ typedef struct _server_context {
     unsigned int        ref_count;            /* initial 0 by
                                                * eglCreateContext, max
                                                * reaches 1 by eglMakecurrent
-                                               */ 
-} server_context_t;
+                                               */
+    server_context_t   *share_context;        
+};
 
 /* a server side surface struct contains
  * the EGLDisplay used for creating
@@ -72,7 +54,6 @@ typedef struct _server_context {
  * surface, either a winddow or a pixmap
  */
 typedef struct _server_surface {
-    EGLDisplay             egl_display;
     EGLSurface             egl_surface;
     server_surface_type_t  type;
     bool                   mark_for_deletion; /* marked by out-of-order
@@ -100,6 +81,52 @@ typedef struct _server_surface {
                                                 */
 } server_surface_t;
 
+/* in OpenGL ES 2.0, according to EGL_KHR_image_pixmap extension,
+ * the only allowed binding is EGL_NATIVE_PIXMAP_KHR and the context
+ * must be EGL_NO_CONTEXT in eglCreateImageKHR
+ */
+typedef struct _server_image {
+    EGLImageKHR        egl_image;
+    bool               mark_for_deletion; /* called by out-of-order
+                                           * eglDestroyImageKHR
+                                           */
+    unsigned int       ref_count;         /* initial 0, increase by 
+                                           * out-of-order eglCreateImageKHR,
+                                           * glEGLTargetImageTexture2DOES,
+                                           * glEGLTargetImageRenderbufferStorageOES,
+                                           * decrease by in-order 
+                                           * glDeleteTextures and
+                                           * glDeleteRenderbuffers
+                                           */
+    link_list_t       *native_surface;    /* must be a pixmap */
+    link_list_t       *image_bindings;    /* a list of server_binding_t */
+    thread_t           lock_server;
+} server_image_t;
+
+/* server data strcture for display.
+ * server will open a new display to X server because
+ * almost all calls, except few are async.  In order to
+ * eliminate contention to Xlib calls, we need a separate
+ * display from client
+ */
+typedef struct _server_display_list {
+    Display            *client_display;
+    Display            *server_display;
+    EGLDisplay          egl_display;
+    bool                mark_for_deletion;   /* called by eglTerminate
+                                              * from out-of-order buffer
+                                              */
+    unsigned int        ref_count;           /* set 0 by eglGetDisplay
+                                              * from out-of-order buffer,
+                                              * increase 1 by out-of-order
+                                              * eglMakeCurrent, decrease
+                                              * by out-of-order eglTerminate
+                                              */
+    link_list_t        *contexts;
+    link_list_t        *surfaces;
+    link_list_t        *images; 
+} server_display_list_t;
+
 /* a server side native surface is either a window or a pixmap.
  * It contains two important fields.
  * 1. a reference count.  When a server creates an EGLSurface from the
@@ -122,101 +149,55 @@ typedef struct _server_native_surface {
                                           */ 
 } server_native_surface_t;
 
-
-/* in OpenGL ES 2.0, according to EGL_KHR_image_pixmap extension,
- * the only allowed binding is EGL_NATIVE_PIXMAP_KHR and the context
- * must be EGL_NO_CONTEXT in eglCreateImageKHR
- */
-typedef struct _server_image {
-    EGLDisplay         egl_display;
-    EGLImageKHR        egl_image;
-    bool               mark_for_deletion; /* called by out-of-order
-                                           * eglDestroyImageKHR
-                                           */
-    unsigned int       ref_count;         /* initial 0, increase by 
-                                           * out-of-order eglCreateImageKHR,
-                                           * glEGLTargetImageTexture2DOES,
-                                           * glEGLTargetImageRenderbufferStorageOES,
-                                           * decrease by in-order 
-                                           * glDeleteTextures and
-                                           * glDeleteRenderbuffers
-                                           */
-    link_list_t       *native_surface;    /* must be a pixmap */
-    link_list_t       *image_bindings;    /* a list of server_binding_t */
-    thread_t           lock_server;
-} server_image_t;
-
-/* get the cached server_display_t list */
-private link_list_t **
-_server_displays ();
-
+/*********************************************************
+ * functions for server_display_list
+ *********************************************************/
 /* obtain server sidde of X server display connection */
 private Display *
 _server_get_display (EGLDisplay egl_display);
 
-/* destroy the server_display_t structure, called by
- * link_list_delete_element
- */
-private void
-_destroy_display (void *abstract_display);
-
 /* create a new server_display_t */
-private server_display_t *
+private server_display_list_t *
 _server_display_create (Display *server_display, Display *client_display,
                         EGLDisplay egl_display);
 
 /* add newly created EGLDisplay to cache, called in
  * eglGetDisplay */
-private void
+private EGLBoolean 
 _server_display_add (Display *server_display,
                      Display *client_display,
                      EGLDisplay egl_display);
 
-/* remove a server_display_t from cache, called by eglTerminate and
- * eglMakeCurrent  */
+/* increase reference count on display, called by out-of-order
+ * eglMakeCurrent */
+private EGLBoolean 
+_server_display_reference (EGLDisplay egl_display);
+private EGLBoolean
+_server_display_unreference (EGLDisplay egl_display);
+
+/* remove a server_display_t from cache, called by in-order 
+ * eglTerminate  */
 private void
 _server_display_remove (Display *server_display, EGLDisplay egl_display);
 
-/* remove all display related resources marked for deletion,
-   returns true if there are still display related resources unfreed */
-private bool
-_server_destroy_display_mark_for_deletion (EGLDisplay egl_display);
-
 /* mark display to be deleted, called by out-of-order eglTerminate */
-private void
+private EGLBoolean
 _server_display_mark_for_deletion (EGLDisplay egl_display);
 
-/* remove all display related resources regardless whether they are locked
- * or mark_for_deletion or not.  This happens app exits without completely
- * destroy resources
- */
-private void
-_server_destroy_display (Display *client_display);
-
 /* get the pointer to the display */
-private server_display_t *
+private server_display_list_t *
 _server_display_find (EGLDisplay egl_display);
 
-/* delete function called by link_list_delete_element from
- * _destroy_image
- */
-private void
-_destroy_binding (void *abstract_binding);
-
-/* delete function called by link_list_delete_element */
-private void
-_destroy_image (void *abstract_image);
-
-/* get cached images */
-private link_list_t **
-_server_images ();
-
-/* create an server_image_t, called by eglCreateImageKHR */
+/*********************************************************
+ * functions for server_image
+ *********************************************************/
+/* create an server_image_t, called by out-of-order eglCreateImageKHR */
 private server_image_t *
 _server_image_create (EGLDisplay egl_display, EGLImageKHR egl_image,
                       EGLClientBuffer buffer);
 
-/* convenience function to add eglimage, called by eglCreateImageKHR */
+/* convenience function to add eglimage, called by out-of-order 
+ * eglCreateImageKHR */
 private void
 _server_image_add (EGLDisplay egl_display, EGLImageKHR egl_image,
                    EGLClientBuffer buffer);
@@ -236,7 +217,8 @@ _server_image_mark_for_deletion (EGLDisplay egl_display,
  * or glEGLImageTargetRenderbufferStorageOES
  */
 private void
-_server_image_lock (EGLImageKHR egl_image, thread_t server);
+_server_image_lock (EGLDisplay display, EGLImageKHR egl_image,
+                    thread_t server);
 
 /* set image binding to a texture or a renderbuffer, called by
  * in-order glEGLImageTargetTexture2DOES or
@@ -262,8 +244,11 @@ _server_image_unbind_buffer_and_unlock (EGLDisplay egl_display,
                                         thread_t server);
 
 private server_image_t *
-_server_image_find (EGLImageKHR egl_image);
+_server_image_find (EGLDisplay display, EGLImageKHR egl_image);
 
+/*********************************************************
+ * functions for server_native_surface
+ *********************************************************/
 /* get cached native surfaces */
 private link_list_t **
 _server_native_surfaces ();
@@ -282,7 +267,52 @@ _server_native_surface_add (EGLDisplay egl_display, void *native_surface);
 /* mark deletion, called by out-of-order eglDestroySurface */
 _server_native_surface_mark_for_deletion (EGLDisplay egl_display,
                                           void *native_surface);
+
+/*********************************************************
+ * functions for server_surface
+ *********************************************************/
+
+/* create a server resource on EGLSurface, called by out-of-order
+ * eglCreateXXXSurface, eglCreatePbufferFromClientBuffer (anyone using it?)  * and eglCreatePixmapSurfaceHI
+ */
+private server_surface_t *
+_server_surface_create (EGLDisplay egl_display, EGLSurface egl_surface,
+                        void *native_surface, server_surface_type_t type);
+
+/* create a server resource on EGLSurface, called by out-of-order
+ * eglCreateXXXSurface, eglCreatePbufferFromClientBuffer (anyone using it?)  * and eglCreatePixmapSurfaceHI
+ */
+private server_surface_t *
+private void
+_server_surface_add (EGLDisplay egl_display, EGLSurface egl_surface,
+                     void *native_surface, server_surface_type_t type);
     
+/* remove an EGLSurface, called by in-order eglDestroySurface */
+private void
+_server_surface_remove (EGLDisplay egl_display, EGLSurface egl_surface);
+
+/* mark deletion for EGLSurface, called by out-of-order eglDestroySurface */
+private void
+_server_surface_mark_for_deletion (EGLDisplay egl_display,
+                                   EGLSurface egl_surface);
+
+/* lock EGLSurface to a particular server, such that no one can delete it.
+ * The lock is only successful if EGLSurface has not been marked for
+ * deletion and ref_count > 1.  This is called by out-of-order
+ * eglMakeCurrent
+ */
+private EGLBoolean
+_server_surface_lock (EGLDisplay egl_display, EGLSurface egl_surface, 
+                      thread_t server);
+
+/* unlock EGLSurface from a particular server, decrease ref_count, 
+ * remove surface if mark_for_deletion and ref_count == 0, called by
+ * in-order eglMakeCurrent.
+ */
+private EGLBoolean
+_server_surface_unlock (EGLDisplay egl_display, EGLSurface egl_surface, 
+                        thread_t server);
+
 private link_list_t **
 _registered_lock_requests ();
 

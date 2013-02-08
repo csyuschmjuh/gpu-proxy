@@ -260,6 +260,24 @@ cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display)
 }
 
 void
+cached_gl_display_add (EGLDisplay display)
+{
+    link_list_t **dpys = cached_gl_displays ();
+    link_list_t *dpy = *dpys;
+
+    while (dpy) {
+        display_list *dpy_list = (display_list_t *)dpy->data;
+        if (dpy_list->display == display)
+            dpy_list->ref_count++;
+            return;
+        }
+
+        dpy = dpy->next;
+    }
+
+}
+
+void
 destroy_dpy (void *abstract_dpy)
 {
     display_list_t *dpy_sur = (display_list_t *)abstract_dpy;

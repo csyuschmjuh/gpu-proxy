@@ -360,6 +360,8 @@ private display_list_t *
 cached_gl_display_new (NativeDisplayType native_display, EGLDisplay display);
 
 private void
+cached_gl_display_add (NativeDisplayType native_display, EGLDisplay display);
+private void
 destroy_dpy (void *abstract_dpy);
 
 private void
