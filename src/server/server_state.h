@@ -36,7 +36,6 @@ typedef enum _server_surface_type {
 typedef struct _server_context  server_context_t;
 
 struct _server_context {
-    EGLDisplay          egl_display;
     EGLContext          egl_context;
     bool                mark_for_deletion;    /* called by out-of-order
                                                * eglDestroySurface
@@ -312,6 +311,25 @@ _server_surface_lock (EGLDisplay egl_display, EGLSurface egl_surface,
 private EGLBoolean
 _server_surface_unlock (EGLDisplay egl_display, EGLSurface egl_surface, 
                         thread_t server);
+
+/*********************************************************
+ * functions for EGLContext
+ *********************************************************/
+/* create a server resource on EGLContext, called by out-of-order
+ * eglCreateContext, set initial ref_count to 1
+ */
+private server_context_t *
+_server_context_create (EGLDisplay egl_display, EGLContext egl_context,
+                        EGLContext egl_share_context);
+
+/* create a server resource on EGLContext, called by out-of-order
+ * eglCreateContext set initial ref_count to 1
+ */
+private void
+_server_context_add (EGLDisplay egl_display, EGLContext egl_context,
+                     EGLContext egl_share_context);
+
+
 
 private link_list_t **
 _registered_lock_requests ();

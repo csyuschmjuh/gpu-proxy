@@ -91,6 +91,30 @@ _destroy_surface (void *abstract_surface)
     free (surface);
 }
 
+static void
+_destroy_context (void *abstract_context)
+{
+    free (abstract_context);
+}
+
+static server_context_t *
+_find_context (EGLDisplay egl_display, EGLContext egl_context)
+{
+    if (egl_display == EGL_NO_DISPLAY)
+        return NULL;
+
+    link_list_t **displays = _server_displays ();
+    link_list_t *head = *displays;
+
+    while (head) {
+        server_display_list_t *dpy = (server_display_list_t *)head->data;
+        if (dpy->egl_display == egl_display)
+            return dpy;
+        head = head->next;
+    }
+
+    return NULL;
+}
 
 /* destroy server_display_list_t, called by link_list_delete_element */
 static void
@@ -923,7 +947,68 @@ _server_surface_unlock (EGLDisplay egl_display, EGLSurface egl_surface,
     return _server_surface_remove (egl_display, egl_surface);
     return EGL_TRUE;
 }
-                    
+
+/*****************************************************************
+ * egl context functions 
+ *****************************************************************/
+/* called by out-of-order eglCreateContext, set initial ref_count = 1
+ */
+server_context_t *
+_server_context_create (EGLDisplay egl_display, EGLContext egl_context,
+                        EGLcontext egl_share_context)
+{
+    server_display_list_t *display = _server_display_find (egl_display);
+    if (! display)
+        return NULL;
+
+    server_context_t *share_context = NULL;
+    if (egl_share_context != EGL_NO_CONTEXT)
+        share_context =  _find_context (egl_display, egl_share_context);
+
+    server_context_t *context = (server_context_t *)malloc (sizeof (server_context_t));
+
+    context->egl_context = egl_context;
+    context->mark_for_deletion = false;
+    context->ref_count = 1;
+    context->share_context = share_context;
+
+    return context;
+}
+
+/* called by out-of-order eglCreateContext 
+ */
+void
+_server_context_add (EGLDisplay egl_display, EGLContext egl_context,
+                     EGContext egl_share_context)
+{
+    server_display_list_t *display = _server_display_find (egl_display);
+    if (! display)
+        return EGL_FALSe;
+
+    server_context_t *share_context = NULL;
+    if (egl_share_context != EGL_NO_CONTEXT)
+        share_context =  _find_context (egl_display, egl_share_context);
+    
+    link_list_t *head = display->contexts;
+
+    while (head) {
+        server_context_t *context = (server_context_t *) head->data;
+        if (context->egl_context == egl_context &&
+            context->share_context == share_context) {
+            return EGL_TRUE;
+        }
+
+        head = head->next;
+    } 
+
+    server_context_t *new_context = _server_context_create (egl_display,
+                                                            egl_context,
+                                                            egl_share_context);
+    link_list_append (&display->contexts, new_context, _destroy_context);
+    return EGL_TRUE;
+}
+
+
 link_list_t **
 _registered_lock_requests ()
 {
