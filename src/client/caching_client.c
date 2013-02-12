@@ -2534,6 +2534,7 @@ caching_client_glGetTexParameterfv (void* client, GLenum target, GLenum pname, G
             texture = caching_client_get_default_texture ();
 
         *params = texture->texture_max_anisotropy;
+        return;
     }
 
     caching_client_glGetTexParameteriv (client, target, pname, &paramsi);
@@ -3176,10 +3177,8 @@ caching_client_glTexParameteri (void* client, GLenum target, GLenum pname, GLint
         return;
     }
 
-    if (! texture) {
-        CACHING_CLIENT(client)->super_dispatch.glTexParameteri (client, target, pname, param);
-        return;
-    }
+    if (! texture)
+        texture = caching_client_get_default_texture ();
 
     if (pname == GL_TEXTURE_MAG_FILTER &&
         texture->texture_mag_filter != param) {
@@ -3250,10 +3249,8 @@ caching_client_glTexParameterf (void* client, GLenum target, GLenum pname, GLflo
         }
 
         texture = caching_client_lookup_cached_texture (state, target);
-        if (! texture) {
-            CACHING_CLIENT(client)->super_dispatch.glTexParameterf (client, target, pname, param);
-            return;
-        }
+        if (! texture)
+            texture = caching_client_get_default_texture ();
 
         if (texture->texture_max_anisotropy != param) {
             texture->texture_max_anisotropy = param;
