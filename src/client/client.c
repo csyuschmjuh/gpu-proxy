@@ -10,6 +10,7 @@
 #include "name_handler.h"
 
 #include <fcntl.h>
+#include <signal.h>
 #include <sys/prctl.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -124,6 +125,22 @@ start_server_process_func (client_t *client)
     return NULL;
 }
 
+static void
+server_crash_handler (int signum)
+{
+    client_destroy (client_get_thread_local ());
+    abort();
+}
+
+
+static void
+client_shutdown_server (client_t *client)
+{
+    command_t *command = client_get_space_for_command (COMMAND_SHUTDOWN);
+    command->type = COMMAND_SHUTDOWN;
+    client_run_command (command);
+}
+
 void
 client_start_server (client_t *client)
 {
@@ -132,9 +149,17 @@ client_start_server (client_t *client)
     child_pid = fork();
 
     if(child_pid < 0)
-        abort();
+        goto error;
 
-    if(child_pid == 0) /* Child process. */
+    struct sigaction new_action;
+    new_action.sa_handler = server_crash_handler;
+    sigemptyset (&new_action.sa_mask);
+    new_action.sa_flags = 0;
+
+    if (sigaction (SIGCHLD, &new_action, NULL))
+        goto error;
+
+    if (child_pid == 0) /* Child process. */
         start_server_process_func (client);
 
     /* FIXME:
@@ -143,7 +168,7 @@ client_start_server (client_t *client)
      * being scheduled on different cores, except the core server thread
      * is running, but on ARM with hotplug, it seems that the kernel
      * will sometime schedule the client and server to run on the same core
-     * which slows down the performance.  So here is the HACK 
+     * which slows down the performance.  So here is the HACK
      */
     int available_cpus = sysconf (_SC_NPROCESSORS_CONF);
 
@@ -154,6 +179,13 @@ client_start_server (client_t *client)
         CPU_SET (0, &cpu_set);
         pthread_setaffinity_np (id, sizeof (cpu_set_t), &cpu_set);
     }
+
+    return;
+
+error:
+    client_shutdown_server (client);
+    client_destroy (client);
+    abort();
 }
 
 client_t *
@@ -193,22 +225,13 @@ client_init (client_t *client)
     client->active_state = NULL;
 
     client_start_server (client);
-    initializing_client = false;
-}
 
-static void
-client_shutdown_server (client_t *client)
-{
-    command_t *command = client_get_space_for_command (COMMAND_SHUTDOWN);
-    command->type = COMMAND_SHUTDOWN;
-    client_run_command (command);
+    initializing_client = false;
 }
 
 bool
 client_destroy (client_t *client)
 {
-    client_shutdown_server (client);
-
     buffer_free (client->buffer);
 
     sem_close (client->server_signal);

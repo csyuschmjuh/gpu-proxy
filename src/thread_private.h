@@ -16,10 +16,10 @@ typedef pthread_cond_t                  signal_t;
 
 typedef pthread_t                       thread_t;
 
-#define wait_signal(name1, name2)   pthread_cond_wait (&(name1), &(name2))
-#define signal(name)         pthread_cond_signal (&(name))
-#define signal_init(name)    pthread_cond_init (&(name), NULL)
-#define signal_destroy(name) pthread_cond_destroy (&(name))
+#define cond_wait_signal(name1, name2)   pthread_cond_wait (&(name1), &(name2))
+#define cond_signal(name)         pthread_cond_signal (&(name))
+#define cond_signal_init(name)    pthread_cond_init (&(name), NULL)
+#define cond_signal_destroy(name) pthread_cond_destroy (&(name))
 
 /* static initializer */
 #define mutex_static_init(name) \
