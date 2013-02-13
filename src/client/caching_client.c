@@ -3550,7 +3550,7 @@ caching_client_glUniform4i (void *client,
 }
 
 bool
-_synthesize_uniform_matrix_error(void *client,
+_synthesize_uniform_vector_error(void *client,
                                  GLint location,
                                  GLsizei count,
                                  GLenum program_error)
@@ -3566,6 +3566,134 @@ _synthesize_uniform_matrix_error(void *client,
 }
 
 static void
+caching_client_glUniform1fv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLfloat *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform1fv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform2fv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLfloat *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform2fv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform3fv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLfloat *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform3fv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform4fv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLfloat *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform4fv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform1iv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLint *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform1iv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform2iv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLint *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform2iv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform3iv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLint *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform3iv (client, location, count, value);
+}
+
+static void
+caching_client_glUniform4iv (void *client,
+                             GLint location,
+                             GLsizei count,
+                             const GLint *value)
+{
+    INSTRUMENT();
+    if (! _synthesize_uniform_vector_error (client,
+                                            location,
+                                            count,
+                                            GL_INVALID_OPERATION))
+        return;
+
+    CACHING_CLIENT(client)->super_dispatch.glUniform4iv (client, location, count, value);
+}
+
+static void
 caching_client_glUniformMatrix2fv (void* client,
                                    GLint location,
                                    GLsizei count,
@@ -3573,7 +3701,7 @@ caching_client_glUniformMatrix2fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_matrix_error (client,
+    if (! _synthesize_uniform_vector_error (client,
                                             location,
                                             count,
                                             GL_INVALID_OPERATION))
@@ -3590,7 +3718,7 @@ caching_client_glUniformMatrix3fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_matrix_error (client,
+    if (! _synthesize_uniform_vector_error (client,
                                             location,
                                             count,
                                             GL_INVALID_OPERATION))
@@ -3607,7 +3735,7 @@ caching_client_glUniformMatrix4fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_matrix_error (client,
+    if (! _synthesize_uniform_vector_error (client,
                                             location,
                                             count,
                                             GL_INVALID_OPERATION))
