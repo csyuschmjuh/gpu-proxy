@@ -197,6 +197,18 @@ client_new ()
     return client;
 }
 
+static int
+x_error_handler (Display *display)
+{
+    client_t *client = client_get_thread_local ();
+
+    client_shutdown_server (client);
+    client_destroy (client);
+    abort();
+
+    return 0;
+}
+
 void
 client_init (client_t *client)
 {
@@ -225,6 +237,8 @@ client_init (client_t *client)
     client->active_state = NULL;
 
     client_start_server (client);
+
+    XSetIOErrorHandler (x_error_handler);
 
     initializing_client = false;
 }
