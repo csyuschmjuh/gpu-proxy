@@ -108,11 +108,11 @@ _FUNCTION_INFO = {
   },
   'glGetUniformLocation': {
     'default_return': '-1',
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetAttribLocation': {
     'default_return': '-1',
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetError': {
     'default_return': 'GL_INVALID_OPERATION',
@@ -296,47 +296,47 @@ _FUNCTION_INFO = {
   },
   'glGetActiveAttrib': {
     'out_arguments': ['length', 'size', 'type', 'name'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetActiveUniform': {
     'out_arguments': ['length', 'size', 'type', 'name'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetAttachedShaders': {
     'out_arguments': ['count', 'shaders'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetBufferParameteriv': {
-    'out_arguments': ['params']
+    'out_arguments': {'attrib_list': ['params']}
   },
   'glGetFramebufferAttachmentParameteriv': {
-    'out_arguments': ['params']
+    'out_arguments': {'attrib_list': ['params']}
   },
   'glGetProgramInfoLog': {
     'out_arguments': ['length', 'infolog'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetProgramiv': {
     'out_arguments': ['params'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetRenderbufferParameteriv': {
     'out_arguments': ['params']
   },
   'glGetShaderInfoLog': {
     'out_arguments': ['length', 'infolog'],
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glGetShaderPrecisionFormat': {
     'out_arguments': ['range', 'precision']
   },
   'glGetShaderSource': {
     'out_arguments': ['length', 'source'],
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glGetShaderiv': {
     'out_arguments': ['params'],
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glGetTexParameteriv': {
     'out_arguments': ['params']
@@ -346,11 +346,11 @@ _FUNCTION_INFO = {
   },
   'glGetUniformiv': {
     'out_arguments': ['params'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetUniformfv': {
     'out_arguments': ['params'],
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glGetVertexAttribiv': {
     'out_arguments': ['params']
@@ -480,73 +480,73 @@ _FUNCTION_INFO = {
     'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
   },
   'glBindBuffer' : {
-    'mapped_names': ['buffer']
+    'mapped_names': {'attrib_list': ['buffer']}
   },
   'glIsBuffer' : {
-    'mapped_names': ['buffer']
+    'mapped_names': {'attrib_list': ['buffer']}
   },
   'glBindFramebuffer' : {
-    'mapped_names': ['framebuffer']
+    'mapped_names': {'attrib_list': ['framebuffer']}
   },
   'glIsFramebuffer' : {
-    'mapped_names': ['framebuffer']
+    'mapped_names': {'attrib_list': ['framebuffer']}
   },
   'glBindTexture' : {
-    'mapped_names': ['texture']
+    'mapped_names': {'attrib_list': ['texture']}
   },
   'glIsTexture' : {
-    'mapped_names': ['texture']
+    'mapped_names': {'attrib_list': ['texture']}
   },
   'glFramebufferTexture2D' : {
-    'mapped_names': ['texture']
+    'mapped_names': {'attrib_list': ['texture']}
   },
   'glBindRenderbuffer' : {
-    'mapped_names': ['renderbuffer']
+    'mapped_names': {'attrib_list': ['renderbuffer']}
   },
   'glIsRenderbuffer' : {
-    'mapped_names': ['renderbuffer']
+    'mapped_names': {'attrib_list': ['renderbuffer']}
   },
   'glFramebufferRenderbuffer' : {
-    'mapped_names': ['renderbuffer']
+    'mapped_names': {'attrib_list': ['renderbuffer']}
   },
   'glFramebufferTexture2DMultisampleEXT': {
-    'mapped_names': ['texture']
+    'mapped_names': {'attrib_list': ['texture']}
   },
   'glFramebufferTexture2DMultisampleIMG': {
-    'mapped_names': ['texture']
+    'mapped_names': {'attrib_list': ['texture']}
   },
   'glAttachShader' : {
-    'mapped_names': ['program', 'shader']
+    'mapped_names': {'attrib_list': ['program', 'shader']}
   },
   'glBindAttribLocation' : {
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glDetachShader' : {
-    'mapped_names': ['program', 'shader']
+    'mapped_names': {'attrib_list': ['program', 'shader']}
   },
   'glIsProgram' : {
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glLinkProgram' : {
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glUseProgram' : {
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glValidateProgram' : {
-    'mapped_names': ['program']
+    'mapped_names': {'attrib_list': ['program']}
   },
   'glCompileShader' : {
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glDeleteShader' : {
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glIsShader' : {
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
   'glShaderSource' : {
-    'mapped_names': ['shader']
+    'mapped_names': {'attrib_list': ['shader']}
   },
 }
 
@@ -1944,7 +1944,7 @@ class FunctionInfo(object):
     if not 'argument_size_from_function' in info:
       self.argument_size_from_function = {}
     if not 'mapped_names' in info:
-      self.mapped_names = []
+      self.mapped_names = {}
 
 
 class Argument(object):
@@ -2568,8 +2568,10 @@ class Function(object):
   def ShouldHideEntryPoint(self):
     return self.IsExtensionFunction() and not self.name.startswith("egl")
 
-  def GetMappedName(self):
-    return self.info.mapped_names
+  def GetMappedNameAttributes(self):
+    if ('attrib_list' in self.info.mapped_names):
+        return self.info.mapped_names['attrib_list'];
+    return []
 
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
@@ -3034,7 +3036,7 @@ class GLGenerator(object):
           file.Write("    command_%s_t *command =\n" % func.name.lower())
           file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
 
-        mapped_names = func.GetMappedName()
+        mapped_names = func.GetMappedNameAttributes()
         for mapped_name in mapped_names:
           file.Write("    if (command->%s) {\n" % mapped_name)
           file.Write("        mutex_lock (name_mapping_mutex);\n")
