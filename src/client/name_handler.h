@@ -15,14 +15,30 @@
 #endif
 #include <stdlib.h>
 
-private void
-name_handler_init ();
+typedef struct name_handler {
+    unsigned int last_name;
+    link_list_t *reusable_names;
+} name_handler_t;
+
+
+private name_handler_t *
+name_handler_create ();
 
 private void
-name_handler_alloc_names (GLsizei n,
-                          GLuint *buffers);
+name_handler_destroy (name_handler_t *name_handler);
+
 private void
-name_handler_delete_names (GLsizei n,
+name_handler_alloc_names (name_handler_t *name_handler,
+                          GLsizei n,
+                          GLuint *buffers);
+
+void
+name_handler_alloc_name (name_handler_t *name_handler,
+                         GLuint buffer);
+
+private void
+name_handler_delete_names (name_handler_t *name_handler,
+                           GLsizei n,
                            const GLuint *buffers);
 
 #endif /* CLIENT_STATE_H */

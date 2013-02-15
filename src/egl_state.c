@@ -1,6 +1,5 @@
 #include "config.h"
 #include "egl_state.h"
-#include "name_handler.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -150,6 +149,12 @@ egl_state_init (egl_state_t *state,
     state->framebuffer_cache = new_hash_table (free);
     state->renderbuffer_cache = new_hash_table (free);
 
+    state->shader_objects_name_handler = name_handler_create ();
+    state->texture_name_handler = name_handler_create ();
+    state->framebuffer_name_handler = name_handler_create ();
+    state->renderbuffer_name_handler = name_handler_create ();
+    state->buffer_name_handler = name_handler_create ();
+
     state->supports_element_index_uint = false;
     state->supports_bgra = false;
 }
@@ -163,47 +168,12 @@ egl_state_new (EGLDisplay display, EGLContext context)
 }
 
 void
-delete_texture_from_name_handler (GLuint key,
-                                  void *data,
-                                  void *userData)
-{
-    name_handler_delete_names (1, data);
-}
-
-void
-delete_framebuffer_from_name_handler (GLuint key,
-                                      void *data,
-                                      void *userData)
-{
-    name_handler_delete_names (1, data);
-}
-
-void
-delete_renderbuffer_from_name_handler (GLuint key,
-                                       void *data,
-                                       void *userData)
-{
-    name_handler_delete_names (1, data);
-}
-
-void
 egl_state_destroy (void *abstract_state)
 {
     egl_state_t *state = abstract_state;
 
     if (state->vertex_attribs.attribs != state->vertex_attribs.embedded_attribs)
         free (state->vertex_attribs.attribs);
-
-    /* We don't use egl_state_get_texture_cache or egl_state_get_program_list
-     * here because we don't want to delete a sharing context's state. */
-    hash_walk (state->texture_cache, delete_texture_from_name_handler, NULL);
-    delete_hash_table (state->texture_cache);
-
-    hash_walk (state->framebuffer_cache, delete_framebuffer_from_name_handler, NULL);
-    delete_hash_table (state->framebuffer_cache);
-    
-    hash_walk (state->renderbuffer_cache, delete_renderbuffer_from_name_handler, NULL);
-    delete_hash_table (state->renderbuffer_cache);
 
     link_list_clear (&state->shader_objects);
 
@@ -217,6 +187,17 @@ egl_state_destroy (void *abstract_state)
         free (state->version_string);
     if (state->extensions_string)
         free (state->extensions_string);
+
+    if (state->shader_objects_name_handler)
+        name_handler_destroy (state->shader_objects_name_handler);
+    if (state->texture_name_handler)
+        name_handler_destroy (state->texture_name_handler);
+    if (state->framebuffer_name_handler)
+        name_handler_destroy (state->framebuffer_name_handler);
+    if (state->renderbuffer_name_handler)
+        name_handler_destroy (state->renderbuffer_name_handler);
+    if (state->buffer_name_handler)
+        name_handler_destroy (state->buffer_name_handler);
 
     free (state);
 }

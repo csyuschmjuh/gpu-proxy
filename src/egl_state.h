@@ -2,6 +2,7 @@
 #define GPUPROCESS_EGL_STATE_H
 
 #include "hash.h"
+#include "name_handler.h"
 #include "program.h"
 #include "thread_private.h"
 #include <EGL/egl.h>
@@ -110,6 +111,7 @@ struct egl_state {
     bool                    need_get_error;
     link_list_t           *shader_objects;         /* initial is NULL */
     vertex_attrib_list_t  vertex_attribs;    /* client states */
+    name_handler_t        *shader_objects_name_handler;
 
 /* GL states from glGet () */
     /* used */
@@ -305,6 +307,11 @@ struct egl_state {
     HashTable    *texture_cache;
     HashTable    *framebuffer_cache;
     HashTable    *renderbuffer_cache;
+
+    name_handler_t *texture_name_handler;
+    name_handler_t *framebuffer_name_handler;
+    name_handler_t *renderbuffer_name_handler;
+    name_handler_t *buffer_name_handler;
 
     bool         supports_element_index_uint;     /* GL_OES_element_index_uint */
     bool	 supports_bgra;	                  /* GL_EXT_texture_format_BGRA8888 */
