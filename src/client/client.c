@@ -43,7 +43,6 @@ on_client_thread ()
     if (initialized)
         return client_thread;
     initialized = true;
-    name_handler_init ();
     mutex_unlock (client_thread_mutex);
 
     return client_thread;
