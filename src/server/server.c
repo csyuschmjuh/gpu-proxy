@@ -345,9 +345,63 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
     command_gldeleteshader_destroy_arguments (command);
 }
 
+/* pilot server handles these out-of-order requests from all servers.
+ * These requests must be handled when client requests it because they are
+ * not tied to a specific context.  We must make theses APIs out-of-order
+ * because it is possible that two threads runs concurrently, thread A
+ * creates a context, and thread B can immediately swith on to the newly
+ * created context.  If we make them in-order, then it might be case where
+ * thread A server has not received create context command yet while thread
+ * B has already received eglMakeCurrent on new context, which result in
+ * error
+ */
 static void
-server_handle_eglcreatecontext (server_t *server,
-                                command_t *abstract_command)
+out_of_order_server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglgetdisplay_t *command =
+        (command_eglgetdisplay_t *)abstract_command;
+
+    /* open a separate display */
+    Display *display = XOpenDisplay (NULL);
+    if (display == NULL)
+        command->result = EGL_NO_DISPLAY;
+
+    command->result = server->dispatch.eglGetDisplay (server, display);
+    if (command->result == EGL_NO_DISPLAY) {
+        XCloseDisplay (display);
+        return;
+    }
+
+    mutex_lock (shared_resources_mutex);
+    _server_display_add (display, command->display_id, command->result);
+    mutex_unlock (shared_resources_mutex);
+}
+
+static void
+out_of_order_server_handle_eglinitialize (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+
+    command_eglinitialize_t *command =
+        (command_eglinitialize_t *)abstract_command;
+
+    command->result = server->dispatch.eglInitialize (server, command->dpy, command->major, command->minor);
+}
+
+static void
+out_of_order_server_handle_eglbindapi (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglbindapi_t *command =
+            (command_eglbindapi_t *)abstract_command;
+    command->result = server->dispatch.eglBindAPI (server, command->api);
+}
+
+static void
+out_of_order_server_handle_eglcreatecontext (server_t *server,
+                                             command_t *abstract_command)
 {
     INSTRUMENT ();
 
@@ -362,14 +416,16 @@ server_handle_eglcreatecontext (server_t *server,
     if (command->result != EGL_NO_CONTEXT &&
         command->share_context != EGL_NO_CONTEXT) {
         mutex_lock (shared_resources_mutex);
-        _server_shared_contexts_add (command->dpy, (EGLContext) command->result);
-        _server_shared_contexts_add (command->dpy, (EGLContext) command->share_context);
+        /* create contexts in shared resources */
+        _server_context_create (command->dpy, (EGLContext) command->result,
+                                command->share_context);
         mutex_unlock (shared_resources_mutex);
     }
 }
 
 static void
-server_handle_eglcreatewindowsurface (server_t *server, command_t *abstract_command)
+out_of_order_server_handle_eglcreatewindowsurface (server_t *server,
+                                                   command_t *abstract_command)
 {
     INSTRUMENT ();
 
@@ -384,13 +440,14 @@ server_handle_eglcreatewindowsurface (server_t *server, command_t *abstract_comm
 
     if (command->result != EGL_NO_SURFACE) {
         mutex_lock (shared_resources_mutex);
-        _server_shared_surfaces_add (command->dpy, (EGLSurface) command->result);
+        _server_surface_add (command->dpy, command->result,
+                             (void *)command->win, WINDOW_SURFACE);
         mutex_unlock (shared_resources_mutex);
     }
 }
 
 static void
-server_handle_eglcreatepixmapsurface (server_t *server, command_t *abstract_command)
+out_of_order_server_handle_eglcreatepixmapsurface (server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
 
@@ -405,91 +462,199 @@ server_handle_eglcreatepixmapsurface (server_t *server, command_t *abstract_comm
 
     if (command->result != EGL_NO_SURFACE) {
         mutex_lock (shared_resources_mutex);
-        _server_shared_surfaces_add (command->dpy, (EGLSurface) command->result);
+        _server_surfaces_add (command->dpy, command->result,
+                              (void *)command->pixma, PIXMAP_SURFACE);
         mutex_unlock (shared_resources_mutex);
     }
 }
 
 static void
-server_handle_egldestroysurface (server_t *server, command_t *abstract_command)
+out_of_order_server_handle_eglcreatepbuffersurface (server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
-    command_egldestroysurface_t *command =
-        (command_egldestroysurface_t *)abstract_command;
 
-    command->result = server->dispatch.eglDestroySurface (server,
-                                                          command->dpy,
-                                                          command->surface);
+    command_eglcreatepbuffersurface_t *command = 
+        (command_eglcreatepbuffersurface_t *) abstract_command;
 
-    if (command->result == EGL_TRUE) {
+    command->result = server->dispatch.eglCreatePbufferSurface (server,
+                                                                command->dpy,
+                                                                command->config,
+                                                                command->attrib_list);
+
+    if (command->result != EGL_NO_SURFACE) {
         mutex_lock (shared_resources_mutex);
-        _server_shared_surfaces_remove (command->dpy, (EGLSurface) command->surface);
+        _server_surfaces_add (command->dpy, command->result,
+                              (void *)NULL, PBUFFER_SURFACE);
         mutex_unlock (shared_resources_mutex);
     }
 }
 
 static void
-server_handle_egldestroycontext (server_t *server, command_t *abstract_command)
+out_of_order_server_handle_eglcreatepbufferfromclientbuffer (
+    server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
-    command_egldestroycontext_t *command =
-        (command_egldestroycontext_t *)abstract_command;
-
-    command->result = server->dispatch.eglDestroyContext (server,
-                                                          command->dpy,
-                                                          command->ctx);
-
-    if (command->result == EGL_TRUE) {
+    command_eglcreatepbufferfromclientbuffer_t *command =
+            (command_eglcreatepbufferfromclientbuffer_t *)abstract_command;
+    command->result = server->dispatch.eglCreatePbufferFromClientBuffer (server, command->dpy, command->buftype, command->buffer, command->config, command->attrib_list);
+    
+    if (command->result != EGL_NO_SURFACE) {
         mutex_lock (shared_resources_mutex);
-        _server_shared_contexts_remove (command->dpy, (EGLContext) command->ctx);
+        _server_surfaces_add (command->dpy, command->result,
+                              (void *)command->bufffer, PBUFFER_SURFACE);
         mutex_unlock (shared_resources_mutex);
     }
 }
 
 static void
-server_handle_eglterminate (server_t *server, command_t *abstract_command)
+out_of_order_server_handle_eglcreatepixmapsurfacehi (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglcreatepixmapsurfacehi_t *command =
+            (command_eglcreatepixmapsurfacehi_t *)abstract_command;
+    command->result = server->dispatch.eglCreatePixmapSurfaceHI (server, command->dpy, command->config, command->pixmap);
+    
+    if (command->result != EGL_NO_SURFACE) {
+        mutex_lock (shared_resources_mutex);
+        _server_surfaces_add (command->dpy, command->result,
+                              (void *)command->pixmap, PIXMAP_SURFACE);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+out_of_order_server_handle_eglcreateimagekhr (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglcreateimagekhr_t *command =
+            (command_eglcreateimagekhr_t *)abstract_command;
+    command->result = server->dispatch.eglCreateImageKHR (server, command->dpy, command->ctx, command->target, command->buffer, command->attrib_list);
+
+    if (command->result != EGL_NO_IMAGE_KHR) {
+        mutex_lock (shared_resources_mutex);
+        _server_image_add (command->dpy, (EGLImageKHR) command->result, command->buffer);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+out_of_order_server_handle_eglcreatedrmimagemesa (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglcreatedrmimagemesa_t *command =
+            (command_eglcreatedrmimagemesa_t *)abstract_command;
+    command->result = server->dispatch.eglCreateDRMImageMESA (server, command->dpy, command->attrib_list);
+    
+    if (command->result != EGL_NO_IMAGE_KHR) {
+        mutex_lock (shared_resources_mutex);
+        _server_image_add (command->dpy, (EGLImageKHR) command->result, NULL);
+        mutex_unlock (shared_resources_mutex);
+    }
+}
+
+static void
+out_of_order_server_handle_egllocksurfacekhr (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egllocksurfacekhr_t *command =
+            (command_egllocksurfacekhr_t *)abstract_command;
+    command->result = server->dispatch.eglLockSurfaceKHR (server, command->display, command->surface, command->attrib_list);
+}
+
+static void
+out_of_order_server_handle_eglunlocksurfacekhr (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglunlocksurfacekhr_t *command =
+            (command_eglunlocksurfacekhr_t *)abstract_command;
+    command->result = server->dispatch.eglUnlockSurfaceKHR (server, command->display, command->surface);
+}
+
+/* server handles out-of-order request, mark for deletion for shared
+ * resources
+ */
+static void
+server_handle_eglterminate_request (server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
 
     command_eglterminate_t *command =
         (command_eglterminate_t *) abstract_command;
 
-    command->result = server->dispatch.eglTerminate (server, command->dpy);
-
-    if (command->result == EGL_TRUE) {
-        mutex_lock (shared_resources_mutex);
-        Display *dpy = _server_get_display (command->dpy);
-        _server_display_remove (dpy, command->dpy);
-        _server_destroy_display (command->dpy);
-        mutex_unlock (shared_resources_mutex);
-    }
+    mutex_lock (shared_resources_mutex);
+    _server_display_mark_for_deletion (command->dpy);
+    mutex_unlock (shared_resources_mutex);
+    command->result = EGL_TRUE;
 }
 
 static void
-server_handle_eglgetdisplay (server_t *server, command_t *abstract_command)
+server_handle_egldestroysurface_request (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egldestroysurface_t *command =
+        (command_egldestroysurface_t *)abstract_command;
+
+    mutex_lock (shared_resources_mutex);
+    _server_surface_mark_for_deletion (command->dpy, (EGLSurface) command->surface);
+    mutex_unlock (shared_resources_mutex);
+    command->result = EGL_TRUE;
+}
+
+static void
+server_handle_egldestroycontext_request (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_egldestroycontext_t *command =
+        (command_egldestroycontext_t *)abstract_command;
+
+    mutex_lock (shared_resources_mutex);
+    _server_context_mark_for_deletion (command->dpy, (EGLContext) command->ctx);
+    mutex_unlock (shared_resources_mutex);
+    command->result = EGL_TRUE;
+}
+
+/*
+static void
+server_handle_eglreleasethread_request (server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
 
-    command_eglgetdisplay_t *command =
-        (command_eglgetdisplay_t *)abstract_command;
-
-    /* open a separate display */
-    Display *display = XOpenDisplay (NULL);
-    if (display == NULL)
-        command->result = EGL_NO_DISPLAY;
-
-    command->display_id = display;
-
-    command->result = server->dispatch.eglGetDisplay (server, command->display_id);
-    if (command->result == EGL_NO_DISPLAY) {
-        XCloseDisplay (display);
-        return;
-    }
+    command_eglreleasethread *command =
+        (command_eglreleasethreadrequest_t *)abstract_command;
 
     mutex_lock (shared_resources_mutex);
-    _server_display_add (display, command->result);
+    _server_surface_unlock (command->dpy, command->draw, 0);
+    if (command->draw != command->read)
+        _server_surface_unlock (command->dpy, command->read, 0);
+    _server_context_unlock (command->dpy, command->ctx, 0);
+    _server_display_unreference (command->dpy);
     mutex_unlock (shared_resources_mutex);
+    return EGL_TRUE;
 }
+*/
+
+/* the out-of-order eglMakeCurrent is only sent if display, read, draw or
+ * context is valid
+ */
+static void
+server_handle_eglmakecurrent_reuquest (server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    command_eglmakecurrent_t *command =
+        (command_eglmakecurrent_t *)abstract_command;
+
+    command->result = EGL_TRUE;
+    if (command->dpy == EGL_NO_DISPLAY ||
+        command->ctx == EGL_NO_CONTEXT) 
+        return;
+    
+    mutex_lock (shared_resources_mutex);
+    if (command->ctx != EGL_NO_CONTEXT)
+        _server_context_lock (command->dpy, command->ctx); 
+
 
 static void
 server_handle_egldestroyimagekhr (server_t *server, command_t *abstract_command)
@@ -503,21 +668,6 @@ server_handle_egldestroyimagekhr (server_t *server, command_t *abstract_command)
     if (command->result == EGL_TRUE) {
         mutex_lock (shared_resources_mutex);
         _server_eglimage_remove (command->dpy, (EGLImageKHR) command->image);
-        mutex_unlock (shared_resources_mutex);
-    }
-}
-
-static void
-server_handle_eglcreateimagekhr (server_t *server, command_t *abstract_command)
-{
-    INSTRUMENT ();
-    command_eglcreateimagekhr_t *command =
-            (command_eglcreateimagekhr_t *)abstract_command;
-    command->result = server->dispatch.eglCreateImageKHR (server, command->dpy, command->ctx, command->target, command->buffer, command->attrib_list);
-
-    if (command->result != EGL_NO_IMAGE_KHR) {
-        mutex_lock (shared_resources_mutex);
-        _server_eglimage_add (command->dpy, (EGLImageKHR) command->result, command->ctx);
         mutex_unlock (shared_resources_mutex);
     }
 }
