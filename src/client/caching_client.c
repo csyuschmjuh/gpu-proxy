@@ -786,7 +786,7 @@ caching_client_glCreateProgram (void* client)
     if (!state)
         return 0;
 
-    name_handler_alloc_names (1, &result);
+    name_handler_alloc_names (state->shader_objects_name_handler, 1, &result);
     command = client_get_space_for_command (COMMAND_GLCREATEPROGRAM);
     command_glcreateprogram_init (command);
     ((command_glcreateprogram_t *)command)->result = result;
@@ -866,7 +866,7 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
     GLuint result = 0;
     command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
 
-    name_handler_alloc_names (1, &result);
+    name_handler_alloc_names (state->shader_objects_name_handler, 1, &result);
     command_glcreateshader_init (command, shaderType);
     ((command_glcreateshader_t *)command)->result = result;
 
@@ -987,7 +987,7 @@ caching_client_glDeleteBuffers (void* client, GLsizei n, const GLuint *buffers)
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteBuffers (client, n, buffers);
 
-    name_handler_delete_names (n, buffers);
+    name_handler_delete_names (state->buffer_name_handler, n, buffers);
 
     /* check array_buffer_binding and element_array_buffer_binding */
     for (i = 0; i < n; i++) {
@@ -1029,7 +1029,7 @@ caching_client_glDeleteFramebuffers (void* client, GLsizei n, const GLuint *fram
         return;
     }
 
-    name_handler_delete_names (n, framebuffers);
+    name_handler_delete_names (state->framebuffer_name_handler, n, framebuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteFramebuffers (client, n, framebuffers);
 
@@ -1087,7 +1087,7 @@ caching_client_glDeleteRenderbuffers (void* client, GLsizei n, const GLuint *ren
         return;
     }
 
-    name_handler_delete_names (n, renderbuffers);
+    name_handler_delete_names (state->renderbuffer_name_handler, n, renderbuffers);
 
     CACHING_CLIENT(client)->super_dispatch.glDeleteRenderbuffers (client, n, renderbuffers);
     int i;
@@ -2037,7 +2037,7 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
         return;
     }
 
-    name_handler_alloc_names (n, buffers);
+    name_handler_alloc_names (state->buffer_name_handler, n, buffers);
     GLuint *server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
     memcpy (server_buffers, buffers, n * sizeof (GLuint));
 
@@ -2059,7 +2059,7 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
         return;
     }
 
-    name_handler_alloc_names (n, framebuffers);
+    name_handler_alloc_names (state->framebuffer_name_handler, n, framebuffers);
     GLuint *server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
     memcpy (server_framebuffers, framebuffers, n * sizeof (GLuint));
 
@@ -2086,7 +2086,7 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
         return;
     }
 
-    name_handler_alloc_names (n, renderbuffers);
+    name_handler_alloc_names (state->renderbuffer_name_handler, n, renderbuffers);
     GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
     memcpy (server_renderbuffers, renderbuffers, n * sizeof (GLuint));
 
@@ -2114,7 +2114,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
         return;
     }
 
-    name_handler_alloc_names (n, textures);
+    name_handler_alloc_names (state->texture_name_handler, n, textures);
 
     GLuint *server_textures = (GLuint *)malloc (n * sizeof (GLuint));
     memcpy (server_textures, textures, n * sizeof (GLuint));
