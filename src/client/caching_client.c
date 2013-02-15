@@ -2068,10 +2068,8 @@ caching_client_glGenBuffers (void* client, GLsizei n, GLuint *buffers)
     }
 
     name_handler_alloc_names (n, buffers);
-    GLuint *server_buffers = (GLuint *)malloc (n * sizeof (GLuint));
-    memcpy (server_buffers, buffers, n * sizeof (GLuint));
 
-    CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, server_buffers);
+    CACHING_CLIENT(client)->super_dispatch.glGenBuffers (client, n, buffers);
 }
 
 static void
@@ -2090,11 +2088,9 @@ caching_client_glGenFramebuffers (void* client, GLsizei n, GLuint *framebuffers)
     }
 
     name_handler_alloc_names (n, framebuffers);
-    GLuint *server_framebuffers = (GLuint *)malloc (n * sizeof (GLuint));
-    memcpy (server_framebuffers, framebuffers, n * sizeof (GLuint));
 
-    CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, server_framebuffers);
-    
+    CACHING_CLIENT(client)->super_dispatch.glGenFramebuffers (client, n, framebuffers);
+
     /* add framebuffers to cache */
     int i;
     for (i = 0; i < n; i++)
@@ -2117,11 +2113,9 @@ caching_client_glGenRenderbuffers (void* client, GLsizei n, GLuint *renderbuffer
     }
 
     name_handler_alloc_names (n, renderbuffers);
-    GLuint *server_renderbuffers = (GLuint *)malloc (n * sizeof (GLuint));
-    memcpy (server_renderbuffers, renderbuffers, n * sizeof (GLuint));
 
-    CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, server_renderbuffers);
-    
+    CACHING_CLIENT(client)->super_dispatch.glGenRenderbuffers (client, n, renderbuffers);
+
     /* add renderbuffers to cache */
     int i;
     for (i = 0; i < n; i++)
@@ -2146,10 +2140,7 @@ caching_client_glGenTextures (void* client, GLsizei n, GLuint *textures)
 
     name_handler_alloc_names (n, textures);
 
-    GLuint *server_textures = (GLuint *)malloc (n * sizeof (GLuint));
-    memcpy (server_textures, textures, n * sizeof (GLuint));
-
-    CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, server_textures);
+    CACHING_CLIENT(client)->super_dispatch.glGenTextures (client, n, textures);
 
     /* add textures to cache */
     int i;
