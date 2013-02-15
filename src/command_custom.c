@@ -195,13 +195,6 @@ command_glshadersource_init (command_t *abstract_command,
 }
 
 void
-command_glshadersource_destroy_arguments (command_glshadersource_t *command)
-{
-    /* This command is asynchronous, but we are using the buffer to handle
-     the texture information. */
-}
-
-void
 command_gltexparameteriv_init (command_t *abstract_command,
                                GLenum target,
                                GLenum pname,
@@ -263,27 +256,4 @@ command_gltexparameterfv_init (command_t *abstract_command,
 
     command->params = (GLfloat *)((char *)command + command_size);
     memcpy (command->params, params, params_size);
-}
-
-void
-command_glvertexattribpointer_destroy_arguments (command_glvertexattribpointer_t *command)
-
-{
-    /* This command is asynchronous, but we don't want to free the pointer
-     * until after glDraw(Elements/Arrays). */
-}
-
-void
-command_gltexsubimage2d_destroy_arguments (command_gltexsubimage2d_t *command)
-{
-    /* This command is asynchronous, but we are using the buffer to handle
-     the texture information. */
-}
-
-void
-command_glteximage2d_destroy_arguments (command_glteximage2d_t *command)
-
-{
-    /* This command is asynchronous, but we are using the buffer to handle
-     the texture information. */
 }

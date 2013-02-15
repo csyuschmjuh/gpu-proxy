@@ -1849,19 +1849,6 @@ class TypeHandler(object):
 
     file.Write("}\n\n")
 
-  def WriteCommandDestroy(self, func, file):
-    file.Write("void\n");
-    file.Write("command_%s_destroy_arguments (command_%s_t *command)\n" % \
-        (func.name.lower(), func.name.lower()))
-    file.Write("\n{\n")
-
-    # The only thing we do for the moment is free arguments.
-    arguments_to_free = [arg for arg in func.GetOriginalArgs() if arg.IsPointer()]
-    for arg in arguments_to_free:
-      file.Write("    if (command->%s)\n" % arg.name)
-      file.Write("        free (command->%s);\n" % arg.name)
-    file.Write("}\n")
-
   def WriteInitSignature(self, func, file):
     """Writes the declaration of the init function for a given function."""
     file.Write("void\n") 
@@ -2498,9 +2485,6 @@ class Function(object):
   def WriteCommandInit(self, file):
     self.type_handler.WriteCommandInit(self, file)
 
-  def WriteCommandDestroy(self, file):
-    self.type_handler.WriteCommandDestroy(self, file)
-
   def WriteInitSignature(self, file):
     self.type_handler.WriteInitSignature(self, file)
 
@@ -2536,9 +2520,6 @@ class Function(object):
     return not self.HasReturnValue() or \
            self.return_type in _DEFAULT_RETURN_VALUES or \
            self.info.default_return
-
-  def NeedsDestructor(self):
-    return not self.IsSynchronous() and not self.IsType('Passthrough')
 
   def IsExtensionFunction(self):
     return self.name.endswith("OES") or \
@@ -2984,11 +2965,6 @@ class GLGenerator(object):
       func.WriteInitSignature(file)
       file.Write(";\n\n")
 
-      if func.NeedsDestructor() or self.HasCustomDestroyArguments(func):
-        file.Write("private void\n");
-        file.Write("command_%s_destroy_arguments (command_%s_t *command);\n\n" % \
-          (func.name.lower(), func.name.lower()))
-
     file.Write("#endif /*COMMAND_AUTOGEN_H*/\n")
     file.Close()
 
@@ -3018,10 +2994,6 @@ class GLGenerator(object):
     init_name = "command_%s_init " % func.name.lower()
     return self.CommandCustomText().find(init_name) != -1
 
-  def HasCustomDestroyArguments(self, func):
-    init_name = "command_%s_destroy_arguments " % func.name.lower()
-    return self.CommandCustomText().find(init_name) != -1
-
   def HasCustomStruct(self, func):
     struct_declaration = "typedef struct _command_%s " % func.name.lower()
     return self.CommandCustomHeaderText().find(struct_declaration) != -1
@@ -3041,8 +3013,6 @@ class GLGenerator(object):
     for func in self.functions:
       if not self.HasCustomInit(func):
         func.WriteCommandInit(file)
-      if not self.HasCustomDestroyArguments(func):
-        func.WriteCommandDestroy(file)
 
     file.Write("void\n")
     file.Write("command_initialize_sizes (size_t *sizes)\n")
@@ -3085,7 +3055,6 @@ class GLGenerator(object):
         file.Write("{\n")
         file.Write("    INSTRUMENT ();\n")
 
-        need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
         if len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
           file.Write("    command_%s_t *command =\n" % func.name.lower())
           file.Write("            (command_%s_t *)abstract_command;\n" % func.name.lower())
