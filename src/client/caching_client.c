@@ -2743,7 +2743,7 @@ caching_client_glHint (void* client, GLenum target, GLenum mode)
     if (target == GL_GENERATE_MIPMAP_HINT && state->generate_mipmap_hint == mode)
         return;
 
-    if (is_valid_HintMode (mode)) {
+    if (! is_valid_HintMode (mode)) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
