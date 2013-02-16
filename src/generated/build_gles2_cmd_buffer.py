@@ -480,7 +480,7 @@ _FUNCTION_INFO = {
     'argument_size_from_function': {'attrib_list': '_get_egl_attrib_list_size'}
   },
   'glBindBuffer' : {
-    'mapped_names': {'type': 'buffer','attrib_list': ['buffer']}
+    'mapped_names': {'type': 'buffer','attrib_list': ['buffer'], 'create_attrib_if_needed': ['buffer']}
   },
   'glIsBuffer' : {
     'mapped_names': {'type': 'buffer', 'attrib_list': ['buffer']}
@@ -492,16 +492,16 @@ _FUNCTION_INFO = {
     'mapped_names': {'type': 'framebuffer', 'attrib_list': ['framebuffer']}
   },
   'glBindTexture' : {
-    'mapped_names': {'type': 'texture', 'attrib_list': ['texture']}
+    'mapped_names': {'type': 'texture', 'attrib_list': ['texture'], 'create_attrib_if_needed': ['texture']}
   },
   'glIsTexture' : {
     'mapped_names': {'type': 'texture', 'attrib_list': ['texture']}
   },
   'glFramebufferTexture2D' : {
-    'mapped_names': {'type': 'texture', 'attrib_list': ['texture']}
+    'mapped_names': {'type': 'texture', 'attrib_list': ['texture'], 'create_attrib_if_needed': ['texture']}
   },
   'glBindRenderbuffer' : {
-    'mapped_names': {'type': 'renderbuffer', 'attrib_list': ['renderbuffer']}
+    'mapped_names': {'type': 'renderbuffer', 'attrib_list': ['renderbuffer'], 'create_attrib_if_needed': ['renderbuffer']}
   },
   'glIsRenderbuffer' : {
     'mapped_names': {'type': 'renderbuffer', 'attrib_list': ['renderbuffer']}
@@ -2577,6 +2577,11 @@ class Function(object):
         return self.info.mapped_names['attrib_list']
     return []
 
+  def NeedsCreateMappedName(self, mapped_name):
+    if ('create_attrib_if_needed' in self.info.mapped_names):
+        return mapped_name in self.info.mapped_names['create_attrib_if_needed']
+    return False
+
 class ImmediateFunction(Function):
   """A class that represnets an immediate function command."""
 
@@ -3046,8 +3051,15 @@ class GLGenerator(object):
           file.Write("        mutex_lock (name_mapping_mutex);\n")
           file.Write("        GLuint *%s = hash_lookup (name_mapping_%s, command->%s);\n" % (mapped_name, func.GetMappedNameType(),  mapped_name))
           file.Write("        mutex_unlock (name_mapping_mutex);\n")
-          file.Write("        if (!%s)\n" % mapped_name)
-          file.Write("            return;\n")
+          file.Write("        if (!%s) {\n" % mapped_name)
+          if (func.NeedsCreateMappedName(mapped_name)):
+            file.Write("        GLuint *data = (GLuint *) malloc (1 * sizeof (GLuint));\n")
+            file.Write("        *data = command->%s;\n" %mapped_name)
+            file.Write("        hash_insert (name_mapping_%s, *data, data);\n" %func.GetMappedNameType())
+            file.Write("        %s = data;\n" %mapped_name)
+          else:
+            file.Write("            return;\n")
+          file.Write("        }\n");
           file.Write("        command->%s = *%s;\n" % (mapped_name, mapped_name))
           file.Write("    }\n")
 
