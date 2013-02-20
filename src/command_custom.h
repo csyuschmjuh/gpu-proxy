@@ -14,3 +14,8 @@ typedef struct _command_gldrawarrays {
     GLsizei count;
     link_list_t *arrays_to_free;
 } command_gldrawarrays_t;
+
+typedef struct _command_log {
+    command_t header;
+    bool result;
+} command_log_t;

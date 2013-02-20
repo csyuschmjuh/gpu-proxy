@@ -3,6 +3,7 @@
 
 #include "compiler_private.h"
 #include "types_private.h"
+#include "thread_private.h"
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
@@ -13,6 +14,7 @@
 
 typedef enum command_type {
     COMMAND_NO_OP,
+    COMMAND_LOG,
     COMMAND_SHUTDOWN,
 
 #include "generated/command_types_autogen.h"
@@ -25,7 +27,11 @@ typedef struct command {
     size_t size;
 
     /* The token is used for making synchronous calls. */
-    unsigned int token; 
+    unsigned int token;
+
+    long timestamp;
+    bool use_timestamp;
+    thread_t server_id;
 } command_t;
 
 private void

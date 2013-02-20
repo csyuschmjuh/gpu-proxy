@@ -20,6 +20,7 @@ typedef pthread_t                       thread_t;
 #define signal(name)         pthread_cond_signal (&(name))
 #define signal_init(name)    pthread_cond_init (&(name), NULL)
 #define signal_destroy(name) pthread_cond_destroy (&(name))
+#define broadcast(name)      pthread_cond_broadcast (&(name))
 
 /* static initializer */
 #define mutex_static_init(name) \

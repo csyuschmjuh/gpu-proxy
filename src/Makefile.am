@@ -62,8 +62,9 @@ libGPUProcess_la_SOURCES += \
 	program.c \
 	program.h \
 	util/gles2_utils.c \
-	util/gles2_utils.h
-
+	util/gles2_utils.h \
+	server/server_state.h \
+	server/server_state.c
 
 nodist_libGPUProcess_la_SOURCES = \
 	generated/client_entry_points.c \
