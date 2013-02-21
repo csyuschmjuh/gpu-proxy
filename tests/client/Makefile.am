@@ -46,6 +46,7 @@ client_test_SOURCES = \
 client_test_LDFLAGS = \
 	-lX11 \
 	-ldl \
+        -lrt \
 	-lpthread
 
 client_test_CFLAGS = \

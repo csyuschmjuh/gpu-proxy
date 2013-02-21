@@ -873,25 +873,6 @@ server_handle_egldestroysurface (server_t *server, command_t *abstract_command)
 }
 
 static void
-server_handle_eglquerysurface (server_t *server, command_t *abstract_command)
-{
-    INSTRUMENT ();
-
-    mutex_lock (server_state_mutex);
-    while (! _server_allow_call (server->thread,
-                                 abstract_command->timestamp))
-        wait_signal (server_state_signal, server_state_mutex);
-
-    command_eglquerysurface_t *command =
-            (command_eglquerysurface_t *)abstract_command;
-    command->result = server->dispatch.eglQuerySurface (server, command->dpy, command->surface, command->attribute, command->value);
-    
-    _server_remove_call_log ();
-    broadcast (server_state_signal);
-    mutex_unlock (server_state_mutex); 
-}
-
-static void
 server_handle_eglbindapi (server_t *server, command_t *abstract_command)
 {
     INSTRUMENT ();
@@ -1286,10 +1267,49 @@ server_handle_gleglimagetargetrenderbufferstorageoes (
         wait_signal (server_state_signal, server_state_mutex);
 
     command_gleglimagetargetrenderbufferstorageoes_t *command =
-            (
-                command_gleglimagetargetrenderbufferstorageoes_t *)abstract_command;
+            (command_gleglimagetargetrenderbufferstorageoes_t *)abstract_command;
     server->dispatch.glEGLImageTargetRenderbufferStorageOES (server, command->target, command->image);
     command_gleglimagetargetrenderbufferstorageoes_destroy_arguments (command);
+    
+    _server_remove_call_log ();
+    broadcast (server_state_signal);
+    mutex_unlock (server_state_mutex); 
+}
+
+static void
+server_handle_glmapbufferoes (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    
+    mutex_lock (server_state_mutex);
+    while (! _server_allow_call (server->thread,
+                                 abstract_command->timestamp))
+        wait_signal (server_state_signal, server_state_mutex);
+
+    command_glmapbufferoes_t *command =
+            (command_glmapbufferoes_t *)abstract_command;
+    server->dispatch.glMapBufferOES (server, command->target, command->access);
+    
+    _server_remove_call_log ();
+    broadcast (server_state_signal);
+    mutex_unlock (server_state_mutex); 
+}
+
+static void 
+server_handle_glunmapbufferoes (
+    server_t *server, command_t *abstract_command)
+{
+    INSTRUMENT ();
+    
+    mutex_lock (server_state_mutex);
+    while (! _server_allow_call (server->thread,
+                                 abstract_command->timestamp))
+        wait_signal (server_state_signal, server_state_mutex);
+
+    command_glunmapbufferoes_t *command =
+            (command_glunmapbufferoes_t *)abstract_command;
+    command->result = server->dispatch.glUnmapBufferOES (server, command->target);
     
     _server_remove_call_log ();
     broadcast (server_state_signal);
@@ -1363,8 +1383,6 @@ server_init (server_t *server,
         server_handle_eglcreatepixmapsurface;
     server->handler_table[COMMAND_EGLDESTROYSURFACE] =
         server_handle_egldestroysurface;
-    server->handler_table[COMMAND_EGLQUERYSURFACE] =
-        server_handle_eglquerysurface;
     server->handler_table[COMMAND_EGLBINDAPI] =
         server_handle_eglbindapi;
     server->handler_table[COMMAND_EGLCREATEPBUFFERFROMCLIENTBUFFER] =
@@ -1403,7 +1421,10 @@ server_init (server_t *server,
         server_handle_eglmapimagesec;
     server->handler_table[COMMAND_EGLUNMAPIMAGESEC] =
         server_handle_eglunmapimagesec;
-    
+    server->handler_table[COMMAND_GLEGLIMAGETARGETTEXTURE2DOES] =
+        server_handle_gleglimagetargettexture2does;
+    server->handler_table[COMMAND_GLEGLIMAGETARGETRENDERBUFFERSTORAGEOES] =
+        server_handle_gleglimagetargetrenderbufferstorageoes;
 
     server->thread = pthread_self ();
     mutex_lock (name_mapping_mutex);
@@ -1423,9 +1444,9 @@ server_handle_log (server_t *server, command_t *abstract_command)
     command_log_t *command = (command_log_t *)abstract_command;
 
     mutex_lock (server_state_mutex);
+    command->result = true;
     _call_order_list_append (abstract_command->server_id,
                              abstract_command->timestamp);
-    command->result = true;
     mutex_unlock (server_state_mutex);
 }
     

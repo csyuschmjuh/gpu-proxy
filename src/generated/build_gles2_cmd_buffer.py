@@ -2875,8 +2875,12 @@ class GLGenerator(object):
             file.Write("        state->need_get_error = true;\n\n");
 
         file.Write("    INSTRUMENT();\n");
+        file.Write("    if (CLIENT(object)->needs_timestamp) {\n");
+        file.Write("        double timestamp = client_get_timestamp ();\n");
+        file.Write("        client_send_log (timestamp);\n");
+        file.Write("        CLIENT(object)->timestamp = timestamp;\n");
+        file.Write("    }\n\n");
         file.Write("    command_t *command = client_get_space_for_command (COMMAND_%s);\n" % func.name.upper())
-
         header = "    command_%s_init (" % func.name.lower()
         indent = " " * len(header)
         file.Write(header + "command")
@@ -2890,6 +2894,7 @@ class GLGenerator(object):
         else:
             file.Write("    client_run_command_async (command);\n");
 
+        file.Write("    CLIENT(object)->needs_timestamp = false;\n");
         if func.HasReturnValue():
           file.Write("\n")
           file.Write("    return ((command_%s_t *)command)->result;\n\n" % func.name.lower())
@@ -3029,7 +3034,7 @@ class GLGenerator(object):
         file.Write("{\n")
         file.Write("    INSTRUMENT ();\n")
         file.Write("\n");
-        file.Write("    if (abstract_command->use_timestamp) {\n");
+        file.Write("    if (abstract_command->use_timestamp == true) {\n");
         file.Write("        mutex_lock (server_state_mutex);\n");
         file.Write("        while (! _server_allow_call (server->thread,\n");
         file.Write("                                     abstract_command->timestamp))\n");

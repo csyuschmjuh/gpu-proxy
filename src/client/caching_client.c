@@ -14,6 +14,7 @@
 #include <GLES2/gl2.h>
 #include <stdlib.h>
 #include <string.h>
+#include <X11/Xlib.h>
 
 mutex_static_init (cached_gl_states_mutex);
 mutex_static_init (cached_gl_display_list_mutex);
@@ -264,6 +265,7 @@ caching_client_glActiveTexture (void* client,
         return;
 
     } else {
+
         CACHING_CLIENT(client)->super_dispatch.glActiveTexture (client, texture);
         /* FIXME: this maybe not right because this texture may be
          * invalid object, we save here to save time in glGetError()
@@ -326,7 +328,7 @@ caching_client_glBindFramebuffer (void* client, GLenum target, GLuint framebuffe
     if (target != GL_FRAMEBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
     }
-
+    
     CACHING_CLIENT(client)->super_dispatch.glBindFramebuffer (client, target, framebuffer);
     /* FIXME: should we save it, it will be invalid if the
      * framebuffer is invalid
@@ -347,7 +349,7 @@ caching_client_glBindRenderbuffer (void* client, GLenum target, GLuint renderbuf
     if (target != GL_RENDERBUFFER) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
     }
-
+    
     CACHING_CLIENT(client)->super_dispatch.glBindRenderbuffer (client, target, renderbuffer);
     /* FIXME: should we save it, it will be invalid if the
      * renderbuffer is invalid
@@ -440,7 +442,7 @@ caching_client_glBlendEquation (void* client, GLenum mode)
 
     state->blend_equation[0] = mode;
     state->blend_equation[1] = mode;
-
+    
     CACHING_CLIENT(client)->super_dispatch.glBlendEquation (client, mode);
 }
 
@@ -517,7 +519,7 @@ caching_client_glBlendFuncSeparate (void* client, GLenum srcRGB, GLenum dstRGB,
     state->blend_src[1] = srcAlpha;
     state->blend_dst[0] = dstRGB;
     state->blend_dst[0] = dstAlpha;
-
+    
     CACHING_CLIENT(client)->super_dispatch.glBlendFuncSeparate (client, srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
@@ -544,7 +546,6 @@ caching_client_glCheckFramebufferStatus (void* client, GLenum target)
         if (framebuffer)
             framebuffer->complete = (result == GL_FRAMEBUFFER_COMPLETE)? FRAMEBUFFER_COMPLETE: FRAMEBUFFER_INCOMPLETE;
     }
-
     return result;
 }
 
@@ -785,6 +786,12 @@ caching_client_glCreateProgram (void* client)
 
     if (!state)
         return 0;
+    
+    if (CLIENT(client)->needs_timestamp) {
+        double timestamp = client_get_timestamp ();
+        client_send_log (timestamp);
+        CLIENT(client)->timestamp = timestamp;
+    }
 
     name_handler_alloc_names (1, &result);
     command = client_get_space_for_command (COMMAND_GLCREATEPROGRAM);
@@ -792,6 +799,7 @@ caching_client_glCreateProgram (void* client)
     ((command_glcreateprogram_t *)command)->result = result;
 
     client_run_command_async (command);
+    CLIENT(client)->needs_timestamp = false;
 
     if (result == 0) {
         caching_client_set_needs_get_error (CLIENT (client));
@@ -862,6 +870,12 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return 0;
     }
+    
+    if (CLIENT(client)->needs_timestamp) {
+        double timestamp = client_get_timestamp ();
+        client_send_log (timestamp);
+        CLIENT(client)->timestamp = timestamp;
+    }
 
     GLuint result = 0;
     command_t *command = client_get_space_for_command (COMMAND_GLCREATESHADER);
@@ -871,6 +885,7 @@ caching_client_glCreateShader (void* client, GLenum shaderType)
     ((command_glcreateshader_t *)command)->result = result;
 
     client_run_command_async (command);
+    CLIENT(client)->needs_timestamp = false;
 
     if (result == 0)
         caching_client_set_needs_get_error (CLIENT (client));
@@ -1577,7 +1592,13 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
         if (! attribs[i].array_enabled || attribs[i].array_buffer_binding) {
             continue;
         }
-
+    
+        if (CLIENT(client)->needs_timestamp) {
+            double timestamp = client_get_timestamp ();
+            client_send_log (timestamp);
+            CLIENT(client)->timestamp = timestamp;
+        }
+    
         if (fits_in_one_array) {
             attribs[i].data = (char *)attribs[i].pointer - (char *)attrib_list->first_index_pointer->pointer +
                 (char *)*command + commands_size;
@@ -1586,6 +1607,12 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
             attrib_command->type = COMMAND_GLVERTEXATTRIBPOINTER;
             attrib_command->size = command_get_size (COMMAND_GLVERTEXATTRIBPOINTER);
             attrib_command->token = 0;
+            if (CLIENT(client)->needs_timestamp) {
+                attrib_command->use_timestamp = true;
+                attrib_command->timestamp = CLIENT(client)->timestamp;
+           }
+           else
+                attrib_command->use_timestamp = false;
         } else {
             attribs[i].data = _create_data_array (&attribs[i], count);
             if (! attribs[i].data)
@@ -1611,6 +1638,7 @@ caching_client_setup_vertex_attrib_pointer_if_necessary (client_t *client,
                                             0,
                                             (const void *)attribs[i].data);
         client_run_command_async (attrib_command);
+        CLIENT(client)->needs_timestamp = false;
 
         attrib_count++;
     }
@@ -1677,6 +1705,12 @@ caching_client_glDrawArrays (void* client,
                                                                  &array_size,
                                                                  0);
     }
+    
+    if (CLIENT(client)->needs_timestamp) {
+        double timestamp = client_get_timestamp ();
+        client_send_log (timestamp);
+        CLIENT(client)->timestamp = timestamp;
+    }
 
     if (!command)
         command = client_get_space_for_command (COMMAND_GLDRAWARRAYS);
@@ -1684,11 +1718,18 @@ caching_client_glDrawArrays (void* client,
         command->type = COMMAND_GLDRAWARRAYS;
         command->size = command_get_size (COMMAND_GLDRAWARRAYS) + array_size;
         command->token = 0;
+        if (CLIENT(client)->needs_timestamp) {
+            command->use_timestamp = true;
+            command->timestamp = CLIENT(client)->timestamp;
+        }
+        else
+            command->use_timestamp = false;
     }
 
     command_gldrawarrays_init (command, mode, first, count);
     ((command_gldrawarrays_t *) command)->arrays_to_free = arrays_to_free;
      client_run_command_async (command);
+    CLIENT(client)->needs_timestamp = false;
 
     caching_client_clear_attribute_list_data (CLIENT(client));
     if (framebuffer && framebuffer->id && framebuffer->complete == FRAMEBUFFER_COMPLETE_UNKNOWN)
@@ -1901,6 +1942,13 @@ caching_client_glDrawElements (void* client,
             ((command_t *)command)->type = COMMAND_GLDRAWELEMENTS;
             ((command_t *)command)->size = command_get_size (COMMAND_GLDRAWELEMENTS) + array_size + index_array_size;
             ((command_t *)command)->token = 0;
+            if (CLIENT(client)->needs_timestamp) {
+                ((command_t *)command)->use_timestamp = true;
+                ((command_t *)command)->timestamp = CLIENT(client)->timestamp;
+            }
+            else
+                ((command_t *)command)->use_timestamp = false;
+
             indices_to_pass = ((char *) command) + command_get_size (COMMAND_GLDRAWELEMENTS) + array_size;
         } else {
             indices_to_pass = malloc (index_array_size);
@@ -1908,13 +1956,14 @@ caching_client_glDrawElements (void* client,
         }
         memcpy (indices_to_pass, indices, index_array_size);
     }
-
+    
     if (! command)
         command = (command_gldrawelements_t *) client_get_space_for_command (COMMAND_GLDRAWELEMENTS);
 
     command_gldrawelements_init (&command->header, mode, count, type, indices_to_pass);
     ((command_gldrawelements_t *) command)->arrays_to_free = arrays_to_free;
     client_run_command_async (&command->header);
+    CLIENT(client)->needs_timestamp = false;
 
 finish:
     caching_client_clear_attribute_list_data (CLIENT(client));
@@ -4109,12 +4158,38 @@ static void
 caching_client_glEGLImageTargetTexture2DOES (void* client, GLenum target, GLeglImageOES image)
 {
     INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
+
     if (target != GL_TEXTURE_2D) {
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return;
     }
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
     CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetTexture2DOES (client, target, image);
+    clients_list_set_needs_timestamp ();
+}
+
+static void
+caching_client_glEGLImageTargetRenderbufferStorageOES (void* client, GLenum target, GLeglImageOES image)
+{
+    INSTRUMENT();
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
+
+    if (target != GL_RENDERBUFFER) {
+        caching_client_glSetError (client, GL_INVALID_ENUM);
+        return;
+    }
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    CACHING_CLIENT(client)->super_dispatch.glEGLImageTargetRenderbufferStorageOES (client, target, image);
+    clients_list_set_needs_timestamp ();
 }
 
 static void*
@@ -4132,8 +4207,11 @@ caching_client_glMapBufferOES (void* client, GLenum target, GLenum access)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
     }
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
     result = CACHING_CLIENT(client)->super_dispatch.glMapBufferOES (client, target, access);
+    clients_list_set_needs_timestamp ();
 
     if (result == NULL)
         caching_client_set_needs_get_error (CLIENT (client));
@@ -4151,9 +4229,12 @@ caching_client_glUnmapBufferOES (void* client, GLenum target)
         caching_client_glSetError (client, GL_INVALID_ENUM);
         return result;
     }
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
     result = CACHING_CLIENT(client)->super_dispatch.glUnmapBufferOES (client, target);
 
+    clients_list_set_needs_timestamp ();
     if (result != GL_TRUE)
         caching_client_set_needs_get_error (CLIENT (client));
     return result;
@@ -4498,7 +4579,11 @@ static EGLDisplay
 caching_client_eglGetDisplay (void *client,
                               NativeDisplayType native_display)
 {
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
     EGLDisplay result = CACHING_CLIENT(client)->super_dispatch.eglGetDisplay (client, native_display);
+    clients_list_set_needs_timestamp ();
 
     if (result != EGL_NO_DISPLAY && cached_gl_display_find (result) == NULL) {
         mutex_lock (cached_gl_display_list_mutex);
@@ -4540,10 +4625,15 @@ caching_client_eglTerminate (void* client,
                              EGLDisplay display)
 {
     INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
-    if (CACHING_CLIENT(client)->super_dispatch.eglTerminate (client, display) == EGL_FALSE)
+    if (CACHING_CLIENT(client)->super_dispatch.eglTerminate (client, display) == EGL_FALSE) {
+        clients_list_set_needs_timestamp ();
         return EGL_FALSE;
+    }
 
+    clients_list_set_needs_timestamp ();
     mutex_lock (cached_gl_states_mutex);
 
     link_list_t **states = cached_gl_states ();
@@ -4578,6 +4668,19 @@ caching_client_eglTerminate (void* client,
 }
 
 static EGLBoolean
+caching_client_eglBindAPI (void *client, EGLenum api)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglBindAPI (client, api);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
 caching_client_eglDestroySurface (void* client,
                                   EGLDisplay display,
                                   EGLSurface surface)
@@ -4586,8 +4689,12 @@ caching_client_eglDestroySurface (void* client,
 
     if (!CLIENT(client)->active_state)
         return EGL_FALSE;
+    
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
     EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglDestroySurface (client, display, surface);
+    clients_list_set_needs_timestamp ();
     if (result == EGL_TRUE) {
         /* update gl states */
         _caching_client_destroy_surface (client, display, surface);
@@ -4600,10 +4707,15 @@ static EGLBoolean
 caching_client_eglReleaseThread (void* client)
 {
     INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
-    if (CACHING_CLIENT(client)->super_dispatch.eglReleaseThread (client) == EGL_FALSE)
+    if (CACHING_CLIENT(client)->super_dispatch.eglReleaseThread (client) == EGL_FALSE) {
+        clients_list_set_needs_timestamp ();
         return EGL_FALSE;
+    }
 
+    clients_list_set_needs_timestamp ();
     _caching_client_make_current (client,
                                   EGL_NO_DISPLAY,
                                   EGL_NO_SURFACE,
@@ -4618,10 +4730,15 @@ caching_client_eglDestroyContext (void* client,
                                   EGLContext ctx)
 {
     INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
 
-    if (CACHING_CLIENT(client)->super_dispatch.eglDestroyContext (client, dpy, ctx) == EGL_FALSE)
+    if (CACHING_CLIENT(client)->super_dispatch.eglDestroyContext (client, dpy, ctx) == EGL_FALSE) {
+        clients_list_set_needs_timestamp ();
         return EGL_FALSE; /* Failure, so do nothing locally. */
+    }
 
+    clients_list_set_needs_timestamp ();
     /* Destroy our cached version of this context. */
     mutex_lock (cached_gl_states_mutex);
 
@@ -4697,14 +4814,73 @@ caching_client_glFlush (void *client)
 
     if (!CLIENT(client)->active_state)
         return;
+    
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+    double timestamp = client_get_timestamp ();
+    client_send_log (timestamp);
+    CLIENT(client)->timestamp = timestamp;
 
     command_t *command = client_get_space_for_command (COMMAND_GLFLUSH);
     command_glflush_init (command);
 
     client_run_command_async (command);
-   // CACHING_CLIENT(client)->super_dispatch.glFlush (client);
+    clients_list_set_needs_timestamp ();
 }
 
+static void
+caching_client_glFinish (void *client)
+{
+    INSTRUMENT();
+    
+    if (!CLIENT(client)->active_state)
+        return;
+    
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    CACHING_CLIENT(client)->super_dispatch.glFlush (client);
+    clients_list_set_needs_timestamp ();
+}
+
+static EGLBoolean
+caching_client_eglWaitGL (void* client)
+{
+    INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglWaitGL (client);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglWaitClient (void* client)
+{
+    INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglWaitClient (client);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglWaitNative (void* client,
+                              EGLint engine)
+{
+    INSTRUMENT();
+    
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglWaitNative (client, engine);
+    clients_list_set_needs_timestamp ();
+    return result;
+
+}
 
 static EGLBoolean
 caching_client_eglSwapBuffers (void* client,
@@ -4720,15 +4896,36 @@ caching_client_eglSwapBuffers (void* client,
     if (! (state->display == display &&
            state->drawable == surface))
         return EGL_FALSE;
+    
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+    double timestamp = client_get_timestamp ();
+    client_send_log (timestamp);
+    CLIENT(client)->timestamp = timestamp;
+
     command_t *command = client_get_space_for_command (COMMAND_EGLSWAPBUFFERS);
     command_eglswapbuffers_init (command, display, surface);
 
     client_run_command_async (command);
+    clients_list_set_needs_timestamp ();
     return EGL_TRUE;
 
 //    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglSwapBuffers (client, display, surface);
 //    return result;
     
+}
+
+static EGLBoolean
+caching_client_eglInitialize (void *client, EGLDisplay display, 
+                              EGLint *major, EGLint *minor)
+{
+    INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglInitialize (client, display, major, minor);
+    clients_list_set_needs_timestamp ();
+    return result;
 }
 
 static EGLSurface
@@ -4737,11 +4934,17 @@ caching_client_eglCreatePbufferSurface (void *client,
                                         EGLConfig config,
                                         EGLint const *attrib_list)
 {
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreatePbufferSurface (client,
                                                             display,
                                                             config,
                                                             attrib_list);
+    clients_list_set_needs_timestamp ();
     if (result) {
         mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
@@ -4758,12 +4961,28 @@ caching_client_eglCreatePixmapSurface (void *client,
                                        NativePixmapType native_pixmap,
                                        EGLint const *attrib_list)
 {
+    INSTRUMENT();
+
+    link_list_t **dpys = cached_gl_displays ();
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_ctxs_surfaces_t *cached_display = (display_ctxs_surfaces_t *)dpy->data;
+        if (cached_display->display == display) {
+            XSync (cached_display->native_display, False);
+            break;
+        }
+    }
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreatePixmapSurface (client,
                                                             display,
                                                             config,
                                                             native_pixmap,
                                                             attrib_list);
+    clients_list_set_needs_timestamp ();
     if (result) {
         mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
@@ -4780,18 +4999,327 @@ caching_client_eglCreateWindowSurface (void *client,
                                        NativeWindowType native_window,
                                        EGLint const *attrib_list)
 {
+    INSTRUMENT();
+
+    link_list_t **dpys = cached_gl_displays ();
+    link_list_t *dpy = *dpys;
+    while (dpy) {
+        display_ctxs_surfaces_t *cached_display = (display_ctxs_surfaces_t *)dpy->data;
+        if (cached_display->display == display) {
+            XSync (cached_display->native_display, False);
+            break;
+        }
+    }
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
     EGLSurface result =
         CACHING_CLIENT(client)->super_dispatch.eglCreateWindowSurface (client,
                                                             display,
                                                             config,
                                                             native_window,
                                                             attrib_list);
+    clients_list_set_needs_timestamp ();
     if (result) {
         mutex_lock (cached_gl_display_list_mutex);
         cached_gl_surface_add (display, config, result);
         mutex_unlock (cached_gl_display_list_mutex);
     }
 
+    return result;
+}
+
+static EGLSurface
+caching_client_eglCreatePbufferFromClientBuffer (void *client,
+                                                 EGLDisplay display,
+                                                 EGLenum buftype,
+                                                 EGLClientBuffer buffer,
+                                                 EGLConfig config,
+                                                 EGLint const *attrib_list)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLSurface result =
+        CACHING_CLIENT(client)->super_dispatch.eglCreatePbufferFromClientBuffer (client,
+                                                            display,
+                                                            buftype,
+                                                            buffer,
+                                                            config,
+                                                            attrib_list);
+    clients_list_set_needs_timestamp ();
+    if (result) {
+        mutex_lock (cached_gl_display_list_mutex);
+        cached_gl_surface_add (display, config, result);
+        mutex_unlock (cached_gl_display_list_mutex);
+    }
+
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglBindTexImage (void *client, EGLDisplay display,
+                                EGLSurface surface, EGLint buffer)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglBindTexImage(client,
+                                                                  display,
+                                                                  surface,
+                                                                  buffer);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglReleaseTexImage (void *client, EGLDisplay display,
+                                   EGLSurface surface, EGLint buffer)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglReleaseTexImage(client,
+                                                                  display,
+                                                                  surface,
+                                                                  buffer);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglCopyBuffers (void *client, EGLDisplay display,
+                               EGLSurface surface,
+                               NativePixmapType native_pixmap)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglCopyBuffers(client,
+                                                                 display,
+                                                                 surface,
+                                                                 native_pixmap);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglLockSurfaceKHR (void *client, EGLDisplay display,
+                                  EGLSurface surface,
+                                  const EGLint *attrib_list)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglLockSurfaceKHR(client,
+                                                                 display,
+                                                                 surface,
+                                                                 attrib_list);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglUnlockSurfaceKHR (void *client, EGLDisplay display,
+                                    EGLSurface surface)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglUnlockSurfaceKHR(client,
+                                                                 display,
+                                                                 surface);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLImageKHR
+caching_client_eglCreateImageKHR (void *client, EGLDisplay display,
+                                  EGLContext context, EGLenum target,
+                                  EGLClientBuffer buffer,
+                                  const EGLint *attrib_list)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLImageKHR image = CACHING_CLIENT(client)->super_dispatch.eglCreateImageKHR(client,
+                                                                 display,
+                                                                 context,
+                                                                 target,
+                                                                 buffer,
+                                                                 attrib_list);
+    clients_list_set_needs_timestamp ();
+    return image;
+}
+
+static EGLBoolean
+caching_client_eglDestroyImageKHR (void *client, EGLDisplay display,
+                                   EGLImageKHR image)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglDestroyImageKHR(client,
+                                                                 display,
+                                                                 image);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLSyncKHR
+caching_client_eglCreateSyncKHR (void *client, EGLDisplay display,
+                                 EGLenum type, 
+                                 const EGLint *attrib_list)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLSyncKHR result = CACHING_CLIENT(client)->super_dispatch.eglCreateSyncKHR(client,
+                                                                 display,
+                                                                 type,
+                                                                 attrib_list);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglDestroySyncKHR (void *client, EGLDisplay display,
+                                  EGLSyncKHR sync)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglDestroySyncKHR(client,
+                                                                 display,
+                                                                 sync);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLint
+caching_client_eglClientWaitSyncKHR (void *client, EGLDisplay display,
+                                     EGLSyncKHR sync, EGLint flags,
+                                     EGLTimeKHR timeout)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLint result = CACHING_CLIENT(client)->super_dispatch.eglClientWaitSyncKHR(client,
+                                                                 display,
+                                                                 sync,
+                                                                 flags,
+                                                                 timeout);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean
+caching_client_eglSignalSyncKHR (void *client, EGLDisplay display,
+                                 EGLSyncKHR sync, EGLenum mode)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglSignalSyncKHR(client,
+                                                                 display,
+                                                                 sync,
+                                                                 mode);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLImageKHR
+caching_client_eglCreateDRMImageMESA (void *client, EGLDisplay display,
+                                      const EGLint *attrib_list)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLImageKHR image = CACHING_CLIENT(client)->super_dispatch.eglCreateDRMImageMESA(client,
+                                                                 display,
+                                                                 attrib_list);
+    clients_list_set_needs_timestamp ();
+    return image;
+}
+
+static EGLBoolean
+caching_client_eglExportDRMImageMESA (void *client, EGLDisplay display,
+                                      EGLImageKHR image,
+                                      EGLint *name,
+                                      EGLint *handle,
+                                      EGLint *stride)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglExportDRMImageMESA(client,
+                                                                 display,
+                                                                 image,
+                                                                 name,
+                                                                 handle,
+                                                                 stride);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static void * 
+caching_client_eglMapImageSEC (void *client, EGLDisplay display,
+                               EGLImageKHR image)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    void *result = CACHING_CLIENT(client)->super_dispatch.eglMapImageSEC(client,
+                                                                 display,
+                                                                 image);
+    clients_list_set_needs_timestamp ();
+    return result;
+}
+
+static EGLBoolean 
+caching_client_eglUnmapImageSEC (void *client, EGLDisplay display,
+                                 EGLImageKHR image)
+{
+    INSTRUMENT();
+
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
+    EGLBoolean result = CACHING_CLIENT(client)->super_dispatch.eglUnmapImageSEC(client,
+                                                                 display,
+                                                                 image);
+    clients_list_set_needs_timestamp ();
     return result;
 }
 
@@ -4802,6 +5330,10 @@ caching_client_eglCreateContext (void *client,
                                  EGLContext share_context,
                                  const EGLint* attrib_list)
 {
+    INSTRUMENT();
+    /* send log */
+    CLIENT(client)->needs_timestamp = true;
+
     EGLContext result =
         CACHING_CLIENT(client)->super_dispatch.eglCreateContext (client,
                                                                  dpy,
@@ -4809,6 +5341,7 @@ caching_client_eglCreateContext (void *client,
                                                                  share_context,
                                                                  attrib_list);
 
+    clients_list_set_needs_timestamp ();
     if (result == EGL_NO_CONTEXT)
         return result;
 
@@ -4834,6 +5367,7 @@ caching_client_eglMakeCurrent (void* client,
                                EGLContext ctx)
 {
     INSTRUMENT();
+    /* send log */
 
     /* First detect situations where we are not changing the context. */
     egl_state_t *current_state = client_get_current_state (CLIENT(client));
@@ -4850,12 +5384,12 @@ caching_client_eglMakeCurrent (void* client,
     bool display_and_context_match = current_state &&
                                      current_state->display == display &&
                                      current_state->context == ctx;
-    if (display_and_context_match) {
+/*    if (display_and_context_match) {
         if (current_state->drawable == draw &&
             current_state->readable == read) {
             return EGL_TRUE;
         }
-
+*/
 /*        mutex_lock (cached_gl_states_mutex);
  
         link_list_t **surfaces = cached_gl_surfaces (display);
@@ -4870,17 +5404,23 @@ caching_client_eglMakeCurrent (void* client,
             matching_state = NULL;
 
         mutex_unlock (cached_gl_states_mutex);
-*/
-    }
 
+    }
+*/
     /* We have found previously used draw and read surface.  Because
      * the display and context are matching, it means we are not
      * releasing the context in the thread, we can do async
      */
 //    if (display_and_context_match && matching_state) {
+        CLIENT(client)->needs_timestamp = true;
+        double timestamp = client_get_timestamp ();
+        client_send_log (timestamp);
+        CLIENT(client)->timestamp = timestamp;
+
         command_t *command = client_get_space_for_command (COMMAND_EGLMAKECURRENT);
         command_eglmakecurrent_init (command, display, draw, read, ctx);
         client_run_command_async (command);
+        clients_list_set_needs_timestamp ();
 //    } else {
         /* Otherwise we must do this synchronously. */
 //        if (CACHING_CLIENT(client)->super_dispatch.eglMakeCurrent (client, display,
@@ -4888,9 +5428,16 @@ caching_client_eglMakeCurrent (void* client,
     //        return EGL_FALSE; /* Don't do anything else if we fail. */
    // }
 
+    if (display_and_context_match) {
+        if (current_state->drawable == draw &&
+            current_state->readable == read) {
+            return EGL_TRUE;
+        }
+    }
     _caching_client_make_current (client, display, draw, read, ctx);
     return EGL_TRUE;
 }
+
 
 #include "caching_client_glget.c"
 

@@ -39,7 +39,7 @@ typedef struct _server_display_list {
 
 typedef struct _server_log {
     thread_t            server;
-    long                timestamp;
+    double              timestamp;
 } server_log_t;
 
 /*********************************************************
@@ -110,19 +110,19 @@ _server_display_find (EGLDisplay egl_display);
  * any other egl/gl calls immediately after these calls
  ********************************************************/
 private void
-_call_order_list_append (thread_t server, long timestamp);
+_call_order_list_append (thread_t server, double timestamp);
 
 private void
 _call_order_list_remove ();
 
 private bool
-_call_order_list_head_is_server (thread_t server, long timestamp);
+_call_order_list_head_is_server (thread_t server, double timestamp);
 
 private void
-_server_append_call_log (thread_t server, long timestamp);
+_server_append_call_log (thread_t server, double timestamp);
 
 private bool
-_server_allow_call (thread_t server, long timestamp);
+_server_allow_call (thread_t server, double timestamp);
 
 private void
 _server_remove_call_log ();

@@ -696,5 +696,3 @@ egl_state_destroy_cached_shader_object (egl_state_t *egl_state,
         egl_state_get_shader_object_list (egl_state),
         shader_object);
 }
-
-

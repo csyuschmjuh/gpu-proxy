@@ -431,4 +431,5 @@ private void
 egl_state_destroy_cached_shader_object (egl_state_t *egl_state,
                                         shader_object_t *shader_object);
 
+
 #endif /* GPUPROCESS_EGL_STATE_H */

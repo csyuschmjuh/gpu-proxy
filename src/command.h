@@ -29,7 +29,7 @@ typedef struct command {
     /* The token is used for making synchronous calls. */
     unsigned int token;
 
-    long timestamp;
+    double timestamp;
     bool use_timestamp;
     thread_t server_id;
 } command_t;
