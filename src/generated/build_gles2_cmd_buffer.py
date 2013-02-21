@@ -3028,6 +3028,14 @@ class GLGenerator(object):
         file.Write("server_handle_%s (server_t *server, command_t *abstract_command)\n" % func.name.lower())
         file.Write("{\n")
         file.Write("    INSTRUMENT ();\n")
+        file.Write("\n");
+        file.Write("    if (abstract_command->use_timestamp) {\n");
+        file.Write("        mutex_lock (server_state_mutex);\n");
+        file.Write("        while (! _server_allow_call (server->thread,\n");
+        file.Write("                                     abstract_command->timestamp))\n");
+        file.Write("            wait_signal (server_state_signal, server_state_mutex);\n");
+        file.Write("    }\n");
+        file.Write("\n");
 
         need_destructor_call = func.NeedsDestructor() or self.HasCustomDestroyArguments(func)
         if need_destructor_call or len(func.GetOriginalArgs()) > 0 or func.HasReturnValue():
@@ -3041,7 +3049,7 @@ class GLGenerator(object):
           file.Write("        GLuint *%s = hash_lookup (name_mapping, command->%s);\n" % (mapped_name, mapped_name))
           file.Write("        mutex_unlock (name_mapping_mutex);\n")
           file.Write("        if (!%s)\n" % mapped_name)
-          file.Write("            return;\n")
+          file.Write("            goto FINISH;\n")
           file.Write("        command->%s = *%s;\n" % (mapped_name, mapped_name))
           file.Write("    }\n")
 
@@ -3059,6 +3067,14 @@ class GLGenerator(object):
 
         if need_destructor_call:
           file.Write("    command_%s_destroy_arguments (command);\n" % func.name.lower())
+        file.Write("\n");
+	if len(mapped_names) > 0:
+		file.Write("FINISH:\n");
+        file.Write("    if (abstract_command->use_timestamp) {\n");
+        file.Write("        _server_remove_call_log ();\n");
+        file.Write("        broadcast (server_state_signal);\n");
+        file.Write("        mutex_unlock (server_state_mutex);\n");
+        file.Write("    }\n");
         file.Write("}\n\n")
 
     file.Write("static void\n")
