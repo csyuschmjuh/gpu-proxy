@@ -110,9 +110,6 @@ hash_lookup_unlocked (HashTable *table, GLuint key)
     GLuint pos;
     const struct HashEntry *entry;
 
-    if (! key)
-        return NULL;
-
     assert (table);
     /* key can be 0 */
 
@@ -170,7 +167,6 @@ hash_insert (HashTable *table, GLuint key, void *data)
     struct HashEntry *entry;
 
     assert (table);
-    assert (key);
 
     if (key > table->MaxKey)
         table->MaxKey = key;

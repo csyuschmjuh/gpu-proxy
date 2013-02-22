@@ -67,6 +67,10 @@ typedef struct _program {
     bool            mark_for_deletion;
     HashTable       *attrib_location_cache;
     HashTable       *uniform_location_cache;
+    /* XXX: location_cache is used to know if the location is valid
+     * We could use a bloom filter in this case.
+     */
+    HashTable       *location_cache;
 } program_t;
 
 private program_t *

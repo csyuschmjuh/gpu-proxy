@@ -11,6 +11,7 @@ program_new (GLuint id)
     new_program->mark_for_deletion = false;
     new_program->uniform_location_cache = id ? new_hash_table(free) : NULL;
     new_program->attrib_location_cache = id ? new_hash_table(free) : NULL;
+    new_program->location_cache = id ? new_hash_table(free) : NULL;
     return new_program;
 }
 

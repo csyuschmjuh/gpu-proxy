@@ -2260,6 +2260,7 @@ caching_client_glGetUniformLocation (void* client,
     GLuint *data = (GLuint *)malloc (sizeof (GLuint));
     *data = result;
     hash_insert (saved_program->uniform_location_cache, hash_str(name), data);
+    hash_insert (saved_program->location_cache, *data, data);
     return result;
 }
 
@@ -3394,15 +3395,6 @@ caching_client_glTexSubImage2D (void* client,
 }
 
 static bool
-_check_uniform_value (const void *data, const void *user_data)
-{
-    GLint uniform_cached_data = *(GLint*) data;
-    GLint uniform_user_data = *(GLint*) user_data;
-
-    return uniform_cached_data != uniform_user_data ? false : true;
-}
-
-static bool
 _synthesize_uniform_error(void *client,
                           GLint location,
                           GLenum program_error)
@@ -3417,7 +3409,7 @@ _synthesize_uniform_error(void *client,
     if (!saved_program)
         return false;
 
-    if (!hash_has_element (saved_program->uniform_location_cache, &location, _check_uniform_value)) {
+    if (!hash_lookup(saved_program->location_cache, location)) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
         return false;
     }
