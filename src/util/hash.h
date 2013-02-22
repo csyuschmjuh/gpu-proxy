@@ -113,9 +113,6 @@ free_data_callback (GLuint key,
 private GLuint
 hash_str (const void *v);
 
-private GLuint
-hash_int (const void *v);
-
 private void
 test_hash_functions (void);
 

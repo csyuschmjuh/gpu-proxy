@@ -507,17 +507,3 @@ hash_str (const void *v)
 
   return h;
 }
-
-GLuint
-has_int (const void *v)
-{
-    const signed char *p = v;
-    unsigned int h = 5381;
-    int loop = sizeof (GLint);
-    int i;
-
-    for (i = 0; i < loop; i++)
-        h = (h << 5) + h + *(p + i);
-
-    return h;
-}
