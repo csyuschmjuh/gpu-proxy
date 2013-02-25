@@ -62,6 +62,10 @@ typedef struct v_program {
     v_program_uniform_list_t    uniforms;
 } v_program_t;
 
+typedef struct location_properties {
+    GLenum type;
+} location_properties_t;
+
 typedef struct _program {
     shader_object_t base;
     bool            mark_for_deletion;

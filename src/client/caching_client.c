@@ -2260,7 +2260,10 @@ caching_client_glGetUniformLocation (void* client,
     GLuint *data = (GLuint *)malloc (sizeof (GLuint));
     *data = result;
     hash_insert (saved_program->uniform_location_cache, hash_str(name), data);
-    hash_insert (saved_program->location_cache, *data, data);
+
+    location_properties_t *location_properties = (location_properties_t *) malloc (sizeof (location_properties_t));
+    location_properties->type = -1;
+    hash_insert (saved_program->location_cache, *data, location_properties);
     return result;
 }
 
@@ -3394,39 +3397,57 @@ caching_client_glTexSubImage2D (void* client,
                                                             width, height, format, type, pixels);
 }
 
-static bool
+static location_properties_t *
 _synthesize_uniform_error(void *client,
                           GLint location,
                           GLenum program_error)
 {
     egl_state_t *state = client_get_current_state (CLIENT (client));
     if (! state)
-        return false;
+        return 0;
 
     program_t *saved_program = egl_state_lookup_cached_program_err (client,
                                                                     state->current_program,
                                                                     GL_INVALID_OPERATION);
     if (!saved_program)
-        return false;
+        return 0;
 
-    if (!hash_lookup(saved_program->location_cache, location)) {
+    location_properties_t *location_properties = hash_lookup(saved_program->location_cache, location);
+    if (! location_properties) {
         caching_client_glSetError (client, GL_INVALID_OPERATION);
-        return false;
+        return 0;
     }
 
-    return true;
+    return location_properties;
+}
+
+static void
+_location_has_valid_type(void *client, location_properties_t *location_properties, GLenum location_type)
+{
+    if (location_properties->type == -1) {
+        GLenum error = CACHING_CLIENT(client)->super_dispatch.glGetError (client);
+
+        if (error != GL_NO_ERROR)
+            caching_client_glSetError (client, GL_INVALID_OPERATION);
+        else
+            location_properties->type = location_type;
+    } else if (location_properties->type != location_type)
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
 }
 
 static void
 caching_client_glUniform1f (void *client, GLint location, GLfloat v0)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1f (client, location, v0);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT);
 }
 
 static void
@@ -3436,12 +3457,15 @@ caching_client_glUniform2f (void *client,
                              GLfloat v1)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2f (client, location, v0, v1);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC2);
 }
 
 static void
@@ -3452,12 +3476,15 @@ caching_client_glUniform3f (void *client,
                              GLfloat v2)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform3f (client, location, v0, v1, v2);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC3);
 }
 
 static void
@@ -3469,24 +3496,30 @@ caching_client_glUniform4f (void *client,
                              GLfloat v3)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform4f (client, location, v0, v1, v2, v3);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC4);
 }
 
 static void
 caching_client_glUniform1i (void *client, GLint location, GLint v0)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1i (client, location, v0);
+
+    _location_has_valid_type (client, location_properties, GL_INT);
 }
 
 static void
@@ -3496,12 +3529,15 @@ caching_client_glUniform2i (void *client,
                              GLint v1)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2i (client, location, v0, v1);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC2);
 }
 
 static void
@@ -3512,12 +3548,15 @@ caching_client_glUniform3i (void *client,
                              GLint v2)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform3i (client, location, v0, v1, v2);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC3);
 }
 
 static void
@@ -3533,15 +3572,18 @@ caching_client_glUniform4i (void *client,
     if (! state)
         return;
 
-    if (! _synthesize_uniform_error (client,
-                                     location,
-                                     GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_error (client,
+                                                                            location,
+                                                                            GL_INVALID_OPERATION);
+    if (! location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform4i (client, location, v0, v1, v2, v3);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC4);
 }
 
-bool
+location_properties_t *
 _synthesize_uniform_vector_error(void *client,
                                  GLint location,
                                  GLsizei count,
@@ -3564,13 +3606,16 @@ caching_client_glUniform1fv (void *client,
                              const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1fv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT);
 }
 
 static void
@@ -3580,13 +3625,16 @@ caching_client_glUniform2fv (void *client,
                              const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2fv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC2);
 }
 
 static void
@@ -3596,13 +3644,17 @@ caching_client_glUniform3fv (void *client,
                              const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
+
     CACHING_CLIENT(client)->super_dispatch.glUniform3fv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC3);
 }
 
 static void
@@ -3612,13 +3664,16 @@ caching_client_glUniform4fv (void *client,
                              const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform4fv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_VEC4);
 }
 
 static void
@@ -3628,13 +3683,16 @@ caching_client_glUniform1iv (void *client,
                              const GLint *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform1iv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_INT);
 }
 
 static void
@@ -3644,13 +3702,16 @@ caching_client_glUniform2iv (void *client,
                              const GLint *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform2iv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC2);
 }
 
 static void
@@ -3660,13 +3721,16 @@ caching_client_glUniform3iv (void *client,
                              const GLint *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform3iv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC3);
 }
 
 static void
@@ -3676,13 +3740,16 @@ caching_client_glUniform4iv (void *client,
                              const GLint *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniform4iv (client, location, count, value);
+
+    _location_has_valid_type (client, location_properties, GL_INT_VEC4);
 }
 
 static void
@@ -3693,13 +3760,16 @@ caching_client_glUniformMatrix2fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix2fv (client, location, count, transpose, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_MAT2);
 }
 
 static void
@@ -3710,13 +3780,16 @@ caching_client_glUniformMatrix3fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix3fv (client, location, count, transpose, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_MAT3);
 }
 
 static void
@@ -3727,13 +3800,16 @@ caching_client_glUniformMatrix4fv (void* client,
                                    const GLfloat *value)
 {
     INSTRUMENT();
-    if (! _synthesize_uniform_vector_error (client,
-                                            location,
-                                            count,
-                                            GL_INVALID_OPERATION))
+    location_properties_t *location_properties = _synthesize_uniform_vector_error (client,
+                                                                                   location,
+                                                                                   count,
+                                                                                   GL_INVALID_OPERATION);
+    if (!location_properties)
         return;
 
     CACHING_CLIENT(client)->super_dispatch.glUniformMatrix4fv (client, location, count, transpose, value);
+
+    _location_has_valid_type (client, location_properties, GL_FLOAT_MAT4);
 }
 
 static void
