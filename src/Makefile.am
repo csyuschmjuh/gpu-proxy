@@ -3,8 +3,6 @@ BUILT_SOURCES =
 lib_LTLIBRARIES = libGPUProcess.la
 libGPUProcess_la_CFLAGS = \
 	$(GLES_CFLAGS) \
-	$(EGL_CFLAGS) \
-	$(GL_CFLAGS) \
 	-Werror \
 	-Wall \
 	-Igenerated \
@@ -42,14 +40,6 @@ libGPUProcess_la_SOURCES = \
 	util/hash.h \
 	util/hash.c
 
-if HAS_GL
-libGPUProcess_la_SOURCES += \
-	server/dispatch_desktop.c \
-	server/dispatch_private_desktop.h \
-	glx_states.h
-endif
-
-if HAS_GLES2
 libGPUProcess_la_SOURCES += \
 	client/egl_api_custom.c \
 	client/caching_client.c \
@@ -85,7 +75,6 @@ generated/dispatch_table.h: generated/build_gles2_cmd_buffer.py \
 								   generated/egl_functions.txt \
 								   generated/gles2_functions.txt
 	python generated/build_gles2_cmd_buffer.py
-endif
 
 library_dir = $(top_builddir)/libs
 $(library_dir)/libGPUProcess.so: libGPUProcess.la
@@ -93,19 +82,11 @@ $(library_dir)/libGPUProcess.so: libGPUProcess.la
 	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so.0.0.0 $(library_dir)/libGPUProcess.so
 symlinks = $(library_dir)/libGPUProcess.so
 
-if HAS_GLES2
 $(library_dir)/libEGL.so:
 	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so $(library_dir)/libEGL.so
 $(library_dir)/libGLESv2.so:
 	$(AM_V_GEN) $(LN_S) -f ../src/.libs/libGPUProcess.so $(library_dir)/libGLESv2.so
 symlinks += $(library_dir)/libEGL.so $(library_dir)/libGLESv2.so
-endif
-
-if HAS_GL
-$(library_dir)/libGL.so:
-	ln -f ../src/.libs/libGPUProcess.so $(library_dir)/libGL.so
-symlinks += $(library_dir)/libGL.so
-endif
 
 all-local: $(symlinks)
 clean-local:

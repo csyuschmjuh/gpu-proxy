@@ -7,12 +7,9 @@
 
 #include "config.h"
 
-#if HAS_GLES2
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#else
-#include <GL/gl.h>
-#endif
+
 #include <stdlib.h>
 
 typedef struct name_handler {
