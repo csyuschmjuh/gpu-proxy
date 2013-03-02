@@ -946,6 +946,31 @@ caching_client_glShaderSource (void *client, GLuint shader, GLsizei count,
 }
 
 static void
+caching_client_glAttachShader (void *client, GLuint program, GLuint shader)
+{
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
+
+    program_t *cached_program = (program_t*) egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
+    if (!cached_program)
+        return;
+
+    shader_object_t *cached_shader = (shader_object_t*) egl_state_lookup_cached_shader_object (state, shader);
+    if (!cached_shader) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    }
+
+    if (cached_shader->type == SHADER_OBJECT_PROGRAM) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return;
+    }
+
+    CACHING_CLIENT(client)->super_dispatch.glAttachShader (client, program, shader);
+}
+
+static void
 caching_client_glCullFace (void* client, GLenum mode)
 {
     INSTRUMENT();
