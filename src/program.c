@@ -12,6 +12,7 @@ program_new (GLuint id)
     new_program->uniform_location_cache = id ? new_hash_table(free) : NULL;
     new_program->attrib_location_cache = id ? new_hash_table(free) : NULL;
     new_program->location_cache = id ? new_hash_table(free) : NULL;
+    new_program->attached_shaders = NULL;
     return new_program;
 }
 
@@ -21,4 +22,5 @@ program_destroy (void *abstract_program)
     program_t *program = abstract_program;
     delete_hash_table (program->attrib_location_cache);
     delete_hash_table (program->uniform_location_cache);
+    link_list_clear (&program->attached_shaders);
 }

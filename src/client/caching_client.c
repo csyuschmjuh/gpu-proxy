@@ -969,7 +969,47 @@ caching_client_glAttachShader (void *client, GLuint program, GLuint shader)
         return;
     }
 
+    GLuint *shader_data = (GLuint *) malloc (sizeof(GLuint));
+    *shader_data = shader;
+    link_list_append (&cached_program->attached_shaders, shader_data, free);
     CACHING_CLIENT(client)->super_dispatch.glAttachShader (client, program, shader);
+}
+
+static void
+caching_client_glGetAttachedShaders (void    *client,
+                                     GLuint   program,
+                                     GLsizei  maxCount,
+                                     GLsizei *count,
+                                     GLuint  *shaders)
+{
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return;
+
+    program_t *cached_program = egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
+    if (!cached_program)
+        return;
+
+    if (maxCount < 0) {
+        caching_client_glSetError (client, GL_INVALID_VALUE);
+        return;
+    }
+
+    link_list_t *current = cached_program->attached_shaders;
+    GLsizei attached_shaders_size = 0;
+    while (current) {
+        if (attached_shaders_size > maxCount)
+            break;
+        if (shaders) {
+            GLuint *shader = (GLuint *)current->data;
+            shaders[attached_shaders_size] = *shader;
+        }
+        ++attached_shaders_size;
+
+        current = current->next;
+    }
+    if (count)
+        *count = attached_shaders_size;
 }
 
 static void

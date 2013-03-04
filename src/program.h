@@ -75,6 +75,7 @@ typedef struct _program {
      * We could use a bloom filter in this case.
      */
     HashTable       *location_cache;
+    link_list_t     *attached_shaders;
 } program_t;
 
 private program_t *
