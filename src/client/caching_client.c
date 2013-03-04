@@ -42,8 +42,10 @@ static void
 caching_client_glSetError (void* client, GLenum error)
 {
     egl_state_t *egl_state = client_get_current_state (CLIENT(client));
-    if (egl_state && egl_state->active && egl_state->error == GL_NO_ERROR)
+    if (egl_state && egl_state->active && egl_state->error == GL_NO_ERROR) {
+        egl_state->need_get_error = false;
         egl_state->error = error;
+    }
 }
 
 static bool
