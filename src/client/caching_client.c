@@ -61,7 +61,7 @@ caching_client_does_index_overflow (void* client,
     state->max_vertex_attribs_queried = true;
 
 FINISH:
-    if (index <= state->max_vertex_attribs)
+    if (index < state->max_vertex_attribs)
         return false;
 
     caching_client_glSetError (client, GL_INVALID_VALUE);
