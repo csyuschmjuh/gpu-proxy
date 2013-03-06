@@ -827,6 +827,30 @@ egl_state_lookup_cached_program_err (void *client,
     return cached_program;
 }
 
+static shader_object_t *
+egl_state_lookup_cached_shader_err (void *client,
+                                    GLuint shader_object_id,
+                                    GLenum shader_error)
+{
+    egl_state_t *state = client_get_current_state (CLIENT (client));
+    if (!state)
+        return 0;
+
+    shader_object_t *cached_shader = (shader_object_t*) egl_state_lookup_cached_shader_object (state, shader_object_id);
+    if (!cached_shader) {
+        caching_client_glSetError (client, shader_error);
+        return 0;
+    }
+
+    if (cached_shader->type == SHADER_OBJECT_PROGRAM) {
+        caching_client_glSetError (client, GL_INVALID_OPERATION);
+        return 0;
+    }
+
+    return cached_shader;
+}
+
+
 static void
 caching_client_glDeleteProgram (void *client,
                                 GLuint program)
@@ -896,6 +920,10 @@ caching_client_glShaderSource (void *client, GLuint shader, GLsizei count,
 	return;
     }
 
+    shader_object_t *cached_shader = egl_state_lookup_cached_shader_err (client, shader, GL_INVALID_VALUE);
+    if (!cached_shader)
+        return;
+
     GLint *caching_client_length = NULL;
     if (length != NULL) {
         size_t lengths_size = sizeof (GLint *) * count;
@@ -954,20 +982,13 @@ caching_client_glAttachShader (void *client, GLuint program, GLuint shader)
     if (!state)
         return;
 
-    program_t *cached_program = (program_t*) egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
+    program_t *cached_program = egl_state_lookup_cached_program_err (client, program, GL_INVALID_VALUE);
     if (!cached_program)
         return;
 
-    shader_object_t *cached_shader = (shader_object_t*) egl_state_lookup_cached_shader_object (state, shader);
-    if (!cached_shader) {
-        caching_client_glSetError (client, GL_INVALID_VALUE);
+    shader_object_t *cached_shader = egl_state_lookup_cached_shader_err (client, shader, GL_INVALID_VALUE);
+    if (!cached_shader)
         return;
-    }
-
-    if (cached_shader->type == SHADER_OBJECT_PROGRAM) {
-        caching_client_glSetError (client, GL_INVALID_OPERATION);
-        return;
-    }
 
     GLuint *shader_data = (GLuint *) malloc (sizeof(GLuint));
     *shader_data = shader;
