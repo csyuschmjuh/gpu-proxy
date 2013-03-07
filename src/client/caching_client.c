@@ -3911,10 +3911,6 @@ caching_client_glUseProgram (void* client,
         return;
     if (state->current_program == program_id)
         return;
-    if (program_id < 0) {
-        caching_client_glSetError (client, GL_INVALID_OPERATION);
-        return;
-    }
 
     /* From glUseProgram doc: if program is zero, then the current
      * rendering state refers to an invalid program object and the
@@ -3923,9 +3919,16 @@ caching_client_glUseProgram (void* client,
     if (program_id) {
         /* this maybe not right because this program may be invalid
          * object, we save here to save time in glGetError() */
+
         program_t *new_program = egl_state_lookup_cached_program_err (client, program_id, GL_INVALID_VALUE);
         if (!new_program)
             return;
+       GLint status;
+       glGetProgramiv(program_id, GL_LINK_STATUS, &status);
+       if (status != GL_TRUE) {
+           caching_client_glSetError (client, GL_INVALID_OPERATION);
+           return;
+       }
     }
 
     CACHING_CLIENT(client)->super_dispatch.glUseProgram (client, program_id);
