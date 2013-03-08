@@ -289,10 +289,13 @@ server_handle_gldeleteprogram (server_t *server, command_t *abstract_command)
 
     mutex_lock (name_mapping_mutex);
     GLuint *program = hash_take (name_mapping_shader_object, command->program);
-    mutex_unlock (name_mapping_mutex);
-
-    if (program)
-        server->dispatch.glDeleteProgram (server, *program);
+    
+    if (program) {
+        GLuint program_value = *program;
+        mutex_unlock (name_mapping_mutex);
+        server->dispatch.glDeleteProgram (server, program_value);
+    } else
+        mutex_unlock (name_mapping_mutex);
 
     command_gldeleteprogram_destroy_arguments (command);
 }
@@ -325,11 +328,16 @@ server_handle_gldeleteshader (server_t *server, command_t *abstract_command)
     GLuint *shader = hash_take (name_mapping_shader_object, command->shader);
     mutex_unlock (name_mapping_mutex);
 
-    if (shader)
-        server->dispatch.glDeleteShader (server, *shader);
-    else
+    if (shader) {
+        GLuint shader_value = *shader;
+        mutex_unlock (name_mapping_mutex);
+        server->dispatch.glDeleteShader (server, shader_value);
+    }
+    else {
+        mutex_unlock (name_mapping_mutex);
         /*XXX: This call should return INVALID_VALUE */
         server->dispatch.glDeleteShader (server, 0xffffffff);
+    }
 
     command_gldeleteshader_destroy_arguments (command);
 }
